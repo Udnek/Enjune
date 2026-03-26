@@ -2,11 +2,11 @@ using OpenTK.Graphics.OpenGL4;
 
 namespace Engine.Graphic.OpenGL.Arrays;
 
-public class Vao
+public class VAO
 {
     private readonly int _id;
 
-    public Vao()
+    public VAO()
     {
         _id = GL.GenVertexArray();
         GL.BindVertexArray(_id);

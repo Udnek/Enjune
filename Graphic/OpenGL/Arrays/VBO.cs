@@ -2,11 +2,11 @@ using OpenTK.Graphics.OpenGL4;
 
 namespace Engine.Graphic.OpenGL.Arrays;
 
-public class Vbo
+public class VBO
 {
     private readonly int _id;
 
-    public Vbo()
+    public VBO()
     {
         _id = GL.GenBuffer();
         GL.BindBuffer(BufferTarget.ArrayBuffer, _id);
