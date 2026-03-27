@@ -1,18 +1,14 @@
 // Main OpenGL API implementation
 
-using System.Drawing;
-using Engine.Graphic;
 using Engine.Graphic.KeyHandler;
-using Engine.Graphic.OpenGL;
 using Engine.Graphic.OpenGL.Arrays;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
-using OpenTK.Platform.Windows;
 using OpenTK.Windowing.GraphicsLibraryFramework;
-using All = OpenTK.Graphics.OpenGL.All;
-using Monitor = OpenTK.Windowing.GraphicsLibraryFramework.Monitor;
 
-public class OpenGLApi : GraphicApi
+namespace Engine.Graphic.OpenGL;
+
+public class OpenGlApi : IGraphicApi
 {
     private unsafe Window* _window;   
     private VAO _vao = null!;
@@ -21,12 +17,13 @@ public class OpenGLApi : GraphicApi
     private ShaderProgram _shaderProgram = null!;
 
     private readonly List<float> _vertices = [];
-    private readonly List<int> _indices = [];
+    private readonly List<int> _elements = [];
+    // todo delete probably?
     private int _elementsAmount = 0;
 
     public void Init(int width, int height, string title,
-                     UserInputHandler keyHandler,
-                     GraphicApi.WindowSizeChangeHandler windowSizeHandler)
+        IUserInputHandler keyHandler,
+        IGraphicApi.WindowSizeChangeHandler windowSizeHandler)
     {
         // Setup error callback
         GLFW.SetErrorCallback((error, description) =>
@@ -52,19 +49,19 @@ public class OpenGLApi : GraphicApi
             if (_window == null) 
                 throw new Exception("Failed to create GLFW window");
             // keys callback
-            GLFW.SetKeyCallback(_window, (window, key, scancode, action, mods) =>
+            GLFW.SetKeyCallback(_window, (window, key, scancode, glAction, mods) =>
             {
-                if (key == Keys.Escape && action == InputAction.Release)
+                if (key == GlfwKey.Escape && glAction == InputAction.Release)
                     GLFW.SetWindowShouldClose(window, true);
 
-                GraphicApi.KeyAction ka = action switch
+                var action = glAction switch
                 {
-                    InputAction.Release => GraphicApi.KeyAction.Release,
-                    InputAction.Press   => GraphicApi.KeyAction.Press,
-                    InputAction.Repeat  => GraphicApi.KeyAction.Repeat,
-                    _ => throw new Exception($"Unknown key action: {action}")
+                    InputAction.Release => IGraphicApi.KeyAction.Release,
+                    InputAction.Press   => IGraphicApi.KeyAction.Press,
+                    InputAction.Repeat  => IGraphicApi.KeyAction.Repeat,
+                    _ => throw new Exception($"Unknown key action: {glAction}")
                 };
-                keyHandler(key, ka);
+                keyHandler.Handle(key, action);
             });
 
             // Framebuffer size callback
@@ -129,57 +126,52 @@ public class OpenGLApi : GraphicApi
         _vertices.Add(color.Y);
         _vertices.Add(color.Z);
         _vertices.Add(color.W);
-        _indices.Add(_elementsAmount);
+        
+        _elements.Add(_elementsAmount);
         _elementsAmount++;
     }
 
-    public void Model(Matrix4 model) => _shaderProgram.SetModel(model);
-    public void Projection(Matrix4 proj) => _shaderProgram.SetProjection(proj);
-    public void View(Matrix4 view) => _shaderProgram.SetView(view);
+    public void Model(Matrix4 model) => _shaderProgram.Model.SetValue(model);
+    public void Projection(Matrix4 proj) => _shaderProgram.Projection.SetValue(proj);
+    public void View(Matrix4 view) => _shaderProgram.View.SetValue(view);
 
     public void ClearRenderBuffer() => GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
     public void Render()
     {
-        // Upload vertex data
-        if (_vertices.Count > 0)
-        {
-            _vbo.Bind();
-            _vbo.SetData(_vertices.ToArray());
-        }
-
-        // Upload index data
-        if (_indices.Count > 0)
-        {
-            _ebo.Bind();
-            _ebo.SetData(_indices.ToArray());
-        }
-
-        // Use shader and draw
-        _shaderProgram.Use();
-        _vao.Bind();
+        // load
+        _vbo.BindAndPut(_vertices.ToArray());
+        _ebo.BindAndPut(_elements.ToArray());
+        
+        // draw
         GL.DrawElements(PrimitiveType.Triangles, _elementsAmount, DrawElementsType.UnsignedInt, 0);
-        _vao.Unbind();
 
-        // Clear per-frame buffers
+        // clear
         _vertices.Clear();
-        _indices.Clear();
+        _elements.Clear();
         _elementsAmount = 0;
 
-        // Swap buffers
-        GLFW.SwapBuffers(_window);
+        // swap buffers
+        unsafe
+        {
+            GLFW.SwapBuffers(_window);
+        }
     }
 
     public void Destroy()
     {
-        _vao.Dispose();
-        _vbo.Dispose();
-        _ebo.Dispose();
-        _shaderProgram.Dispose();
+        _vao.Destroy();
+        _vbo.Destroy();
+        _ebo.Destroy();
+        _shaderProgram.Destroy();
 
-        GLFW.SetKeyCallback(_window, null);
-        GLFW.SetFramebufferSizeCallback(_window, null);
-        GLFW.DestroyWindow(_window);
+        unsafe
+        {
+            GLFW.SetKeyCallback(_window, null);
+            GLFW.SetFramebufferSizeCallback(_window, null);
+            GLFW.DestroyWindow(_window);
+        }
+
         GLFW.Terminate();
         GLFW.SetErrorCallback(null);
     }

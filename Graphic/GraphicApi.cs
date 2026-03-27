@@ -1,17 +1,18 @@
 using System.Numerics;
 using Engine.Graphic.KeyHandler;
+using OpenTK.Mathematics;
 
 namespace Engine.Graphic;
 
-public interface GraphicApi
+public interface IGraphicApi
 {
-    void Init(int width, int height, string title, UserInputHandler userInputHandler, WindowSizeChangeHandler windowSizeHandler);
+    void Init(int width, int height, string title, IUserInputHandler userInputHandler, WindowSizeChangeHandler windowSizeHandler);
     void ViewPort(int x, int y, int width, int height);
     void Title(string title);
     // uniforms
-    void Model(Matrix4x4 model);
-    void View(Matrix4x4 view);
-    void Projection(Matrix4x4 proj);
+    void Model(Matrix4 model);
+    void View(Matrix4 view);
+    void Projection(Matrix4 proj);
     // uniforms end
     void PutVertex(Position position, Color color);
     void ClearRenderBuffer();

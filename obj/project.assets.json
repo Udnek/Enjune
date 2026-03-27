@@ -199,11 +199,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\glebd\\RiderProjects\\Engine\\Engine.csproj",
-      "projectName": "Engine",
-      "projectPath": "C:\\Users\\glebd\\RiderProjects\\Engine\\Engine.csproj",
+      "projectUniqueName": "C:\\Users\\glebd\\RiderProjects\\Enjune\\Enjune.csproj",
+      "projectName": "Enjune",
+      "projectPath": "C:\\Users\\glebd\\RiderProjects\\Enjune\\Enjune.csproj",
       "packagesPath": "C:\\Users\\glebd\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\glebd\\RiderProjects\\Engine\\obj\\",
+      "outputPath": "C:\\Users\\glebd\\RiderProjects\\Enjune\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\glebd\\AppData\\Roaming\\NuGet\\NuGet.Config",

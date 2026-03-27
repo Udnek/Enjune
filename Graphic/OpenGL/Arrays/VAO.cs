@@ -2,6 +2,7 @@ using OpenTK.Graphics.OpenGL4;
 
 namespace Engine.Graphic.OpenGL.Arrays;
 
+// ReSharper disable once InconsistentNaming
 public class VAO
 {
     private readonly int _id;

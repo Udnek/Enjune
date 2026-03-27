@@ -2,7 +2,7 @@
   "version": 2,
   "dgSpecHash": "SMh0Nv5XW1k=",
   "success": true,
-  "projectFilePath": "C:\\Users\\glebd\\RiderProjects\\Engine\\Engine.csproj",
+  "projectFilePath": "C:\\Users\\glebd\\RiderProjects\\Enjune\\Enjune.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\glebd\\.nuget\\packages\\opentk.core\\4.9.4\\opentk.core.4.9.4.nupkg.sha512",
     "C:\\Users\\glebd\\.nuget\\packages\\opentk.graphics\\4.9.4\\opentk.graphics.4.9.4.nupkg.sha512",
