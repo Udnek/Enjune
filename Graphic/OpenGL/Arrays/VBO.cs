@@ -13,10 +13,10 @@ public class VBO
         GL.BindBuffer(BufferTarget.ArrayBuffer, _id);
     }
 
-    public void BindAndPut(float[] data)
+    public void BindAndPut(float[] data, int sliceLen)
     {
         GL.BindBuffer(BufferTarget.ArrayBuffer, _id);
-        GL.BufferData(BufferTarget.ArrayBuffer, data.Length * sizeof(float), data, BufferUsageHint.DynamicDraw);
+        GL.BufferData(BufferTarget.ArrayBuffer, sliceLen * sizeof(float), data, BufferUsageHint.StaticDraw);
     }
 
     public void Destroy()

@@ -13,10 +13,10 @@ public class EBO
         GL.BindBuffer(BufferTarget.ElementArrayBuffer, _id);
     }
 
-    public void BindAndPut(int[] data)
+    public void BindAndPut(int[] data, int sliceLen)
     {
         GL.BindBuffer(BufferTarget.ElementArrayBuffer, _id);
-        GL.BufferData(BufferTarget.ElementArrayBuffer, data.Length * sizeof(int), data, BufferUsageHint.DynamicDraw);
+        GL.BufferData(BufferTarget.ElementArrayBuffer, sliceLen * sizeof(int), data, BufferUsageHint.DynamicDraw);
     }
 
     public void Destroy()

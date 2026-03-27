@@ -1,14 +1,14 @@
 {
   "version": 2,
-  "dgSpecHash": "heFfq021YpQ=",
+  "dgSpecHash": "MNCLhPhENcs=",
   "success": true,
-  "projectFilePath": "/home/udnek/RiderProjects/Enjune/Enjune.csproj",
+  "projectFilePath": "C:\\Users\\glebd\\RiderProjects\\Enjune\\Enjune.csproj",
   "expectedPackageFiles": [
-    "/home/udnek/.nuget/packages/opentk.core/4.9.4/opentk.core.4.9.4.nupkg.sha512",
-    "/home/udnek/.nuget/packages/opentk.graphics/4.9.4/opentk.graphics.4.9.4.nupkg.sha512",
-    "/home/udnek/.nuget/packages/opentk.mathematics/4.9.4/opentk.mathematics.4.9.4.nupkg.sha512",
-    "/home/udnek/.nuget/packages/opentk.redist.glfw/3.4.0.44/opentk.redist.glfw.3.4.0.44.nupkg.sha512",
-    "/home/udnek/.nuget/packages/opentk.windowing.graphicslibraryframework/4.9.4/opentk.windowing.graphicslibraryframework.4.9.4.nupkg.sha512"
+    "C:\\Users\\glebd\\.nuget\\packages\\opentk.core\\4.9.4\\opentk.core.4.9.4.nupkg.sha512",
+    "C:\\Users\\glebd\\.nuget\\packages\\opentk.graphics\\4.9.4\\opentk.graphics.4.9.4.nupkg.sha512",
+    "C:\\Users\\glebd\\.nuget\\packages\\opentk.mathematics\\4.9.4\\opentk.mathematics.4.9.4.nupkg.sha512",
+    "C:\\Users\\glebd\\.nuget\\packages\\opentk.redist.glfw\\3.4.0.44\\opentk.redist.glfw.3.4.0.44.nupkg.sha512",
+    "C:\\Users\\glebd\\.nuget\\packages\\opentk.windowing.graphicslibraryframework\\4.9.4\\opentk.windowing.graphicslibraryframework.4.9.4.nupkg.sha512"
   ],
   "logs": []
 }

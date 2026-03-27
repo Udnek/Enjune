@@ -24,10 +24,12 @@ public class App
 
         var polygons = new List<Polygon>();
 
-        for (int i = 0; i < 100; i++)
+        for (int i = 0; i < 300; i++)
         {
-            Polygon.Cube(new Position(0f, 1f+i, -4f), 3f, polygons.Add);
-            Polygon.Cube(new Position(0f, 0f+i, 4f), 0.5f, polygons.Add);
+            for (int j = 0; j < 300; j++)
+            {
+                Polygon.Cube(new Position(0f + i, 0f + j, -4f), 0.7f, polygons.Add);
+            }
         }
 
         var o = 0.5f;
@@ -40,9 +42,9 @@ public class App
         var yaw = 0f;
 
         var tick = 0;
-
+        
         var delays = new List<long>(200);
-        RunTargetFpsLoopWhile(500f,
+        RunTargetFpsLoopWhile(144f,
             (delay) =>
             {
                 delays.Add(delay);
@@ -51,6 +53,13 @@ public class App
             () => !_grapi.ShouldStop(),
             () =>
             {
+                foreach (var poly in polygons)
+                {
+                    _grapi.PutVertex(poly.V0, red);
+                    _grapi.PutVertex(poly.V1, green);
+                    _grapi.PutVertex(poly.V2, blue);
+                }
+                
                 // rotation input
                 if (keyHandler.IsPressed(KeyBinds.LookLeft)) yaw += 1;
                 if (keyHandler.IsPressed(KeyBinds.LookRight)) yaw -= 1;
@@ -101,13 +110,7 @@ public class App
                 // {
                 //     Console.WriteLine("Pressed menu");
                 // }
-
-                foreach (var poly in polygons)
-                {
-                    _grapi.PutVertex(poly.V0, red);
-                    _grapi.PutVertex(poly.V1, green);
-                    _grapi.PutVertex(poly.V2, blue);
-                }
+                
 
                 _grapi.Projection(Matrix4.CreatePerspectiveFieldOfView(
                     MathF.PI / 2, ((float) _windowWidth) / _windowHeight, 0.1f, 100f));

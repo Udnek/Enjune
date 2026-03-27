@@ -16,8 +16,8 @@ public class OpenGlApi : IGraphicApi
     private EBO _ebo = null!;
     private ShaderProgram _shaderProgram = null!;
 
-    private readonly float[] _vertices = new float[1048576];
-    private readonly int[] _elements = new int[1048576];
+    private readonly float[] _vertices = new float[(int) Math.Pow(2, 25)];
+    private readonly int[] _elements = new int[(int) Math.Pow(2, 22)];
 
     // todo delete probably?
     private int _elementsAmount = 0;
@@ -135,15 +135,13 @@ public class OpenGlApi : IGraphicApi
     public void Render()
     {
         // load
-        _vbo.BindAndPut(_vertices);
-        _ebo.BindAndPut(_elements);
+        _vbo.BindAndPut(_vertices, _verticesIndex);
+        _ebo.BindAndPut(_elements, _elementsAmount);
 
         // draw
         GL.DrawElements(PrimitiveType.Triangles, _elementsAmount, DrawElementsType.UnsignedInt, 0);
 
         // clear
-        // _vertices.Clear();
-        // _elements.Clear();
         _elementsAmount = 0;
         _verticesIndex = 0;
 
