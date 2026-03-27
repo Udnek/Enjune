@@ -10,26 +10,25 @@ namespace Enjune.Graphic.OpenGL;
 
 public class OpenGlApi : IGraphicApi
 {
-    private unsafe Window* _window;   
+    private unsafe Window* _window;
     private VAO _vao = null!;
     private VBO _vbo = null!;
     private EBO _ebo = null!;
     private ShaderProgram _shaderProgram = null!;
 
-    private readonly List<float> _vertices = [];
-    private readonly List<int> _elements = [];
+    private readonly float[] _vertices = new float[2048];
+    private readonly int[] _elements = new int[1024];
+
     // todo delete probably?
     private int _elementsAmount = 0;
+    private int _verticesIndex = 0;
 
     public void Init(int width, int height, string title,
         IUserInputHandler keyHandler,
         IGraphicApi.WindowSizeChangeHandler windowSizeHandler)
     {
         // Setup error callback
-        GLFW.SetErrorCallback((error, description) =>
-        {
-            Console.Error.WriteLine($"{error}: {description}");
-        });
+        GLFW.SetErrorCallback((error, description) => { Console.Error.WriteLine($"{error}: {description}"); });
 
         if (!GLFW.Init())
             throw new Exception("Unable to initialize GLFW");
@@ -46,7 +45,7 @@ public class OpenGlApi : IGraphicApi
         unsafe
         {
             _window = GLFW.CreateWindow(width, height, title, null, null);
-            if (_window == null) 
+            if (_window == null)
                 throw new Exception("Failed to create GLFW window");
             // keys callback
             GLFW.SetKeyCallback(_window, (window, key, scancode, glAction, mods) =>
@@ -57,23 +56,24 @@ public class OpenGlApi : IGraphicApi
                 var action = glAction switch
                 {
                     InputAction.Release => IGraphicApi.KeyAction.Release,
-                    InputAction.Press   => IGraphicApi.KeyAction.Press,
-                    InputAction.Repeat  => IGraphicApi.KeyAction.Repeat,
+                    InputAction.Press => IGraphicApi.KeyAction.Press,
+                    InputAction.Repeat => IGraphicApi.KeyAction.Repeat,
                     _ => throw new Exception($"Unknown key action: {glAction}")
                 };
                 keyHandler.Handle(key, action);
             });
 
             // Framebuffer size callback
-            GLFW.SetFramebufferSizeCallback(_window, (_, newWidth, newHeight) =>
-            {
-                windowSizeHandler(newWidth, newHeight);
-            });
-            
+            GLFW.SetFramebufferSizeCallback(_window,
+                (_, newWidth, newHeight) => { windowSizeHandler(newWidth, newHeight); });
+
             GLFW.MakeContextCurrent(_window);
-            GLFW.SwapInterval(1); // enable vsync
-            GLFW.ShowWindow(_window);  
+            //GLFW.SwapInterval(1); // enable vsync
+            GLFW.ShowWindow(_window);
         }
+
+        // without that shit it won't work
+        GL.LoadBindings(new GLFWBindingsContext());
         
         // enable features
         GL.Enable(EnableCap.DepthTest);
@@ -99,10 +99,7 @@ public class OpenGlApi : IGraphicApi
 
     public void Title(string title)
     {
-        unsafe
-        {
-            GLFW.SetWindowTitle(_window, title);
-        }
+        unsafe { GLFW.SetWindowTitle(_window, title); }
     }
 
     public void ViewPort(int x, int y, int width, int height) => GL.Viewport(x, y, width, height);
@@ -111,23 +108,20 @@ public class OpenGlApi : IGraphicApi
 
     public bool ShouldStop()
     {
-        unsafe 
-        {
-            return GLFW.WindowShouldClose(_window);
-        }
-    } 
+        unsafe { return GLFW.WindowShouldClose(_window); }
+    }
 
     public void PutVertex(Vector3 v, Color color)
     {
-        _vertices.Add(v.X);
-        _vertices.Add(v.Y);
-        _vertices.Add(v.Z);
-        _vertices.Add(color.X);
-        _vertices.Add(color.Y);
-        _vertices.Add(color.Z);
-        _vertices.Add(color.W);
-        
-        _elements.Add(_elementsAmount);
+        _vertices[_verticesIndex++] = v.X;
+        _vertices[_verticesIndex++] =(v.Y);
+        _vertices[_verticesIndex++] =(v.Z);
+        _vertices[_verticesIndex++] =(color.X);
+        _vertices[_verticesIndex++]=(color.Y);
+        _vertices[_verticesIndex++]=(color.Z);
+        _vertices[_verticesIndex++]=(color.W);
+
+        _elements[_elementsAmount] = _elementsAmount;
         _elementsAmount++;
     }
 
@@ -140,16 +134,17 @@ public class OpenGlApi : IGraphicApi
     public void Render()
     {
         // load
-        _vbo.BindAndPut(_vertices.ToArray());
-        _ebo.BindAndPut(_elements.ToArray());
-        
+        _vbo.BindAndPut(_vertices);
+        _ebo.BindAndPut(_elements);
+
         // draw
         GL.DrawElements(PrimitiveType.Triangles, _elementsAmount, DrawElementsType.UnsignedInt, 0);
 
         // clear
-        _vertices.Clear();
-        _elements.Clear();
+        // _vertices.Clear();
+        // _elements.Clear();
         _elementsAmount = 0;
+        _verticesIndex = 0;
 
         // swap buffers
         unsafe

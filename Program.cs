@@ -5,6 +5,9 @@ global using Vector4 = OpenTK.Mathematics.Vector4;
 global using Position = OpenTK.Mathematics.Vector3;
 global using Color = OpenTK.Mathematics.Vector4;
 global using GlfwKey = OpenTK.Windowing.GraphicsLibraryFramework.Keys;
+global using Nanoseconds = long;
+global using Fps = float;
+
 using Enjune;
 
-new App().run();
+new App().Run();

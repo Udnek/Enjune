@@ -1,6 +1,6 @@
 namespace Enjune.Graphic.KeyHandler;
 
-class BasicKeyHandler: IUserInputHandler
+public class BasicInputHandler: IUserInputHandler
 {
     private readonly ISet<KeyBinds.Bind> _pressed = new HashSet<KeyBinds.Bind>();
     private readonly ISet<KeyBinds.Bind> _shortPressed = new HashSet<KeyBinds.Bind>();

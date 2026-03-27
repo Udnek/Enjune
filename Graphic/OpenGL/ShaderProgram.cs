@@ -48,7 +48,7 @@ public class ShaderProgram
         GL.GetShader(shader, ShaderParameter.CompileStatus, out int compileStatus);
         if (compileStatus != (int)All.True)
         {
-            string infoLog = GL.GetShaderInfoLog(shader);
+            var infoLog = GL.GetShaderInfoLog(shader);
             throw new Exception($"Shader compilation failed ({type}): {infoLog}");
         }
 
@@ -95,14 +95,14 @@ public class ShaderProgram
     {
         private readonly List<Attribute> _attributes = [];
 
-        public void Add(Attribute attribute)=> _attributes.Add(attribute);
+        public void Add(Attribute attribute) => _attributes.Add(attribute);
 
         public void Compile(int program)
         {
             int stride = _attributes.Sum(a => a.Elements) * sizeof(float);
             int offset = 0;
 
-            foreach (var attr in _attributes)
+            foreach (var attr in _attributes) 
             {
                 int location = GL.GetAttribLocation(program, attr.Name);
                 GL.EnableVertexAttribArray(location);
@@ -125,10 +125,6 @@ public class ShaderProgram
         public Uniform(int program, string name)
         {
             _location = GL.GetUniformLocation(program, name);
-            if (_location == -1)
-            {
-                Console.WriteLine($"Warning: Uniform '{name}' not found in shader.");
-            }
             SetValue(Matrix4.Identity);
         }
 
@@ -141,16 +137,15 @@ public class ShaderProgram
     private const string VertexContent = """
 
                                                      #version 150 core
-
+                                                     
                                                      in vec3 position;
                                                      in vec4 color;
-
                                                      out vec4 vertexColor;
-
+                                                     
                                                      uniform mat4 model;
                                                      uniform mat4 view;
                                                      uniform mat4 projection;
-
+                                                     
                                                      void main() {
                                                          vertexColor = color;
                                                          mat4 mvp = projection * view * model;
@@ -161,15 +156,15 @@ public class ShaderProgram
 
     private const string FragmentContent = """
 
-                                                       #version 150 core
-
-                                                       in vec4 vertexColor;
-
-                                                       out vec4 fragColor;
-
-                                                       void main() {
-                                                           fragColor = vertexColor;
-                                                       }
+                                           #version 150 core
+                                           
+                                           in vec4 vertexColor;
+                                           
+                                           out vec4 fragColor;
+                                           
+                                           void main() {
+                                               fragColor = vertexColor;
+                                           }
                                                    
                                            """;
 }
