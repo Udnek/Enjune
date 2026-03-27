@@ -1,12 +1,12 @@
 // Main OpenGL API implementation
 
-using Engine.Graphic.KeyHandler;
-using Engine.Graphic.OpenGL.Arrays;
+using Enjune.Graphic.KeyHandler;
+using Enjune.Graphic.OpenGL.Arrays;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 
-namespace Engine.Graphic.OpenGL;
+namespace Enjune.Graphic.OpenGL;
 
 public class OpenGlApi : IGraphicApi
 {

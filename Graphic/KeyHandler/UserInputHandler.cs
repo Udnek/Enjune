@@ -1,4 +1,4 @@
-namespace Engine.Graphic.KeyHandler;
+namespace Enjune.Graphic.KeyHandler;
 
 public interface IUserInputHandler
 {

@@ -1,4 +1,4 @@
-namespace Engine;
+namespace Enjune;
 
 public class App
 {

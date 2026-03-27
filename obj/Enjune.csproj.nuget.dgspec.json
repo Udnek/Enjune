@@ -1,27 +1,25 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\glebd\\RiderProjects\\Enjune\\Enjune.csproj": {}
+    "/home/udnek/RiderProjects/Enjune/Enjune.csproj": {}
   },
   "projects": {
-    "C:\\Users\\glebd\\RiderProjects\\Enjune\\Enjune.csproj": {
+    "/home/udnek/RiderProjects/Enjune/Enjune.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\glebd\\RiderProjects\\Enjune\\Enjune.csproj",
+        "projectUniqueName": "/home/udnek/RiderProjects/Enjune/Enjune.csproj",
         "projectName": "Enjune",
-        "projectPath": "C:\\Users\\glebd\\RiderProjects\\Enjune\\Enjune.csproj",
-        "packagesPath": "C:\\Users\\glebd\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\glebd\\RiderProjects\\Enjune\\obj\\",
+        "projectPath": "/home/udnek/RiderProjects/Enjune/Enjune.csproj",
+        "packagesPath": "/home/udnek/.nuget/packages/",
+        "outputPath": "/home/udnek/RiderProjects/Enjune/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\glebd\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "/home/udnek/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net10.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -75,7 +73,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Users\\glebd\\.dotnet\\sdk\\10.0.201/PortableRuntimeIdentifierGraph.json",
+          "runtimeIdentifierGraphPath": "/home/udnek/.dotnet/sdk/10.0.201/PortableRuntimeIdentifierGraph.json",
           "packagesToPrune": {
             "Microsoft.CSharp": "(,4.7.32767]",
             "Microsoft.VisualBasic": "(,10.4.32767]",

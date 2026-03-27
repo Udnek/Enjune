@@ -1,7 +1,4 @@
-using OpenTK.Graphics.ES11;
-using OpenTK.Windowing.GraphicsLibraryFramework;
-
-namespace Engine.Graphic;
+namespace Enjune.Graphic;
 
 public static class KeyBinds
 {

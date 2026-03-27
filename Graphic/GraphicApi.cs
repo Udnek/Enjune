@@ -1,8 +1,7 @@
-using System.Numerics;
-using Engine.Graphic.KeyHandler;
+using Enjune.Graphic.KeyHandler;
 using OpenTK.Mathematics;
 
-namespace Engine.Graphic;
+namespace Enjune.Graphic;
 
 public interface IGraphicApi
 {

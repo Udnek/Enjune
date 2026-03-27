@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Engine", "Engine.csproj", "{50D95296-E30C-48EA-A8A1-8B83FD82A1E4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Enjune", "Enjune.csproj", "{50D95296-E30C-48EA-A8A1-8B83FD82A1E4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

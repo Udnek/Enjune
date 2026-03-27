@@ -1,7 +1,7 @@
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 
-namespace Engine.Graphic.OpenGL;
+namespace Enjune.Graphic.OpenGL;
 
 public class ShaderProgram
 {

@@ -1,4 +1,4 @@
-namespace Engine.Graphic.KeyHandler;
+namespace Enjune.Graphic.KeyHandler;
 
 class BasicKeyHandler: IUserInputHandler
 {
