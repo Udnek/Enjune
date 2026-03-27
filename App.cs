@@ -24,8 +24,11 @@ public class App
 
         var polygons = new List<Polygon>();
 
-        Polygon.Cube(new Position(0f, 1f, -4f), 3f, polygons.Add);
-        Polygon.Cube(new Position(0f, 0f, 4f), 0.5f, polygons.Add);
+        for (int i = 0; i < 100; i++)
+        {
+            Polygon.Cube(new Position(0f, 1f+i, -4f), 3f, polygons.Add);
+            Polygon.Cube(new Position(0f, 0f+i, 4f), 0.5f, polygons.Add);
+        }
 
         var o = 0.5f;
         var red = new Color(1f, o, o, 1f);

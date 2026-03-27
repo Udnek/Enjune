@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using OpenTK.Mathematics;
 
 namespace Enjune.Misc;
@@ -17,6 +18,7 @@ public static class Misc
     public static Fps NanoDelayToFps(Nanoseconds nanos) => (Fps)(1_000_000_000.0 / nanos);
     private static Nanoseconds TicksToNanos(long ticks) => (Nanoseconds)(ticks * (1_000_000_000.0 / Stopwatch.Frequency));
     
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void RunTargetFpsLoopWhile(
         Fps targetFps, Consumer<Nanoseconds> delayConsumer, Func<bool> shouldContinue, Action action)
     {

@@ -16,8 +16,8 @@ public class OpenGlApi : IGraphicApi
     private EBO _ebo = null!;
     private ShaderProgram _shaderProgram = null!;
 
-    private readonly float[] _vertices = new float[2048];
-    private readonly int[] _elements = new int[1024];
+    private readonly float[] _vertices = new float[1048576];
+    private readonly int[] _elements = new int[1048576];
 
     // todo delete probably?
     private int _elementsAmount = 0;
@@ -68,6 +68,7 @@ public class OpenGlApi : IGraphicApi
                 (_, newWidth, newHeight) => { windowSizeHandler(newWidth, newHeight); });
 
             GLFW.MakeContextCurrent(_window);
+            GLFW.SwapInterval(0);
             //GLFW.SwapInterval(1); // enable vsync
             GLFW.ShowWindow(_window);
         }

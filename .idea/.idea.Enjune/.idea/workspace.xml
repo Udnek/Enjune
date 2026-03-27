@@ -7,19 +7,20 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a5664a4b-d36e-4c26-85b7-d01599f9f13c" name="Changes" comment="fixed namespace">
-      <change afterPath="$PROJECT_DIR$/Graphic/Polygon.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Misc/Misc.cs" afterDir="false" />
+    <list default="true" id="a5664a4b-d36e-4c26-85b7-d01599f9f13c" name="Changes" comment="forking (probably)">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.Enjune/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Enjune/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/App.cs" beforeDir="false" afterPath="$PROJECT_DIR$/App.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Enjune.sln.DotSettings.user" beforeDir="false" afterPath="$PROJECT_DIR$/Enjune.sln.DotSettings.user" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Graphic/KeyHandler/BasicInputHandler.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Graphic/KeyHandler/BasicInputHandler.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Graphic/OpenGL/OpenGLApi.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Graphic/OpenGL/OpenGLApi.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Graphic/OpenGL/ShaderProgram.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Graphic/OpenGL/ShaderProgram.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Program.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Program.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Misc/Misc.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Misc/Misc.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bin/Debug/net10.0/Enjune.dll" beforeDir="false" afterPath="$PROJECT_DIR$/bin/Debug/net10.0/Enjune.dll" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/bin/Debug/net10.0/Enjune.pdb" beforeDir="false" afterPath="$PROJECT_DIR$/bin/Debug/net10.0/Enjune.pdb" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/obj/Debug/net10.0/Enjune.AssemblyInfo.cs" beforeDir="false" afterPath="$PROJECT_DIR$/obj/Debug/net10.0/Enjune.AssemblyInfo.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/obj/Debug/net10.0/Enjune.AssemblyInfoInputs.cache" beforeDir="false" afterPath="$PROJECT_DIR$/obj/Debug/net10.0/Enjune.AssemblyInfoInputs.cache" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/obj/rider.project.model.nuget.info" beforeDir="false" afterPath="$PROJECT_DIR$/obj/rider.project.model.nuget.info" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/obj/Debug/net10.0/Enjune.dll" beforeDir="false" afterPath="$PROJECT_DIR$/obj/Debug/net10.0/Enjune.dll" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/obj/Debug/net10.0/Enjune.pdb" beforeDir="false" afterPath="$PROJECT_DIR$/obj/Debug/net10.0/Enjune.pdb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/obj/Debug/net10.0/Enjune.sourcelink.json" beforeDir="false" afterPath="$PROJECT_DIR$/obj/Debug/net10.0/Enjune.sourcelink.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/obj/Debug/net10.0/ref/Enjune.dll" beforeDir="false" afterPath="$PROJECT_DIR$/obj/Debug/net10.0/ref/Enjune.dll" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/obj/Debug/net10.0/refint/Enjune.dll" beforeDir="false" afterPath="$PROJECT_DIR$/obj/Debug/net10.0/refint/Enjune.dll" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -54,6 +55,7 @@
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/8ee76eff6d199d6564dd6e8b29e5b95722e670a8af8dd048c6d7fb84957955/Stopwatch.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/a94e162deb2cb855be35d5050b222638fdca3d284536b9cf522889bfbee4457/Vector3.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/d1b3e93ee7eac7c9d2d20ef1717971cf696d48d9b6162855dbd38e6806e74/MathHelper.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/e464f215d31fa3745da91cec5e9c82ad3686ce17713625446234f7060a5c6c6/MethodImplOptions.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Graphic/Polygon.cs" root0="FORCE_HIGHLIGHTING" />
   </component>
   <component name="McpProjectServerCommands">
@@ -69,23 +71,24 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;.NET Project.Enjune.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;CodeLensConfigurable&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    ".NET Project.Enjune.executor": "Run",
+    "RunOnceActivity.MCP Project settings loaded": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "git-widget-placeholder": "master",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "CodeLensConfigurable",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RunManager">
     <configuration name="Enjune" type="DotNetProject" factoryName=".NET Project">
       <option name="EXE_PATH" value="" />
@@ -117,7 +120,7 @@
       <option name="presentableId" value="Default" />
       <updated>1774606696978</updated>
       <workItem from="1774606698422" duration="10029000" />
-      <workItem from="1774627232917" duration="7331000" />
+      <workItem from="1774627232917" duration="10535000" />
     </task>
     <task id="LOCAL-00001" summary="fixed namespace">
       <option name="closed" value="true" />
@@ -127,7 +130,15 @@
       <option name="project" value="LOCAL" />
       <updated>1774606849210</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="forking (probably)">
+      <option name="closed" value="true" />
+      <created>1774634756775</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1774634756775</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -137,6 +148,7 @@
   <component name="UnityProjectConfiguration" hasMinimizedUI="false" />
   <component name="VcsManagerConfiguration">
     <MESSAGE value="fixed namespace" />
-    <option name="LAST_COMMIT_MESSAGE" value="fixed namespace" />
+    <MESSAGE value="forking (probably)" />
+    <option name="LAST_COMMIT_MESSAGE" value="forking (probably)" />
   </component>
 </project>
