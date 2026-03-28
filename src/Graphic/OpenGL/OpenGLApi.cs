@@ -136,7 +136,7 @@ public sealed class OpenGlApi : IGraphicApi
         _vbo.Put(color.Z);
         _vbo.Put(color.W);
 
-        _ebo.Put(_ebo.Pointer);
+        _ebo.Put(_ebo.Count);
     }
     
     public void ClearScreenBuffers() => GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
@@ -148,7 +148,7 @@ public sealed class OpenGlApi : IGraphicApi
         _ebo.BindAndPush();
 
         // draw
-        GL.DrawElements(PrimitiveType.Triangles, _ebo.Pointer, DrawElementsType.UnsignedInt, 0);
+        GL.DrawElements(PrimitiveType.Triangles, _ebo.Count, DrawElementsType.UnsignedInt, 0);
     }
 
     public void UpdateScreen() { unsafe { GLFW.SwapBuffers(_window); } }

@@ -16,7 +16,7 @@ public sealed class EBO : SmartBuffer<int>
     public override void BindAndPush()
     {
         GL.BindBuffer(BufferTarget.ElementArrayBuffer, _id);
-        GL.BufferData(BufferTarget.ElementArrayBuffer, Pointer * sizeof(int), Values, BufferUsageHint.DynamicDraw);
+        GL.BufferData(BufferTarget.ElementArrayBuffer, Count * sizeof(int), Values, BufferUsageHint.DynamicDraw);
     }
 
     public void Destroy() => GL.DeleteBuffer(_id);
