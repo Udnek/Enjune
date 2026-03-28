@@ -3,7 +3,7 @@ using OpenTK.Graphics.OpenGL4;
 namespace Enjune.Graphic.OpenGL.Arrays;
 
 // ReSharper disable once InconsistentNaming
-public class VAO
+public sealed class VAO
 {
     private readonly int _id;
 

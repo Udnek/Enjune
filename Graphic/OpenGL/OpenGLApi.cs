@@ -1,5 +1,6 @@
 // Main OpenGL API implementation
 
+using System.Runtime.InteropServices;
 using Enjune.Graphic.KeyHandler;
 using Enjune.Graphic.OpenGL.Arrays;
 using OpenTK.Graphics.OpenGL4;
@@ -8,28 +9,29 @@ using OpenTK.Windowing.GraphicsLibraryFramework;
 
 namespace Enjune.Graphic.OpenGL;
 
-public class OpenGlApi : IGraphicApi
+public sealed class OpenGlApi : IGraphicApi
 {
     private unsafe Window* _window;
     private VAO _vao = null!;
     private VBO _vbo = null!;
     private EBO _ebo = null!;
     private ShaderProgram _shaderProgram = null!;
+    
+    // so fucking gc won't erase it
+    private GLFWCallbacks.KeyCallback _keyCallback = null!;
+    private GLFWCallbacks.FramebufferSizeCallback _sizeChangeCallback = null!;
 
-    private readonly float[] _vertices = new float[(int) Math.Pow(2, 25)];
-    private readonly int[] _elements = new int[(int) Math.Pow(2, 22)];
-
-    // todo delete probably?
-    private int _elementsAmount = 0;
-    private int _verticesIndex = 0;
-
+    private static readonly int VboCapacity = (int) Math.Pow(2, 25);
+    private static readonly int EboCapacity = (int) Math.Pow(2, 22);
+    
+    
     public void Init(int width, int height, string title,
         IUserInputHandler keyHandler,
         IGraphicApi.WindowSizeChangeHandler windowSizeHandler)
     {
         // Setup error callback
         GLFW.SetErrorCallback((error, description) => { Console.Error.WriteLine($"{error}: {description}"); });
-
+        
         if (!GLFW.Init())
             throw new Exception("Unable to initialize GLFW");
 
@@ -47,8 +49,9 @@ public class OpenGlApi : IGraphicApi
             _window = GLFW.CreateWindow(width, height, title, null, null);
             if (_window == null)
                 throw new Exception("Failed to create GLFW window");
+            
             // keys callback
-            GLFW.SetKeyCallback(_window, (window, key, scancode, glAction, mods) =>
+            _keyCallback = (window, key, scancode, glAction, mods) =>
             {
                 if (key == GlfwKey.Escape && glAction == InputAction.Release)
                     GLFW.SetWindowShouldClose(window, true);
@@ -61,11 +64,12 @@ public class OpenGlApi : IGraphicApi
                     _ => throw new Exception($"Unknown key action: {glAction}")
                 };
                 keyHandler.Handle(key, action);
-            });
+            };
+            GLFW.SetKeyCallback(_window, _keyCallback);
 
             // Framebuffer size callback
-            GLFW.SetFramebufferSizeCallback(_window,
-                (_, newWidth, newHeight) => { windowSizeHandler(newWidth, newHeight); });
+            _sizeChangeCallback = (_, newWidth, newHeight) => { windowSizeHandler(newWidth, newHeight); };
+            GLFW.SetFramebufferSizeCallback(_window, _sizeChangeCallback);
 
             GLFW.MakeContextCurrent(_window);
             GLFW.SwapInterval(0);
@@ -86,8 +90,8 @@ public class OpenGlApi : IGraphicApi
 
         // other objects
         _vao = new VAO();
-        _vbo = new VBO();
-        _ebo = new EBO();
+        _vbo = new VBO(VboCapacity);
+        _ebo = new EBO(EboCapacity);
         _shaderProgram = new ShaderProgram();
     }
 
@@ -105,52 +109,49 @@ public class OpenGlApi : IGraphicApi
 
     public void ViewPort(int x, int y, int width, int height) => GL.Viewport(x, y, width, height);
 
-    public void ClearColor(Color color) => GL.ClearColor(color.X, color.Y, color.Z, color.W);
-
-    public bool ShouldStop()
-    {
-        unsafe { return GLFW.WindowShouldClose(_window); }
-    }
-
-    public void PutVertex(Vector3 v, Color color)
-    {
-        _vertices[_verticesIndex++] = v.X;
-        _vertices[_verticesIndex++] =(v.Y);
-        _vertices[_verticesIndex++] =(v.Z);
-        _vertices[_verticesIndex++] =(color.X);
-        _vertices[_verticesIndex++]=(color.Y);
-        _vertices[_verticesIndex++]=(color.Z);
-        _vertices[_verticesIndex++]=(color.W);
-
-        _elements[_elementsAmount] = _elementsAmount;
-        _elementsAmount++;
-    }
+    public void SetClearColor(Color color) => GL.ClearColor(color.X, color.Y, color.Z, color.W);
 
     public void Model(Matrix4 model) => _shaderProgram.Model.SetValue(model);
     public void Projection(Matrix4 proj) => _shaderProgram.Projection.SetValue(proj);
     public void View(Matrix4 view) => _shaderProgram.View.SetValue(view);
 
-    public void ClearRenderBuffer() => GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+    public bool ShouldStop()
+    {
+        unsafe { return GLFW.WindowShouldClose(_window); }
+    }
+    
+    public void ClearVerticesBuffers()
+    {
+        _vbo.Clear();
+        _ebo.Clear();
+    }
 
-    public void Render()
+    public void PutVertex(Vector3 v, Color color)
+    {
+        _vbo.Put(v.X);
+        _vbo.Put(v.Y);
+        _vbo.Put(v.Z);
+        _vbo.Put(color.X);
+        _vbo.Put(color.Y);
+        _vbo.Put(color.Z);
+        _vbo.Put(color.W);
+
+        _ebo.Put(_ebo.Pointer);
+    }
+    
+    public void ClearScreenBuffers() => GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+    
+    public void RenderToScreenBuffer()
     {
         // load
-        _vbo.BindAndPut(_vertices, _verticesIndex);
-        _ebo.BindAndPut(_elements, _elementsAmount);
+        _vbo.BindAndPush();
+        _ebo.BindAndPush();
 
         // draw
-        GL.DrawElements(PrimitiveType.Triangles, _elementsAmount, DrawElementsType.UnsignedInt, 0);
-
-        // clear
-        _elementsAmount = 0;
-        _verticesIndex = 0;
-
-        // swap buffers
-        unsafe
-        {
-            GLFW.SwapBuffers(_window);
-        }
+        GL.DrawElements(PrimitiveType.Triangles, _ebo.Pointer, DrawElementsType.UnsignedInt, 0);
     }
+
+    public void UpdateScreen() { unsafe { GLFW.SwapBuffers(_window); } }
 
     public void Destroy()
     {

@@ -13,13 +13,29 @@ public interface IGraphicApi
     void View(Matrix4 view);
     void Projection(Matrix4 proj);
     // uniforms end
+    
+    // general pipeline (preferred order)
+    bool ShouldStop(); // should stop application
+    void ClearVerticesBuffers();
     void PutVertex(Position position, Color color);
-    void ClearRenderBuffer();
-    void Render();
-    void UpdateEvents();
-    bool ShouldStop();
+    void ClearScreenBuffers();
+    void RenderToScreenBuffer();
+    void UpdateScreen();
+    void UpdateEvents(); // such as keyboard, mouse, etc
+    // general pipeline end
+    
+    // call #PutVertex before it
+    void ProceedBasePipeline()
+    {   
+        ClearScreenBuffers();
+        RenderToScreenBuffer();
+        UpdateScreen();
+        UpdateEvents();
+        ClearVerticesBuffers();
+    }
+    
     void Destroy();
-    void ClearColor(Color color);
+    void SetClearColor(Color color);
 
     delegate void WindowSizeChangeHandler(int width, int height);
 

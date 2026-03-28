@@ -3,24 +3,22 @@ using OpenTK.Graphics.OpenGL4;
 namespace Enjune.Graphic.OpenGL.Arrays;
 
 // ReSharper disable once InconsistentNaming
-public class VBO
+public sealed class VBO : SmartBuffer<float>
 {
     private readonly int _id;
 
-    public VBO()
+    public VBO(int capacity) : base(capacity)
     {
         _id = GL.GenBuffer();
         GL.BindBuffer(BufferTarget.ArrayBuffer, _id);
     }
 
-    public void BindAndPut(float[] data, int sliceLen)
+    public override void BindAndPush()
     {
         GL.BindBuffer(BufferTarget.ArrayBuffer, _id);
-        GL.BufferData(BufferTarget.ArrayBuffer, sliceLen * sizeof(float), data, BufferUsageHint.StaticDraw);
+        GL.BufferData(BufferTarget.ArrayBuffer, Pointer * sizeof(float), Values, BufferUsageHint.StaticDraw);
     }
 
-    public void Destroy()
-    {
-        GL.DeleteBuffer(_id);
-    }
+    public void Destroy() => GL.DeleteBuffer(_id);
+
 }

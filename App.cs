@@ -10,17 +10,20 @@ public class App
 {
     private int _windowWidth = 480;
     private int _windowHeight = 360;
-    private IGraphicApi _grapi = new OpenGlApi();
+    private readonly IGraphicApi _grapi = new OpenGlApi();
+    
+    void WindowSizeChangeHandler(int w, int h)
+    {
+        _windowWidth = w;
+        _windowHeight = h;
+        _grapi.ViewPort(0, 0, w, h);
+    }
     
     public void Run()
     {
         var keyHandler = new BasicInputHandler();
-        _grapi.Init(_windowWidth, _windowHeight, "EngineU C#", keyHandler, (w, h) =>
-        {
-            _windowWidth = w;
-            _windowHeight = h;
-            _grapi.ViewPort(0, 0, w, h);
-        });
+
+        _grapi.Init(_windowWidth, _windowHeight, "EngineU C#", keyHandler, WindowSizeChangeHandler);
 
         var polygons = new List<Polygon>();
 
@@ -44,15 +47,19 @@ public class App
         var tick = 0;
         
         var delays = new List<long>(200);
+
+        float deltaTime = 1;
         RunTargetFpsLoopWhile(144f,
             (delay) =>
             {
+                //deltaTime = NanosToSeconds(delay);
                 delays.Add(delay);
                 //if (tick % 20 == 0) _grapi.Title($"{NanoDelayToFps(delay)}");
             },
             () => !_grapi.ShouldStop(),
             () =>
             {
+                _grapi.ClearVerticesBuffers();
                 foreach (var poly in polygons)
                 {
                     _grapi.PutVertex(poly.V0, red);
@@ -104,17 +111,11 @@ public class App
                     move += new Vector3(0f, -1f, 0f);
                 }
                 
-                position += move * 0.2f;
-                
-                // if (keyHandler.IsPressed(KeyBinds.DebugMenu))
-                // {
-                //     Console.WriteLine("Pressed menu");
-                // }
-                
+                position += move * 0.2f * deltaTime;
+
 
                 _grapi.Projection(Matrix4.CreatePerspectiveFieldOfView(
                     MathF.PI / 2, ((float) _windowWidth) / _windowHeight, 0.1f, 100f));
-
 
                 //var rot4 = new Matrix4(cameraRotation);
                 //rot4 = rot4.Transposed();
@@ -124,10 +125,11 @@ public class App
                             * Matrix4.CreateRotationX(-radPitch)
                             );
                 
-                _grapi.ClearRenderBuffer();
-                _grapi.Render();
-                
                 keyHandler.ClearForNextFrame();
+                
+                _grapi.ClearScreenBuffers();
+                _grapi.RenderToScreenBuffer();
+                _grapi.UpdateScreen();
                 _grapi.UpdateEvents();
                 tick += 1;
             });

@@ -13,10 +13,12 @@ public static class Misc
         public Vector3 TransformDirection(Vector3 vector) => Vector3.TransformVector(vector, matrix);
         public Vector3 TransformPosition(Vector3 vector) => Vector3.TransformPosition(vector, matrix);
     }
-    
-    public static Nanoseconds FpsToNanoDelay(Fps fps) => (Nanoseconds)(1_000_000_000.0 / fps);
-    public static Fps NanoDelayToFps(Nanoseconds nanos) => (Fps)(1_000_000_000.0 / nanos);
-    private static Nanoseconds TicksToNanos(long ticks) => (Nanoseconds)(ticks * (1_000_000_000.0 / Stopwatch.Frequency));
+
+    private static readonly float NanosInSec = 1_000_000_000.0f;
+    public static Nanoseconds FpsToNanoDelay(Fps fps) => (Nanoseconds)(NanosInSec / fps);
+    public static float NanosToSeconds(Nanoseconds nanos) => nanos / NanosInSec;
+    public static Fps NanoDelayToFps(Nanoseconds nanos) => NanosInSec / nanos;
+    private static Nanoseconds TicksToNanos(long ticks) => (Nanoseconds)(ticks * (NanosInSec / Stopwatch.Frequency));
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void RunTargetFpsLoopWhile(
