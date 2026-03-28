@@ -1,0 +1,83 @@
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+[x64]/
+[x86]/
+[Aa]rm64/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.userprefs
+*.DotSettings.user
+
+# JetBrains Rider
+.idea/
+*.sln.iml
+_ReSharper*/
+
+# Visual Studio
+.vs/
+*.ncb
+*.sdf
+*.cache
+*.dbmdl
+*.opendb
+*.psess
+*.vsp
+*.vspx
+*.vspscc
+*.vssscc
+
+# Auto-generated files
+*.pdb
+*.pidb
+*.svclog
+*.nupkg
+*.snupkg
+*.deps.json
+*.runtimeconfig.dev.json
+*.runtimeconfig.json
+
+# Test results
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+TestResult.xml
+*.coverage
+*.coveragexml
+*.dotCover
+
+# NuGet packages
+packages/
+*.nuget.props
+*.nuget.targets
+.nuget/
+project.lock.json
+project.fragment.lock.json
+
+# Backup and temp files
+*~
+*.bak
+*.tmp
+*.tmp_proj
+*.log
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# OpenTK-specific (optional)
+# OpenTK doesn't typically generate extra files beyond standard build outputs,
+# but you might want to ignore specific native binaries if you're building them
+# from source:
+# src/Native/bin/
