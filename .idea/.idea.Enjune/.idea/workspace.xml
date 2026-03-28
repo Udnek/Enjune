@@ -7,22 +7,14 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="a5664a4b-d36e-4c26-85b7-d01599f9f13c" name="Changes" comment="kek">
-      <change afterPath="$PROJECT_DIR$/Graphic/OpenGL/Arrays/SmartBuffer.cs" afterDir="false" />
+    <list default="true" id="a5664a4b-d36e-4c26-85b7-d01599f9f13c" name="Changes" comment="moved to buffers, lag again">
       <change beforePath="$PROJECT_DIR$/.idea/.idea.Enjune/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Enjune/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/App.cs" beforeDir="false" afterPath="$PROJECT_DIR$/App.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Enjune.sln.DotSettings.user" beforeDir="false" afterPath="$PROJECT_DIR$/Enjune.sln.DotSettings.user" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Graphic/GraphicApi.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Graphic/GraphicApi.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Graphic/OpenGL/Arrays/EBO.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Graphic/OpenGL/Arrays/EBO.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Graphic/OpenGL/Arrays/VAO.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Graphic/OpenGL/Arrays/VAO.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Graphic/OpenGL/Arrays/SmartBuffer.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Graphic/OpenGL/Arrays/SmartBuffer.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Graphic/OpenGL/Arrays/VBO.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Graphic/OpenGL/Arrays/VBO.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Graphic/OpenGL/OpenGLApi.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Graphic/OpenGL/OpenGLApi.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Misc/Misc.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Misc/Misc.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/Debug/net10.0/Enjune.dll" beforeDir="false" afterPath="$PROJECT_DIR$/bin/Debug/net10.0/Enjune.dll" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/bin/Debug/net10.0/Enjune.pdb" beforeDir="false" afterPath="$PROJECT_DIR$/bin/Debug/net10.0/Enjune.pdb" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/obj/Debug/net10.0/Enjune.AssemblyInfo.cs" beforeDir="false" afterPath="$PROJECT_DIR$/obj/Debug/net10.0/Enjune.AssemblyInfo.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/obj/Debug/net10.0/Enjune.AssemblyInfoInputs.cache" beforeDir="false" afterPath="$PROJECT_DIR$/obj/Debug/net10.0/Enjune.AssemblyInfoInputs.cache" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/obj/Debug/net10.0/Enjune.csproj.CoreCompileInputs.cache" beforeDir="false" afterPath="$PROJECT_DIR$/obj/Debug/net10.0/Enjune.csproj.CoreCompileInputs.cache" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/obj/Debug/net10.0/Enjune.dll" beforeDir="false" afterPath="$PROJECT_DIR$/obj/Debug/net10.0/Enjune.dll" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/obj/Debug/net10.0/Enjune.pdb" beforeDir="false" afterPath="$PROJECT_DIR$/obj/Debug/net10.0/Enjune.pdb" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/obj/Debug/net10.0/Enjune.sourcelink.json" beforeDir="false" afterPath="$PROJECT_DIR$/obj/Debug/net10.0/Enjune.sourcelink.json" afterDir="false" />
@@ -74,25 +66,25 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    ".NET Project.Enjune.executor": "Run",
-    "RunOnceActivity.MCP Project settings loaded": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
-    "git-widget-placeholder": "master",
-    "ignore.virus.scanning.warn.message": "true",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "preferences.pluginManager",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;.NET Project.Enjune.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RunManager">
     <configuration name="Enjune" type="DotNetProject" factoryName=".NET Project">
       <option name="EXE_PATH" value="" />
@@ -126,7 +118,7 @@
       <workItem from="1774606698422" duration="10029000" />
       <workItem from="1774627232917" duration="10535000" />
       <workItem from="1774642940573" duration="4907000" />
-      <workItem from="1774685342559" duration="5775000" />
+      <workItem from="1774685342559" duration="7205000" />
     </task>
     <task id="LOCAL-00001" summary="fixed namespace">
       <option name="closed" value="true" />
@@ -152,7 +144,15 @@
       <option name="project" value="LOCAL" />
       <updated>1774647150083</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="moved to buffers, lag again">
+      <option name="closed" value="true" />
+      <created>1774691180668</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1774691180668</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -164,6 +164,7 @@
     <MESSAGE value="fixed namespace" />
     <MESSAGE value="forking (probably)" />
     <MESSAGE value="kek" />
-    <option name="LAST_COMMIT_MESSAGE" value="kek" />
+    <MESSAGE value="moved to buffers, lag again" />
+    <option name="LAST_COMMIT_MESSAGE" value="moved to buffers, lag again" />
   </component>
 </project>

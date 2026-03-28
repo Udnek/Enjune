@@ -16,7 +16,7 @@ public sealed class VBO : SmartBuffer<float>
     public override void BindAndPush()
     {
         GL.BindBuffer(BufferTarget.ArrayBuffer, _id);
-        GL.BufferData(BufferTarget.ArrayBuffer, Pointer * sizeof(float), Values, BufferUsageHint.StaticDraw);
+        GL.BufferData(BufferTarget.ArrayBuffer, Pointer * sizeof(float), Values, BufferUsageHint.DynamicDraw);
     }
 
     public void Destroy() => GL.DeleteBuffer(_id);
