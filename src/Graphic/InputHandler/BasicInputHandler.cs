@@ -1,4 +1,4 @@
-namespace Enjune.Graphic.KeyHandler;
+namespace Enjune.Graphic.InputHandler;
 
 public class BasicInputHandler: IUserInputHandler
 {

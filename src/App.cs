@@ -1,5 +1,5 @@
 using Enjune.Graphic;
-using Enjune.Graphic.KeyHandler;
+using Enjune.Graphic.InputHandler;
 using Enjune.Graphic.OpenGL;
 using OpenTK.Mathematics;
 using static Enjune.Misc.Misc;
@@ -10,7 +10,7 @@ public class App
 {
     private int _windowWidth = 480;
     private int _windowHeight = 360;
-    private readonly IGraphicApi _grapi = new OpenGlApi();
+    private readonly IGraphicApi _grapi = new OpenGLApi();
     
     void WindowSizeChangeHandler(int w, int h)
     {
@@ -24,12 +24,13 @@ public class App
         var keyHandler = new BasicInputHandler();
 
         _grapi.Init(_windowWidth, _windowHeight, "EngineU C#", keyHandler, WindowSizeChangeHandler);
-
+        _grapi.SetClearColor(new Color(0f, 0.3f, 0f, 1f));
+        
         var polygons = new List<Polygon>();
 
-        for (int i = 0; i < 300; i++)
+        for (int i = 0; i < 5; i++)
         {
-            for (int j = 0; j < 300; j++)
+            for (int j = 0; j < 5; j++)
             {
                 Polygon.Cube(new Position(0f + i, 0f + j, -4f), 0.7f, polygons.Add);
             }
@@ -62,9 +63,9 @@ public class App
                 _grapi.ClearVerticesBuffers();
                 foreach (var poly in polygons)
                 {
-                    _grapi.PutVertex(poly.V0, red);
-                    _grapi.PutVertex(poly.V1, green);
-                    _grapi.PutVertex(poly.V2, blue);
+                    _grapi.PutVertex(poly.V0, red, new TextureCoord(1, 0));
+                    _grapi.PutVertex(poly.V1, green, new TextureCoord(1-1f/16, 0));
+                    _grapi.PutVertex(poly.V2, blue, new TextureCoord(1-1f/16, 1f/16));
                 }
                 
                 // rotation input
@@ -85,41 +86,27 @@ public class App
                 // movement input
                 var move = new Vector3(0f, 0f, 0f);
                 if (keyHandler.IsPressed(KeyBinds.Forward))
-                {
                     move += yawRotation.TransformDirection(new Vector3(0f, 0f, -1f));
-                }
-                else if (keyHandler.IsPressed(KeyBinds.Backward))
-                {
+                else if (keyHandler.IsPressed(KeyBinds.Backward)) 
                     move += yawRotation.TransformDirection(new Vector3(0f, 0f, 1f));
-                }
 
                 if (keyHandler.IsPressed(KeyBinds.Rightward))
-                {
                     move += yawRotation.TransformDirection(new Vector3(1f, 0f, 0f));
-                }
-                else if (keyHandler.IsPressed(KeyBinds.Leftward))
-                {
+                else if (keyHandler.IsPressed(KeyBinds.Leftward)) 
                     move += yawRotation.TransformDirection(new Vector3(-1f, 0f, 0f));
-                }
 
                 if (keyHandler.IsPressed(KeyBinds.Upward))
-                {
                     move += new Vector3(0f, 1f, 0f);
-                }
-                else if (keyHandler.IsPressed(KeyBinds.Downward))
-                {
+                else if (keyHandler.IsPressed(KeyBinds.Downward)) 
                     move += new Vector3(0f, -1f, 0f);
-                }
                 
                 position += move * 0.2f * deltaTime;
 
 
                 _grapi.Projection(Matrix4.CreatePerspectiveFieldOfView(
                     MathF.PI / 2, ((float) _windowWidth) / _windowHeight, 0.1f, 100f));
-
-                //var rot4 = new Matrix4(cameraRotation);
-                //rot4 = rot4.Transposed();
-                //_grapi.View(rot4 * Matrix4.CreateTranslation(-position));
+                
+                // todo figure out even why this shit works
                 _grapi.View(Matrix4.CreateTranslation(-position) 
                             * Matrix4.CreateRotationY(-radYaw)
                             * Matrix4.CreateRotationX(-radPitch)

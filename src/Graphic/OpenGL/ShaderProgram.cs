@@ -66,6 +66,9 @@ public class ShaderProgram
         var defaultProjection = Matrix4.CreatePerspectiveFieldOfView(
             MathF.PI / 2, 1.0f, 0.1f, 1000.0f);
         Projection.SetValue(defaultProjection);
+
+        int textureLocation = GL.GetUniformLocation(_program, "texture0");
+        GL.Uniform1(textureLocation, 0);
     }
 
     private void InitAttributes()
@@ -73,6 +76,7 @@ public class ShaderProgram
         var attributes = new Attributes();
         attributes.Add(new Attribute("position", 3));
         attributes.Add(new Attribute("color", 4));
+        attributes.Add(new Attribute("texcoord", 2));
         attributes.Compile(_program);
     }
 
@@ -140,7 +144,10 @@ public class ShaderProgram
                                                      
                                                      in vec3 position;
                                                      in vec4 color;
+                                                     in vec2 texcoord;
+                                                     
                                                      out vec4 vertexColor;
+                                                     out vec2 textureCoord;
                                                      
                                                      uniform mat4 model;
                                                      uniform mat4 view;
@@ -148,6 +155,7 @@ public class ShaderProgram
                                                      
                                                      void main() {
                                                          vertexColor = color;
+                                                         textureCoord = texcoord;
                                                          mat4 mvp = projection * view * model;
                                                          gl_Position = mvp * vec4(position, 1.0);
                                                      }
@@ -159,11 +167,15 @@ public class ShaderProgram
                                            #version 150 core
                                            
                                            in vec4 vertexColor;
+                                           in vec2 textureCoord;
                                            
                                            out vec4 fragColor;
                                            
+                                           uniform sampler2D texture0;
+                                           
                                            void main() {
-                                               fragColor = vertexColor;
+                                               vec4 textureColor = texture(texture0, textureCoord);
+                                               fragColor = vertexColor * textureColor;
                                            }
                                                    
                                            """;

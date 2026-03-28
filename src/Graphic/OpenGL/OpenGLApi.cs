@@ -1,15 +1,16 @@
 // Main OpenGL API implementation
 
 using System.Runtime.InteropServices;
-using Enjune.Graphic.KeyHandler;
+using Enjune.Graphic.InputHandler;
 using Enjune.Graphic.OpenGL.Arrays;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
+using StbImageSharp;
 
 namespace Enjune.Graphic.OpenGL;
 
-public sealed class OpenGlApi : IGraphicApi
+public sealed class OpenGLApi : IGraphicApi
 {
     private unsafe Window* _window;
     private VAO _vao = null!;
@@ -85,19 +86,41 @@ public sealed class OpenGlApi : IGraphicApi
         GL.Enable(EnableCap.Blend);
         GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
 
-        // load textures
-        LoadTexture();
+        GL.Enable(EnableCap.DebugOutput);
+
+        void DebugProc(DebugSource source, DebugType type, int id, DebugSeverity severity, int length, IntPtr messagePointer, IntPtr param)
+        {
+            string message = Marshal.PtrToStringUTF8(messagePointer, length);
+            Console.WriteLine(message);
+            if (type == DebugType.DebugTypeError) throw new Exception(message);
+        }
+        GL.DebugMessageCallback(DebugProc, IntPtr.Zero);
 
         // other objects
         _vao = new VAO();
         _vbo = new VBO(VboCapacity);
         _ebo = new EBO(EboCapacity);
         _shaderProgram = new ShaderProgram();
+        
+        // load textures
+        InitTexture();
     }
 
-    private void LoadTexture()
+    private void InitTexture()
     {
-        // TODO
+        int textureId = GL.GenTexture();
+        GL.BindTexture(TextureTarget.Texture2D, textureId);
+        
+        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int) TextureWrapMode.Repeat);
+        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int) TextureWrapMode.Repeat);
+        
+        StbImage.stbi_set_flip_vertically_on_load(1);
+        var atlas = FileManager.LoadAtlas();
+        GL.TexImage2D(TextureTarget.Texture2D, 0, 
+            PixelInternalFormat.Rgba, 
+            atlas.Width, atlas.Height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, atlas.Data);
+        
+        GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);
     }
 
     public void UpdateEvents() => GLFW.PollEvents();
@@ -126,15 +149,19 @@ public sealed class OpenGlApi : IGraphicApi
         _ebo.Clear();
     }
 
-    public void PutVertex(Vector3 v, Color color)
+    public void PutVertex(Position v, Color color, TextureCoord texCoord)
     {
         _vbo.Put(v.X);
         _vbo.Put(v.Y);
         _vbo.Put(v.Z);
+        
         _vbo.Put(color.X);
         _vbo.Put(color.Y);
         _vbo.Put(color.Z);
         _vbo.Put(color.W);
+        
+        _vbo.Put(texCoord.X);
+        _vbo.Put(texCoord.Y);
 
         _ebo.Put(_ebo.Count);
     }

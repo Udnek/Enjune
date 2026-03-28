@@ -1,4 +1,4 @@
-using Enjune.Graphic.KeyHandler;
+using Enjune.Graphic.InputHandler;
 using OpenTK.Mathematics;
 
 namespace Enjune.Graphic;
@@ -17,7 +17,7 @@ public interface IGraphicApi
     // general pipeline (preferred order)
     bool ShouldStop(); // should stop application
     void ClearVerticesBuffers();
-    void PutVertex(Position position, Color color);
+    void PutVertex(Position position, Color color, TextureCoord texCoord);
     void ClearScreenBuffers();
     void RenderToScreenBuffer();
     void UpdateScreen();
