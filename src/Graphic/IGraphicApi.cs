@@ -17,7 +17,11 @@ public interface IGraphicApi
     // general pipeline (preferred order)
     bool ShouldStop(); // should stop application
     void ClearVerticesBuffers();
-    void PutVertex(Position position, Color color, TextureCoord texCoord);
+    
+    void PutColoredMesh(Mesh mesh, Color color);
+    void PutColoredVertex(Position position, Color color, TextureCoord texCoord);
+    void PutWhiteVertex(Position position, TextureCoord texCoord);
+    
     void ClearScreenBuffers();
     void RenderToScreenBuffer();
     void UpdateScreen();

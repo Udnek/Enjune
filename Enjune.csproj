@@ -18,6 +18,10 @@
     <ItemGroup>
       <None Remove="resources\atlas.png" />
       <EmbeddedResource Include="Resources\atlas.png" />
+      <None Remove="Resources\OpenGL\frag.frag" />
+      <EmbeddedResource Include="Resources\OpenGL\frag.frag" />
+      <None Remove="Resources\OpenGL\vert.vert" />
+      <EmbeddedResource Include="Resources\OpenGL\vert.vert" />
     </ItemGroup>
 
 </Project>

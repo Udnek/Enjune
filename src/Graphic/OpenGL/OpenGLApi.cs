@@ -2,36 +2,41 @@
 
 using System.Runtime.InteropServices;
 using Enjune.Graphic.InputHandler;
-using Enjune.Graphic.OpenGL.Arrays;
+using Enjune.Graphic.OpenGL.Array;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
-using StbImageSharp;
 
 namespace Enjune.Graphic.OpenGL;
 
 public sealed class OpenGLApi : IGraphicApi
 {
     private unsafe Window* _window;
-    private VAO _vao = null!;
-    private VBO _vbo = null!;
-    private EBO _ebo = null!;
+    
+    private Vao _vaoColored = null!;
+    private Vao _vaoWhite = null!;
+    private VboAndEbo _vboAndEbo = null!;
     private ShaderProgram _shaderProgram = null!;
+    
+    private static readonly int VboCapacity = (int) Math.Pow(2, 23);
+    private static readonly int EboCapacity = (int) Math.Pow(2, 23);
+    
+    private readonly SmartBuffer<float> _vboWhiteBuffer = new (VboCapacity);
+    private readonly SmartBuffer<float> _vboColoredBuffer = new (VboCapacity);
+    private readonly SmartBuffer<int> _eboWhiteBuffer = new (EboCapacity);
+    private readonly SmartBuffer<int> _eboColoredBuffer = new (EboCapacity);
     
     // so fucking gc won't erase it
     private GLFWCallbacks.KeyCallback _keyCallback = null!;
     private GLFWCallbacks.FramebufferSizeCallback _sizeChangeCallback = null!;
-
-    private static readonly int VboCapacity = (int) Math.Pow(2, 25);
-    private static readonly int EboCapacity = (int) Math.Pow(2, 22);
-    
+    private DebugProc _debugProc = null!;
     
     public void Init(int width, int height, string title,
         IUserInputHandler keyHandler,
         IGraphicApi.WindowSizeChangeHandler windowSizeHandler)
     {
         // Setup error callback
-        GLFW.SetErrorCallback((error, description) => { Console.Error.WriteLine($"{error}: {description}"); });
+        GLFW.SetErrorCallback((error, description) => { Logger.Error($"{error}: {description}"); });
         
         if (!GLFW.Init())
             throw new Exception("Unable to initialize GLFW");
@@ -88,47 +93,47 @@ public sealed class OpenGLApi : IGraphicApi
 
         GL.Enable(EnableCap.DebugOutput);
 
-        void DebugProc(DebugSource source, DebugType type, int id, DebugSeverity severity, int length, IntPtr messagePointer, IntPtr param)
+        _debugProc = (source, type, id, severity, length, messagePointer, param) =>
         {
+            if (type != DebugType.DebugTypeError) return;
             string message = Marshal.PtrToStringUTF8(messagePointer, length);
-            Console.WriteLine(message);
-            if (type == DebugType.DebugTypeError) throw new Exception(message);
-        }
-        GL.DebugMessageCallback(DebugProc, IntPtr.Zero);
-
-        // other objects
-        _vao = new VAO();
-        _vbo = new VBO(VboCapacity);
-        _ebo = new EBO(EboCapacity);
-        _shaderProgram = new ShaderProgram();
+            throw new Exception(message);
+        };
+        GL.DebugMessageCallback(_debugProc, IntPtr.Zero);
         
-        // load textures
-        InitTexture();
+        // other objects
+        _vboAndEbo = new VboAndEbo(BufferUsageHint.DynamicDraw);
+        _shaderProgram = new ShaderProgram();
+        InitVaos();
     }
 
-    private void InitTexture()
+    private const string AttributePosition = "position";
+    private const string AttributeColor = "color";
+    private const string AttributeTexture = "texcoord";
+    
+    private void InitVaos()
     {
-        int textureId = GL.GenTexture();
-        GL.BindTexture(TextureTarget.Texture2D, textureId);
-        
-        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int) TextureWrapMode.Repeat);
-        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int) TextureWrapMode.Repeat);
-        
-        StbImage.stbi_set_flip_vertically_on_load(1);
-        var atlas = FileManager.LoadAtlas();
-        GL.TexImage2D(TextureTarget.Texture2D, 0, 
-            PixelInternalFormat.Rgba, 
-            atlas.Width, atlas.Height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, atlas.Data);
-        
-        GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);
+        {
+            _vaoColored = new Vao();
+            var attributes = new VaoAttributes(_shaderProgram);
+            attributes.Add(new Attribute(AttributePosition, 3));
+            attributes.Add(new Attribute(AttributeColor, 4));
+            attributes.Add(new Attribute(AttributeTexture, 2));
+            attributes.Compile();
+        }
+        {
+            _vaoWhite = new Vao();
+            var attributes = new VaoAttributes(_shaderProgram);
+            attributes.Add(new Attribute(AttributePosition, 3));
+            // no color here
+            attributes.Add(new Attribute(AttributeTexture, 2));
+            attributes.Compile();
+        }
     }
 
     public void UpdateEvents() => GLFW.PollEvents();
 
-    public void Title(string title)
-    {
-        unsafe { GLFW.SetWindowTitle(_window, title); }
-    }
+    public void Title(string title) { unsafe { GLFW.SetWindowTitle(_window, title); } }
 
     public void ViewPort(int x, int y, int width, int height) => GL.Viewport(x, y, width, height);
 
@@ -138,53 +143,101 @@ public sealed class OpenGLApi : IGraphicApi
     public void Projection(Matrix4 proj) => _shaderProgram.Projection.SetValue(proj);
     public void View(Matrix4 view) => _shaderProgram.View.SetValue(view);
 
-    public bool ShouldStop()
-    {
-        unsafe { return GLFW.WindowShouldClose(_window); }
-    }
+    public bool ShouldStop() { unsafe { return GLFW.WindowShouldClose(_window); } }
     
     public void ClearVerticesBuffers()
     {
-        _vbo.Clear();
-        _ebo.Clear();
+        _vboColoredBuffer.Clear();
+        _eboColoredBuffer.Clear();
+        
+        _vboWhiteBuffer.Clear();
+        _eboWhiteBuffer.Clear();
     }
 
-    public void PutVertex(Position v, Color color, TextureCoord texCoord)
+    public void PutColoredMesh(Mesh mesh, Color color)
     {
-        _vbo.Put(v.X);
-        _vbo.Put(v.Y);
-        _vbo.Put(v.Z);
-        
-        _vbo.Put(color.X);
-        _vbo.Put(color.Y);
-        _vbo.Put(color.Z);
-        _vbo.Put(color.W);
-        
-        _vbo.Put(texCoord.X);
-        _vbo.Put(texCoord.Y);
+        var offset = _vboColoredBuffer.Count / (3+4+2);
+        foreach (var meshIndex in mesh.Indexes)
+        {
+            _eboColoredBuffer.Put(offset + meshIndex);
+        }
 
-        _ebo.Put(_ebo.Count);
+        for (var i = 0; i < mesh.Vertices.Length; i++)
+        {
+            var vertex = mesh.Vertices[i];
+            _vboColoredBuffer.Put(vertex.X);
+            _vboColoredBuffer.Put(vertex.Y);
+            _vboColoredBuffer.Put(vertex.Z);
+
+            _vboColoredBuffer.Put(color.X);
+            _vboColoredBuffer.Put(color.Y);
+            _vboColoredBuffer.Put(color.Z);
+            _vboColoredBuffer.Put(color.W);
+
+            _vboColoredBuffer.Put(mesh.Textures[i].X);
+            _vboColoredBuffer.Put(mesh.Textures[i].Y);
+        }
+    }
+
+    public void PutWhiteVertex(Position v, TextureCoord texCoord)
+    {
+        _vboWhiteBuffer.Put(v.X);
+        _vboWhiteBuffer.Put(v.Y);
+        _vboWhiteBuffer.Put(v.Z);
+        
+        _vboWhiteBuffer.Put(texCoord.X);
+        _vboWhiteBuffer.Put(texCoord.Y);
+
+        _eboWhiteBuffer.Put(_eboWhiteBuffer.Count);
+    }
+    
+    public void PutColoredVertex(Position v, Color color, TextureCoord texCoord)
+    {
+        _vboColoredBuffer.Put(v.X);
+        _vboColoredBuffer.Put(v.Y);
+        _vboColoredBuffer.Put(v.Z);
+        
+        _vboColoredBuffer.Put(color.X);
+        _vboColoredBuffer.Put(color.Y);
+        _vboColoredBuffer.Put(color.Z);
+        _vboColoredBuffer.Put(color.W);
+        
+        _vboColoredBuffer.Put(texCoord.X);
+        _vboColoredBuffer.Put(texCoord.Y);
+
+        _eboColoredBuffer.Put(_eboColoredBuffer.Count);
     }
     
     public void ClearScreenBuffers() => GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
     
     public void RenderToScreenBuffer()
     {
-        // load
-        _vbo.BindAndPush();
-        _ebo.BindAndPush();
-
-        // draw
-        GL.DrawElements(PrimitiveType.Triangles, _ebo.Count, DrawElementsType.UnsignedInt, 0);
+        // colored
+        _shaderProgram.ColorProvided.SetValue(true);
+        _vaoColored.Bind();
+        _vboAndEbo.PushVbo(_vboColoredBuffer);
+        _vboAndEbo.PushEbo(_eboColoredBuffer);
+        //Logger.Log("colored size: " + _vboColoredBuffer.Count);
+        GL.DrawElements(PrimitiveType.Triangles, _eboColoredBuffer.Count, DrawElementsType.UnsignedInt, 0);
+        
+        // white
+        _shaderProgram.ColorProvided.SetValue(false);
+        _vaoWhite.Bind();
+        _vboAndEbo.PushVbo(_vboWhiteBuffer);
+        _vboAndEbo.PushEbo(_eboWhiteBuffer);
+        //Logger.Log("white size: " + _vboWhiteBuffer.Count);
+        GL.DrawElements(PrimitiveType.Triangles, _eboWhiteBuffer.Count, DrawElementsType.UnsignedInt, 0);
     }
 
     public void UpdateScreen() { unsafe { GLFW.SwapBuffers(_window); } }
 
     public void Destroy()
     {
-        _vao.Destroy();
-        _vbo.Destroy();
-        _ebo.Destroy();
+        _vboAndEbo.Destroy();
+        
+        _vaoColored.Destroy();
+        _vaoWhite.Destroy();
+        
         _shaderProgram.Destroy();
 
         unsafe

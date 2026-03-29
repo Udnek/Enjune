@@ -25,7 +25,7 @@ public static class KeyBinds
     {
         if (Binds.TryGetValue(bind.GlfwKey, out var existed))
         {
-            Console.WriteLine($"Rebinded key from {existed} to {bind}");
+            Logger.Warn($"Rebound key from {existed} to {bind}");
         }
         Binds[bind.GlfwKey] = bind;
         return bind;

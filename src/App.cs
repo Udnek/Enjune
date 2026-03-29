@@ -24,22 +24,44 @@ public class App
         var keyHandler = new BasicInputHandler();
 
         _grapi.Init(_windowWidth, _windowHeight, "EngineU C#", keyHandler, WindowSizeChangeHandler);
-        _grapi.SetClearColor(new Color(0f, 0.3f, 0f, 1f));
+        _grapi.SetClearColor(new Color(0.1f, 0.1f, 0.1f, 1f));
         
         var polygons = new List<Polygon>();
+        var meshes = new List<Mesh>();
 
-        for (int i = 0; i < 5; i++)
+        int yOffset = 0;
+        // for (int i = 0; i < 10; i++)
+        // {
+        //     for (int j = 0; j < 10; j++)
+        //     {
+        //         Polygon.Cube(new Position(0f + i, 0f + j, -4f), 0.7f, polygons.Add);
+        //         yOffset = j;
+        //     }
+        // }
+        for (int i = 0; i < 16; i++)
         {
-            for (int j = 0; j < 5; j++)
+            for (int j = 0; j < 16; j++)
             {
-                Polygon.Cube(new Position(0f + i, 0f + j, -4f), 0.7f, polygons.Add);
+                meshes.Add(Mesh.Cube(new Position(i, j + yOffset, -4f), 0.9f, AtlasUtils.GetAt(i, j)));
             }
         }
-
-        var o = 0.5f;
+        
+        var o = 0f;
         var red = new Color(1f, o, o, 1f);
         var green = new Color(o, 1f, o, 1f);
         var blue = new Color(o, o, 1f, 1f);
+        
+        _grapi.ClearVerticesBuffers();
+        foreach (var mesh in meshes)
+        {
+            _grapi.PutColoredMesh(mesh, new Color(1,1,1,1));
+        }
+        foreach (var poly in polygons)
+        {
+            _grapi.PutWhiteVertex(poly.V0, AtlasUtils.GetAt(8, 0).BotLeft);
+            _grapi.PutWhiteVertex(poly.V1, AtlasUtils.GetAt(8, 0).BotRight);
+            _grapi.PutWhiteVertex(poly.V2, AtlasUtils.GetAt(8, 0).TopRight);
+        }
 
         var position = new Position(0f, 0f, 0f);
         var pitch = 0f;
@@ -60,21 +82,13 @@ public class App
             () => !_grapi.ShouldStop(),
             () =>
             {
-                _grapi.ClearVerticesBuffers();
-                foreach (var poly in polygons)
-                {
-                    _grapi.PutVertex(poly.V0, red, new TextureCoord(1, 0));
-                    _grapi.PutVertex(poly.V1, green, new TextureCoord(1-1f/16, 0));
-                    _grapi.PutVertex(poly.V2, blue, new TextureCoord(1-1f/16, 1f/16));
-                }
-                
                 // rotation input
-                if (keyHandler.IsPressed(KeyBinds.LookLeft)) yaw += 1;
-                if (keyHandler.IsPressed(KeyBinds.LookRight)) yaw -= 1;
-                if (keyHandler.IsPressed(KeyBinds.LookUp)) pitch += 1;
-                if (keyHandler.IsPressed(KeyBinds.LookDown)) pitch -= 1;
+                if (keyHandler.IsPressed(KeyBinds.LookLeft)) yaw += 2;
+                if (keyHandler.IsPressed(KeyBinds.LookRight)) yaw -= 2;
+                if (keyHandler.IsPressed(KeyBinds.LookUp)) pitch += 2;
+                if (keyHandler.IsPressed(KeyBinds.LookDown)) pitch -= 2;
                 yaw %= 360;
-                pitch %= 90;
+                pitch = Math.Clamp(pitch, -90f, 90f);
 
                 var radYaw = MathHelper.DegreesToRadians(yaw);
                 var radPitch = MathHelper.DegreesToRadians(pitch);
