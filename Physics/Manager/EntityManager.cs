@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Enjune.Physics.Type;
 
 namespace Enjune.Physics;
 
