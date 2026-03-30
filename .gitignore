@@ -76,6 +76,8 @@ project.fragment.lock.json
 Thumbs.db
 desktop.ini
 
+obj/
+
 # OpenTK-specific (optional)
 # OpenTK doesn't typically generate extra files beyond standard build outputs,
 # but you might want to ignore specific native binaries if you're building them

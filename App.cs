@@ -27,11 +27,15 @@ public class App
 
         var polygons = new List<Polygon>();
 
-        for (int i = 0; i < 300; i++)
+        for (int i = 0; i < 44; i++)
         {
-            for (int j = 0; j < 300; j++)
+            for (int j = 0; j < 44; j++)
             {
-                Polygon.Cube(new Position(0f + i, 0f + j, -4f), 0.7f, polygons.Add);
+                for (int k = 0; k < 44; k++)
+                {
+                    Polygon.Cube(new Position(-22f + i, -22f + j, -22f + k), 0.7f, polygons.Add);
+                }
+               
             }
         }
 
