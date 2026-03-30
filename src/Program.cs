@@ -15,4 +15,6 @@ using Enjune;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using StbImageSharp;
 
-new App().Run();
+var app = new App();
+app.Init();
+app.Run();

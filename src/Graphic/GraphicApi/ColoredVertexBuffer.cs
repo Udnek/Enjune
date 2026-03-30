@@ -1,0 +1,31 @@
+namespace Enjune.Graphic.GraphicApi;
+
+public class ColoredVertexBuffer(int verticesCapacity) : VertexBuffer(ColoredVertexSize, verticesCapacity)
+{
+    public void PutMesh(Mesh mesh, Color color)
+    {
+        var offset = Vbo.Count / ColoredVertexSize;
+        foreach (var meshIndex in mesh.Indexes)
+        {
+            Ebo.Put(offset + meshIndex);
+        }
+
+        for (var i = 0; i < mesh.Vertices.Length; i++)
+        {
+            var vertex = mesh.Vertices[i];
+            Vbo.Put(vertex.X);
+            Vbo.Put(vertex.Y);
+            Vbo.Put(vertex.Z);
+
+            Vbo.Put(color.X);
+            Vbo.Put(color.Y);
+            Vbo.Put(color.Z);
+            Vbo.Put(color.W);
+
+            Vbo.Put(mesh.Textures[i].X);
+            Vbo.Put(mesh.Textures[i].Y);
+        }
+    }
+
+    public override bool ProvidesColor() => true;
+}

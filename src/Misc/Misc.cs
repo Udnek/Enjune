@@ -22,15 +22,19 @@ public static class Misc
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void RunTargetFpsLoopWhile(
-        Fps targetFps, Consumer<Nanoseconds> delayConsumer, Func<bool> shouldContinue, Action action)
+        Fps targetFps, out float deltaTime, Consumer<Nanoseconds> delayConsumer, Func<bool> shouldContinue, Action action)
     {
         var targetDelay = FpsToNanoDelay(targetFps);
+        
+        var frameEnd = TicksToNanos(Stopwatch.GetTimestamp());
         while (true)
-        {
+        { 
             var frameStart = TicksToNanos(Stopwatch.GetTimestamp());
+            deltaTime = NanosToSeconds(frameStart - frameEnd);
             if (!shouldContinue()) break;
             action();
-            var took = TicksToNanos(Stopwatch.GetTimestamp()) - frameStart;
+            frameEnd = TicksToNanos(Stopwatch.GetTimestamp());
+            var took = frameEnd - frameStart;
             delayConsumer(took);
             var sleepTime = targetDelay - took;
             if (sleepTime > 0)

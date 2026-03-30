@@ -1,7 +1,7 @@
 using Enjune.Graphic.InputHandler;
 using OpenTK.Mathematics;
 
-namespace Enjune.Graphic;
+namespace Enjune.Graphic.GraphicApi;
 
 public interface IGraphicApi
 {
@@ -16,27 +16,11 @@ public interface IGraphicApi
     
     // general pipeline (preferred order)
     bool ShouldStop(); // should stop application
-    void ClearVerticesBuffers();
-    
-    void PutColoredMesh(Mesh mesh, Color color);
-    void PutColoredVertex(Position position, Color color, TextureCoord texCoord);
-    void PutWhiteVertex(Position position, TextureCoord texCoord);
-    
     void ClearScreenBuffers();
-    void RenderToScreenBuffer();
+    void RenderToScreenBuffer(VertexBuffer buffer);
     void UpdateScreen();
     void UpdateEvents(); // such as keyboard, mouse, etc
     // general pipeline end
-    
-    // call #PutVertex before it
-    void ProceedBasePipeline()
-    {   
-        ClearScreenBuffers();
-        RenderToScreenBuffer();
-        UpdateScreen();
-        UpdateEvents();
-        ClearVerticesBuffers();
-    }
     
     void Destroy();
     void SetClearColor(Color color);

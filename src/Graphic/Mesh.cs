@@ -9,7 +9,7 @@ public class Mesh
     public Mesh(Position[] vertices, TextureCoord[] textures, int[] indexes)
     {
         if (!IsValid(vertices, textures, indexes, out var error)) 
-            Logger.Error("can not construct mesh: " + error);
+            Logger.Error("constructing incorrect mesh: " + error);
         
         Vertices = vertices;
         Textures = textures;

@@ -1,8 +1,8 @@
 using System.Runtime.CompilerServices;
 
-namespace Enjune.Graphic.OpenGL.Array;
+namespace Enjune.Graphic;
 
-public class SmartBuffer<T>(int capacity) where T : unmanaged
+public class FixedBuffer<T>(int capacity)
 {
     public readonly T[] Data = new T[capacity];
     private int _pointer = 0;

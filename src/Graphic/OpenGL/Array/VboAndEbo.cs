@@ -19,13 +19,13 @@ public class VboAndEbo
         GL.BindBuffer(BufferTarget.ElementArrayBuffer, _ebo);
     }
     
-    public void PushVbo(SmartBuffer<float> buffer)
+    public void PushVbo(FixedBuffer<float> buffer)
     {
         GL.BindBuffer(BufferTarget.ArrayBuffer, _vbo);
         GL.BufferData(BufferTarget.ArrayBuffer, buffer.Count * sizeof(float), buffer.Data, _usageHint);
     }
     
-    public void PushEbo(SmartBuffer<int> buffer)
+    public void PushEbo(FixedBuffer<int> buffer)
     {
         GL.BindBuffer(BufferTarget.ElementArrayBuffer, _ebo);
         GL.BufferData(BufferTarget.ElementArrayBuffer, buffer.Count * sizeof(int), buffer.Data, _usageHint);

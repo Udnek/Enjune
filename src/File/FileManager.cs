@@ -7,7 +7,6 @@ namespace Enjune;
 
 public static class FileManager
 {
-    
     public static ImageResult LoadAtlas() => LoadImage("atlas.png");
 
     public static string LoadText(params string[] path)

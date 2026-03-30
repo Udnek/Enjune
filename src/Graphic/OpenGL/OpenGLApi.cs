@@ -1,6 +1,7 @@
 // Main OpenGL API implementation
 
 using System.Runtime.InteropServices;
+using Enjune.Graphic.GraphicApi;
 using Enjune.Graphic.InputHandler;
 using Enjune.Graphic.OpenGL.Array;
 using OpenTK.Graphics.OpenGL4;
@@ -17,14 +18,6 @@ public sealed class OpenGLApi : IGraphicApi
     private Vao _vaoWhite = null!;
     private VboAndEbo _vboAndEbo = null!;
     private ShaderProgram _shaderProgram = null!;
-    
-    private static readonly int VboCapacity = (int) Math.Pow(2, 23);
-    private static readonly int EboCapacity = (int) Math.Pow(2, 23);
-    
-    private readonly SmartBuffer<float> _vboWhiteBuffer = new (VboCapacity);
-    private readonly SmartBuffer<float> _vboColoredBuffer = new (VboCapacity);
-    private readonly SmartBuffer<int> _eboWhiteBuffer = new (EboCapacity);
-    private readonly SmartBuffer<int> _eboColoredBuffer = new (EboCapacity);
     
     // so fucking gc won't erase it
     private GLFWCallbacks.KeyCallback _keyCallback = null!;
@@ -145,88 +138,25 @@ public sealed class OpenGLApi : IGraphicApi
 
     public bool ShouldStop() { unsafe { return GLFW.WindowShouldClose(_window); } }
     
-    public void ClearVerticesBuffers()
-    {
-        _vboColoredBuffer.Clear();
-        _eboColoredBuffer.Clear();
-        
-        _vboWhiteBuffer.Clear();
-        _eboWhiteBuffer.Clear();
-    }
-
-    public void PutColoredMesh(Mesh mesh, Color color)
-    {
-        var offset = _vboColoredBuffer.Count / (3+4+2);
-        foreach (var meshIndex in mesh.Indexes)
-        {
-            _eboColoredBuffer.Put(offset + meshIndex);
-        }
-
-        for (var i = 0; i < mesh.Vertices.Length; i++)
-        {
-            var vertex = mesh.Vertices[i];
-            _vboColoredBuffer.Put(vertex.X);
-            _vboColoredBuffer.Put(vertex.Y);
-            _vboColoredBuffer.Put(vertex.Z);
-
-            _vboColoredBuffer.Put(color.X);
-            _vboColoredBuffer.Put(color.Y);
-            _vboColoredBuffer.Put(color.Z);
-            _vboColoredBuffer.Put(color.W);
-
-            _vboColoredBuffer.Put(mesh.Textures[i].X);
-            _vboColoredBuffer.Put(mesh.Textures[i].Y);
-        }
-    }
-
-    public void PutWhiteVertex(Position v, TextureCoord texCoord)
-    {
-        _vboWhiteBuffer.Put(v.X);
-        _vboWhiteBuffer.Put(v.Y);
-        _vboWhiteBuffer.Put(v.Z);
-        
-        _vboWhiteBuffer.Put(texCoord.X);
-        _vboWhiteBuffer.Put(texCoord.Y);
-
-        _eboWhiteBuffer.Put(_eboWhiteBuffer.Count);
-    }
-    
-    public void PutColoredVertex(Position v, Color color, TextureCoord texCoord)
-    {
-        _vboColoredBuffer.Put(v.X);
-        _vboColoredBuffer.Put(v.Y);
-        _vboColoredBuffer.Put(v.Z);
-        
-        _vboColoredBuffer.Put(color.X);
-        _vboColoredBuffer.Put(color.Y);
-        _vboColoredBuffer.Put(color.Z);
-        _vboColoredBuffer.Put(color.W);
-        
-        _vboColoredBuffer.Put(texCoord.X);
-        _vboColoredBuffer.Put(texCoord.Y);
-
-        _eboColoredBuffer.Put(_eboColoredBuffer.Count);
-    }
-    
     public void ClearScreenBuffers() => GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
     
-    public void RenderToScreenBuffer()
+    public void RenderToScreenBuffer(VertexBuffer buffer)
     {
-        // colored
-        _shaderProgram.ColorProvided.SetValue(true);
-        _vaoColored.Bind();
-        _vboAndEbo.PushVbo(_vboColoredBuffer);
-        _vboAndEbo.PushEbo(_eboColoredBuffer);
-        //Logger.Log("colored size: " + _vboColoredBuffer.Count);
-        GL.DrawElements(PrimitiveType.Triangles, _eboColoredBuffer.Count, DrawElementsType.UnsignedInt, 0);
+        if (buffer.ProvidesColor())
+        {
+            _shaderProgram.ColorProvided.SetValue(true);
+            _vaoColored.Bind();
+        }
+        else
+        {
+            _shaderProgram.ColorProvided.SetValue(false);
+            _vaoWhite.Bind(); 
+        }
         
-        // white
-        _shaderProgram.ColorProvided.SetValue(false);
-        _vaoWhite.Bind();
-        _vboAndEbo.PushVbo(_vboWhiteBuffer);
-        _vboAndEbo.PushEbo(_eboWhiteBuffer);
-        //Logger.Log("white size: " + _vboWhiteBuffer.Count);
-        GL.DrawElements(PrimitiveType.Triangles, _eboWhiteBuffer.Count, DrawElementsType.UnsignedInt, 0);
+        _vboAndEbo.PushVbo(buffer.Vbo);
+        _vboAndEbo.PushEbo(buffer.Ebo);
+        
+        GL.DrawElements(PrimitiveType.Triangles, buffer.Ebo.Count, DrawElementsType.UnsignedInt, 0);
     }
 
     public void UpdateScreen() { unsafe { GLFW.SwapBuffers(_window); } }

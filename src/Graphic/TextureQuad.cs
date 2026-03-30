@@ -2,8 +2,13 @@ using OpenTK.Graphics.OpenGL4;
 
 namespace Enjune.Graphic;
 
-public static class AtlasUtils
+public struct TextureQuad(TextureCoord botLeft, TextureCoord botRight, TextureCoord topRight, TextureCoord topLeft)
 {
+    public TextureCoord BotLeft = botLeft;
+    public TextureCoord BotRight = botRight;
+    public TextureCoord TopRight = topRight;
+    public TextureCoord TopLeft = topLeft;
+    
     private const int Size = 256;
     private const int UnitSize = 16;
     private const float Factor = (float) UnitSize / Size;
@@ -19,12 +24,4 @@ public static class AtlasUtils
             new TextureCoord(x, y+1)*Factor
         );
     }
-}
-
-public struct TextureQuad(TextureCoord botLeft, TextureCoord botRight, TextureCoord topRight, TextureCoord topLeft)
-{
-    public TextureCoord BotLeft = botLeft;
-    public TextureCoord BotRight = botRight;
-    public TextureCoord TopRight = topRight;
-    public TextureCoord TopLeft = topLeft;
 }

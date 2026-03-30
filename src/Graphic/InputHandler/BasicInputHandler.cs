@@ -1,3 +1,5 @@
+using Enjune.Graphic.GraphicApi;
+
 namespace Enjune.Graphic.InputHandler;
 
 public class BasicInputHandler: IUserInputHandler
