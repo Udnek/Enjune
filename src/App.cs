@@ -33,24 +33,9 @@ public class App
     {
         _controller = new FlyingPlayerController(_inputHandler);
         
-        // int yOffset = 0;
-        // for (int i = 0; i < 16; i++)
-        // {
-        //     for (int j = 0; j < 16; j++)
-        //     {
-        //         _meshes.Add(Mesh.Cube(new Position(i, j + yOffset, -4f), 0.9f, TextureQuad.GetAt(i, j)));
-        //     }
-        // }
-        // var poses = new List<Position>();
-        // poses.Add(new Position(0, 0, -4));
-        // var angle = 0f;
-        // for (int i = 0; i < 6; i++)
-        // {
-        //     poses.Add(new Position(MathF.Cos(MathHelper.DegreesToRadians(angle))*2, MathF.Sin(MathHelper.DegreesToRadians(angle))*2, -4));
-        //     angle += 30;
-        // }
-        // _meshes.Add(Mesh.Ngon(poses.ToArray(), TextureQuad.Furnace));
-        var kukuruznikModel = new ObjModelReader(new ResourcePath("Models", "power_lines.obj")).Mesh;
+        var kukuruznikModel =
+            new DotObjModelReader(new ResourcePath("Models", "power_lines.obj")).Read(out var error)
+            ?? throw new Exception(error);
         _meshes.Add(kukuruznikModel);
         
         foreach (var mesh in _meshes) _vertexBuffer.PutMesh(mesh);
@@ -77,27 +62,8 @@ public class App
             () => !_grapi.ShouldStop(),
             () =>
             {
-                // var index = random.Next(_meshes[0].Vertices.Length);
-                // var vertex = _meshes[0].Vertices[index];
-                // var offset = (random.NextSingle() - 0.5f)*5;
-                // switch (random.Next(3))
-                // {
-                //     case 0:
-                //         vertex.X += offset;
-                //         break;
-                //     case 1:
-                //         vertex.Y += offset;
-                //         break;
-                //     case 2:
-                //         vertex.Z += offset;
-                //         break;
-                // }
-                //
-                // _meshes[0].Vertices[index] = vertex;
-                
                 _vertexBuffer.Clear();
                 foreach (var mesh in _meshes) _vertexBuffer.PutMesh(mesh);
-                
                 
                 //Logger.Log(deltaTime);
                 _controller.Update(deltaTime);

@@ -21,8 +21,13 @@ public class ShaderProgram
     {
         _program = GL.CreateProgram();
 
-        _fragmentShader = InitShader(ShaderType.FragmentShader, FileManager.LoadText(new ResourcePath("OpenGL", "frag.frag")));
-        _vertexShader = InitShader(ShaderType.VertexShader, FileManager.LoadText(new ResourcePath("OpenGL", "vert.vert")));
+        var fragText = FileManager.LoadText(new ResourcePath("OpenGL", "frag.frag"), out var error)
+            ?? throw new Exception($"Fragment shader can not be loaded: {error}");
+        var vertText = FileManager.LoadText(new ResourcePath("OpenGL", "vert.vert"), out error)
+            ?? throw new Exception($"Vertex shader can not be loaded: {error}");
+        
+        _fragmentShader = InitShader(ShaderType.FragmentShader, fragText);
+        _vertexShader = InitShader(ShaderType.VertexShader, vertText);
 
         GL.BindFragDataLocation(_program, 0, "fragColor");
         GL.LinkProgram(_program);

@@ -16,8 +16,13 @@ public class TextureUniform
         
         GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int) TextureWrapMode.Repeat);
         GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int) TextureWrapMode.Repeat);
+        // mipmap generation
         GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
         GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest);
+        
+        // todo
+        // GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, TextureMinFilter.);
+        // GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, GL_LINEAR);
         
         // load
         StbImage.stbi_set_flip_vertically_on_load(1);

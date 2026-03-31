@@ -98,6 +98,11 @@ public sealed class OpenGLApi : IGraphicApi
         _vboAndEbo = new VboAndEbo(BufferUsageHint.DynamicDraw);
         _shaderProgram = new ShaderProgram();
         InitVaos();
+        
+        GL.GetInteger(GetPName.MaxTextureSize, out var maxTextureSize);
+        GL.GetInteger(GetPName.MaxArrayTextureLayers, out var maxArrayLayers);
+        Logger.Log($"GL max texture size: {maxTextureSize}");
+        Logger.Log($"GL max texture array layers: {maxArrayLayers}");
     }
 
     private const string AttributePosition = "position";
