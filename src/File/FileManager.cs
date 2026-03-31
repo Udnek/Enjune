@@ -1,15 +1,14 @@
 using System.Reflection;
-using System.Text;
-using Enjune.Misc;
 using StbImageSharp;
 
-namespace Enjune;
+namespace Enjune.File;
 
 public static class FileManager
 {
+    
     public static ImageResult LoadAtlas() => LoadImage("atlas.png");
 
-    public static string LoadText(params string[] path)
+    public static string LoadText(ResourcePath path)
     {
         return LoadResource(path, s =>
         {
@@ -18,14 +17,14 @@ public static class FileManager
         });
     }
     
-    public static ImageResult LoadImage(params string[] path)
+    public static ImageResult LoadImage(ResourcePath path)
     {
         return LoadResource(path, s => ImageResult.FromStream(s));
     }
     
-    public static T LoadResource<T>(string[] path, Func<Stream, T> streamTaker)
+    public static T LoadResource<T>(ResourcePath path, Func<Stream, T> streamTaker)
     {
-        using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream($"Enjune.Resources.{string.Join('.', path)}");
+        using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream($"Enjune.Resources.{string.Join('.', path.Path)}");
         if (stream == null) throw new Exception("embedded resource not found");
         var result = streamTaker(stream);
         return result;

@@ -16,14 +16,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <None Remove="resources\atlas.png" />
-      <EmbeddedResource Include="Resources\atlas.png" />
-      <None Remove="Resources\OpenGL\frag.frag" />
-      <EmbeddedResource Include="Resources\OpenGL\frag.frag" />
-      <None Remove="Resources\OpenGL\vert.vert" />
-      <EmbeddedResource Include="Resources\OpenGL\vert.vert" />
-      <None Remove="Resources\Models\cessna.obj" />
-      <EmbeddedResource Include="Resources\Models\cessna.obj" />
+	  <EmbeddedResource Include="Resources\**\*" />
     </ItemGroup>
 
 </Project>

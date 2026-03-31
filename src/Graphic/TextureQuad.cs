@@ -8,12 +8,16 @@ public struct TextureQuad(TextureCoord botLeft, TextureCoord botRight, TextureCo
     public TextureCoord BotRight = botRight;
     public TextureCoord TopRight = topRight;
     public TextureCoord TopLeft = topLeft;
+
+    public static readonly TextureQuad Tnt = GetAtAtlas(8, 0);
+    public static readonly TextureQuad Furnace = GetAtAtlas(13, 3);
+    public static readonly TextureQuad Planks = GetAtAtlas(4, 0);
     
     private const int Size = 256;
     private const int UnitSize = 16;
     private const float Factor = (float) UnitSize / Size;
     
-    public static TextureQuad GetAt(int x, int y)
+    public static TextureQuad GetAtAtlas(int x, int y)
     {
         y = (Size / UnitSize) -y -1;
         return new TextureQuad
@@ -24,4 +28,14 @@ public struct TextureQuad(TextureCoord botLeft, TextureCoord botRight, TextureCo
             new TextureCoord(x, y+1)*Factor
         );
     }
+    
+    public TextureCoord this[int index] =>
+        index switch
+        {
+            0 => BotLeft,
+            1 => BotRight,
+            2 => TopRight,
+            3 => TopLeft,
+            _ => throw new ArgumentOutOfRangeException(nameof(index), index, null)
+        };
 }

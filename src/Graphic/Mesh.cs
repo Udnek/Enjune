@@ -16,14 +16,14 @@ public class Mesh
         Indexes = indexes;
     }
     
-    public Mesh MergeWith(Mesh other) => MergeAll(this, other);
+    public Mesh MergeWith(Mesh other) => MergeAllParam(this, other);
     
     public static Mesh Cuboid(
         Position b1, Position b2, Position b3, Position b4,
         Position t1, Position t2, Position t3, Position t4,
         TextureQuad texture)
     {
-        return MergeAll(
+        return MergeAllParam(
             Quad(b1, b2, b3, b4, texture), // bot
             Quad(t1, t2, t3, t4, texture), // top
             Quad(b1, b2, t2, t1, texture), // front
@@ -58,7 +58,37 @@ public class Mesh
             [0, 1, 2, 0, 2, 3]);
     }
     
-    public static Mesh MergeAll(params Mesh[] meshes)
+    public static Mesh Triangle(Position bl, Position br, Position tr, TextureQuad tex)
+    {
+        return new Mesh([bl, br, tr], 
+            [tex.BotLeft, tex.BotRight, tex.TopRight], 
+            [0, 1, 2]);
+    }
+    
+    public static Mesh Ngon(Position[] poses, TextureQuad tex)
+    {
+        if (poses.Length == 3) return Triangle(poses[0], poses[1], poses[2], tex);
+        if (poses.Length == 4) return Quad(poses[0], poses[1], poses[2], poses[3], tex);
+        List<int> indexes = [];
+        List<TextureCoord> textures = [];
+        textures.Add(tex.BotLeft); // so it botLeft
+        for (int i = 0; i < poses.Length-1; i++)
+        {
+            textures.Add(tex[i % 2 + 1]); // so it botRight or TopRight
+        }
+        for (int i = 0; i < poses.Length-1; i++) 
+        {
+            // fan-like
+            indexes.Add(0);
+            indexes.Add(i);
+            indexes.Add(i + 1);
+        }
+        return new Mesh(poses, textures.ToArray(), indexes.ToArray());
+    }
+    
+    public static Mesh MergeAllParam(params Mesh[] meshes) => MergeAll(meshes);
+    
+    public static Mesh MergeAll(IEnumerable<Mesh> meshes)
     {
         int offset = 0;
         var indexes = new List<int>();
@@ -74,9 +104,9 @@ public class Mesh
 
     public static bool IsValid(Position[] vertices, TextureCoord[] textures, int[] indexes, out string? error)
     {
-        if (vertices.Length == 0)
+        if (vertices.Length < 3)
         {
-            error = $"vertices array is empty: mesh doesn't really make sense";
+            error = $"vertices array < 3: mesh doesn't really make sense";
             return false;
         }
         if (vertices.Length != textures.Length)

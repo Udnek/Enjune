@@ -9,10 +9,10 @@ public static class Logger
     private static void Write(object msg, string type, ConsoleColor color)
     {
         string time = DateTime.Now.ToString("HH:mm:ss.fff");
-        var initFrontColor = Console.ForegroundColor;
+        var initialFrontColor = Console.ForegroundColor;
         Console.ForegroundColor = color;
         
         Console.Write($"[{time}] [{type}] {msg}\n");
-        Console.ForegroundColor = initFrontColor;
+        Console.ForegroundColor = initialFrontColor;
     }
 }

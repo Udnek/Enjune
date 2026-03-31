@@ -12,9 +12,14 @@ global using Fps = float;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using Enjune;
+using Enjune.File;
+using Enjune.File.ModelReader;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using StbImageSharp;
 
 var app = new App();
 app.Init();
 app.Run();
+// new ObjModelReader(new ResourcePath("Models", "cessna.obj"));
+
+//Console.WriteLine(string.Join('|', "a b c       d".Split(' ')));

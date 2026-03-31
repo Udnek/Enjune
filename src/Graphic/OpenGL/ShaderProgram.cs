@@ -1,3 +1,4 @@
+using Enjune.File;
 using Enjune.Graphic.OpenGL.Uniform;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
@@ -20,8 +21,8 @@ public class ShaderProgram
     {
         _program = GL.CreateProgram();
 
-        _fragmentShader = InitShader(ShaderType.FragmentShader, FileManager.LoadText("OpenGL", "frag.frag"));
-        _vertexShader = InitShader(ShaderType.VertexShader, FileManager.LoadText("OpenGL", "vert.vert"));
+        _fragmentShader = InitShader(ShaderType.FragmentShader, FileManager.LoadText(new ResourcePath("OpenGL", "frag.frag")));
+        _vertexShader = InitShader(ShaderType.VertexShader, FileManager.LoadText(new ResourcePath("OpenGL", "vert.vert")));
 
         GL.BindFragDataLocation(_program, 0, "fragColor");
         GL.LinkProgram(_program);
