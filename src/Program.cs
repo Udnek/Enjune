@@ -20,6 +20,3 @@ using StbImageSharp;
 var app = new App();
 app.Init();
 app.Run();
-// new ObjModelReader(new ResourcePath("Models", "cessna.obj"));
-
-//Console.WriteLine(string.Join('|', "a b c       d".Split(' ')));
