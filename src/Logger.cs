@@ -10,8 +10,8 @@ public static class Logger
     {
         string time = DateTime.Now.ToString("HH:mm:ss.fff");
         string authorName;
-        if (author is Type typeType)
-            authorName = typeType.Name;
+        if (author is Type authorType)
+            authorName = authorType.Name;
         else
             authorName = author.GetType().Name;
         
