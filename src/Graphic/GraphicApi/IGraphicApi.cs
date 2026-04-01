@@ -5,7 +5,7 @@ namespace Enjune.Graphic.GraphicApi;
 
 public interface IGraphicApi
 {
-    void Init(int width, int height, string title, IUserInputHandler userInputHandler, WindowSizeChangeHandler windowSizeHandler);
+    void Init(TextureManager textureManager, int width, int height, string title, IUserInputHandler userInputHandler, WindowSizeChangeHandler windowSizeHandler);
     void ViewPort(int x, int y, int width, int height);
     void Title(string title);
     // uniforms

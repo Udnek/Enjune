@@ -34,16 +34,14 @@ public class App
         _controller = new FlyingPlayerController(_inputHandler);
         var textureManager = new TextureManager();
 
-        var kukuruznikModel =
-            new DotObjModelReader(textureManager, new ResourcePath("Models", "test.obj")).Read(out var error)
-            ?? throw new Exception(error);
-        _meshes.Add(kukuruznikModel);
+        new DotObjModelReader(textureManager, new ResourcePath("Models", "test.obj")).Read(_meshes.Add, out var error);
+        if (error != null) throw new Exception(error);
         
         foreach (var mesh in _meshes) _vertexBuffer.PutMesh(mesh);
         
-        Logger.Log(this, $"Kukuruznik model size: {kukuruznikModel.Vertices.Length}");
+        //Logger.Log(this, $"Kukuruznik model size: {kukuruznikModel.Vertices.Length}");
         
-        _grapi.Init(_windowWidth, _windowHeight, "Enjune C#", _inputHandler, WindowSizeChangeHandler);
+        _grapi.Init(textureManager, _windowWidth, _windowHeight, "Enjune C#", _inputHandler, WindowSizeChangeHandler);
         _grapi.SetClearColor(new Color(0.1f, 0.1f, 0.1f, 1f));
     }
     
@@ -64,7 +62,6 @@ public class App
                 _vertexBuffer.Clear();
                 foreach (var mesh in _meshes) _vertexBuffer.PutMesh(mesh);
                 
-                //Logger.Log(deltaTime);
                 _controller.Update(deltaTime);
                 _grapi.Projection(Matrix4.CreatePerspectiveFieldOfView(
                     MathF.PI / 2, ((float) _windowWidth) / _windowHeight, 0.1f, 1000f));

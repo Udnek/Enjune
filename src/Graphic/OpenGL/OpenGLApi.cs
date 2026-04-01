@@ -16,7 +16,7 @@ public sealed class OpenGLApi : IGraphicApi
     
     private Vao _vaoColored = null!;
     private Vao _vaoWhite = null!;
-    private VboAndEbo _vboAndEbo = null!;
+    private VbosAndEbo _vbosAndEbo = null!;
     private ShaderProgram _shaderProgram = null!;
     
     // so fucking gc won't erase it
@@ -24,7 +24,7 @@ public sealed class OpenGLApi : IGraphicApi
     private GLFWCallbacks.FramebufferSizeCallback _sizeChangeCallback = null!;
     private DebugProc _debugProc = null!;
     
-    public void Init(int width, int height, string title,
+    public void Init(TextureManager textureManager, int width, int height, string title,
         IUserInputHandler keyHandler,
         IGraphicApi.WindowSizeChangeHandler windowSizeHandler)
     {
@@ -96,8 +96,8 @@ public sealed class OpenGLApi : IGraphicApi
         GL.DebugMessageCallback(_debugProc, IntPtr.Zero);
         
         // other objects
-        _vboAndEbo = new VboAndEbo(BufferUsageHint.DynamicDraw);
-        _shaderProgram = new ShaderProgram();
+        _vbosAndEbo = new VbosAndEbo(BufferUsageHint.DynamicDraw);
+        _shaderProgram = new ShaderProgram(textureManager);
         InitVaos();
         
         GL.GetInteger(GetPName.MaxTextureSize, out var maxTextureSize);
@@ -109,23 +109,26 @@ public sealed class OpenGLApi : IGraphicApi
     private const string AttributePosition = "position";
     private const string AttributeColor = "color";
     private const string AttributeTexture = "texcoord";
+    private const string AttributeTextureLayer = "texLayer";
     
     private void InitVaos()
     {
         {
             _vaoColored = new Vao();
             var attributes = new VaoAttributes(_shaderProgram);
-            attributes.Add(new Attribute(AttributePosition, 3));
-            attributes.Add(new Attribute(AttributeColor, 4));
-            attributes.Add(new Attribute(AttributeTexture, 2));
+            attributes.Add<float>(AttributePosition, 3);
+            attributes.Add<float>(AttributeColor, 4);
+            attributes.Add<float>(AttributeTexture, 2);
+            attributes.Add<TexId>(AttributeTextureLayer, 1);
             attributes.Compile();
         }
         {
             _vaoWhite = new Vao();
             var attributes = new VaoAttributes(_shaderProgram);
-            attributes.Add(new Attribute(AttributePosition, 3));
+            attributes.Add<float>(AttributePosition, 3);
             // no color here
-            attributes.Add(new Attribute(AttributeTexture, 2));
+            attributes.Add<float>(AttributeTexture, 2);
+            attributes.Add<TexId>(AttributeTextureLayer, 1);
             attributes.Compile();
         }
     }
@@ -159,8 +162,8 @@ public sealed class OpenGLApi : IGraphicApi
             _vaoWhite.Bind(); 
         }
         
-        _vboAndEbo.PushVbo(buffer.Vbo);
-        _vboAndEbo.PushEbo(buffer.Ebo);
+        _vbosAndEbo.PushMainVbo(buffer.Vbo);
+        _vbosAndEbo.PushEbo(buffer.Ebo);
         
         GL.DrawElements(PrimitiveType.Triangles, buffer.Ebo.Count, DrawElementsType.UnsignedInt, 0);
     }
@@ -169,7 +172,7 @@ public sealed class OpenGLApi : IGraphicApi
 
     public void Destroy()
     {
-        _vboAndEbo.Destroy();
+        _vbosAndEbo.Destroy();
         
         _vaoColored.Destroy();
         _vaoWhite.Destroy();

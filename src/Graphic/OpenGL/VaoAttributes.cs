@@ -12,11 +12,18 @@ public class VaoAttributes
         _shaderProgram = program;
     }
     
-    public void Add(Attribute attribute) => _attributes.Add(attribute);
+    public void Add<T>(string name, int elements) where  T : unmanaged
+    {
+        unsafe
+        {
+            int size = sizeof(T) * elements;
+            _attributes.Add(new Attribute(size, name, elements));
+        }
+    }
 
     public void Compile()
     {
-        int stride = _attributes.Sum(a => a.Elements) * sizeof(float);
+        int stride = _attributes.Sum(a => a.SizeBytes);
         int offset = 0;
 
         foreach (var attr in _attributes)
@@ -30,13 +37,9 @@ public class VaoAttributes
                 false,
                 stride,
                 offset);
-            offset += attr.Elements * sizeof(float);
+            offset += attr.SizeBytes;
         }
     }
 }
 
-public struct Attribute(string name, int elements)
-{
-    public readonly string Name = name;
-    public readonly int Elements = elements;
-}
+public record struct Attribute(int SizeBytes, string Name, int Elements);

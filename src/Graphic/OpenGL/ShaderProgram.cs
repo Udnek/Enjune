@@ -10,15 +10,17 @@ public class ShaderProgram
     private readonly int _program;
     private readonly int _vertexShader;
     private readonly int _fragmentShader;
+    private readonly TextureManager _textureManager;
 
     public Matrix4Uniform Model { get; private set; } = null!;
     public Matrix4Uniform View { get; private set; } = null!;
     public Matrix4Uniform Projection { get; private set; } = null!;
     public BoolUniform ColorProvided { get; private set; } = null!;
-    private TextureUniform TextureUniform { get; set; } = null!;
+    private TextureArrayUniform TextureArrayUniform { get; set; } = null!;
 
-    public ShaderProgram()
+    public ShaderProgram(TextureManager textureManager)
     {
+        _textureManager = textureManager;
         _program = GL.CreateProgram();
 
         var fragText = FileManager.LoadText(new ResourcePath("OpenGL", "frag.frag"), out var error)
@@ -87,7 +89,7 @@ public class ShaderProgram
         var defaultProjection = Matrix4.CreatePerspectiveFieldOfView(MathF.PI / 2, 1.0f, 0.1f, 1000.0f);
         Projection.SetValue(defaultProjection);
         
-        TextureUniform = new TextureUniform(this, TextureUnit.Texture0, 0,UniformTexture);
+        TextureArrayUniform = new TextureArrayUniform(this, _textureManager, TextureUnit.Texture0, 0,UniformTexture);
     }
 
     public void Destroy()
@@ -95,11 +97,11 @@ public class ShaderProgram
         GL.DeleteShader(_fragmentShader);
         GL.DeleteShader(_vertexShader);
         GL.DeleteProgram(_program);
-        TextureUniform.Destroy();
+        TextureArrayUniform.Destroy();
     }
 
     private const string UniformColorProvided = "colorProvided";
-    private const string UniformTexture = "texture0";
+    private const string UniformTexture = "textureArray";
     private const string UniformModel = "model";
     private const string UniformView = "view";
     private const string UniformProjection = "projection";

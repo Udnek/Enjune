@@ -70,47 +70,42 @@ public class Mesh
             texId);
     }
     
-    public string Mesh Ngon(Position[] poses, TextureCoord[] texCoords, TexId texId)
+    public static Mesh Ngon(Position[] poses, TextureCoord[] texCoords, TexId texId)
     {
+        if (texCoords.Length != poses.Length)
+            throw new ArgumentException($"positions and text coordinates must have the same length: {poses.Length} != {texCoords.Length}");
         List<int> indexes = [];
-        List<TextureCoord> textures = [];
-        textures.Add(tex.BotLeft); // so it botLeft
-        for (int i = 0; i < poses.Length-1; i++)
-        {
-            textures.Add(tex[i % 2 + 1]); // so it botRight or TopRight
-        }
-        for (int i = 0; i < poses.Length-1; i++)
+        for (int i = 1; i < poses.Length-1; i++)
         {
             // fan-like
             indexes.Add(0);
             indexes.Add(i);
             indexes.Add(i + 1);
         }
-        return new Mesh(poses, textures.ToArray(), indexes.ToArray(), texId);
+        return new Mesh(poses, texCoords.ToArray(), indexes.ToArray(), texId);
     }
     
-    public static Mesh Ngon(Position[] poses, TextureQuad tex, TexId texId)
-    {
-        if (poses.Length == 3) return Triangle(poses[0], poses[1], poses[2], tex, texId);
-        if (poses.Length == 4) return Quad(poses[0], poses[1], poses[2], poses[3], tex, texId);
-        List<int> indexes = [];
-        List<TextureCoord> textures = [];
-        textures.Add(tex.BotLeft); // so it botLeft
-        for (int i = 0; i < poses.Length-1; i++)
-        {
-            textures.Add(tex[i % 2 + 1]); // so it botRight or TopRight
-        }
-        for (int i = 0; i < poses.Length-1; i++) 
-        {
-            // fan-like
-            indexes.Add(0);
-            indexes.Add(i);
-            indexes.Add(i + 1);
-        }
-        return new Mesh(poses, textures.ToArray(), indexes.ToArray(), texId);
-    }
-
-
+    // public static Mesh Ngon(Position[] poses, TextureQuad tex, TexId texId)
+    // {
+    //     if (poses.Length == 3) return Triangle(poses[0], poses[1], poses[2], tex, texId);
+    //     if (poses.Length == 4) return Quad(poses[0], poses[1], poses[2], poses[3], tex, texId);
+    //     List<int> indexes = [];
+    //     List<TextureCoord> textures = [];
+    //     textures.Add(tex.BotLeft); // so it botLeft
+    //     for (int i = 0; i < poses.Length-1; i++)
+    //     {
+    //         textures.Add(tex[i % 2 + 1]); // so it botRight or TopRight
+    //     }
+    //     for (int i = 0; i < poses.Length-1; i++) 
+    //     {
+    //         // fan-like
+    //         indexes.Add(0);
+    //         indexes.Add(i);
+    //         indexes.Add(i + 1);
+    //     }
+    //     return new Mesh(poses, textures.ToArray(), indexes.ToArray(), texId);
+    // }
+    
     public static void MergeThatHasSameTexture(IEnumerable<Mesh> meshes, Consumer<Mesh> mergedMeshesConsumer)
     {
         foreach (var groupedByTex in meshes.GroupBy(m => m.TextureId))

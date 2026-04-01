@@ -52,10 +52,23 @@ public class DotObjModelReader
             "#" => null,
             "v" => Vertex(args.Skip(1).ToArray()),
             "f" => Face(args.Skip(1).ToArray()),
+            "vt" => VertexTexture(args.Skip(1).ToArray()),
             "mtllib" => MaterialLib(args.Skip(1).ToArray()),
             "usemtl" => UseMaterial(args.Skip(1).ToArray()),
             _ => null
         };
+    }
+
+    private string? VertexTexture(string[] args)
+    {
+        if (args.Length != 2) return "incorrect amount of args: " + args.Length;
+        if (float.TryParse(args[0], out float u)
+            && float.TryParse(args[1], out float v))
+        {
+            _loadedTextureCoords.Add(new TextureCoord(u, v));
+            return null;
+        }
+        return "can not parse vertex textures";
     }
 
     private string? UseMaterial(string[] args)
@@ -158,16 +171,14 @@ public class DotObjModelReader
         }
 
         var verPoses = verIndexes.Select(i => GetById(_loadedVertices, i)).ToArray();
+        var texPoses = texIndexes.Select(i => GetById(_loadedTextureCoords, i)).ToArray();
         TexId textureId;
         if (_selectedMaterial?.TexturePath != null)
             textureId = _textureManager.AddTextureAndGetId(_selectedMaterial.TexturePath);
         else
             textureId = _textureManager.ErrorTexture;
         
-        if (verPoses.Length > 4)
-            _meshes.Add(Mesh.Ngon(verPoses, TextureQuad.Furnace, textureId));
-        else
-            _meshes.Add(Mesh.Ngon(verPoses, TextureQuad.Planks, textureId));
+        _meshes.Add(Mesh.Ngon(verPoses, texPoses, textureId));
 
         return null;
     }
