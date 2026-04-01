@@ -27,7 +27,7 @@ public static class FileManager
     
     public static T? LoadResource<T>(ResourcePath path, out string? error, Func<Stream, T> streamTaker)
     {
-        using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream($"Enjune.Resources.{string.Join('.', path.Path)}");
+        using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream($"Enjune.{path.GetSplitBy(".")}");
         if (stream == null)
         {
             error = $"file with path \"{path}\" not found";

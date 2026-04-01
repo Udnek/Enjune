@@ -32,15 +32,16 @@ public class App
     public void Init()
     {
         _controller = new FlyingPlayerController(_inputHandler);
-        
+        var textureManager = new TextureManager();
+
         var kukuruznikModel =
-            new DotObjModelReader(new ResourcePath("Models", "power_lines.obj")).Read(out var error)
+            new DotObjModelReader(textureManager, new ResourcePath("Models", "test.obj")).Read(out var error)
             ?? throw new Exception(error);
         _meshes.Add(kukuruznikModel);
         
         foreach (var mesh in _meshes) _vertexBuffer.PutMesh(mesh);
         
-        Logger.Log($"Kukuruznik model size: {kukuruznikModel.Vertices.Length}");
+        Logger.Log(this, $"Kukuruznik model size: {kukuruznikModel.Vertices.Length}");
         
         _grapi.Init(_windowWidth, _windowHeight, "Enjune C#", _inputHandler, WindowSizeChangeHandler);
         _grapi.SetClearColor(new Color(0.1f, 0.1f, 0.1f, 1f));
@@ -55,9 +56,7 @@ public class App
             out deltaTime,
             (delay) =>
             {
-                //deltaTime = NanosToSeconds(delay);
-                //delays.Add(delay);
-                //if (tick % 20 == 0) _grapi.Title($"{NanoDelayToFps(delay)}");
+                delays.Add(delay);
             },
             () => !_grapi.ShouldStop(),
             () =>
@@ -81,8 +80,8 @@ public class App
             });
 
         _grapi.Destroy();
-        //var avgDelay = delays.Sum(v => v) / delays.Count;
-        //Console.WriteLine($"Avg delay: {avgDelay}; avg possible fps: {NanoDelayToFps(avgDelay)}");
+        var avgDelay = delays.Sum(v => v) / delays.Count;
+        Console.WriteLine($"Avg delay: {avgDelay}; avg possible fps: {NanoDelayToFps(avgDelay)}");
         
     }
 }

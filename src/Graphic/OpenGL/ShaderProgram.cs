@@ -48,14 +48,14 @@ public class ShaderProgram
     public int GetUniformLocation(string name)
     {
         var location = GL.GetUniformLocation(_program, name);
-        if (location == -1) Logger.Error("can not find uniform location " + name);
+        if (location == -1) Logger.Error(this, "can not find uniform location " + name);
         return  location;
     }
     
     public int GetAttributeLocation(string name)
     {
         var location = GL.GetAttribLocation(_program, name);
-        if (location == -1) Logger.Error("can not find attribute location " + name);
+        if (location == -1) Logger.Error(this, "can not find attribute location " + name);
         return location;
     }
     
@@ -70,7 +70,7 @@ public class ShaderProgram
         if (compileStatus != (int)All.True)
         {
             var infoLog = GL.GetShaderInfoLog(shader);
-            throw new Exception($"Shader compilation failed ({type}): {infoLog}");
+            throw new Exception($"shader compilation failed ({type}): {infoLog}");
         }
         GL.AttachShader(_program, shader);
         return shader;

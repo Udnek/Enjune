@@ -9,13 +9,8 @@ global using TextureCoord = OpenTK.Mathematics.Vector2;
 global using GlfwKey = OpenTK.Windowing.GraphicsLibraryFramework.Keys;
 global using Nanoseconds = long;
 global using Fps = float;
-using System.Reflection;
-using System.Runtime.InteropServices;
+global using TexId = int;
 using Enjune;
-using Enjune.File;
-using Enjune.File.ModelReader;
-using OpenTK.Windowing.GraphicsLibraryFramework;
-using StbImageSharp;
 
 var app = new App();
 app.Init();

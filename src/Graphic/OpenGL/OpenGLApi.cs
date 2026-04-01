@@ -29,7 +29,7 @@ public sealed class OpenGLApi : IGraphicApi
         IGraphicApi.WindowSizeChangeHandler windowSizeHandler)
     {
         // Setup error callback
-        GLFW.SetErrorCallback((error, description) => { Logger.Error($"{error}: {description}"); });
+        GLFW.SetErrorCallback((error, description) => { Logger.Error(this, $"{error}: {description}"); });
         
         if (!GLFW.Init())
             throw new Exception("Unable to initialize GLFW");
@@ -82,6 +82,7 @@ public sealed class OpenGLApi : IGraphicApi
         // enable features
         GL.Enable(EnableCap.DepthTest);
         GL.Enable(EnableCap.Blend);
+        GL.Enable(EnableCap.CullFace);
         GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
 
         GL.Enable(EnableCap.DebugOutput);
@@ -101,8 +102,8 @@ public sealed class OpenGLApi : IGraphicApi
         
         GL.GetInteger(GetPName.MaxTextureSize, out var maxTextureSize);
         GL.GetInteger(GetPName.MaxArrayTextureLayers, out var maxArrayLayers);
-        Logger.Log($"GL max texture size: {maxTextureSize}");
-        Logger.Log($"GL max texture array layers: {maxArrayLayers}");
+        Logger.Log(this, $"max texture size: {maxTextureSize}");
+        Logger.Log(this, $"max texture array layers: {maxArrayLayers}");
     }
 
     private const string AttributePosition = "position";
