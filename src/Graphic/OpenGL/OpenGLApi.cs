@@ -1,40 +1,56 @@
 // Main OpenGL API implementation
 
 using System.Runtime.InteropServices;
+using Enjune.File;
 using Enjune.Graphic.GraphicApi;
 using Enjune.Graphic.InputHandler;
-using Enjune.Graphic.OpenGL.Array;
+using Enjune.Graphic.OpenGL.Component;
+using Enjune.Graphic.OpenGL.Component.Array;
+using Enjune.Graphic.OpenGL.Uniform;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 
 namespace Enjune.Graphic.OpenGL;
 
-public sealed class OpenGLApi : IGraphicApi
+public sealed class OpenGLApi : GLDisposable, IGraphicApi
 {
     private unsafe Window* _window;
     
+    private TextureManager _textureManager = null!;
+    
     private Vao _vaoColored = null!;
     private Vao _vaoWhite = null!;
-    private VbosAndEbo _vbosAndEbo = null!;
+    private Vbo<byte> _vbo = null!;
+    private Ebo _ebo = null!;
     private ShaderProgram _shaderProgram = null!;
+    private TextureArray _textureArray = null!;
     
-    // so fucking gc won't erase it
+    // storing it here fucking gc won't erase it
     private GLFWCallbacks.KeyCallback _keyCallback = null!;
     private GLFWCallbacks.FramebufferSizeCallback _sizeChangeCallback = null!;
     private DebugProc _debugProc = null!;
     
+    // uniforms
+    private BoolUniform _colorProvided = null!;
+    private Matrix4Uniform _model = null!;
+    private Matrix4Uniform _view = null!;
+    private Matrix4Uniform _projection = null!;
+    private TextureUniform _textureUniform = null!;
+
     public void Init(TextureManager textureManager, int width, int height, string title,
         IUserInputHandler keyHandler,
         IGraphicApi.WindowSizeChangeHandler windowSizeHandler)
     {
-        // Setup error callback
+        _textureManager = textureManager;
+        
+        // error callback
         GLFW.SetErrorCallback((error, description) => { Logger.Error(this, $"{error}: {description}"); });
         
         if (!GLFW.Init())
             throw new Exception("Unable to initialize GLFW");
 
-        // Configure GLFW
+        // GLFW configuration
         GLFW.DefaultWindowHints();
         GLFW.WindowHint(WindowHintBool.Visible, true);
         GLFW.WindowHint(WindowHintBool.Resizable, true);
@@ -42,7 +58,7 @@ public sealed class OpenGLApi : IGraphicApi
         GLFW.WindowHint(WindowHintInt.ContextVersionMinor, 2);
         GLFW.WindowHint(WindowHintBool.OpenGLForwardCompat, true);
 
-        // Create window
+        // window creation
         unsafe
         {
             _window = GLFW.CreateWindow(width, height, title, null, null);
@@ -76,59 +92,101 @@ public sealed class OpenGLApi : IGraphicApi
             GLFW.ShowWindow(_window);
         }
 
+        
         // without that shit it won't work
         GL.LoadBindings(new GLFWBindingsContext());
+        new Vao();
+        Logger.Log(this, "bindings loaded");
+        Logger.Log(this, GL.GetError());
         
         // enable features
         GL.Enable(EnableCap.DepthTest);
         GL.Enable(EnableCap.Blend);
         GL.Enable(EnableCap.CullFace);
         GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);
-
+        
+        // debug
         GL.Enable(EnableCap.DebugOutput);
-
         _debugProc = (source, type, id, severity, length, messagePointer, param) =>
         {
-            if (type != DebugType.DebugTypeError) return;
             string message = Marshal.PtrToStringUTF8(messagePointer, length);
-            throw new Exception(message);
+            if (type == DebugType.DebugTypeError)
+            {
+                Logger.Error(this, message);
+                throw new Exception(message);  
+            }
+            else
+                Logger.Log(this, message);
+
         };
         GL.DebugMessageCallback(_debugProc, IntPtr.Zero);
         
-        // other objects
-        _vbosAndEbo = new VbosAndEbo(BufferUsageHint.DynamicDraw);
-        _shaderProgram = new ShaderProgram(textureManager);
-        InitVaos();
+        // other components init
+        InitComponents();
         
+        // just in case
         GL.GetInteger(GetPName.MaxTextureSize, out var maxTextureSize);
         GL.GetInteger(GetPName.MaxArrayTextureLayers, out var maxArrayLayers);
         Logger.Log(this, $"max texture size: {maxTextureSize}");
         Logger.Log(this, $"max texture array layers: {maxArrayLayers}");
     }
 
+    
     private const string AttributePosition = "position";
     private const string AttributeColor = "color";
     private const string AttributeTexture = "texcoord";
     private const string AttributeTextureLayer = "texLayer";
     
-    private void InitVaos()
+    private const string UniformColorProvided = "colorProvided";
+    private const string UniformTexture = "textureArray";
+    private const string UniformModel = "model";
+    private const string UniformView = "view";
+    private const string UniformProjection = "projection";
+    
+    private void InitComponents()
     {
+        _shaderProgram = new ShaderProgram(_textureManager, 
+            new ResourcePath("OpenGL", "frag.frag"),
+            new ResourcePath("OpenGL", "vert.vert"));
+        _shaderProgram.Bind();
+        
+        // uniforms
+        _colorProvided = new BoolUniform(_shaderProgram, UniformColorProvided);
+        _model = new Matrix4Uniform(_shaderProgram, UniformModel);
+        _view = new Matrix4Uniform(_shaderProgram, UniformView);
+        _projection = new Matrix4Uniform(_shaderProgram, UniformProjection);
+        _textureUniform = new TextureUniform(_shaderProgram, UniformTexture);
+        
+        // Set default projection matrix
+        var defaultProjection = Matrix4.CreatePerspectiveFieldOfView(MathF.PI / 2, 1.0f, 0.1f, 1000.0f);
+        _projection.SetValue(defaultProjection);
+        
+        // textures
+        _textureArray = new TextureArray(_textureManager, TextureUnit.Texture0);
+        
+        
+        // vaos
+        _vaoColored = new Vao();
+        _vaoWhite = new Vao();
+        _vbo = new Vbo<byte>((int)Math.Pow(2, 33));
+        _ebo = new Ebo((int)Math.Pow(2, 30));
+        
         {
-            _vaoColored = new Vao();
-            var attributes = new VaoAttributes(_shaderProgram);
-            attributes.Add<float>(AttributePosition, 3);
-            attributes.Add<float>(AttributeColor, 4);
-            attributes.Add<float>(AttributeTexture, 2);
-            attributes.Add<TexId>(AttributeTextureLayer, 1);
+            // colored
+            var attributes = new VaoAttributes<byte>(_vaoColored, _vbo, _shaderProgram);
+            attributes.Add<float>(VertexAttribPointerType.Float, AttributePosition, 3);
+            attributes.Add<float>(VertexAttribPointerType.Float, AttributeColor, 4);
+            attributes.Add<float>(VertexAttribPointerType.Float, AttributeTexture, 2);
+            attributes.Add<TexId>(VertexAttribPointerType.Int, AttributeTextureLayer, 1);
             attributes.Compile();
         }
         {
-            _vaoWhite = new Vao();
-            var attributes = new VaoAttributes(_shaderProgram);
-            attributes.Add<float>(AttributePosition, 3);
-            // no color here
-            attributes.Add<float>(AttributeTexture, 2);
-            attributes.Add<TexId>(AttributeTextureLayer, 1);
+            // white
+            var attributes = new VaoAttributes<byte>(_vaoWhite, _vbo, _shaderProgram);
+            attributes.Add<float>(VertexAttribPointerType.Float, AttributePosition, 3);
+            // skipping color
+            attributes.Add<float>(VertexAttribPointerType.Float, AttributeTexture, 2);
+            attributes.Add<TexId>(VertexAttribPointerType.Int, AttributeTextureLayer, 1);
             attributes.Compile();
         }
     }
@@ -141,44 +199,46 @@ public sealed class OpenGLApi : IGraphicApi
 
     public void SetClearColor(Color color) => GL.ClearColor(color.X, color.Y, color.Z, color.W);
 
-    public void Model(Matrix4 model) => _shaderProgram.Model.SetValue(model);
-    public void Projection(Matrix4 proj) => _shaderProgram.Projection.SetValue(proj);
-    public void View(Matrix4 view) => _shaderProgram.View.SetValue(view);
+    public void Model(Matrix4 model) => _model.SetValue(model);
+    public void Projection(Matrix4 proj) => _projection.SetValue(proj);
+    public void View(Matrix4 view) => _view.SetValue(view);
 
     public bool ShouldStop() { unsafe { return GLFW.WindowShouldClose(_window); } }
     
     public void ClearScreenBuffers() => GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-    
-    public void RenderToScreenBuffer(VertexBuffer buffer)
+
+    public void RenderToScreenBuffer<T>(VertexBuffer<T> buffer) where T : unmanaged
     {
         if (buffer.ProvidesColor())
         {
-            _shaderProgram.ColorProvided.SetValue(true);
+            _colorProvided.SetValue(true);
             _vaoColored.Bind();
         }
         else
         {
-            _shaderProgram.ColorProvided.SetValue(false);
+            _colorProvided.SetValue(false);
             _vaoWhite.Bind(); 
         }
         
-        _vbosAndEbo.PushMainVbo(buffer.Vbo);
-        _vbosAndEbo.PushEbo(buffer.Ebo);
-        
+        _vbo.BindAndPush(buffer.Vbo);
+        _ebo.BindAndPush(buffer.Ebo);
+            
         GL.DrawElements(PrimitiveType.Triangles, buffer.Ebo.Count, DrawElementsType.UnsignedInt, 0);
     }
 
+
+
     public void UpdateScreen() { unsafe { GLFW.SwapBuffers(_window); } }
-
-    public void Destroy()
+    
+    protected override void DisposeGLData()
     {
-        _vbosAndEbo.Destroy();
+        _vaoColored.Dispose();
+        _vaoWhite.Dispose();
+        _vbo.Dispose();
+        _ebo.Dispose();
+        _shaderProgram.Dispose();
+        _textureArray.Dispose();
         
-        _vaoColored.Destroy();
-        _vaoWhite.Destroy();
-        
-        _shaderProgram.Destroy();
-
         unsafe
         {
             GLFW.SetKeyCallback(_window, null);

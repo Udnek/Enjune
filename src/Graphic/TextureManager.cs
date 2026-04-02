@@ -70,6 +70,7 @@ public class TextureManager
         Dictionary<TexId, byte[]> resizedImages = new();
         foreach (var (id, rawImage) in rawImages)
         {
+            //Logger.Log(this,$"datasize: {rawImage.Data.Length}, wh = {rawImage.Width}, {rawImage.Height}");
             using (var image = Image.LoadPixelData<Rgba32>(rawImage.Data, rawImage.Width, rawImage.Height))
             {
                 image.Mutate(c => c.Resize(targetSize, targetSize));

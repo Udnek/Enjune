@@ -3,7 +3,7 @@ using OpenTK.Mathematics;
 
 namespace Enjune.Graphic.GraphicApi;
 
-public interface IGraphicApi
+public interface IGraphicApi : IDisposable
 {
     void Init(TextureManager textureManager, int width, int height, string title, IUserInputHandler userInputHandler, WindowSizeChangeHandler windowSizeHandler);
     void ViewPort(int x, int y, int width, int height);
@@ -17,12 +17,11 @@ public interface IGraphicApi
     // general pipeline (preferred order)
     bool ShouldStop(); // should stop application
     void ClearScreenBuffers();
-    void RenderToScreenBuffer(VertexBuffer buffer);
+    void RenderToScreenBuffer<T>(VertexBuffer<T> buffer) where T : unmanaged;
     void UpdateScreen();
     void UpdateEvents(); // such as keyboard, mouse, etc
     // general pipeline end
     
-    void Destroy();
     void SetClearColor(Color color);
 
     delegate void WindowSizeChangeHandler(int width, int height);

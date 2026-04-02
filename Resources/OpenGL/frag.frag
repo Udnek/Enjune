@@ -2,7 +2,7 @@
 
 in vec4 vertexColor;
 in vec2 textureCoord;
-in int textureLayer;
+flat in int textureLayer;
 
 out vec4 fragColor;
 

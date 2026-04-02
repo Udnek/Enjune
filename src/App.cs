@@ -75,10 +75,10 @@ public class App
                 _grapi.UpdateScreen();
                 _grapi.UpdateEvents();
             });
-
-        _grapi.Destroy();
+        
         var avgDelay = delays.Sum(v => v) / delays.Count;
         Console.WriteLine($"Avg delay: {avgDelay}; avg possible fps: {NanoDelayToFps(avgDelay)}");
+        _grapi.Dispose();
         
     }
 }

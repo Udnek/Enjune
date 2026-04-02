@@ -1,6 +1,6 @@
 namespace Enjune.Graphic.GraphicApi;
 
-public class ColoredVertexBuffer(int elementsCapacity) : VertexBuffer(ColoredVertexSize, elementsCapacity)
+public class ColoredVertexBuffer(int elementsCapacity) : VertexBuffer<ColoredVertexData>(elementsCapacity)
 {
     public void PutMesh(Mesh mesh, Color color)
     {

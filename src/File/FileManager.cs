@@ -5,12 +5,6 @@ namespace Enjune.File;
 
 public static class FileManager
 {
-    
-    public static ImageResult LoadAtlas()
-    {
-        return LoadImage("atlas.png", out var error) ?? throw new Exception(error);
-    }
-
     public static string? LoadText(ResourcePath path, out string? error)
     {
         return LoadResource(path,  out error, s =>
@@ -22,7 +16,7 @@ public static class FileManager
     
     public static ImageResult? LoadImage(ResourcePath path, out string? error)
     {
-        return LoadResource(path, out error, s => ImageResult.FromStream(s));
+        return LoadResource(path, out error, s => ImageResult.FromStream(s, ColorComponents.RedGreenBlueAlpha));
     }
     
     public static T? LoadResource<T>(ResourcePath path, out string? error, Func<Stream, T> streamTaker)

@@ -12,11 +12,5 @@ public class FixedBuffer<T>(int capacity)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Put(T value) => Data[_pointer++] = value;
 
-    public void Put(T[] values)
-    {
-        values.CopyTo(Data, _pointer);
-        _pointer += values.Length;
-    }
-
     public void Clear() => _pointer = 0;
 }
