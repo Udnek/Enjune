@@ -16,7 +16,9 @@ public static class FileManager
     
     public static ImageResult? LoadImage(ResourcePath path, out string? error)
     {
-        return LoadResource(path, out error, s => ImageResult.FromStream(s, ColorComponents.RedGreenBlueAlpha));
+        StbImage.stbi_set_flip_vertically_on_load(1);
+        var image = LoadResource(path, out error, s => ImageResult.FromStream(s, ColorComponents.RedGreenBlueAlpha));
+        return image;
     }
     
     public static T? LoadResource<T>(ResourcePath path, out string? error, Func<Stream, T> streamTaker)
