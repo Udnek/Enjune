@@ -1,4 +1,5 @@
 using Enjune.File;
+using Enjune.Misc;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
@@ -38,7 +39,7 @@ public class TextureManager
             return ErrorTexture;
         }
         _textureToId.Add(texturePath, _newId);
-        Logger.Log(this, $"added texture {texturePath} with id={_newId}");
+        Logger.Log(this, $"added texture {texturePath} with id: {_newId}");
         return _newId++;
     }
 
@@ -65,15 +66,16 @@ public class TextureManager
 
         // choosing max size
         var targetSize = rawImages.MaxBy(img => img.Value.Width).Value.Width;
+        Logger.Log(this, $"target texture size: {targetSize}");
 
         // resizing
         Dictionary<TexId, byte[]> resizedImages = new();
         foreach (var (id, rawImage) in rawImages)
         {
-            //Logger.Log(this,$"datasize: {rawImage.Data.Length}, wh = {rawImage.Width}, {rawImage.Height}");
+
             using (var image = Image.LoadPixelData<Rgba32>(rawImage.Data, rawImage.Width, rawImage.Height))
             {
-                image.Mutate(c => c.Resize(targetSize, targetSize));
+                image.Mutate(c => c.Resize(targetSize, targetSize, KnownResamplers.Box, false));
                 byte[] buffer = new byte[targetSize * targetSize * 4];
                 image.CopyPixelDataTo(buffer);
                 resizedImages[id] = buffer;

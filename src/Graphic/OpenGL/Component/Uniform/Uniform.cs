@@ -1,4 +1,4 @@
-namespace Enjune.Graphic.OpenGL.Uniform;
+namespace Enjune.Graphic.OpenGL.Component.Uniform;
 
 public abstract class Uniform<T>
 {

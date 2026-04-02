@@ -40,7 +40,7 @@ public class DotObjModelReader
             error = "model is empty";
             return;
         }
-        Mesh.MergeThatHasSameTexture(_meshes, consumer);
+        Mesh.MergeThatHaveSameTexture(_meshes, consumer);
     }
     
     private string? ProcessLine(string[] args)
@@ -85,7 +85,7 @@ public class DotObjModelReader
     private string? MaterialLib(string[] args)
     {
         if (args.Length == 0) return "not enough args";
-        var matPath = _path.ResolveFromLocal(args[0]);
+        var matPath = _path.ResolveFromLocal(string.Join(" ", args));
         var mat = FileManager.LoadText(matPath, out var error);
         if (mat == null) return error;
         var lines = mat.Replace("\r", "").Split("\n");
@@ -104,17 +104,18 @@ public class DotObjModelReader
     private string? NewMaterial(string[] args)
     {
         if (args.Length == 0) return "not enough args";
-        var mat = new DotObjMaterial(args[0]);
-        _materialByName[args[0]] = mat;
+        var path = string.Join(" ", args);
+        var mat = new DotObjMaterial(path);
+        _materialByName[path] = mat;
         _lastCreatedMaterial = mat;
-        //Logger.Log($"adding material: {args[0]}");
         return null;
     }
     
     private string? CurrentMatTexture(string[] args)
     {
+        if (args.Length == 0) return "not enough args";
         if (_lastCreatedMaterial == null) return "material hasn't created";
-        _lastCreatedMaterial.TexturePath = _path.ResolveFromLocal(args[0]);
+        _lastCreatedMaterial.TexturePath = _path.ResolveFromLocal(string.Join(" ", args));
         return null;
     }
 
@@ -169,15 +170,31 @@ public class DotObjModelReader
                 texIndexes.Add(texIndex);
             // we do not return error here cause this arg can be omitted
         }
-
+        
         var verPoses = verIndexes.Select(i => GetById(_loadedVertices, i)).ToArray();
-        var texPoses = texIndexes.Select(i => GetById(_loadedTextureCoords, i)).ToArray();
+        TextureCoord[] texPoses;
+        if (texIndexes.Count == 0) // then we filling it by ourselves 
+        {
+            var texPosesList = new List<TextureCoord>();
+            for (var i = 0; i < verIndexes.Count; i++)
+            {
+                texPosesList.Add(TextureQuad.Full[i % 4]);
+            }
+            texPoses = texPosesList.ToArray();
+        }
+        else
+            texPoses = texIndexes.Select(i => GetById(_loadedTextureCoords, i)).ToArray();
+        
         TexId textureId;
         if (_selectedMaterial?.TexturePath != null)
+        {
+            // Logger.Warn(this, $"asking: {_selectedMaterial.TexturePath}");
             textureId = _textureManager.AddTextureAndGetId(_selectedMaterial.TexturePath);
+        }
         else
             textureId = _textureManager.ErrorTexture;
         
+        // Logger.Warn(this, "using texture id " + textureId);
         _meshes.Add(Mesh.Ngon(verPoses, texPoses, textureId));
 
         return null;

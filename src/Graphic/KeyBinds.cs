@@ -1,3 +1,5 @@
+using Enjune.Misc;
+
 namespace Enjune.Graphic;
 
 public static class KeyBinds
@@ -18,6 +20,7 @@ public static class KeyBinds
     public static readonly Bind LookRight = BindKey(new Bind("look_right", GlfwKey.Right, true));
 
     public static readonly Bind DebugMenu = BindKey(new Bind("debug", GlfwKey.F3));
+    public static readonly Bind DumpTextures = BindKey(new Bind("dump_textures", GlfwKey.F4));
 
     public static Bind? Get(GlfwKey key) => Binds.GetValueOrDefault(key);
     

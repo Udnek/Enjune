@@ -2,6 +2,7 @@ using Enjune.File;
 using Enjune.File.ModelReader;
 using Enjune.Graphic;
 using Enjune.Graphic.GraphicApi;
+using Enjune.Graphic.GraphicApi.Buffer;
 using Enjune.Graphic.InputHandler;
 using Enjune.Graphic.OpenGL;
 using Enjune.Misc;
@@ -34,10 +35,8 @@ public class App
         _controller = new FlyingPlayerController(_inputHandler);
         var textureManager = new TextureManager();
 
-        new DotObjModelReader(textureManager, new ResourcePath("Models", "test.obj")).Read(_meshes.Add, out var error);
+        new DotObjModelReader(textureManager, new ResourcePath("Models", "wt", "wooden watch tower2.obj")).Read(_meshes.Add, out var error);
         if (error != null) throw new Exception(error);
-        
-        foreach (var mesh in _meshes) _vertexBuffer.PutMesh(mesh);
         
         //Logger.Log(this, $"Kukuruznik model size: {kukuruznikModel.Vertices.Length}");
         
@@ -47,7 +46,6 @@ public class App
     
     public void Run()
     {
-        var random = new Random();
         var delays = new List<long>(200);
         float deltaTime = 0;
         RunTargetFpsLoopWhile(144,
@@ -59,12 +57,20 @@ public class App
             () => !_grapi.ShouldStop(),
             () =>
             {
+                if (_inputHandler.IsPressed(KeyBinds.DumpTextures))
+                {
+                    _grapi.DumpTextures();
+                }
+                
                 _vertexBuffer.Clear();
-                foreach (var mesh in _meshes) _vertexBuffer.PutMesh(mesh);
+                foreach (var mesh in _meshes)
+                {
+                    _vertexBuffer.PutMesh(mesh);
+                }
                 
                 _controller.Update(deltaTime);
                 _grapi.Projection(Matrix4.CreatePerspectiveFieldOfView(
-                    MathF.PI / 2, ((float) _windowWidth) / _windowHeight, 0.1f, 1000f));
+                    MathF.PI / 2, (float) _windowWidth / _windowHeight, 0.1f, 1000f));
                 
                 _grapi.View(_controller.View);
                 
@@ -79,6 +85,5 @@ public class App
         var avgDelay = delays.Sum(v => v) / delays.Count;
         Console.WriteLine($"Avg delay: {avgDelay}; avg possible fps: {NanoDelayToFps(avgDelay)}");
         _grapi.Dispose();
-        
     }
 }

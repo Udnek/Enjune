@@ -1,4 +1,4 @@
-namespace Enjune;
+namespace Enjune.Misc;
 
 public static class Logger
 {

@@ -24,6 +24,8 @@ public interface IGraphicApi : IDisposable
     
     void SetClearColor(Color color);
 
+    void DumpTextures();
+    
     delegate void WindowSizeChangeHandler(int width, int height);
 
     enum KeyAction

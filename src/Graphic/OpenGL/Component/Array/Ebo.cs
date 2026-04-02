@@ -1,6 +1,4 @@
-using OpenTK.Graphics.OpenGL4;
-
-namespace Enjune.Graphic.OpenGL.Component;
+namespace Enjune.Graphic.OpenGL.Component.Array;
 
 public sealed class Ebo: VaoOwnedBuffer<int>
 {

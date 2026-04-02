@@ -1,34 +1,30 @@
-using OpenTK.Graphics.OpenGL4;
-
-namespace Enjune.Graphic.OpenGL.Component;
+namespace Enjune.Graphic.OpenGL.Component.Array;
 
 public abstract class VaoOwnedBuffer<T> : GLDisposable where T : unmanaged
 {
     private readonly int _handle;
-    protected readonly int _elementSize;
-    protected readonly BufferTarget _target;
+    protected readonly int ElementSize;
+    protected readonly BufferTarget Target;
 
     public VaoOwnedBuffer(BufferTarget target, int capacity)
     {
         _handle = GL.GenBuffer();
-        _target = target;
+        Target = target;
         unsafe
         {
-            _elementSize = sizeof(T);
+            ElementSize = sizeof(T);
         }
         Bind();
-        GL.BufferStorage(_target, _elementSize*capacity, IntPtr.Zero, BufferStorageFlags.MapWriteBit);
-        Unbind();
+        GL.BufferStorage(Target, capacity*ElementSize, IntPtr.Zero, BufferStorageFlags.DynamicStorageBit);
     }
 
-    public void Bind() => GL.BindBuffer(_target, _handle);
-    public void Unbind() => GL.BindBuffer(_target, 0);
+    public void Bind() => GL.BindBuffer(Target, _handle);
+    public void Unbind() => GL.BindBuffer(Target, 0);
     
     public void BindAndPush(FixedBuffer<T> fixedBuffer)
     {
         Bind();
-        GL.BufferSubData(_target, 0, fixedBuffer.Count*_elementSize, fixedBuffer.Data);
-        Unbind();
+        GL.BufferSubData(Target, 0, fixedBuffer.Count*ElementSize, fixedBuffer.Data);
     }
 
     protected override void DisposeGLData() => GL.DeleteBuffer(_handle);

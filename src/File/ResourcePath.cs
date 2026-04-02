@@ -10,7 +10,7 @@ public class ResourcePath(params string[] path)
     public ResourcePath ResolveFromLocal(string slashedPath)
     {
         var newPath = new List<string>(_path);
-        newPath.RemoveAt(newPath.Count - 1); // dir where current reosource
+        newPath.RemoveAt(newPath.Count - 1); // dir where current resource
         if (slashedPath.StartsWith('.'))
         {
             slashedPath = slashedPath.Substring(2); // './'

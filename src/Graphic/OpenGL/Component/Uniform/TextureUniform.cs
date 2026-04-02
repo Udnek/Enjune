@@ -1,6 +1,4 @@
-using OpenTK.Graphics.OpenGL4;
-
-namespace Enjune.Graphic.OpenGL.Uniform;
+namespace Enjune.Graphic.OpenGL.Component.Uniform;
 
 public sealed class TextureUniform : Uniform<int>
 {

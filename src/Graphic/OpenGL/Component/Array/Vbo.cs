@@ -1,6 +1,4 @@
-using OpenTK.Graphics.OpenGL4;
-
-namespace Enjune.Graphic.OpenGL.Component;
+namespace Enjune.Graphic.OpenGL.Component.Array;
 
 public sealed class Vbo<T> : VaoOwnedBuffer<T> where T : unmanaged
 {
@@ -11,8 +9,7 @@ public sealed class Vbo<T> : VaoOwnedBuffer<T> where T : unmanaged
         Bind();
         unsafe
         {
-            GL.BufferSubData(_target, 0, fixedBuffer.Count*sizeof(TT), fixedBuffer.Data);
+            GL.BufferSubData(Target, 0, fixedBuffer.Count*sizeof(TT), fixedBuffer.Data);
         }
-        Unbind();
     }
 }

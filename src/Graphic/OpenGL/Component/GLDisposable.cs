@@ -1,3 +1,5 @@
+using Enjune.Misc;
+
 namespace Enjune.Graphic.OpenGL.Component;
 
 public abstract class GLDisposable : IDisposable
@@ -10,6 +12,7 @@ public abstract class GLDisposable : IDisposable
     {
         if (_disposed) return;
         DisposeGLData();
+        GC.SuppressFinalize(this);
         _disposed = true;
     }
 

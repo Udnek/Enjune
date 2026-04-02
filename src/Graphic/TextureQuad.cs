@@ -9,6 +9,7 @@ public struct TextureQuad(TextureCoord botLeft, TextureCoord botRight, TextureCo
     public TextureCoord TopRight = topRight;
     public TextureCoord TopLeft = topLeft;
 
+    public static readonly TextureQuad Full = new TextureQuad((0, 0), (1, 0), (1, 1), (0, 1));
     public static readonly TextureQuad Tnt = GetAtAtlas(8, 0);
     public static readonly TextureQuad Furnace = GetAtAtlas(13, 3);
     public static readonly TextureQuad Planks = GetAtAtlas(4, 0);

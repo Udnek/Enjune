@@ -1,13 +1,12 @@
-// Main OpenGL API implementation
-
 using System.Runtime.InteropServices;
 using Enjune.File;
 using Enjune.Graphic.GraphicApi;
 using Enjune.Graphic.InputHandler;
 using Enjune.Graphic.OpenGL.Component;
 using Enjune.Graphic.OpenGL.Component.Array;
-using Enjune.Graphic.OpenGL.Uniform;
-using OpenTK.Graphics.OpenGL4;
+using Enjune.Graphic.OpenGL.Component.Texture;
+using Enjune.Graphic.OpenGL.Component.Uniform;
+using Enjune.Misc;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 
@@ -45,7 +44,10 @@ public sealed class OpenGLApi : GLDisposable, IGraphicApi
         _textureManager = textureManager;
         
         // error callback
-        GLFW.SetErrorCallback((error, description) => { Logger.Error(this, $"{error}: {description}"); });
+        GLFW.SetErrorCallback((error, description) =>
+        {
+            Logger.Error(this, $"{error}: {description}");
+        });
         
         if (!GLFW.Init())
             throw new Exception("Unable to initialize GLFW");
@@ -91,13 +93,9 @@ public sealed class OpenGLApi : GLDisposable, IGraphicApi
             //GLFW.SwapInterval(1); // enable vsync
             GLFW.ShowWindow(_window);
         }
-
         
         // without that shit it won't work
         GL.LoadBindings(new GLFWBindingsContext());
-        new Vao();
-        Logger.Log(this, "bindings loaded");
-        Logger.Log(this, GL.GetError());
         
         // enable features
         GL.Enable(EnableCap.DepthTest);
@@ -127,8 +125,8 @@ public sealed class OpenGLApi : GLDisposable, IGraphicApi
         // just in case
         GL.GetInteger(GetPName.MaxTextureSize, out var maxTextureSize);
         GL.GetInteger(GetPName.MaxArrayTextureLayers, out var maxArrayLayers);
-        Logger.Log(this, $"max texture size: {maxTextureSize}");
-        Logger.Log(this, $"max texture array layers: {maxArrayLayers}");
+        Logger.Log(this, $"max possible texture size: {maxTextureSize}");
+        Logger.Log(this, $"max possible texture array layers: {maxArrayLayers}");
     }
 
     
@@ -164,12 +162,11 @@ public sealed class OpenGLApi : GLDisposable, IGraphicApi
         // textures
         _textureArray = new TextureArray(_textureManager, TextureUnit.Texture0);
         
-        
         // vaos
         _vaoColored = new Vao();
         _vaoWhite = new Vao();
-        _vbo = new Vbo<byte>((int)Math.Pow(2, 33));
-        _ebo = new Ebo((int)Math.Pow(2, 30));
+        _vbo = new Vbo<byte>((int)Math.Pow(2, 20));
+        _ebo = new Ebo((int)Math.Pow(2, 20));
         
         {
             // colored
@@ -189,7 +186,11 @@ public sealed class OpenGLApi : GLDisposable, IGraphicApi
             attributes.Add<TexId>(VertexAttribPointerType.Int, AttributeTextureLayer, 1);
             attributes.Compile();
         }
+        
+        _shaderProgram.Bind();
     }
+
+    public void DumpTextures() => _textureArray.Dump();
 
     public void UpdateEvents() => GLFW.PollEvents();
 
@@ -209,7 +210,7 @@ public sealed class OpenGLApi : GLDisposable, IGraphicApi
 
     public void RenderToScreenBuffer<T>(VertexBuffer<T> buffer) where T : unmanaged
     {
-        if (buffer.ProvidesColor())
+        if (buffer.ProvidesColor)
         {
             _colorProvided.SetValue(true);
             _vaoColored.Bind();
@@ -225,9 +226,7 @@ public sealed class OpenGLApi : GLDisposable, IGraphicApi
             
         GL.DrawElements(PrimitiveType.Triangles, buffer.Ebo.Count, DrawElementsType.UnsignedInt, 0);
     }
-
-
-
+    
     public void UpdateScreen() { unsafe { GLFW.SwapBuffers(_window); } }
     
     protected override void DisposeGLData()

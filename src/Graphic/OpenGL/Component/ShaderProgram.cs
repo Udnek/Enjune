@@ -1,10 +1,7 @@
 using Enjune.File;
-using Enjune.Graphic.OpenGL.Component;
-using Enjune.Graphic.OpenGL.Uniform;
-using OpenTK.Graphics.OpenGL4;
-using OpenTK.Mathematics;
+using Enjune.Misc;
 
-namespace Enjune.Graphic.OpenGL;
+namespace Enjune.Graphic.OpenGL.Component;
 
 public class ShaderProgram : GLDisposable
 {

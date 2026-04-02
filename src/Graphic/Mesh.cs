@@ -106,7 +106,7 @@ public class Mesh
     //     return new Mesh(poses, textures.ToArray(), indexes.ToArray(), texId);
     // }
     
-    public static void MergeThatHasSameTexture(IEnumerable<Mesh> meshes, Consumer<Mesh> mergedMeshesConsumer)
+    public static void MergeThatHaveSameTexture(IEnumerable<Mesh> meshes, Consumer<Mesh> mergedMeshesConsumer)
     {
         foreach (var groupedByTex in meshes.GroupBy(m => m.TextureId))
         {
