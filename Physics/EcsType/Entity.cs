@@ -1,4 +1,4 @@
-namespace Enjune.Physics.Type;
+namespace Enjune.Physics.EcsType;
 
 public readonly record struct Entity(EntityId Id)
 {

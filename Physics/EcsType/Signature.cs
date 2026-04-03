@@ -1,15 +1,15 @@
 using System.Collections;
 
-namespace Enjune.Physics.Type;
+namespace Enjune.Physics.EcsType;
 
-public class Signature
+public record struct Signature
 {
     //uint -> 32-bit set
     //ulong -> 64-bit set
     private SignatureInteger _bitSet;
-
+    
     public Signature(SignatureInteger bitSet) => _bitSet = bitSet;
-
+    
     public void Flip(int bitPosition) => _bitSet &= ~( (SignatureInteger) 1 << bitPosition);
 
     public void Set(int bitPosition) => _bitSet |= (SignatureInteger) 1 << bitPosition;
@@ -21,4 +21,16 @@ public class Signature
     public bool Contains(Signature other) => (_bitSet & other._bitSet) == other._bitSet;
     
     public bool Matches(Signature other) => _bitSet == other._bitSet;
+    
+    public int GetSetBitsCount()
+    {
+        int cnt = 0;
+        SignatureInteger bitSetCopy = _bitSet;
+        while (bitSetCopy > 0)
+        {
+            cnt += (int) bitSetCopy & 1;
+            bitSetCopy >>= 1;
+        }
+        return cnt;
+    }
 }

@@ -1,25 +1,24 @@
-using System.Diagnostics;
-using Enjune.Physics.Type;
+using Enjune.Physics.EcsType;
 
-namespace Enjune.Physics;
+namespace Enjune.Physics.Manager;
 
 public class EntityManager
 {
-    private readonly Queue<EntityId> _availableEntities;
-    private Signature[] _signatures =  new Signature[EcsConstants.MaxEntities];
+    private readonly Stack<EntityId> _availableEntities = new();
+    //private Signature[] _signatures =  new Signature[EcsConstants.MaxEntities];
     
     public EntityManager()
     {
-        _availableEntities = new Queue<EntityId>();
         for (EntityId id = 0; id < EcsConstants.MaxEntities; id++)
         {
-            _availableEntities.Enqueue(id);
+            _availableEntities.Push(id);
         }
+        _availableEntities = (Stack<EntityId>) _availableEntities.Reverse();
     }
 
     private bool HasAvailableEntity() { return _availableEntities.Count > 0; }
 
-    private bool EntityIsValid(EntityId id) { return id < EcsConstants.MaxEntities; }
+    private static bool EntityIsValid(EntityId id) { return id < EcsConstants.MaxEntities; }
 
     private bool EntityIsLiving(EntityId id)
     {
@@ -37,8 +36,8 @@ public class EntityManager
             Console.WriteLine("New entity requested, but no more entities available! Ignoring request");
             return null;
         }
-        EntityId id = _availableEntities.Dequeue();
-        SetSignature(id, signature);
+        EntityId id = _availableEntities.Pop();
+        //SetSignature(id, signature);
         return id;
     }
 
@@ -49,10 +48,10 @@ public class EntityManager
             Console.WriteLine("Invalid entity destruction requested! Ignoring request");
             return;
         }
-        _availableEntities.Enqueue(id);
+        _availableEntities.Push(id);
     }
 
-    public void SetSignature(EntityId id, Signature signature)
+    /*public void SetSignature(EntityId id, Signature signature)
     {
         if (!EntityIsLiving(id))
         {
@@ -70,5 +69,5 @@ public class EntityManager
             return null;
         }
         return _signatures[id];
-    }
+    }*/
 }

@@ -8,17 +8,22 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a5664a4b-d36e-4c26-85b7-d01599f9f13c" name="Changes" comment="forking (probably)">
-      <change afterPath="$PROJECT_DIR$/Physics/Type/ComponentType.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Physics/Type/Entity.cs" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Physics/Type/Signature.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Physics/EcsType/Archetype.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Physics/Utility.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.idea.Enjune/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.Enjune/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/App.cs" beforeDir="false" afterPath="$PROJECT_DIR$/App.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Physics/Component/ComponentManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Physics/Manager/ComponentManager.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Physics/ECSConstants.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Physics/EcsConstants.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Physics/Entity/EntityManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Physics/Manager/EntityManager.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Physics/Archetype/Archetype.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Physics/Archetype/ArchetypeManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Physics/Manager/ArchetypeManager.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Physics/EcsConstants.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Physics/EcsConstants.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Physics/Manager/ComponentManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Physics/Manager/ComponentManager.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Physics/Manager/EntityManager.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Physics/Manager/EntityManager.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Physics/Type/ComponentType.cs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Physics/Type/Entity.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Physics/EcsType/Entity.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Physics/Type/Signature.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Physics/EcsType/Signature.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Physics/World.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Physics/World.cs" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Program.cs" beforeDir="false" afterPath="$PROJECT_DIR$/Program.cs" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/obj/rider.project.restore.info" beforeDir="false" afterPath="$PROJECT_DIR$/obj/rider.project.restore.info" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/obj/Debug/net10.0/Enjune.AssemblyInfo.cs" beforeDir="false" afterPath="$PROJECT_DIR$/obj/Debug/net10.0/Enjune.AssemblyInfo.cs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/obj/Debug/net10.0/Enjune.AssemblyInfoInputs.cache" beforeDir="false" afterPath="$PROJECT_DIR$/obj/Debug/net10.0/Enjune.AssemblyInfoInputs.cache" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/obj/rider.project.model.nuget.info" beforeDir="false" afterPath="$PROJECT_DIR$/obj/rider.project.model.nuget.info" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -39,29 +44,24 @@
 }</component>
   <component name="GithubPullRequestsUISettings">{
   &quot;selectedUrlAndAccountId&quot;: {
-    &quot;url&quot;: &quot;https://github.com/Udnek/Enjune&quot;,
-    &quot;accountId&quot;: &quot;05572f35-4eb6-43a5-b1b1-c5b052dd490b&quot;
+    &quot;url&quot;: &quot;https://github.com/Udnek/Enjune.git&quot;,
+    &quot;accountId&quot;: &quot;f949bceb-63c3-4caf-9691-0a20d21f9f29&quot;
   }
 }</component>
   <component name="HighlightingSettingsPerFile">
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/8d9e14c5cb544d29869278e6b5a373c142200/d7/27c14935/Stack`1.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/9ba97d0ec44a4a538b54e8dd49158754dba600/09/816ae76a/Object.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/9ba97d0ec44a4a538b54e8dd49158754dba600/bf/a400b960/BitArray.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/9ba97d0ec44a4a538b54e8dd49158754dba600/fc/9bf33bf4/BitConverter.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Graphic/Polygon.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Physics/Component/IComponent.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Physics/Component/Mass.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Physics/Component/Position.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Physics/System/ISystem.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Physics/System/IntegrationSystem.cs" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/Physics/Type/ComponentType.cs" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/Physics/Type/Entity.cs" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$PROJECT_DIR$/Physics/Type/Signature.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/Physics/Utility.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/Physics/World.cs" root0="FORCE_HIGHLIGHTING" />
     <setting file="file://$PROJECT_DIR$/obj/project.assets.json" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/56fce2c682e9454c8c16a88f90e06a2d4da000/41/9a1fd58b/GL.cs" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/5a6236cfdac448ffada1671fabc4404ef49908/00/087a7eff/Queue`1.cs" root0="SKIP_HIGHLIGHTING" />
-    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/5a6236cfdac448ffada1671fabc4404ef49908/07/52a2a1b9/Single.cs" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/5a6236cfdac448ffada1671fabc4404ef49908/0c/0b89c41f/UInt16.cs" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/5a6236cfdac448ffada1671fabc4404ef49908/ad/e61feda1/UInt32.cs" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/5a6236cfdac448ffada1671fabc4404ef49908/c8/76dfa427/Int16.cs" root0="FORCE_HIGHLIGHTING" />
-    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/5d3c666a770b81546c6802a8764f1c45ab4b91233bf1d4e492bc84e6a68643/Matrix4.cs" root0="FORCE_HIGHLIGHTING" />
   </component>
   <component name="McpProjectServerCommands">
     <commands />
@@ -79,26 +79,26 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    ".NET Project.Enjune.executor": "Run",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.MCP Project settings loaded": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
-    "git-widget-placeholder": "master",
-    "ignore.virus.scanning.warn.message": "true",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "FileTemplatesSettingsId",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;.NET Project.Enjune.executor&quot;: &quot;Run&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;ecs&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;CodeLensConfigurable&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RunManager">
     <configuration name="Enjune" type="DotNetProject" factoryName=".NET Project">
       <option name="EXE_PATH" value="" />
@@ -135,6 +135,9 @@
       <workItem from="1774682107232" duration="4448000" />
       <workItem from="1774688309775" duration="5104000" />
       <workItem from="1774695069565" duration="15550000" />
+      <workItem from="1775042439219" duration="9920000" />
+      <workItem from="1775118271294" duration="2376000" />
+      <workItem from="1775210382249" duration="17299000" />
     </task>
     <task id="LOCAL-00001" summary="fixed namespace">
       <option name="closed" value="true" />
@@ -160,6 +163,17 @@
   </component>
   <component name="UnityCheckinConfiguration" checkUnsavedScenes="true" />
   <component name="UnityProjectConfiguration" hasMinimizedUI="false" />
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
   <component name="VcsManagerConfiguration">
     <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="true" />
     <MESSAGE value="fixed namespace" />
