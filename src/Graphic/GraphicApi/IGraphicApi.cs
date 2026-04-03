@@ -14,10 +14,12 @@ public interface IGraphicApi : IDisposable
     void Projection(Matrix4 proj);
     // uniforms end
     
+    public void SetMaterials(MaterialBuffer materials);
+    
     // general pipeline (preferred order)
     bool ShouldStop(); // should stop application
     void ClearScreenBuffers();
-    void RenderToScreenBuffer<T>(VertexBuffer<T> buffer) where T : unmanaged;
+    void RenderToScreenBuffer(VertexBuffer buffer);
     void UpdateScreen();
     void UpdateEvents(); // such as keyboard, mouse, etc
     // general pipeline end

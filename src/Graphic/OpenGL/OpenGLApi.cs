@@ -1,6 +1,7 @@
 using System.Runtime.InteropServices;
 using Enjune.File;
 using Enjune.Graphic.GraphicApi;
+using Enjune.Graphic.GraphicApi.Data;
 using Enjune.Graphic.InputHandler;
 using Enjune.Graphic.OpenGL.Component;
 using Enjune.Graphic.OpenGL.Component.Array;
@@ -18,10 +19,11 @@ public sealed class OpenGLApi : GLDisposable, IGraphicApi
     
     private TextureManager _textureManager = null!;
     
-    private Vao _vaoColored = null!;
-    private Vao _vaoWhite = null!;
-    private Vbo<byte> _vbo = null!;
+    private Vao _vao = null!;
+    private Vbo<VertexData> _vertexVbo = null!;
+    private Vbo<MatId> _matIdVbo = null!;
     private Ebo _ebo = null!;
+    
     private ShaderProgram _shaderProgram = null!;
     private TextureArray _textureArray = null!;
     
@@ -163,25 +165,17 @@ public sealed class OpenGLApi : GLDisposable, IGraphicApi
         _textureArray = new TextureArray(_textureManager, TextureUnit.Texture0);
         
         // vaos
-        _vaoColored = new Vao();
-        _vaoWhite = new Vao();
-        _vbo = new Vbo<byte>((int)Math.Pow(2, 20));
+        _vao = new Vao();
+        // todo better calc capacities
+        _vertexVbo = new Vbo<VertexData>((int)Math.Pow(2, 20));
+        _matIdVbo = new Vbo<MatId>((int)Math.Pow(2, 20));
         _ebo = new Ebo((int)Math.Pow(2, 20));
         
         {
-            // colored
-            var attributes = new VaoAttributes<byte>(_vaoColored, _vbo, _shaderProgram);
+            // attributes
+            var attributes = new VaoAttributes<byte>(_vao, _vertexVbo, _shaderProgram);
             attributes.Add<float>(VertexAttribPointerType.Float, AttributePosition, 3);
             attributes.Add<float>(VertexAttribPointerType.Float, AttributeColor, 4);
-            attributes.Add<float>(VertexAttribPointerType.Float, AttributeTexture, 2);
-            attributes.Add<TexId>(VertexAttribPointerType.Int, AttributeTextureLayer, 1);
-            attributes.Compile();
-        }
-        {
-            // white
-            var attributes = new VaoAttributes<byte>(_vaoWhite, _vbo, _shaderProgram);
-            attributes.Add<float>(VertexAttribPointerType.Float, AttributePosition, 3);
-            // skipping color
             attributes.Add<float>(VertexAttribPointerType.Float, AttributeTexture, 2);
             attributes.Add<TexId>(VertexAttribPointerType.Int, AttributeTextureLayer, 1);
             attributes.Compile();
@@ -208,12 +202,12 @@ public sealed class OpenGLApi : GLDisposable, IGraphicApi
     
     public void ClearScreenBuffers() => GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-    public void RenderToScreenBuffer<T>(VertexBuffer<T> buffer) where T : unmanaged
+    public void RenderToScreenBuffer<T>(VertexBuffer buffer) where T : unmanaged
     {
         if (buffer.ProvidesColor)
         {
             _colorProvided.SetValue(true);
-            _vaoColored.Bind();
+            _vao.Bind();
         }
         else
         {
@@ -221,7 +215,7 @@ public sealed class OpenGLApi : GLDisposable, IGraphicApi
             _vaoWhite.Bind(); 
         }
         
-        _vbo.BindAndPush(buffer.Vbo);
+        _vertexVbo.BindAndPush(buffer.Vbo);
         _ebo.BindAndPush(buffer.Ebo);
             
         GL.DrawElements(PrimitiveType.Triangles, buffer.Ebo.Count, DrawElementsType.UnsignedInt, 0);
@@ -231,9 +225,9 @@ public sealed class OpenGLApi : GLDisposable, IGraphicApi
     
     protected override void DisposeGLData()
     {
-        _vaoColored.Dispose();
+        _vao.Dispose();
         _vaoWhite.Dispose();
-        _vbo.Dispose();
+        _vertexVbo.Dispose();
         _ebo.Dispose();
         _shaderProgram.Dispose();
         _textureArray.Dispose();

@@ -40,7 +40,7 @@ public class DotObjModelReader
             error = "model is empty";
             return;
         }
-        Mesh.MergeThatHaveSameTexture(_meshes, consumer);
+        Mesh.MergeThatHaveSameMaterial(_meshes, consumer);
     }
     
     private string? ProcessLine(string[] args)

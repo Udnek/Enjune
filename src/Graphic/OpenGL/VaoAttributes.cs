@@ -9,7 +9,7 @@ public sealed class VaoAttributes<T> where T : unmanaged
 {
     private readonly List<Attribute> _attributes = [];
     private readonly Vao _vao;
-    private readonly VaoOwnedBuffer<T> _vbo;
+    private readonly AbstractBuffer<T> _vbo;
     private readonly ShaderProgram _shaderProgram;
     private bool _compiled = false;
     
@@ -20,7 +20,7 @@ public sealed class VaoAttributes<T> where T : unmanaged
         _shaderProgram = program;
     }
     
-    public void Add<TT>(VertexAttribPointerType pType, string name, int elements) where TT : unmanaged
+    public void Add<TT>(VertexAttribPointerType pType, string name, int elements, bool perInstance = false) where TT : unmanaged
     {
         if (_compiled)
         {
@@ -30,7 +30,7 @@ public sealed class VaoAttributes<T> where T : unmanaged
         unsafe
         {
             int size =  sizeof(TT) * elements;
-            _attributes.Add(new Attribute(size, name, elements, pType));   
+            _attributes.Add(new Attribute(size, name, elements, pType, perInstance));   
         }
     }
 
@@ -73,9 +73,15 @@ public sealed class VaoAttributes<T> where T : unmanaged
                     stride,
                     offset);
             }
+
+            if (attr.PerInstance)
+            {
+                GL.VertexAttribDivisor(location, 1);
+            }
             offset += attr.SizeBytes;
         }
     }
     
-    private record struct Attribute(int SizeBytes, string Name, int Elements, VertexAttribPointerType PointerType);
+    private record struct Attribute(int SizeBytes, string Name, 
+        int Elements, VertexAttribPointerType PointerType, bool PerInstance);
 }

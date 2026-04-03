@@ -1,12 +1,12 @@
 namespace Enjune.Graphic.OpenGL.Component.Array;
 
-public abstract class VaoOwnedBuffer<T> : GLDisposable where T : unmanaged
+public abstract class AbstractBuffer<T> : GLDisposable where T : unmanaged
 {
     private readonly int _handle;
     protected readonly int ElementSize;
     protected readonly BufferTarget Target;
 
-    public VaoOwnedBuffer(BufferTarget target, int capacity)
+    public AbstractBuffer(BufferTarget target, int capacity)
     {
         _handle = GL.GenBuffer();
         Target = target;

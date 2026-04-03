@@ -62,7 +62,7 @@ public class App
                     _grapi.DumpTextures();
                 }
                 
-                _vertexBuffer.Clear();
+                _vertexBuffer.ClearVertices();
                 foreach (var mesh in _meshes)
                 {
                     _vertexBuffer.PutMesh(mesh);
