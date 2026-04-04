@@ -1,6 +1,6 @@
 using Enjune.Misc;
 
-namespace Enjune.Graphic.OpenGL.Component;
+namespace Enjune.Graphic.GraphicApi.OpenGL.Component;
 
 public abstract class GLDisposable : IDisposable
 {

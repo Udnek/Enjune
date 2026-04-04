@@ -1,3 +1,4 @@
+using Enjune.Graphic.Asset;
 using Enjune.Graphic.InputHandler;
 using OpenTK.Mathematics;
 
@@ -5,7 +6,7 @@ namespace Enjune.Graphic.GraphicApi;
 
 public interface IGraphicApi : IDisposable
 {
-    void Init(TextureManager textureManager, int width, int height, string title, IUserInputHandler userInputHandler, WindowSizeChangeHandler windowSizeHandler);
+    void Init(CompiledAssets assets, int width, int height, string title, IUserInputHandler userInputHandler, WindowSizeChangeHandler windowSizeHandler);
     void ViewPort(int x, int y, int width, int height);
     void Title(string title);
     // uniforms
@@ -14,8 +15,6 @@ public interface IGraphicApi : IDisposable
     void Projection(Matrix4 proj);
     // uniforms end
     
-    public void SetMaterials(MaterialBuffer materials);
-    
     // general pipeline (preferred order)
     bool ShouldStop(); // should stop application
     void ClearScreenBuffers();
@@ -23,13 +22,20 @@ public interface IGraphicApi : IDisposable
     void UpdateScreen();
     void UpdateEvents(); // such as keyboard, mouse, etc
     // general pipeline end
-    
-    void SetClearColor(Color color);
 
+    // misc
+    void SetClearColor(Color color);
     void DumpTextures();
+    void SetDrawMode(DrawMode mode);
     
     delegate void WindowSizeChangeHandler(int width, int height);
 
+    enum DrawMode
+    {
+        Fill,
+        Wireframe
+    }
+    
     enum KeyAction
     {
         Press,

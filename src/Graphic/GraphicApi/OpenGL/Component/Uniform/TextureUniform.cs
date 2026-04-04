@@ -1,4 +1,4 @@
-namespace Enjune.Graphic.OpenGL.Component.Uniform;
+namespace Enjune.Graphic.GraphicApi.OpenGL.Component.Uniform;
 
 public sealed class TextureUniform : Uniform<int>
 {

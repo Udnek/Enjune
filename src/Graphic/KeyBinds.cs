@@ -21,6 +21,7 @@ public static class KeyBinds
 
     public static readonly Bind DebugMenu = BindKey(new Bind("debug", GlfwKey.F3));
     public static readonly Bind DumpTextures = BindKey(new Bind("dump_textures", GlfwKey.F4));
+    public static readonly Bind SwitchDrawMode = BindKey(new Bind("SwitchDrawMode", GlfwKey.F5));
 
     public static Bind? Get(GlfwKey key) => Binds.GetValueOrDefault(key);
     
@@ -34,15 +35,5 @@ public static class KeyBinds
         return bind;
     }
 
-    public class Bind(string name, GlfwKey glfwKey, bool continuousPress = false)
-    {
-        public readonly string Name = name;
-        public readonly GlfwKey GlfwKey = glfwKey;
-        public readonly bool ContinuousPress = continuousPress;
-
-        public override string ToString()
-        {
-            return $"Bind(name='{Name}', glfwKeyId={GlfwKey})";
-        }
-    }
+    public record Bind(string Name, GlfwKey GlfwKey, bool ContinuousPress = false){}
 }

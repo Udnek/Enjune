@@ -1,29 +1,32 @@
 using Enjune.Graphic;
+using Enjune.Graphic.Asset;
 using Enjune.Misc;
+using Buffer = System.Buffer;
 
 namespace Enjune.File.ModelReader;
 
 public class DotObjModelReader
 {
-    private readonly TextureManager _textureManager;
+    private readonly AssetManager _assetManager;
     private readonly ResourcePath _path;
     private readonly List<Position> _loadedVertices = [];
     private readonly List<TextureCoord> _loadedTextureCoords = [];
-    private readonly List<Mesh> _meshes = [];
-    private readonly Dictionary<string, DotObjMaterial> _materialByName = new();
-    private DotObjMaterial? _selectedMaterial = null;
-    private DotObjMaterial? _lastCreatedMaterial = null;
+    private readonly Dictionary<string, RawMaterial> _materialByName = new();
+    private RawMaterial? _selectedMaterial = null;
+    private RawMaterial? _lastCreatedMaterial = null;  
+    
+    private readonly Model.Builder _builder = new();
 
-    public DotObjModelReader(TextureManager textureManager, ResourcePath path)
+    public DotObjModelReader(AssetManager assetManager, ResourcePath path)
     {
-        _textureManager = textureManager;
+        _assetManager = assetManager;
         _path = path;
     }
 
-    public void Read(Consumer<Mesh> consumer, out string? error)
+    public Model? Read(out string? error)
     {
         var text = FileManager.LoadText(_path, out error);
-        if (text == null) return;
+        if (text == null) return null;
         var lines = text.Replace("\r", "").Split("\n");
         for (var i = 0; i < lines.Length; i++)
         {
@@ -35,12 +38,11 @@ public class DotObjModelReader
             }
         }
 
-        if (_meshes.Count == 0)
-        {
-            error = "model is empty";
-            return;
-        }
-        Mesh.MergeThatHaveSameMaterial(_meshes, consumer);
+        if (!_builder.IsEmpty) return _builder.Build();
+        
+        error = "model is empty";
+        return null;
+
     }
     
     private string? ProcessLine(string[] args)
@@ -104,9 +106,9 @@ public class DotObjModelReader
     private string? NewMaterial(string[] args)
     {
         if (args.Length == 0) return "not enough args";
-        var path = string.Join(" ", args);
-        var mat = new DotObjMaterial(path);
-        _materialByName[path] = mat;
+        var name = string.Join(" ", args);
+        var mat = RawMaterial.FromColor(new Color(0.8f, 0.8f, 0.8f, 1f)); // default color in .obj
+        _materialByName[name] = mat;
         _lastCreatedMaterial = mat;
         return null;
     }
@@ -118,6 +120,20 @@ public class DotObjModelReader
         _lastCreatedMaterial.TexturePath = _path.ResolveFromLocal(string.Join(" ", args));
         return null;
     }
+    
+    private string? CurrentMatColor(string[] args)
+    {
+        if (_lastCreatedMaterial == null) return "material hasn't created";
+        if (float.TryParse(args[0], out float r)
+            && float.TryParse(args[1], out float g)
+            && float.TryParse(args[2], out float b))
+        {
+            _lastCreatedMaterial.Color = new Color(r, g, b, 1);
+            return null;
+        }
+        return "can not parse rgb";
+    }
+
 
     private string? ProcessMaterialLine(string[] args)
     {
@@ -128,10 +144,11 @@ public class DotObjModelReader
             "#" => null,
             "newmtl" => NewMaterial(args.Skip(1).ToArray()),
             "map_Kd" => CurrentMatTexture(args.Skip(1).ToArray()),
+            "Kd" => CurrentMatColor(args.Skip(1).ToArray()),
             _ => null
         };
     }
-
+    
     private T GetById<T>(List<T> from, int id)
     {
         if (id < 0) return from[from.Count + id];
@@ -185,18 +202,13 @@ public class DotObjModelReader
         else
             texPoses = texIndexes.Select(i => GetById(_loadedTextureCoords, i)).ToArray();
         
-        TexId textureId;
-        if (_selectedMaterial?.TexturePath != null)
-        {
-            // Logger.Warn(this, $"asking: {_selectedMaterial.TexturePath}");
-            textureId = _textureManager.AddTextureAndGetId(_selectedMaterial.TexturePath);
-        }
+        CompiledMaterial material;
+        if (_selectedMaterial != null)
+            material = _assetManager.AddMaterialAndGetCompiled(_selectedMaterial);
         else
-            textureId = _textureManager.ErrorTexture;
-        
-        // Logger.Warn(this, "using texture id " + textureId);
-        _meshes.Add(Mesh.Ngon(verPoses, texPoses, textureId));
+            material = _assetManager.MissingMaterial;
 
+        _builder.Add(Mesh.Ngon(verPoses, texPoses), material);
         return null;
     }
 }

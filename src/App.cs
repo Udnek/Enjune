@@ -1,10 +1,10 @@
 using Enjune.File;
 using Enjune.File.ModelReader;
 using Enjune.Graphic;
+using Enjune.Graphic.Asset;
 using Enjune.Graphic.GraphicApi;
-using Enjune.Graphic.GraphicApi.Buffer;
+using Enjune.Graphic.GraphicApi.OpenGL;
 using Enjune.Graphic.InputHandler;
-using Enjune.Graphic.OpenGL;
 using Enjune.Misc;
 using OpenTK.Mathematics;
 using static Enjune.Misc.Misc;
@@ -20,9 +20,11 @@ public class App
     private readonly BasicInputHandler _inputHandler = new BasicInputHandler();
     private FlyingPlayerController _controller = null!;
     
-    private readonly WhiteVertexBuffer _vertexBuffer = new WhiteVertexBuffer(20_000);
-    private readonly List<Mesh> _meshes = new();
+    private readonly VertexBuffer _vertexBuffer = new VertexBuffer(20_000);
+    private readonly List<Model> _models = new();
 
+    private IGraphicApi.DrawMode _drawMode = IGraphicApi.DrawMode.Fill;
+    
     private void WindowSizeChangeHandler(int w, int h)
     {
         _windowWidth = w;
@@ -33,15 +35,26 @@ public class App
     public void Init()
     {
         _controller = new FlyingPlayerController(_inputHandler);
-        var textureManager = new TextureManager();
+        var textureManager = new AssetManager();
 
-        new DotObjModelReader(textureManager, new ResourcePath("Models", "wt", "wooden watch tower2.obj")).Read(_meshes.Add, out var error);
-        if (error != null) throw new Exception(error);
+        var model = new DotObjModelReader(textureManager, new ResourcePath("Models", "wt", "wooden watch tower2.obj")).Read(out var error)
+            ?? throw new Exception(error);
+        Logger.Log(this, $"model info: {model.Info()}");
         
+        
+        _models.Add(model);
         //Logger.Log(this, $"Kukuruznik model size: {kukuruznikModel.Vertices.Length}");
-        
-        _grapi.Init(textureManager, _windowWidth, _windowHeight, "Enjune C#", _inputHandler, WindowSizeChangeHandler);
+        var assets = textureManager.Compile();
+
+        _grapi.Init(assets, _windowWidth, _windowHeight, "Enjune C#", _inputHandler, WindowSizeChangeHandler);
         _grapi.SetClearColor(new Color(0.1f, 0.1f, 0.1f, 1f));
+        
+        _vertexBuffer.Clear();
+        foreach (var m in _models)
+        {
+            _vertexBuffer.PutModel(m);
+        }
+        //_vertexBuffer.PutMesh(Mesh.Cube(new Position(0, 0, -4f), 2, TextureQuad.Full), 0);
     }
     
     public void Run()
@@ -57,16 +70,14 @@ public class App
             () => !_grapi.ShouldStop(),
             () =>
             {
-                if (_inputHandler.IsPressed(KeyBinds.DumpTextures))
-                {
+                if (_inputHandler.IsPressed(KeyBinds.DumpTextures)) 
                     _grapi.DumpTextures();
+                if (_inputHandler.IsPressed(KeyBinds.SwitchDrawMode))
+                {
+                    _drawMode = (IGraphicApi.DrawMode)((int)(_drawMode + 1) % Enum.GetValues(typeof(IGraphicApi.DrawMode)).Length);
+                    _grapi.SetDrawMode(_drawMode);
                 }
                 
-                _vertexBuffer.ClearVertices();
-                foreach (var mesh in _meshes)
-                {
-                    _vertexBuffer.PutMesh(mesh);
-                }
                 
                 _controller.Update(deltaTime);
                 _grapi.Projection(Matrix4.CreatePerspectiveFieldOfView(

@@ -1,18 +1,16 @@
 using Enjune.File;
 using Enjune.Misc;
 
-namespace Enjune.Graphic.OpenGL.Component;
+namespace Enjune.Graphic.GraphicApi.OpenGL.Component;
 
 public class ShaderProgram : GLDisposable
 {
     private readonly int _program;
     private readonly int _vertexShader;
     private readonly int _fragmentShader;
-    private readonly TextureManager _textureManager;
 
-    public ShaderProgram(TextureManager textureManager, ResourcePath fragmentPath, ResourcePath vertexPath)
+    public ShaderProgram(ResourcePath fragmentPath, ResourcePath vertexPath)
     {
-        _textureManager = textureManager;
         _program = GL.CreateProgram();
 
         var fragText = FileManager.LoadText(fragmentPath, out var error)
@@ -28,10 +26,10 @@ public class ShaderProgram : GLDisposable
 
         // check init
         GL.GetProgram(_program, GetProgramParameterName.LinkStatus, out int linkStatus);
-        if (linkStatus != (int)All.True)
+        if (linkStatus != (int) All.True)
         {
             string infoLog = GL.GetProgramInfoLog(_program);
-            throw new Exception($"Shader program linking failed: {infoLog}");
+            throw new Exception($"shader program linking failed: {infoLog}");
         }
     }
 
@@ -44,6 +42,13 @@ public class ShaderProgram : GLDisposable
         if (location == -1) Logger.Error(this, "can not find uniform location " + name);
         return location;
     }
+    
+    // public int GetSsboBinding(string name)
+    // {
+    //     var index =  GL.GetProgramResourceIndex(_program, ProgramInterface.ShaderStorageBlock, name);
+    //     if (index == -1) Logger.Error(this, "can not find ssbo index " + name);
+    //     return index;
+    // }
     
     public int GetAttributeLocation(string name)
     {

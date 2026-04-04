@@ -1,6 +1,4 @@
-using OpenTK.Windowing.GraphicsLibraryFramework;
-
-namespace Enjune.Graphic.OpenGL.Component.Array;
+namespace Enjune.Graphic.GraphicApi.OpenGL.Component.Array;
 
 public class Vao : GLDisposable
 {

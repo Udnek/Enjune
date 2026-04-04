@@ -1,27 +1,27 @@
 using System.Runtime.InteropServices;
 using Enjune.File;
-using Enjune.Graphic.GraphicApi;
-using Enjune.Graphic.GraphicApi.Data;
+using Enjune.Graphic.Asset;
+using Enjune.Graphic.GraphicApi.OpenGL.Component;
+using Enjune.Graphic.GraphicApi.OpenGL.Component.Array;
+using Enjune.Graphic.GraphicApi.OpenGL.Component.Texture;
+using Enjune.Graphic.GraphicApi.OpenGL.Component.Uniform;
 using Enjune.Graphic.InputHandler;
-using Enjune.Graphic.OpenGL.Component;
-using Enjune.Graphic.OpenGL.Component.Array;
-using Enjune.Graphic.OpenGL.Component.Texture;
-using Enjune.Graphic.OpenGL.Component.Uniform;
 using Enjune.Misc;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 
-namespace Enjune.Graphic.OpenGL;
+namespace Enjune.Graphic.GraphicApi.OpenGL;
 
 public sealed class OpenGLApi : GLDisposable, IGraphicApi
 {
     private unsafe Window* _window;
     
-    private TextureManager _textureManager = null!;
+    private CompiledAssets _assets = null!;
     
     private Vao _vao = null!;
     private Vbo<VertexData> _vertexVbo = null!;
-    private Vbo<MatId> _matIdVbo = null!;
+    private Ssbo<MatId> _matIdSsbo = null!;
+    private Ssbo<MaterialData> _materialSsbo = null!;
     private Ebo _ebo = null!;
     
     private ShaderProgram _shaderProgram = null!;
@@ -33,17 +33,16 @@ public sealed class OpenGLApi : GLDisposable, IGraphicApi
     private DebugProc _debugProc = null!;
     
     // uniforms
-    private BoolUniform _colorProvided = null!;
     private Matrix4Uniform _model = null!;
     private Matrix4Uniform _view = null!;
     private Matrix4Uniform _projection = null!;
     private TextureUniform _textureUniform = null!;
 
-    public void Init(TextureManager textureManager, int width, int height, string title,
+    public void Init(CompiledAssets assets, int width, int height, string title,
         IUserInputHandler keyHandler,
         IGraphicApi.WindowSizeChangeHandler windowSizeHandler)
     {
-        _textureManager = textureManager;
+        _assets = assets;
         
         // error callback
         GLFW.SetErrorCallback((error, description) =>
@@ -58,8 +57,9 @@ public sealed class OpenGLApi : GLDisposable, IGraphicApi
         GLFW.DefaultWindowHints();
         GLFW.WindowHint(WindowHintBool.Visible, true);
         GLFW.WindowHint(WindowHintBool.Resizable, true);
-        GLFW.WindowHint(WindowHintInt.ContextVersionMajor, 3);
-        GLFW.WindowHint(WindowHintInt.ContextVersionMinor, 2);
+        GLFW.WindowHint(WindowHintInt.ContextVersionMajor, 4);
+        GLFW.WindowHint(WindowHintInt.ContextVersionMinor, 6);
+        GLFW.WindowHint(WindowHintOpenGlProfile.OpenGlProfile, OpenGlProfile.Core);
         GLFW.WindowHint(WindowHintBool.OpenGLForwardCompat, true);
 
         // window creation
@@ -99,6 +99,8 @@ public sealed class OpenGLApi : GLDisposable, IGraphicApi
         // without that shit it won't work
         GL.LoadBindings(new GLFWBindingsContext());
         
+        Logger.Log(this, $"OpenGL version: {GL.GetString(StringName.Version)}");
+        
         // enable features
         GL.Enable(EnableCap.DepthTest);
         GL.Enable(EnableCap.Blend);
@@ -121,23 +123,21 @@ public sealed class OpenGLApi : GLDisposable, IGraphicApi
         };
         GL.DebugMessageCallback(_debugProc, IntPtr.Zero);
         
-        // other components init
-        InitComponents();
-        
         // just in case
         GL.GetInteger(GetPName.MaxTextureSize, out var maxTextureSize);
         GL.GetInteger(GetPName.MaxArrayTextureLayers, out var maxArrayLayers);
         Logger.Log(this, $"max possible texture size: {maxTextureSize}");
         Logger.Log(this, $"max possible texture array layers: {maxArrayLayers}");
+        
+        // other components init
+        InitComponents();
     }
 
     
     private const string AttributePosition = "position";
-    private const string AttributeColor = "color";
     private const string AttributeTexture = "texcoord";
-    private const string AttributeTextureLayer = "texLayer";
+    private const string AttributeMaterialId = "materialId";
     
-    private const string UniformColorProvided = "colorProvided";
     private const string UniformTexture = "textureArray";
     private const string UniformModel = "model";
     private const string UniformView = "view";
@@ -145,13 +145,13 @@ public sealed class OpenGLApi : GLDisposable, IGraphicApi
     
     private void InitComponents()
     {
-        _shaderProgram = new ShaderProgram(_textureManager, 
+        _shaderProgram = new ShaderProgram(
             new ResourcePath("OpenGL", "frag.frag"),
             new ResourcePath("OpenGL", "vert.vert"));
+        
         _shaderProgram.Bind();
         
         // uniforms
-        _colorProvided = new BoolUniform(_shaderProgram, UniformColorProvided);
         _model = new Matrix4Uniform(_shaderProgram, UniformModel);
         _view = new Matrix4Uniform(_shaderProgram, UniformView);
         _projection = new Matrix4Uniform(_shaderProgram, UniformProjection);
@@ -162,26 +162,31 @@ public sealed class OpenGLApi : GLDisposable, IGraphicApi
         _projection.SetValue(defaultProjection);
         
         // textures
-        _textureArray = new TextureArray(_textureManager, TextureUnit.Texture0);
+        _textureArray = new TextureArray(_assets, TextureUnit.Texture0);
         
-        // vaos
+        // buffers
         _vao = new Vao();
         // todo better calc capacities
+        _materialSsbo = new Ssbo<MaterialData>(0, 20);
+        _matIdSsbo = new Ssbo<MatId>(1, (int)Math.Pow(2, 20));
         _vertexVbo = new Vbo<VertexData>((int)Math.Pow(2, 20));
-        _matIdVbo = new Vbo<MatId>((int)Math.Pow(2, 20));
         _ebo = new Ebo((int)Math.Pow(2, 20));
         
+        // attributes
         {
-            // attributes
-            var attributes = new VaoAttributes<byte>(_vao, _vertexVbo, _shaderProgram);
+            var attributes = new VaoAttributes<VertexData>(_vao, _vertexVbo, _shaderProgram);
             attributes.Add<float>(VertexAttribPointerType.Float, AttributePosition, 3);
-            attributes.Add<float>(VertexAttribPointerType.Float, AttributeColor, 4);
             attributes.Add<float>(VertexAttribPointerType.Float, AttributeTexture, 2);
-            attributes.Add<TexId>(VertexAttribPointerType.Int, AttributeTextureLayer, 1);
             attributes.Compile();
         }
-        
-        _shaderProgram.Bind();
+
+        // loading materials
+        {
+            MaterialData ToData(CompiledMaterial mat) => new(mat.Raw.Color, mat.TextureId);
+            var matBuffer = new FixedBuffer<MaterialData>(_assets.Materials.Length);
+            matBuffer.Put(_assets.Materials.Select(ToData).ToArray());
+            _materialSsbo.BindAndPush(matBuffer);
+        }
     }
 
     public void DumpTextures() => _textureArray.Dump();
@@ -193,6 +198,21 @@ public sealed class OpenGLApi : GLDisposable, IGraphicApi
     public void ViewPort(int x, int y, int width, int height) => GL.Viewport(x, y, width, height);
 
     public void SetClearColor(Color color) => GL.ClearColor(color.X, color.Y, color.Z, color.W);
+    public void SetDrawMode(IGraphicApi.DrawMode mode)
+    {
+        switch (mode)
+        {
+            case IGraphicApi.DrawMode.Fill:
+                GL.PolygonMode(TriangleFace.FrontAndBack, PolygonMode.Fill);
+                break;
+            case IGraphicApi.DrawMode.Wireframe:
+                GL.PolygonMode(TriangleFace.FrontAndBack, PolygonMode.Line);
+                break;
+            default:
+                Logger.Error(this, $"unknown graphic mode: {mode}");
+                break;
+        }
+    }
 
     public void Model(Matrix4 model) => _model.SetValue(model);
     public void Projection(Matrix4 proj) => _projection.SetValue(proj);
@@ -202,22 +222,14 @@ public sealed class OpenGLApi : GLDisposable, IGraphicApi
     
     public void ClearScreenBuffers() => GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-    public void RenderToScreenBuffer<T>(VertexBuffer buffer) where T : unmanaged
+    public void RenderToScreenBuffer(VertexBuffer buffer)
     {
-        if (buffer.ProvidesColor)
-        {
-            _colorProvided.SetValue(true);
-            _vao.Bind();
-        }
-        else
-        {
-            _colorProvided.SetValue(false);
-            _vaoWhite.Bind(); 
-        }
-        
-        _vertexVbo.BindAndPush(buffer.Vbo);
+        _vertexVbo.BindAndPush(buffer.VertexVbo);
+        _matIdSsbo.BindAndPush(buffer.MatIdSsbo);
         _ebo.BindAndPush(buffer.Ebo);
-            
+        
+        //GL.DrawElementsInstanced(PrimitiveType.Triangles, 3, DrawElementsType.UnsignedInt, 0,buffer.Ebo.Count/3);
+        //GL.MultiDrawElementsIndirect(PrimitiveType.Triangles, DrawElementsType.UnsignedInt, 0);
         GL.DrawElements(PrimitiveType.Triangles, buffer.Ebo.Count, DrawElementsType.UnsignedInt, 0);
     }
     
@@ -226,7 +238,8 @@ public sealed class OpenGLApi : GLDisposable, IGraphicApi
     protected override void DisposeGLData()
     {
         _vao.Dispose();
-        _vaoWhite.Dispose();
+        _materialSsbo.Dispose();
+        _matIdSsbo.Dispose();
         _vertexVbo.Dispose();
         _ebo.Dispose();
         _shaderProgram.Dispose();

@@ -1,14 +1,14 @@
-namespace Enjune.Graphic.OpenGL.Component.Array;
+namespace Enjune.Graphic.GraphicApi.OpenGL.Component.Array;
 
 public abstract class AbstractBuffer<T> : GLDisposable where T : unmanaged
 {
-    private readonly int _handle;
+    protected readonly int Handle;
     protected readonly int ElementSize;
     protected readonly BufferTarget Target;
 
     public AbstractBuffer(BufferTarget target, int capacity)
     {
-        _handle = GL.GenBuffer();
+        Handle = GL.GenBuffer();
         Target = target;
         unsafe
         {
@@ -18,7 +18,7 @@ public abstract class AbstractBuffer<T> : GLDisposable where T : unmanaged
         GL.BufferStorage(Target, capacity*ElementSize, IntPtr.Zero, BufferStorageFlags.DynamicStorageBit);
     }
 
-    public void Bind() => GL.BindBuffer(Target, _handle);
+    public void Bind() => GL.BindBuffer(Target, Handle);
     public void Unbind() => GL.BindBuffer(Target, 0);
     
     public void BindAndPush(FixedBuffer<T> fixedBuffer)
@@ -27,5 +27,5 @@ public abstract class AbstractBuffer<T> : GLDisposable where T : unmanaged
         GL.BufferSubData(Target, 0, fixedBuffer.Count*ElementSize, fixedBuffer.Data);
     }
 
-    protected override void DisposeGLData() => GL.DeleteBuffer(_handle);
+    protected override void DisposeGLData() => GL.DeleteBuffer(Handle);
 }

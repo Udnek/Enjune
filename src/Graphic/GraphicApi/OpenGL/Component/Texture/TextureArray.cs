@@ -1,9 +1,10 @@
+using Enjune.Graphic.Asset;
 using Enjune.Misc;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
 
-namespace Enjune.Graphic.OpenGL.Component.Texture;
+namespace Enjune.Graphic.GraphicApi.OpenGL.Component.Texture;
 
 public class TextureArray : GLDisposable
 {
@@ -11,15 +12,15 @@ public class TextureArray : GLDisposable
     private readonly int _size;
     private readonly int _layers;
     
-    public TextureArray(TextureManager texManager, TextureUnit unit)
+    public TextureArray(CompiledAssets compiledAssets, TextureUnit unit)
     {
         _handler = GL.GenTexture();
         GL.ActiveTexture(unit);
         GL.BindTexture(TextureTarget.Texture2DArray, _handler);
-        
-        texManager.Compile(out _size, out var texturesDict);
-        _layers = texturesDict.Count;
-        var textures = texturesDict.OrderBy(pair => pair.Key).Select(pair => pair.Value).ToArray();
+
+        var textures = compiledAssets.Textures;
+        _size = compiledAssets.TextureSize;
+        _layers = textures.Count;
 
         // allocation
         GL.TexStorage3D(TextureTarget3d.Texture2DArray, 1, 
@@ -33,7 +34,7 @@ public class TextureArray : GLDisposable
         GL.TexParameter(TextureTarget.Texture2DArray, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest);
         
         // loading into
-        for (var layer = 0; layer < textures.Length; layer++)
+        for (var layer = 0; layer < textures.Count; layer++)
         {
             var texture = textures[layer];
             GL.TexSubImage3D(TextureTarget.Texture2DArray,

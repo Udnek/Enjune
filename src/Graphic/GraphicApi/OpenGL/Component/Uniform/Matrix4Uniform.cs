@@ -1,6 +1,6 @@
 using OpenTK.Mathematics;
 
-namespace Enjune.Graphic.OpenGL.Component.Uniform;
+namespace Enjune.Graphic.GraphicApi.OpenGL.Component.Uniform;
 
 public sealed class Matrix4Uniform : Uniform<Matrix4>
 {

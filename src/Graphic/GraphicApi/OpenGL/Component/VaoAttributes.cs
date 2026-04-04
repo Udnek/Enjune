@@ -1,9 +1,7 @@
-using System.Numerics;
-using Enjune.Graphic.OpenGL.Component;
-using Enjune.Graphic.OpenGL.Component.Array;
+using Enjune.Graphic.GraphicApi.OpenGL.Component.Array;
 using Enjune.Misc;
 
-namespace Enjune.Graphic.OpenGL;
+namespace Enjune.Graphic.GraphicApi.OpenGL.Component;
 
 public sealed class VaoAttributes<T> where T : unmanaged
 {
