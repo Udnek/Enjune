@@ -1,3 +1,4 @@
+using Enjune;
 using Enjune.File;
 using Enjune.File.ModelReader;
 using Enjune.Graphic;
@@ -7,11 +8,10 @@ using Enjune.Graphic.GraphicApi.OpenGL;
 using Enjune.Graphic.InputHandler;
 using Enjune.Misc;
 using OpenTK.Mathematics;
-using static Enjune.Misc.Misc;
 
-namespace Enjune;
+namespace SceneMaker;
 
-public class App
+public class App : IApp
 {
     private int _windowWidth = 480;
     private int _windowHeight = 360;
@@ -31,16 +31,17 @@ public class App
         _windowHeight = h;
         _grapi.ViewPort(0, 0, w, h);
     }
-
-    public void Init()
+    
+    public void Init(out string? error)
     {
         _controller = new FlyingPlayerController(_inputHandler);
         var textureManager = new AssetManager();
 
-        var model = new DotObjModelReader(textureManager, new ResourcePath("Models", "wt", "wooden watch tower2.obj")).Read(out var error)
-            ?? throw new Exception(error);
-        Logger.Log(this, $"model info: {model.Info()}");
+        var model = new DotObjModelReader(textureManager, new ResourcePath("Models", "wt", "wooden watch tower2.obj"))
+            .Read(out error);
+        if (model == null) return;
         
+        Logger.Log(this, $"model info: {model.Info()}");
         
         _models.Add(model);
         //Logger.Log(this, $"Kukuruznik model size: {kukuruznikModel.Vertices.Length}");
@@ -56,12 +57,12 @@ public class App
         }
         //_vertexBuffer.PutMesh(Mesh.Cube(new Position(0, 0, -4f), 2, TextureQuad.Full), 0);
     }
-    
+
     public void Run()
     {
         var delays = new List<long>(200);
         float deltaTime = 0;
-        RunTargetFpsLoopWhile(144,
+        Misc.RunTargetFpsLoopWhile(144,
             out deltaTime,
             (delay) =>
             {
@@ -94,7 +95,7 @@ public class App
             });
         
         var avgDelay = delays.Sum(v => v) / delays.Count;
-        Console.WriteLine($"Avg delay: {avgDelay}; avg possible fps: {NanoDelayToFps(avgDelay)}");
+        Console.WriteLine($"Avg delay: {avgDelay}; avg possible fps: {Misc.NanoDelayToFps(avgDelay)}");
         _grapi.Dispose();
     }
 }
