@@ -13,17 +13,33 @@ namespace SceneMaker;
 
 public class App : IApp
 {
-    private int _windowWidth = 480;
-    private int _windowHeight = 360;
+    private int _windowWidth = 480*2;
+    private int _windowHeight = 360*2;
     
     private readonly IGraphicApi _grapi = new OpenGLApi();
-    private readonly BasicInputHandler _inputHandler = new BasicInputHandler();
+    private readonly KeyBinds _binds;
+    private readonly Wasd _wasd;
+    
+    private readonly BasicInputHandler _inputHandler;
     private FlyingPlayerController _controller = null!;
     
     private readonly VertexBuffer _vertexBuffer = new VertexBuffer(20_000);
     private readonly List<Model> _models = new();
 
     private IGraphicApi.DrawMode _drawMode = IGraphicApi.DrawMode.Fill;
+    private readonly KeyBinds.Bind _freeCursorBind;
+
+    public App()
+    {
+        _binds = KeyBinds.CreateEmpty();
+        KeyBinds.AddWasd(_binds, out _wasd);
+        _freeCursorBind = new KeyBinds.Bind("free_cursor", GlfwKey.Escape);
+        _binds.AddBind(_freeCursorBind);
+        
+        _inputHandler = new BasicInputHandler(_grapi, _binds);
+        _controller = new FlyingPlayerController(_grapi, _inputHandler, _wasd, 0.2f);
+        
+    }
     
     private void WindowSizeChangeHandler(int w, int h)
     {
@@ -34,7 +50,6 @@ public class App : IApp
     
     public void Init(out string? error)
     {
-        _controller = new FlyingPlayerController(_inputHandler);
         var textureManager = new AssetManager();
 
         var model = new DotObjModelReader(textureManager, new ResourcePath("Models", "wt", "wooden watch tower2.obj"))
@@ -42,27 +57,27 @@ public class App : IApp
         if (model == null) return;
         
         Logger.Log(this, $"model info: {model.Info()}");
-        
         _models.Add(model);
-        //Logger.Log(this, $"Kukuruznik model size: {kukuruznikModel.Vertices.Length}");
+        
         var assets = textureManager.Compile();
 
         _grapi.Init(assets, _windowWidth, _windowHeight, "Enjune C#", _inputHandler, WindowSizeChangeHandler);
         _grapi.SetClearColor(new Color(0.1f, 0.1f, 0.1f, 1f));
+        
+        _grapi.SetCursorMode(IGraphicApi.CursorMode.Centered);
         
         _vertexBuffer.Clear();
         foreach (var m in _models)
         {
             _vertexBuffer.PutModel(m);
         }
-        //_vertexBuffer.PutMesh(Mesh.Cube(new Position(0, 0, -4f), 2, TextureQuad.Full), 0);
     }
 
     public void Run()
     {
         var delays = new List<long>(200);
         float deltaTime = 0;
-        Misc.RunTargetFpsLoopWhile(144,
+        Misc.RunTargetFpsLoopWhile(100,
             out deltaTime,
             (delay) =>
             {
@@ -71,13 +86,15 @@ public class App : IApp
             () => !_grapi.ShouldStop(),
             () =>
             {
-                if (_inputHandler.IsPressed(KeyBinds.DumpTextures)) 
-                    _grapi.DumpTextures();
-                if (_inputHandler.IsPressed(KeyBinds.SwitchDrawMode))
-                {
-                    _drawMode = (IGraphicApi.DrawMode)((int)(_drawMode + 1) % Enum.GetValues(typeof(IGraphicApi.DrawMode)).Length);
-                    _grapi.SetDrawMode(_drawMode);
-                }
+                // if (_inputHandler.IsPressed(KeyBinds.DumpTextures)) 
+                //     _grapi.DumpTextures();
+                // if (_inputHandler.IsPressed(KeyBinds.SwitchDrawMode))
+                // {
+                //     _drawMode = (IGraphicApi.DrawMode)((int)(_drawMode + 1) % Enum.GetValues(typeof(IGraphicApi.DrawMode)).Length);
+                //     _grapi.SetDrawMode(_drawMode);
+                // }
+                if (_inputHandler.IsPressed(_freeCursorBind))
+                    _grapi.SetCursorMode(IGraphicApi.CursorMode.Normal);
                 
                 
                 _controller.Update(deltaTime);

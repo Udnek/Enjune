@@ -27,13 +27,23 @@ public interface IGraphicApi : IDisposable
     void SetClearColor(Color color);
     void DumpTextures();
     void SetDrawMode(DrawMode mode);
-    
+    void SetCursorMode(CursorMode mode);
+    CursorMode GetCursorMode();
+
     delegate void WindowSizeChangeHandler(int width, int height);
 
     enum DrawMode
     {
         Fill,
         Wireframe
+    }
+
+    enum CursorMode
+    {
+        Normal,
+        Invisible,
+        Centered,
+        CanNotLeaveWindow
     }
     
     enum KeyAction

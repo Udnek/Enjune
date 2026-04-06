@@ -4,7 +4,7 @@ namespace Enjune;
 
 public static class Enjune
 {
-    public static void Run(IApp app)
+    public static void Run(IApp app, string[] args)
     {
         app.Init(out string? error);
         if (error != null)

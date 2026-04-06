@@ -29,6 +29,7 @@ public sealed class OpenGLApi : GLDisposable, IGraphicApi
     
     // storing it here fucking gc won't erase it
     private GLFWCallbacks.KeyCallback _keyCallback = null!;
+    private GLFWCallbacks.CursorPosCallback _cursorCallback = null!;
     private GLFWCallbacks.FramebufferSizeCallback _sizeChangeCallback = null!;
     private DebugProc _debugProc = null!;
     
@@ -69,12 +70,9 @@ public sealed class OpenGLApi : GLDisposable, IGraphicApi
             if (_window == null)
                 throw new Exception("Failed to create GLFW window");
             
-            // keys callback
+            // callbacks
             _keyCallback = (window, key, scancode, glAction, mods) =>
             {
-                if (key == GlfwKey.Escape && glAction == InputAction.Release)
-                    GLFW.SetWindowShouldClose(window, true);
-
                 var action = glAction switch
                 {
                     InputAction.Release => IGraphicApi.KeyAction.Release,
@@ -82,19 +80,32 @@ public sealed class OpenGLApi : GLDisposable, IGraphicApi
                     InputAction.Repeat => IGraphicApi.KeyAction.Repeat,
                     _ => throw new Exception($"Unknown key action: {glAction}")
                 };
-                keyHandler.Handle(key, action);
+                keyHandler.HandleKey(key, action);
             };
             GLFW.SetKeyCallback(_window, _keyCallback);
-
-            // Framebuffer size callback
-            _sizeChangeCallback = (_, newWidth, newHeight) => { windowSizeHandler(newWidth, newHeight); };
+            
+            _sizeChangeCallback = (_, newWidth, newHeight) => windowSizeHandler(newWidth, newHeight);
             GLFW.SetFramebufferSizeCallback(_window, _sizeChangeCallback);
 
+            _cursorCallback = (window, x, y) => keyHandler.HandleCursor(x, y);
+            GLFW.SetCursorPosCallback(_window, _cursorCallback);
+            // end callbacks
+
+            if (GLFW.RawMouseMotionSupported())
+            {
+                GLFW.SetInputMode(_window, RawMouseMotionAttribute.RawMouseMotion, true);
+                Logger.Log(this,"raw mouse input enabled");
+            }
+            else
+                Logger.Warn(this,"raw mouse input isn't supported; mouse motion might be janky");
+                
+            
             GLFW.MakeContextCurrent(_window);
-            GLFW.SwapInterval(0);
-            //GLFW.SwapInterval(1); // enable vsync
+            GLFW.SwapInterval(0); // enable vsync
             GLFW.ShowWindow(_window);
         }
+        
+
         
         // without that shit it won't work
         GL.LoadBindings(new GLFWBindingsContext());
@@ -157,9 +168,11 @@ public sealed class OpenGLApi : GLDisposable, IGraphicApi
         _projection = new Matrix4Uniform(_shaderProgram, UniformProjection);
         _textureUniform = new TextureUniform(_shaderProgram, UniformTexture);
         
-        // Set default projection matrix
-        var defaultProjection = Matrix4.CreatePerspectiveFieldOfView(MathF.PI / 2, 1.0f, 0.1f, 1000.0f);
-        _projection.SetValue(defaultProjection);
+        // Set default projection matrix{
+        {
+            var defaultProjection = Matrix4.CreatePerspectiveFieldOfView(MathF.PI / 2, 1.0f, 0.1f, 1000.0f);
+            _projection.SetValue(defaultProjection);  
+        }
         
         // textures
         _textureArray = new TextureArray(_assets, TextureUnit.Texture0);
@@ -214,6 +227,37 @@ public sealed class OpenGLApi : GLDisposable, IGraphicApi
         }
     }
 
+    public IGraphicApi.CursorMode GetCursorMode()
+    {
+        unsafe
+        {
+            return GLFW.GetInputMode(_window, CursorStateAttribute.Cursor) switch
+            {
+                CursorModeValue.CursorNormal => IGraphicApi.CursorMode.Normal,
+                CursorModeValue.CursorHidden => IGraphicApi.CursorMode.Invisible,
+                CursorModeValue.CursorDisabled => IGraphicApi.CursorMode.Centered,
+                CursorModeValue.CursorCaptured => IGraphicApi.CursorMode.CanNotLeaveWindow,
+                _ => throw new ArgumentOutOfRangeException()
+            };
+        }
+    }
+
+    public void SetCursorMode(IGraphicApi.CursorMode mode)
+    {
+        var state = mode switch
+        {
+            IGraphicApi.CursorMode.Normal => CursorModeValue.CursorNormal,
+            IGraphicApi.CursorMode.Invisible => CursorModeValue.CursorHidden,
+            IGraphicApi.CursorMode.Centered => CursorModeValue.CursorDisabled,
+            IGraphicApi.CursorMode.CanNotLeaveWindow => CursorModeValue.CursorCaptured,
+            _ => throw new ArgumentOutOfRangeException()
+        };
+        unsafe
+        {
+            GLFW.SetInputMode(_window, CursorStateAttribute.Cursor, state);
+        }
+    }
+
     public void Model(Matrix4 model) => _model.SetValue(model);
     public void Projection(Matrix4 proj) => _projection.SetValue(proj);
     public void View(Matrix4 view) => _view.SetValue(view);
@@ -227,9 +271,7 @@ public sealed class OpenGLApi : GLDisposable, IGraphicApi
         _vertexVbo.BindAndPush(buffer.VertexVbo);
         _matIdSsbo.BindAndPush(buffer.MatIdSsbo);
         _ebo.BindAndPush(buffer.Ebo);
-        
-        //GL.DrawElementsInstanced(PrimitiveType.Triangles, 3, DrawElementsType.UnsignedInt, 0,buffer.Ebo.Count/3);
-        //GL.MultiDrawElementsIndirect(PrimitiveType.Triangles, DrawElementsType.UnsignedInt, 0);
+
         GL.DrawElements(PrimitiveType.Triangles, buffer.Ebo.Count, DrawElementsType.UnsignedInt, 0);
     }
     

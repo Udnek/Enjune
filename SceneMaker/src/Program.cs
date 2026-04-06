@@ -4,6 +4,6 @@ class Program
 {
     static void Main(string[] args)
     {
-        Enjune.Enjune.Run(new App());
+        Enjune.Enjune.Run(new App(), args);
     }
 }

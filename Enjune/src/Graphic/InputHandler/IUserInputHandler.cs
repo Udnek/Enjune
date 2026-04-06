@@ -4,5 +4,6 @@ namespace Enjune.Graphic.InputHandler;
 
 public interface IUserInputHandler
 {
-    void Handle(GlfwKey key, IGraphicApi.KeyAction action);
+    void HandleKey(GlfwKey key, IGraphicApi.KeyAction action);
+    void HandleCursor(double x, double y);
 }

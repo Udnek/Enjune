@@ -1,4 +1,5 @@
 using Enjune.Graphic;
+using Enjune.Graphic.GraphicApi;
 using Enjune.Graphic.InputHandler;
 using OpenTK.Mathematics;
 
@@ -6,15 +7,21 @@ namespace Enjune.Misc;
 
 public class FlyingPlayerController
 {
+    private readonly IGraphicApi _graphicApi;
     private readonly BasicInputHandler _inputHandler;
+    private readonly Wasd _wasd;
+    private readonly float _sensitivity;
 
     private Position _position = new(0f, 0f, 0f);
     private float _pitch = 0f;
     private float _yaw = 0f;
     
-    public FlyingPlayerController(BasicInputHandler inputHandler)
+    public FlyingPlayerController(IGraphicApi graphicApi, BasicInputHandler inputHandler, Wasd wasd, float sensitivity)
     {
+        _graphicApi = graphicApi;
         _inputHandler = inputHandler;
+        _wasd = wasd;
+        _sensitivity = sensitivity;
     }
 
     // todo figure out even why this shit works
@@ -26,36 +33,34 @@ public class FlyingPlayerController
     
     public void Update(float deltaTime)
     {
-        var rotSpeed = 120 * deltaTime;
-        if (_inputHandler.IsPressed(KeyBinds.LookLeft)) _yaw += rotSpeed;
-        if (_inputHandler.IsPressed(KeyBinds.LookRight)) _yaw -= rotSpeed;
-        if (_inputHandler.IsPressed(KeyBinds.LookUp)) _pitch += rotSpeed;
-        if (_inputHandler.IsPressed(KeyBinds.LookDown)) _pitch -= rotSpeed;
-        _yaw %= 360;
-        _pitch = Math.Clamp(_pitch, -90f, 90f);
+        if (_graphicApi.GetCursorMode() == IGraphicApi.CursorMode.Centered)
+        {
+            _yaw -= _sensitivity * (float)_inputHandler.DeltaMousePosition.X;
+            _pitch -= _sensitivity * (float) _inputHandler.DeltaMousePosition.Y;
+            _yaw %= 360;
+            _pitch = Math.Clamp(_pitch, -90f, 90f);
+        }
 
-        var radYaw = MathHelper.DegreesToRadians(_yaw);
-        var radPitch = MathHelper.DegreesToRadians(_pitch);
-                
-        var yawRotation = Matrix4.CreateRotationY(radYaw);
-        //var pitchRotation = Matrix4.CreateRotationX(radPitch);
-        //var cameraRotation = yawRotation * pitchRotation;
+
+
+        // todo rewrite using sins and cosins instead of matrix4 
+        var yawRotation = Matrix4.CreateRotationY(MathHelper.DegreesToRadians(_yaw));
 
         // movement input
         var move = new Vector3(0f, 0f, 0f);
-        if (_inputHandler.IsPressed(KeyBinds.Forward))
+        if (_inputHandler.IsPressed(_wasd.Forward))
             move += yawRotation.TransformDirection(new Vector3(0f, 0f, -1f));
-        else if (_inputHandler.IsPressed(KeyBinds.Backward)) 
+        else if (_inputHandler.IsPressed(_wasd.Backward)) 
             move += yawRotation.TransformDirection(new Vector3(0f, 0f, 1f));
 
-        if (_inputHandler.IsPressed(KeyBinds.Rightward))
+        if (_inputHandler.IsPressed(_wasd.Rightward))
             move += yawRotation.TransformDirection(new Vector3(1f, 0f, 0f));
-        else if (_inputHandler.IsPressed(KeyBinds.Leftward)) 
+        else if (_inputHandler.IsPressed(_wasd.Leftward)) 
             move += yawRotation.TransformDirection(new Vector3(-1f, 0f, 0f));
 
-        if (_inputHandler.IsPressed(KeyBinds.Upward))
+        if (_inputHandler.IsPressed(_wasd.Upward))
             move += new Vector3(0f, 1f, 0f);
-        else if (_inputHandler.IsPressed(KeyBinds.Downward)) 
+        else if (_inputHandler.IsPressed(_wasd.Downward)) 
             move += new Vector3(0f, -1f, 0f);
                 
         _position += move * 8f * deltaTime;
