@@ -1,9 +1,12 @@
+using System.Reflection;
 using Enjune.Misc;
 
 namespace Enjune;
 
 public static class Enjune
 {
+    public static Assembly Assembly => typeof(Enjune).Assembly;
+    
     public static void Run(IApp app, string[] args)
     {
         app.Init(out string? error);

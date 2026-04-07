@@ -3,9 +3,9 @@ using OpenTK.Mathematics;
 
 namespace Enjune.World;
 
-public class SObject(Model model, Position position, Quaternion rotation)
+public class SObject(Model model)
 {
     public Model Model = model;
-    public Position Position = position;
-    public Quaternion Rotation = rotation;
+    public Position Position = (0, 0, 0);
+    public Quaternion Rotation = Quaternion.Identity;
 }

@@ -61,10 +61,8 @@ public class TextureArray : GLDisposable
             
             try
             {
-                using (var image = Image.LoadPixelData<Rgba32>(layerData, _size, _size))
-                {
-                    image.Save(Path.GetFullPath($"{path}/texture_id_{layer}.png"), new PngEncoder());
-                }
+                using var image = Image.LoadPixelData<Rgba32>(layerData, _size, _size);
+                image.Save(Path.GetFullPath($"{path}/texture_id_{layer}.png"), new PngEncoder());
             }
             catch (Exception e)
             {

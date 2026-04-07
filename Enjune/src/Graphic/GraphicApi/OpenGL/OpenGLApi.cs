@@ -258,9 +258,9 @@ public sealed class OpenGLApi : GLDisposable, IGraphicApi
         }
     }
 
-    public void Model(Matrix4 model) => _model.SetValue(model);
-    public void Projection(Matrix4 proj) => _projection.SetValue(proj);
-    public void View(Matrix4 view) => _view.SetValue(view);
+    public void ModelTransform(Matrix4 model) => _model.SetValue(model);
+    public void ProjectionTransform(Matrix4 proj) => _projection.SetValue(proj);
+    public void ViewTransform(Matrix4 view) => _view.SetValue(view);
 
     public bool ShouldStop() { unsafe { return GLFW.WindowShouldClose(_window); } }
     

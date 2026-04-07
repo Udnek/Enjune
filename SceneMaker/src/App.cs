@@ -7,6 +7,7 @@ using Enjune.Graphic.GraphicApi;
 using Enjune.Graphic.GraphicApi.OpenGL;
 using Enjune.Graphic.InputHandler;
 using Enjune.Misc;
+using Enjune.World;
 using OpenTK.Mathematics;
 
 namespace SceneMaker;
@@ -28,6 +29,7 @@ public class App : IApp
 
     private IGraphicApi.DrawMode _drawMode = IGraphicApi.DrawMode.Fill;
     private readonly KeyBinds.Bind _freeCursorBind;
+    private Scene _scene;
 
     public App()
     {
@@ -55,22 +57,25 @@ public class App : IApp
         var model = new DotObjModelReader(textureManager, new ResourcePath("Models", "wt", "wooden watch tower2.obj"))
             .Read(out error);
         if (model == null) return;
-        
+
+        model.Meshes[0].Item2.Raw.Color = (1, 1, 1, 1);
         Logger.Log(this, $"model info: {model.Info()}");
         _models.Add(model);
         
         var assets = textureManager.Compile();
 
         _grapi.Init(assets, _windowWidth, _windowHeight, "Enjune C#", _inputHandler, WindowSizeChangeHandler);
-        _grapi.SetClearColor(new Color(0.1f, 0.1f, 0.1f, 1f));
+        _grapi.SetClearColor(new Color(0.2f, 0.2f, 0.2f, 0f));
         
         _grapi.SetCursorMode(IGraphicApi.CursorMode.Centered);
-        
-        _vertexBuffer.Clear();
-        foreach (var m in _models)
-        {
-            _vertexBuffer.PutModel(m);
-        }
+
+        _scene = new Scene();
+        _scene.Objects.Add(new SObject(model));
+        // _vertexBuffer.Clear();
+        // foreach (var m in _models)
+        // {
+        //     _vertexBuffer.PutModel(m);
+        // }
     }
 
     public void Run()
@@ -86,6 +91,7 @@ public class App : IApp
             () => !_grapi.ShouldStop(),
             () =>
             {
+                
                 // if (_inputHandler.IsPressed(KeyBinds.DumpTextures)) 
                 //     _grapi.DumpTextures();
                 // if (_inputHandler.IsPressed(KeyBinds.SwitchDrawMode))
@@ -93,20 +99,34 @@ public class App : IApp
                 //     _drawMode = (IGraphicApi.DrawMode)((int)(_drawMode + 1) % Enum.GetValues(typeof(IGraphicApi.DrawMode)).Length);
                 //     _grapi.SetDrawMode(_drawMode);
                 // }
+ 
+                
                 if (_inputHandler.IsPressed(_freeCursorBind))
                     _grapi.SetCursorMode(IGraphicApi.CursorMode.Normal);
                 
                 
                 _controller.Update(deltaTime);
-                _grapi.Projection(Matrix4.CreatePerspectiveFieldOfView(
+                _grapi.ProjectionTransform(Matrix4.CreatePerspectiveFieldOfView(
                     MathF.PI / 2, (float) _windowWidth / _windowHeight, 0.1f, 1000f));
                 
-                _grapi.View(_controller.View);
+                _grapi.ViewTransform(_controller.View);
                 
-                _inputHandler.ClearForNextFrame();
+                // render
                 
                 _grapi.ClearScreenBuffers();
-                _grapi.RenderToScreenBuffer(_vertexBuffer);
+                
+                foreach (var sObject in _scene.Objects)
+                {
+                    sObject.Position.X += 1f*deltaTime;
+                    sObject.Rotation *= Quaternion.FromAxisAngle(Vector3.UnitZ, 1*deltaTime);
+                    _vertexBuffer.Clear();
+                    _vertexBuffer.PutModel(sObject.Model);
+                    _grapi.ModelTransform(Matrix4.CreateFromQuaternion(sObject.Rotation) * Matrix4.CreateTranslation(sObject.Position));
+                    _grapi.RenderToScreenBuffer(_vertexBuffer);
+                }
+                
+                // end
+                _inputHandler.ClearForNextFrame();
                 _grapi.UpdateScreen();
                 _grapi.UpdateEvents();
             });

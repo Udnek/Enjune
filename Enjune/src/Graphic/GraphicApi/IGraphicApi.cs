@@ -10,9 +10,9 @@ public interface IGraphicApi : IDisposable
     void ViewPort(int x, int y, int width, int height);
     void Title(string title);
     // uniforms
-    void Model(Matrix4 model);
-    void View(Matrix4 view);
-    void Projection(Matrix4 proj);
+    void ModelTransform(Matrix4 model);
+    void ViewTransform(Matrix4 view);
+    void ProjectionTransform(Matrix4 proj);
     // uniforms end
     
     // general pipeline (preferred order)
