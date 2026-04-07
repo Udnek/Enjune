@@ -14,9 +14,11 @@ public abstract class Path
     public abstract Path ThisDirectory();
     public abstract Path Subdir(string subdir);
 
+    public abstract override string ToString();
+
     public Path ResolveRaw(string raw)
     {
-        var split = raw.Replace(@"\", @"/").Split('/', StringSplitOptions.RemoveEmptyEntries);
+        var split = raw.Replace(@"\\", "/").Replace(@"\", "/").Split('/', StringSplitOptions.RemoveEmptyEntries);
         Path newPath = this;
         foreach (var part in split)
         {
@@ -27,7 +29,8 @@ public abstract class Path
         return newPath;
     }
 
-public override bool Equals(object? obj) => GetHashCode() == obj?.GetHashCode();
+    public override bool Equals(object? obj) => GetHashCode() == obj?.GetHashCode();
+    
     public abstract override int GetHashCode();
 
     // misc

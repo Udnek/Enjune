@@ -4,11 +4,16 @@ public sealed class ExternalPath : Path
 {
     private readonly string _absolutePath;
     
-    public ExternalPath(params string[] path)
-    {
-        _absolutePath = System.IO.Path.GetFullPath(System.IO.Path.Combine(path));
-    }
+    public static ExternalPath Of(params string[] path) 
+        => new(System.IO.Path.GetFullPath(System.IO.Path.Combine(path)));
+    
+    private ExternalPath(string absolutePath) => _absolutePath = absolutePath;
 
+    public override Path Parent() => new ExternalPath(System.IO.Path.GetFullPath(System.IO.Path.Combine(_absolutePath, "..")));
+
+    public override Path ThisDirectory() => new ExternalPath(System.IO.Path.GetFullPath(System.IO.Path.Combine(_absolutePath, ".")));
+
+    public override Path Subdir(string subdir) => new ExternalPath(System.IO.Path.Combine(_absolutePath, subdir));
 
     protected override Stream? Read(out string? error)
     {
@@ -30,20 +35,7 @@ public sealed class ExternalPath : Path
         throw new NotImplementedException();
     }
 
-    public override Path Parent()
-    {
-        throw new NotImplementedException();
-    }
-
-    public override Path ThisDirectory()
-    {
-        throw new NotImplementedException();
-    }
-
-    public override Path Subdir(string subdir)
-    {
-        throw new NotImplementedException();
-    }
+    public override string ToString() => _absolutePath;
 
     public override int GetHashCode() => _absolutePath.GetHashCode();
 }

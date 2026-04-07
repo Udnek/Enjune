@@ -4,6 +4,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Enjune", "Enjune\Enjune.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SceneMaker", "SceneMaker\SceneMaker.csproj", "{33CA2422-4880-4AAD-8137-78843A784B54}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{45393459-3B37-443C-8B2E-935E5A254E5C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +20,9 @@ Global
 		{33CA2422-4880-4AAD-8137-78843A784B54}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{33CA2422-4880-4AAD-8137-78843A784B54}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{33CA2422-4880-4AAD-8137-78843A784B54}.Release|Any CPU.Build.0 = Release|Any CPU
+		{45393459-3B37-443C-8B2E-935E5A254E5C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{45393459-3B37-443C-8B2E-935E5A254E5C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{45393459-3B37-443C-8B2E-935E5A254E5C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{45393459-3B37-443C-8B2E-935E5A254E5C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
