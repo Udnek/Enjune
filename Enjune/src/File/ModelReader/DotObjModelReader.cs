@@ -25,7 +25,7 @@ public class DotObjModelReader
 
     public Model? Read(out string? error)
     {
-        var text = FileManager.LoadText(_path, out error);
+        var text = _path.LoadText(out error);
         if (text == null) return null;
         var lines = text.Replace("\r", "").Split("\n");
         for (var i = 0; i < lines.Length; i++)
@@ -87,8 +87,8 @@ public class DotObjModelReader
     private string? MaterialLib(string[] args)
     {
         if (args.Length == 0) return "not enough args";
-        var matPath = _path.ResolveFromLocal(string.Join(" ", args));
-        var mat = FileManager.LoadText(matPath, out var error);
+        var matPath = _path.ResolveRaw(string.Join(" ", args));
+        var mat = matPath.LoadText(out var error);
         if (mat == null) return error;
         var lines = mat.Replace("\r", "").Split("\n");
         for (var i = 0; i < lines.Length; i++)
@@ -117,7 +117,7 @@ public class DotObjModelReader
     {
         if (args.Length == 0) return "not enough args";
         if (_lastCreatedMaterial == null) return "material hasn't created";
-        _lastCreatedMaterial.TexturePath = _path.ResolveFromLocal(string.Join(" ", args));
+        _lastCreatedMaterial.TexturePath = _path.ResolveRaw(string.Join(" ", args));
         return null;
     }
     

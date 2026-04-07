@@ -1,6 +1,6 @@
 namespace Enjune.File;
 
-public sealed class ExternalPath : Path
+public sealed class ExternalPath : ResourcePath
 {
     private readonly string _absolutePath;
     
@@ -9,11 +9,11 @@ public sealed class ExternalPath : Path
     
     private ExternalPath(string absolutePath) => _absolutePath = absolutePath;
 
-    public override Path Parent() => new ExternalPath(System.IO.Path.GetFullPath(System.IO.Path.Combine(_absolutePath, "..")));
+    public override ResourcePath Parent() => new ExternalPath(System.IO.Path.GetFullPath(System.IO.Path.Combine(_absolutePath, "..")));
 
-    public override Path ThisDirectory() => new ExternalPath(System.IO.Path.GetFullPath(System.IO.Path.Combine(_absolutePath, ".")));
+    public override ResourcePath ThisDirectory() => new ExternalPath(System.IO.Path.GetFullPath(System.IO.Path.Combine(_absolutePath, ".")));
 
-    public override Path Subdir(string subdir) => new ExternalPath(System.IO.Path.Combine(_absolutePath, subdir));
+    public override ResourcePath Subdir(string subdir) => new ExternalPath(System.IO.Path.Combine(_absolutePath, subdir));
 
     protected override Stream? Read(out string? error)
     {

@@ -1,34 +1,47 @@
 using System.Reflection;
+using Enjune.Misc;
 
 namespace Enjune.File;
 
-public sealed class AssemblyPath : Path
+public sealed class AssemblyPath : ResourcePath
 {
     private readonly string[] _path;
     private readonly Assembly _assembly;
     
-    public AssemblyPath(Assembly assembly, params string[] path)
+    public static AssemblyPath Of(Assembly assembly, params string[] path) => new(assembly, path);
+    
+    private AssemblyPath(Assembly assembly, params string[] path)
     {
+        if (path.Length == 0 || path.Any(v => v.Length == 0)) 
+            Logger.Error(this,$"trying to create path with incorrect parameter: {Utils.ContentToString(path)}");
+        
         _assembly = assembly;
         _path = path;
     }
 
-    public override Path Parent() => new AssemblyPath(_assembly, _path.Take(_path.Length - 1).ToArray());
-
-    public override Path ThisDirectory()
+    public override ResourcePath Parent()
     {
         if (_path.Length == 0) return this;
-        if (_path[^1].Contains('.')) return Parent();
-        return this; // we are already dir
+        return Of(_assembly, _path.Take(_path.Length - 1).ToArray());
     }
 
-    public override Path Subdir(string subdir)
+    public override ResourcePath ThisDirectory()
     {
-        var newDirs =  new string[_path.Length + 1];
-        _path.CopyTo(newDirs, 0);
-        newDirs[_path.Length] = subdir;
-        return new AssemblyPath(_assembly, newDirs);
+        return IsFile() ? Parent() : this;
     }
+
+    public override ResourcePath Subdir(string subdir)
+    {
+        var workingDir = this;
+        if (IsFile()) workingDir = (AssemblyPath) ThisDirectory();
+        
+        var newDirs = new string[workingDir._path.Length + 1];
+        workingDir._path.CopyTo(newDirs, 0);
+        newDirs[workingDir._path.Length] = subdir;
+        return Of(_assembly, newDirs);
+    }
+
+    public bool IsFile() => _path.Length != 0 && _path[^1].Contains('.');
 
     private string GetSplitBy(char splitter)
     {

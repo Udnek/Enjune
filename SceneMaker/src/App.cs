@@ -54,7 +54,7 @@ public class App : IApp
     {
         var textureManager = new AssetManager();
 
-        var model = new DotObjModelReader(textureManager, new ResourcePath("Models", "wt", "wooden watch tower2.obj"))
+        var model = new DotObjModelReader(textureManager, AssemblyPath.Of(Enjune.Enjune.Assembly,"Models", "wt", "wooden watch tower2.obj"))
             .Read(out error);
         if (model == null) return;
 
@@ -82,7 +82,7 @@ public class App : IApp
     {
         var delays = new List<long>(200);
         float deltaTime = 0;
-        Misc.RunTargetFpsLoopWhile(100,
+        Utils.RunTargetFpsLoopWhile(100,
             out deltaTime,
             (delay) =>
             {
@@ -132,7 +132,7 @@ public class App : IApp
             });
         
         var avgDelay = delays.Sum(v => v) / delays.Count;
-        Console.WriteLine($"Avg delay: {avgDelay}; avg possible fps: {Misc.NanoDelayToFps(avgDelay)}");
+        Console.WriteLine($"Avg delay: {avgDelay}; avg possible fps: {Utils.NanoDelayToFps(avgDelay)}");
         _grapi.Dispose();
     }
 }

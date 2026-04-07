@@ -157,8 +157,8 @@ public sealed class OpenGLApi : GLDisposable, IGraphicApi
     private void InitComponents()
     {
         _shaderProgram = new ShaderProgram(
-            new ResourcePath("OpenGL", "frag.frag"),
-            new ResourcePath("OpenGL", "vert.vert"));
+            AssemblyPath.Of(Enjune.Assembly,"OpenGL", "frag.frag"),
+            AssemblyPath.Of(Enjune.Assembly, "OpenGL", "vert.vert"));
         
         _shaderProgram.Bind();
         

@@ -18,8 +18,8 @@ public class AssetManager
     
     public AssetManager()
     {
-        MissingMaterial = AddMaterialAndGetCompiled(RawMaterial.FromTexture("MissingTexture.png"));
-        WhiteMaterial = AddMaterialAndGetCompiled(RawMaterial.FromTexture("WhitePixel.png"));
+        MissingMaterial = AddMaterialAndGetCompiled(RawMaterial.FromTexture(AssemblyPath.Of(Enjune.Assembly,"MissingTexture.png")));
+        WhiteMaterial = AddMaterialAndGetCompiled(RawMaterial.FromTexture(AssemblyPath.Of(Enjune.Assembly,"WhitePixel.png")));
     }
 
     public CompiledMaterial AddMaterialAndGetCompiled(RawMaterial rawMaterial)
@@ -69,7 +69,7 @@ public class AssetManager
 
     private bool IsValidTexture(ResourcePath path, out string? error)
     {
-        var imageResult = FileManager.LoadImage(path, out error);
+        var imageResult = path.LoadImage(out error);
         return imageResult != null;
     }
     
@@ -81,7 +81,8 @@ public class AssetManager
         List<ImageResult> rawImages = new();
         foreach (var texturePath in _textures)
         {
-            var imageResult = FileManager.LoadImage(texturePath, out var error) ?? throw new Exception(error);
+            var imageResult = texturePath.LoadImage(out var error) 
+                              ?? throw new Exception(error);
             rawImages.Add(imageResult);
         }
 

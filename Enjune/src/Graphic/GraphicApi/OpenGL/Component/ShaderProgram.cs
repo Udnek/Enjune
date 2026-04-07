@@ -13,10 +13,10 @@ public class ShaderProgram : GLDisposable
     {
         _program = GL.CreateProgram();
 
-        var fragText = FileManager.LoadText(fragmentPath, out var error)
-            ?? throw new Exception($"Fragment shader can not be loaded: {error}");
-        var vertText = FileManager.LoadText(vertexPath, out error)
-            ?? throw new Exception($"Vertex shader can not be loaded: {error}");
+        var fragText = fragmentPath.LoadText(out var error)
+                       ?? throw new Exception($"Fragment shader can not be loaded: {error}");
+        var vertText = vertexPath.LoadText(out error)
+                       ?? throw new Exception($"Vertex shader can not be loaded: {error}");
         
         _fragmentShader = InitShader(ShaderType.FragmentShader, fragText);
         _vertexShader = InitShader(ShaderType.VertexShader, vertText);

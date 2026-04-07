@@ -6,7 +6,7 @@ namespace Enjune.Misc;
 
 public delegate void Consumer<in T>(T obj);
 
-public static class Misc
+public static class Utils
 {
     extension(Matrix4 matrix)
     {
@@ -19,7 +19,12 @@ public static class Misc
     public static float NanosToSeconds(Nanoseconds nanos) => nanos / NanosInSec;
     public static Fps NanoDelayToFps(Nanoseconds nanos) => NanosInSec / nanos;
     private static Nanoseconds TicksToNanos(long ticks) => (Nanoseconds)(ticks * (NanosInSec / Stopwatch.Frequency));
-    
+
+    public static string ContentToString<T>(T?[] array)
+    {
+        return "["+string.Join(", ", array.Select(v => v?.ToString() ?? "null"))+"]";
+    }
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void RunTargetFpsLoopWhile(
         Fps targetFps, out float deltaTime, Consumer<Nanoseconds> delayConsumer, Func<bool> shouldContinue, Action action)
