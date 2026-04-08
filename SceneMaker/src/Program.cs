@@ -1,9 +1,13 @@
-﻿namespace SceneMaker;
+﻿using Enjune.File;
+using Enjune.Graphic.Font;
+
+namespace SceneMaker;
 
 class Program
 {
     static void Main(string[] args)
     {
-        Enjune.Enjune.Run(new App(), args);
+        new FontLoader().Load(AssemblyPath.Of(Enjune.Enjune.Assembly, "Fonts", "papyrus.ttf"));
+        // Enjune.Enjune.Run(new App(), args);
     }
 }
