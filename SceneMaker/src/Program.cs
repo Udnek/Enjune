@@ -7,7 +7,6 @@ class Program
 {
     static void Main(string[] args)
     {
-        new FontLoader().Load(AssemblyPath.Of(Enjune.Enjune.Assembly, "Fonts", "papyrus.ttf"));
-        // Enjune.Enjune.Run(new App(), args);
+        Enjune.Enjune.Run(new App(), args);
     }
 }

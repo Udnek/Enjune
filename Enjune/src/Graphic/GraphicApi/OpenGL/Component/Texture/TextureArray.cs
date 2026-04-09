@@ -1,3 +1,4 @@
+using Enjune.File;
 using Enjune.Graphic.Asset;
 using Enjune.Misc;
 using SixLabors.ImageSharp;
@@ -37,17 +38,29 @@ public class TextureArray : GLDisposable
         for (var layer = 0; layer < textures.Count; layer++)
         {
             var texture = textures[layer];
+            PixelFormat? pixelFormat = texture.Type.Depth switch
+            {
+                4 => PixelFormat.Rgba,
+                3 => PixelFormat.Rgb,
+                1 => PixelFormat.Alpha,
+                _ => null
+            };
+            if (pixelFormat == null)
+            {
+                Logger.Error(this, $"unsupported depth: {texture.Type.Depth}");
+                continue;
+            }
             GL.TexSubImage3D(TextureTarget.Texture2DArray,
                 0, // mipmap
                 0, 0, layer,
                 _size, _size, 1,
-                PixelFormat.Rgba, PixelType.UnsignedByte, texture);
+                (PixelFormat)pixelFormat, PixelType.UnsignedByte, texture.Data);
         }
     }
 
-    public void Dump()
+    public void Dump(ExternalPath path)
     {
-        string path = Path.GetFullPath($"./");
+        path = (ExternalPath)path.ThisDirectory();
         Logger.Log(this, $"dumping textures into {path}");
         int layerSize = _size * _size * 4;
         byte[] data = new byte[layerSize * _layers];

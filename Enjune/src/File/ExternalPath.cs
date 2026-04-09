@@ -30,11 +30,6 @@ public sealed class ExternalPath : ResourcePath
         }
     }
 
-    public override void Write(out string? error, StreamReader data)
-    {
-        throw new NotImplementedException();
-    }
-
     public override string ToString() => _absolutePath;
 
     public override int GetHashCode() => _absolutePath.GetHashCode();

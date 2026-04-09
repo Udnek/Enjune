@@ -3,6 +3,7 @@ using Enjune.File;
 using Enjune.File.ModelReader;
 using Enjune.Graphic;
 using Enjune.Graphic.Asset;
+using Enjune.Graphic.Font;
 using Enjune.Graphic.GraphicApi;
 using Enjune.Graphic.GraphicApi.OpenGL;
 using Enjune.Graphic.InputHandler;
@@ -20,6 +21,7 @@ public class App : IApp
     private readonly IGraphicApi _grapi = new OpenGLApi();
     private readonly KeyBinds _binds;
     private readonly Wasd _wasd;
+    private readonly KeyBinds.Bind _dumbTexturesBind;
     
     private readonly BasicInputHandler _inputHandler;
     private FlyingPlayerController _controller = null!;
@@ -37,6 +39,7 @@ public class App : IApp
         KeyBinds.AddWasd(_binds, out _wasd);
         _freeCursorBind = new KeyBinds.Bind("free_cursor", GlfwKey.Escape);
         _binds.AddBind(_freeCursorBind);
+        _dumbTexturesBind = _binds.AddBind(new KeyBinds.Bind("dumb_textures", GlfwKey.F2));
         
         _inputHandler = new BasicInputHandler(_grapi, _binds);
         _controller = new FlyingPlayerController(_grapi, _inputHandler, _wasd, 0.2f);
@@ -61,6 +64,10 @@ public class App : IApp
         model.Meshes[0].Item2.Raw.Color = (1, 1, 1, 1);
         Logger.Log(this, $"model info: {model.Info()}");
         _models.Add(model);
+
+        var byteImage = new FontLoader().Load(out error, AssemblyPath.Of(Enjune.Enjune.Assembly, "Fonts", "papyrus.ttf"));
+        if (byteImage == null) return;
+        textureManager.AddTexture(byteImage);
         
         var assets = textureManager.Compile();
 
@@ -92,8 +99,8 @@ public class App : IApp
             () =>
             {
                 
-                // if (_inputHandler.IsPressed(KeyBinds.DumpTextures)) 
-                //     _grapi.DumpTextures();
+                if (_inputHandler.IsPressed(_dumbTexturesBind)) 
+                    _grapi.DumpTextures(ExternalPath.Of("."));
                 // if (_inputHandler.IsPressed(KeyBinds.SwitchDrawMode))
                 // {
                 //     _drawMode = (IGraphicApi.DrawMode)((int)(_drawMode + 1) % Enum.GetValues(typeof(IGraphicApi.DrawMode)).Length);

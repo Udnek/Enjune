@@ -1,3 +1,4 @@
+using Enjune.File;
 using Enjune.Graphic.Asset;
 using Enjune.Graphic.InputHandler;
 using OpenTK.Mathematics;
@@ -6,16 +7,18 @@ namespace Enjune.Graphic.GraphicApi;
 
 public interface IGraphicApi : IDisposable
 {
-    void Init(CompiledAssets assets, int width, int height, string title, IUserInputHandler userInputHandler, WindowSizeChangeHandler windowSizeHandler);
+    void Init(CompiledAssets assets, int width, int height, string title, 
+        IUserInputHandler userInputHandler, WindowSizeChangeHandler windowSizeHandler);
     void ViewPort(int x, int y, int width, int height);
     void Title(string title);
     // uniforms
     void ModelTransform(Matrix4 model);
     void ViewTransform(Matrix4 view);
     void ProjectionTransform(Matrix4 proj);
+    void GlobalColor(Color color);
     // uniforms end
     
-    // general pipeline (preferred order)
+    // general pipeliner
     bool ShouldStop(); // should stop application
     void ClearScreenBuffers();
     void RenderToScreenBuffer(VertexBuffer buffer);
@@ -25,7 +28,7 @@ public interface IGraphicApi : IDisposable
 
     // misc
     void SetClearColor(Color color);
-    void DumpTextures();
+    void DumpTextures(ExternalPath path);
     void SetDrawMode(DrawMode mode);
     void SetCursorMode(CursorMode mode);
     CursorMode GetCursorMode();

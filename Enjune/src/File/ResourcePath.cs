@@ -1,3 +1,4 @@
+using Enjune.Graphic.Asset;
 using Enjune.Misc;
 using StbImageSharp;
 
@@ -8,8 +9,6 @@ public abstract class ResourcePath
     // interface
 
     protected abstract Stream? Read(out string? error);
-
-    public abstract void Write(out string? error, StreamReader data);
 
     public abstract ResourcePath Parent();
     public abstract ResourcePath ThisDirectory();
@@ -38,38 +37,39 @@ public abstract class ResourcePath
     
     public string? LoadText(out string? error)
     {
-        return LoadResource(out error, s =>
-        {
-            using var streamReader = new StreamReader(s);
-            return streamReader.ReadToEnd();
-        });
+        using var stream = Read(out error);
+        if (stream == null) return null;
+        using var streamReader = new StreamReader(stream);
+        return streamReader.ReadToEnd();
     }
     
-    public ImageResult? LoadImage(out string? error)
+    public ByteImage? LoadImage(out string? error)
     {
+        using var stream = Read(out error);
+        if (stream == null) return null;
         StbImage.stbi_set_flip_vertically_on_load(1);
-        return LoadResource(out error, s => ImageResult.FromStream(s, ColorComponents.RedGreenBlueAlpha));
+        var imageResult = ImageResult.FromStream(stream);
+        ByteImage.ImType? type = imageResult.Comp switch
+        {
+            ColorComponents.RedGreenBlueAlpha => ByteImage.ImType.Rgba32,
+            ColorComponents.RedGreenBlue => ByteImage.ImType.Rgb24,
+            ColorComponents.Grey => ByteImage.ImType.Grey8,
+            _ => null
+        };
+        if (type == null)
+        {
+            error = $"unknown color components: {imageResult.Comp}";
+            return null;
+        }
+        return new ByteImage(imageResult.Width, imageResult.Height, (ByteImage.ImType)type, imageResult.Data);
     }
 
     public byte[]? LoadBytes(out string? error)
     {
-        return LoadResource(out error, stream =>
-        {
-            using var memoryStream = new MemoryStream();
-            stream.CopyTo(memoryStream);
-            return memoryStream.ToArray();
-        });
-    }
-    
-    public T? LoadResource<T>(out string? error, Func<Stream, T> streamTaker)
-    {
         using var stream = Read(out error);
-        if (stream == null)
-        {
-            error = $"stream is null: {error}";
-            return default;
-        }
-        error = null;
-        return streamTaker(stream);
+        if (stream == null) return null;
+        using var memoryStream = new MemoryStream();
+        stream.CopyTo(memoryStream);
+        return memoryStream.ToArray();
     }
 }

@@ -17,6 +17,12 @@ public class Mesh
         Textures = textures;
         Indexes = indexes;
     }
+
+    public void Offset(Position offset)
+    {
+        for (var i = 0; i < Vertices.Length; i++) 
+            Vertices[i] += offset;
+    }
     
     public static Mesh Cuboid(
         Position b1, Position b2, Position b3, Position b4,

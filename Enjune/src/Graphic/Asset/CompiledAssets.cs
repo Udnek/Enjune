@@ -2,7 +2,7 @@ namespace Enjune.Graphic.Asset;
 
 public record CompiledAssets(
     int TextureSize, 
-    List<byte[]> Textures, 
+    List<ByteImage> Textures, 
     CompiledMaterial[] Materials
     )
 {

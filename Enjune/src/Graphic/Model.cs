@@ -14,6 +14,9 @@ public sealed class Model
         Meshes = meshes;
     }
 
+    public static Model CreateFromOneMaterial(Mesh[] meshes, CompiledMaterial material)
+        => CreateNotOptimized([(Mesh.Merge(meshes), material)]);
+    
     public static Model CreateAndOptimize(ValueTuple<Mesh, CompiledMaterial>[] meshes)
     {
         List<ValueTuple<Mesh, CompiledMaterial>> newMeshes = [];

@@ -37,6 +37,7 @@ public sealed class OpenGLApi : GLDisposable, IGraphicApi
     private Matrix4Uniform _model = null!;
     private Matrix4Uniform _view = null!;
     private Matrix4Uniform _projection = null!;
+    private Vector4Uniform _globalColor = null!;
     private TextureUniform _textureUniform = null!;
 
     public void Init(CompiledAssets assets, int width, int height, string title,
@@ -153,6 +154,7 @@ public sealed class OpenGLApi : GLDisposable, IGraphicApi
     private const string UniformModel = "model";
     private const string UniformView = "view";
     private const string UniformProjection = "projection";
+    private const string UniformGlobalColor = "globalColor";
     
     private void InitComponents()
     {
@@ -167,9 +169,11 @@ public sealed class OpenGLApi : GLDisposable, IGraphicApi
         _view = new Matrix4Uniform(_shaderProgram, UniformView);
         _projection = new Matrix4Uniform(_shaderProgram, UniformProjection);
         _textureUniform = new TextureUniform(_shaderProgram, UniformTexture);
+        _globalColor = new Vector4Uniform(_shaderProgram, UniformGlobalColor);
         
-        // Set default projection matrix{
+        // Set default for uniforms
         {
+            _globalColor.SetValue(new Color(1));
             var defaultProjection = Matrix4.CreatePerspectiveFieldOfView(MathF.PI / 2, 1.0f, 0.1f, 1000.0f);
             _projection.SetValue(defaultProjection);  
         }
@@ -202,7 +206,7 @@ public sealed class OpenGLApi : GLDisposable, IGraphicApi
         }
     }
 
-    public void DumpTextures() => _textureArray.Dump();
+    public void DumpTextures(ExternalPath path) => _textureArray.Dump(path);
 
     public void UpdateEvents() => GLFW.PollEvents();
 
@@ -261,6 +265,7 @@ public sealed class OpenGLApi : GLDisposable, IGraphicApi
     public void ModelTransform(Matrix4 model) => _model.SetValue(model);
     public void ProjectionTransform(Matrix4 proj) => _projection.SetValue(proj);
     public void ViewTransform(Matrix4 view) => _view.SetValue(view);
+    public void GlobalColor(Color color) =>  _globalColor.SetValue(color);
 
     public bool ShouldStop() { unsafe { return GLFW.WindowShouldClose(_window); } }
     
