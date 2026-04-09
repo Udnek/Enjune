@@ -9,8 +9,26 @@ namespace Enjune.Graphic.Font;
 
 public class FontLoader
 {
-    public record struct RawGlyph(uint Width, uint Height, int BearingX, int BearingY, float Advance, byte[] Buffer);
-    
+    public record struct RawGlyph
+    {
+        public uint Width;
+        public uint Height;
+        public int BearingX;
+        public int BearingY;
+        public float Advance;
+        public byte[] Buffer;
+        
+        public RawGlyph(uint Width, uint Height, int BearingX, int BearingY, float Advance, byte[] Buffer)
+        {
+            this.Width = Width;
+            this.Height = Height;
+            this.BearingX = BearingX;
+            this.BearingY = BearingY;
+            this.Advance = Advance;
+            this.Buffer = Buffer;
+        }
+    }
+
     public record struct CompiledGlyph();
     
     public unsafe string? Load(ResourcePath path)
@@ -58,31 +76,52 @@ public class FontLoader
         FT_Done_Face(face);
         FT_Done_FreeType(ft);
         
-        foreach (var (c, glyph) in rawGlyphs)
-        {
-            Logger.Log(this, $"{c} ({(byte) c}) = {glyph}");
-        }
+        // foreach (var (c, glyph) in rawGlyphs)
+        // {
+        //     Logger.Log(this, $"{c} ({(byte) c}) = {glyph}");
+        // }
+        //
+        // var meanWidth = rawGlyphs.Sum(v => v.glyph.Width) / (float) rawGlyphs.Count;
+        // var meanHeight = rawGlyphs.Sum(v => v.glyph.Height) / (float) rawGlyphs.Count;
+        // Logger.Log(this, $"meanWidth: {meanWidth}, meanHeight: {meanHeight}");
+        // Logger.Log(this, $"maxWidth: {rawGlyphs.Max(v => v.glyph.Width)}, " +
+        //                  $"maxHeight: {rawGlyphs.Max(v => v.glyph.Height)}");
 
-        var meanWidth = rawGlyphs.Sum(v => v.glyph.Width) / (float) rawGlyphs.Count;
-        var meanHeight = rawGlyphs.Sum(v => v.glyph.Height) / (float) rawGlyphs.Count;
-        Logger.Log(this, $"meanWidth: {meanWidth}, meanHeight: {meanHeight}");
-        Logger.Log(this, $"maxWidth: {rawGlyphs.Max(v => v.glyph.Width)}, " +
-                         $"maxHeight: {rawGlyphs.Max(v => v.glyph.Height)}");
 
-
-        var rectangles = new List<PackingRectangle>(rawGlyphs.Count);
+        var rectanglesList = new List<PackingRectangle>(rawGlyphs.Count);
         foreach (var (ch, glyph) in rawGlyphs)
         {
             if (glyph.Width == 0 || glyph.Height == 0)
             {
-                Logger.Warn(this, $"char '{ch}' ({(byte) ch}) has zero size: {glyph}");
+                Logger.Warn(this, $"char '{ch}' ({(byte)ch}) has zero size: {glyph}");
                 continue;
             }
-            rectangles.Add(new PackingRectangle(0, 0, glyph.Width, glyph.Height));
+            rectanglesList.Add(new PackingRectangle(0, 0, glyph.Width, glyph.Height));
         }
-        Logger.Log(this, "packing started");
-        RectanglePacker.Pack(rectangles.ToArray(), out var bounds);
-        Logger.Log(this, $"packing finished: {bounds}");
+
+        var rectangles = rectanglesList.ToArray();
+        
+        RectanglePacker.Pack(rectangles, out var bounds);
+        Logger.Log(this, $"bounds: {bounds.Width}x{bounds.Height}");
+        var atlasSize = (int) Math.Pow(2, Math.Ceiling(Math.Log2(Math.Max(bounds.Width, bounds.Height))));
+        Logger.Log(this, $"atlas size: {atlasSize}");
+
+        byte[] atlas = new byte[atlasSize*atlasSize];
+        foreach (var rectangle in rectangles)
+        {
+            
+        }
         return null;
     }
 }
+
+
+
+
+
+
+
+
+
+
+
