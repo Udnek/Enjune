@@ -62,11 +62,6 @@ public sealed class AssemblyPath : ResourcePath
         error = null;
         return stream;
     }
-
-    public override void Write(out string? error, StreamReader data)
-    {
-        throw new NotImplementedException();
-    }
     
     public override string ToString() => GetSplitBy('.');
 

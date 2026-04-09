@@ -1,4 +1,5 @@
 using Enjune.File;
+using Enjune.Graphic.Font;
 using Enjune.Misc;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
@@ -12,7 +13,6 @@ public class AssetManager
     private readonly Dictionary<RawMaterial, CompiledMaterial> _materials = [];
     
     private readonly List<ByteImage> _textures = [];
-    //private readonly List<ResourcePath> _knownTexturePaths = [];
     private readonly HashSet<ResourcePath> _invalidPaths = [];
 
     public readonly CompiledMaterial MissingMaterial;
@@ -24,10 +24,17 @@ public class AssetManager
         WhiteMaterial = AddMaterialAndGetCompiled(RawMaterial.FromTexture(AssemblyPath.Of(Enjune.Assembly,"WhitePixel.png")));
     }
 
-    public void AddTexture(ByteImage image)
+    public CompiledFont? AddFont(ResourcePath path, uint resolution, out string? error)
     {
-        
-        _textures.Add(image);
+        FontLoader.Load(out error, resolution, path, out var image, out var rawGlyphs);
+        if (image == null || rawGlyphs == null) 
+            return null;
+
+        var glyphs = new Dictionary<char, CompiledFont.Glyph>(rawGlyphs.Count);
+        foreach (var (ch, rawGlyph) in rawGlyphs)
+        {
+
+        }
     }
     
     public CompiledMaterial AddMaterialAndGetCompiled(RawMaterial rawMaterial)
@@ -86,16 +93,6 @@ public class AssetManager
     {
         Logger.Log(this, $"compiling {_textures.Count} textures; {_materials.Count} materials");
         
-        // List<ByteImage> rawImages = new();
-        // // loading
-        // foreach (var texturePath in _textures)
-        // {
-        //     var imageResult = texturePath.LoadImage(out var error) 
-        //                       ?? throw new Exception(error);
-        //     rawImages.Add(imageResult);
-        // }
-        // // adding already loaded
-        // rawImages.AddRange(_textures);
         var rawImages = _textures;
 
         // choosing max size

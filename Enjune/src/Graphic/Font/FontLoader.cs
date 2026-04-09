@@ -10,7 +10,7 @@ namespace Enjune.Graphic.Font;
 
 public static class FontLoader
 {
-    private record struct RawGlyph
+    public record struct RawGlyph
     {
         public uint Width;
         public uint Height;
@@ -30,8 +30,9 @@ public static class FontLoader
         }
     }
     
-    public static unsafe void Load(out string? error, uint pixelHeight, ResourcePath path, out ByteImage? image)
+    public static unsafe void Load(out string? error, uint pixelHeight, ResourcePath path, out ByteImage? image, out Dictionary<char, RawGlyph>? rawGlyphs)
     {
+        rawGlyphs = null;
         image = null;
         FT_LibraryRec_* ft;
         var initError = FT_Init_FreeType(&ft);
@@ -64,7 +65,7 @@ public static class FontLoader
 
         FT_Set_Pixel_Sizes(face, 0, pixelHeight);
         
-        Dictionary<char, RawGlyph> rawGlyphs = new ();
+        rawGlyphs = new Dictionary<char, RawGlyph>();
         for (byte charI = 0; charI < 128; charI++)
         {
             var ch = (char) charI;
@@ -91,7 +92,7 @@ public static class FontLoader
                 );
             if (rawGlyph.Width == 0 || rawGlyph.Height == 0)
             {
-                Logger.Warn(this, $"char '{ch}' ({(byte)ch}) has zero size: {rawGlyph}; defaulting to 1x1");
+                Logger.Warn(typeof(FontLoader), $"char '{ch}' ({(byte)ch}) has zero size: {rawGlyph}; defaulting to 1x1");
                 rawGlyph.Width = 1;
                 rawGlyph.Height = 1;
                 rawGlyph.Buffer = new byte[1];
@@ -99,11 +100,13 @@ public static class FontLoader
             rawGlyphs[ch] = rawGlyph;
         }
         
+        FT_Done_Face(face);
+        FT_Done_FreeType(ft);
+        
         // foreach (var (c, glyph) in rawGlyphs)
         // {
         //     Logger.Log(this, $"{c} ({(byte) c}) = {glyph}");
         // }
-
 
         PackingRectangle[] rectangles;
         {
@@ -116,9 +119,9 @@ public static class FontLoader
         }
         
         RectanglePacker.Pack(rectangles, out var bounds);
-        Logger.Log(this, $"bounds: {bounds.Width}x{bounds.Height}");
+        Logger.Log(typeof(FontLoader), $"bounds: {bounds.Width}x{bounds.Height}");
         var atlasSize = (int) Math.Pow(2, Math.Ceiling(Math.Log2(Math.Max(bounds.Width, bounds.Height))));
-        Logger.Log(this, $"atlas size: {atlasSize}");
+        Logger.Log(typeof(FontLoader), $"atlas size: {atlasSize}");
 
         var atlasBuffer = new Buffer2D<byte>(atlasSize, atlasSize);
         foreach (var rectangle in rectangles)
@@ -130,8 +133,6 @@ public static class FontLoader
         }
 
         error = null;
-        FT_Done_Face(face);
-        FT_Done_FreeType(ft);
         image = new ByteImage(atlasSize, atlasSize, ByteImage.ImType.Grey8, atlasBuffer.Data);
     }
 }
