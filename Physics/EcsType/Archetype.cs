@@ -9,10 +9,11 @@ public class Archetype
 {
     private readonly Signature _signature;
     
-    private Dictionary<Type, List<IComponent>> _components = new();
+    private Array[] _componentArrays;
     public Dictionary<EntityId, int> Id2Row = new();
     public Dictionary<int, EntityId> Row2Id = new();
-    
+
+    private int _entityCapacity = 32;
     private int _lastRow;
     public int Count;
 
@@ -20,10 +21,11 @@ public class Archetype
     {
         _signature = signature;
         int nComponents = signature.GetSetBitsCount();
-        var types = World.ComponentManager.DeconstructSignature(_signature);
-        foreach (var type in types)
+        List<Type> types = World.ComponentManager.DeconstructSignature(_signature);
+        _componentArrays = new Array[nComponents];
+        for (int i = nComponents - 1; i >= 0; i--)
         {
-            _components.Add(type, new List<IComponent>());
+            _componentArrays[i] = Array.CreateInstance(types[i], _entityCapacity);
         }
     }
 
@@ -35,7 +37,7 @@ public class Archetype
         _lastRow++;
         Id2Row.Add(id, index);
         Row2Id.Add(index, id);
-        foreach (var component in components) { _components[component.GetType()].Add(component); }
+        //foreach (var component in components) { _components[component.GetType()].Add(component); }
     }
 
     public void RemoveEntity(EntityId id)
@@ -44,10 +46,10 @@ public class Archetype
         _lastRow--;
         Id2Row.Remove(id);
         Row2Id.Remove(id);
-        foreach (var componentList in _components.Values)
+        /*foreach (var componentList in _components.Values)
         {
             componentList[index] = componentList.Last();
             componentList.RemoveAt(componentList.Count - 1);
-        }
+        }*/
     }
 }
