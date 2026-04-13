@@ -8,14 +8,14 @@ public sealed class VaoAttributes<T> where T : unmanaged
     private readonly List<Attribute> _attributes = [];
     private readonly Vao _vao;
     private readonly AbstractBuffer<T> _vbo;
-    private readonly ShaderProgram _shaderProgram;
+    private readonly ShaderProgram[] _shaderPrograms;
     private bool _compiled = false;
     
-    public VaoAttributes(Vao vao, Vbo<T> vbo, ShaderProgram program)
+    public VaoAttributes(Vao vao, Vbo<T> vbo, params ShaderProgram[] programs)
     {
         _vao = vao;
         _vbo = vbo;
-        _shaderProgram = program;
+        _shaderPrograms = programs;
     }
     
     public void Add<TT>(VertexAttribPointerType pType, string name, int elements, bool perInstance = false) where TT : unmanaged
@@ -43,40 +43,41 @@ public sealed class VaoAttributes<T> where T : unmanaged
         
         _vao.Bind();
         _vbo.Bind();
-        _shaderProgram.Bind();
-        
-        int stride = _attributes.Sum(a => a.SizeBytes);
-        int offset = 0;
-        foreach (var attr in _attributes)
+        foreach (var program in _shaderPrograms)
         {
-            int location = _shaderProgram.GetAttributeLocation(attr.Name);
-            GL.EnableVertexAttribArray(location);
-            var allIntPointerTypes = (int[]) Enum.GetValues(typeof(VertexAttribIntegerType));
-            if (allIntPointerTypes.Contains((int) attr.PointerType)) // so it means we need to use integer pointer
+            int stride = _attributes.Sum(a => a.SizeBytes);
+            int offset = 0;
+            foreach (var attr in _attributes)
             {
-                GL.VertexAttribIPointer(
-                    location,
-                    attr.Elements,
-                    (VertexAttribIntegerType) attr.PointerType,
-                    stride,
-                    offset);
-            }
-            else
-            {
-                GL.VertexAttribPointer(
-                    location,
-                    attr.Elements,
-                    attr.PointerType,
-                    false,
-                    stride,
-                    offset);
-            }
+                int location = program.GetAttributeLocation(attr.Name);
+                GL.EnableVertexAttribArray(location);
+                var allIntPointerTypes = (int[]) Enum.GetValues(typeof(VertexAttribIntegerType));
+                if (allIntPointerTypes.Contains((int) attr.PointerType)) // so it means we need to use integer pointer
+                {
+                    GL.VertexAttribIPointer(
+                        location,
+                        attr.Elements,
+                        (VertexAttribIntegerType) attr.PointerType,
+                        stride,
+                        offset);
+                }
+                else
+                {
+                    GL.VertexAttribPointer(
+                        location,
+                        attr.Elements,
+                        attr.PointerType,
+                        false,
+                        stride,
+                        offset);
+                }
 
-            if (attr.PerInstance)
-            {
-                GL.VertexAttribDivisor(location, 1);
-            }
-            offset += attr.SizeBytes;
+                if (attr.PerInstance)
+                {
+                    GL.VertexAttribDivisor(location, 1);
+                }
+                offset += attr.SizeBytes;
+            }   
         }
     }
     

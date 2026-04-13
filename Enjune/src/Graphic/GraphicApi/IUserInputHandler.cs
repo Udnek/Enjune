@@ -1,9 +1,11 @@
 using Enjune.Graphic.GraphicApi;
+using OpenTK.Windowing.GraphicsLibraryFramework;
 
 namespace Enjune.Graphic.InputHandler;
 
 public interface IUserInputHandler
 {
     void HandleKey(GlfwKey key, IGraphicApi.KeyAction action);
-    void HandleCursor(double x, double y);
+    void HandleMouseKey(MouseButton key, IGraphicApi.KeyAction action);
+    void HandleCursor(int x, int y);
 }

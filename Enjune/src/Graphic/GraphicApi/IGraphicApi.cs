@@ -1,14 +1,16 @@
 using Enjune.File;
 using Enjune.Graphic.Asset;
 using Enjune.Graphic.InputHandler;
+using Enjune.Misc;
 using OpenTK.Mathematics;
 
 namespace Enjune.Graphic.GraphicApi;
 
 public interface IGraphicApi : IDisposable
 {
-    void Init(CompiledAssets assets, int width, int height, string title, 
+    Error? Init(CompiledAssets assets, int width, int height, string title, 
         IUserInputHandler userInputHandler, WindowSizeChangeHandler windowSizeHandler);
+    
     void ViewPort(int x, int y, int width, int height);
     void Title(string title);
     // uniforms
@@ -31,8 +33,19 @@ public interface IGraphicApi : IDisposable
     void DumpTextures(ExternalPath path);
     void SetDrawMode(DrawMode mode);
     void SetCursorMode(CursorMode mode);
+    void SetVsync(bool vsync);
     CursorMode GetCursorMode();
 
+
+    // shader
+    void SwitchShader(ShaderType type);
+    
+    enum ShaderType
+    {
+        Main,
+        Text
+    }
+    
     delegate void WindowSizeChangeHandler(int width, int height);
 
     enum DrawMode

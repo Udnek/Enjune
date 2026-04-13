@@ -23,7 +23,7 @@ public class DotObjModelReader
         _path = path;
     }
 
-    public Model? Read(out string? error)
+    public Model? Read(out Error? error)
     {
         var text = _path.LoadText(out error);
         if (text == null) return null;
@@ -61,7 +61,7 @@ public class DotObjModelReader
         };
     }
 
-    private string? VertexTexture(string[] args)
+    private Error? VertexTexture(string[] args)
     {
         if (args.Length != 2) return "incorrect amount of args: " + args.Length;
         if (float.TryParse(args[0], out float u)
@@ -73,7 +73,7 @@ public class DotObjModelReader
         return "can not parse vertex textures";
     }
 
-    private string? UseMaterial(string[] args)
+    private Error? UseMaterial(string[] args)
     {
         if (args.Length == 0) return "not enough args";
         if (_materialByName.TryGetValue(args[0], out var mat))
@@ -84,7 +84,7 @@ public class DotObjModelReader
         return $"material is not defined: {args[0]}";
     }
 
-    private string? MaterialLib(string[] args)
+    private Error? MaterialLib(string[] args)
     {
         if (args.Length == 0) return "not enough args";
         var matPath = _path.ResolveRaw(string.Join(" ", args));
@@ -103,7 +103,7 @@ public class DotObjModelReader
         return null;
     }
 
-    private string? NewMaterial(string[] args)
+    private Error? NewMaterial(string[] args)
     {
         if (args.Length == 0) return "not enough args";
         var name = string.Join(" ", args);
@@ -113,7 +113,7 @@ public class DotObjModelReader
         return null;
     }
     
-    private string? CurrentMatTexture(string[] args)
+    private Error? CurrentMatTexture(string[] args)
     {
         if (args.Length == 0) return "not enough args";
         if (_lastCreatedMaterial == null) return "material hasn't created";
@@ -121,7 +121,7 @@ public class DotObjModelReader
         return null;
     }
     
-    private string? CurrentMatColor(string[] args)
+    private Error? CurrentMatColor(string[] args)
     {
         if (_lastCreatedMaterial == null) return "material hasn't created";
         if (float.TryParse(args[0], out float r)
@@ -135,7 +135,7 @@ public class DotObjModelReader
     }
 
 
-    private string? ProcessMaterialLine(string[] args)
+    private Error? ProcessMaterialLine(string[] args)
     {
         if (args.Length == 0) return null;
         if (args[0].Length == 0) return null;
@@ -155,7 +155,7 @@ public class DotObjModelReader
         return from[id-1]; // cause starts with 1
     }
     
-    private string? Vertex(string[] args)
+    private Error? Vertex(string[] args)
     {
         if (args.Length != 3) return "incorrect amount of args: " + args.Length;
         if (float.TryParse(args[0], out float x)
@@ -168,7 +168,7 @@ public class DotObjModelReader
         return "can not parse vertex coordinates";
     }
 
-    private string? Face(string[] args)
+    private Error? Face(string[] args)
     {
         if (args.Length < 3) return "amount of args must be at least 3:, but got " + args.Length;
         List<int> verIndexes = [];

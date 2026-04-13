@@ -1,3 +1,4 @@
+using Enjune.Graphic;
 using Enjune.Graphic.Asset;
 using Enjune.Misc;
 using StbImageSharp;
@@ -8,7 +9,7 @@ public abstract class ResourcePath
 {
     // interface
 
-    protected abstract Stream? Read(out string? error);
+    protected abstract Stream? Read(out Error? error);
 
     public abstract ResourcePath Parent();
     public abstract ResourcePath ThisDirectory();
@@ -35,7 +36,7 @@ public abstract class ResourcePath
 
     // misc
     
-    public string? LoadText(out string? error)
+    public string? LoadText(out Error? error)
     {
         using var stream = Read(out error);
         if (stream == null) return null;
@@ -43,17 +44,17 @@ public abstract class ResourcePath
         return streamReader.ReadToEnd();
     }
     
-    public ByteImage? LoadImage(out string? error)
+    public ByteImage? LoadImage(out Error? error)
     {
         using var stream = Read(out error);
         if (stream == null) return null;
-        StbImage.stbi_set_flip_vertically_on_load(1);
+        //StbImage.stbi_set_flip_vertically_on_load(1);
         var imageResult = ImageResult.FromStream(stream);
         ByteImage.ImType? type = imageResult.Comp switch
         {
             ColorComponents.RedGreenBlueAlpha => ByteImage.ImType.Rgba32,
             ColorComponents.RedGreenBlue => ByteImage.ImType.Rgb24,
-            ColorComponents.Grey => ByteImage.ImType.Grey8,
+            ColorComponents.Grey => ByteImage.ImType.Alpha8,
             _ => null
         };
         if (type == null)
@@ -64,7 +65,7 @@ public abstract class ResourcePath
         return new ByteImage(imageResult.Width, imageResult.Height, (ByteImage.ImType)type, imageResult.Data);
     }
 
-    public byte[]? LoadBytes(out string? error)
+    public byte[]? LoadBytes(out Error? error)
     {
         using var stream = Read(out error);
         if (stream == null) return null;

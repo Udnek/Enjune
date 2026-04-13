@@ -104,7 +104,7 @@ public class Mesh
         return new Mesh(vertices, textures, indexes.ToArray());
     }
 
-    public static bool IsValid(Position[] vertices, TextureCoord[] textures, int[] indexes, out string? error)
+    public static bool IsValid(Position[] vertices, TextureCoord[] textures, int[] indexes, out Error? error)
     {
         if (vertices.Length < 3)
         {

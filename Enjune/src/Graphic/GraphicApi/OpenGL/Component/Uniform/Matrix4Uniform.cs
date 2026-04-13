@@ -4,10 +4,12 @@ namespace Enjune.Graphic.GraphicApi.OpenGL.Component.Uniform;
 
 public sealed class Matrix4Uniform : Uniform<Matrix4>
 {
-    public Matrix4Uniform(ShaderProgram program, string name) : base(program, name)
+    public Matrix4Uniform(string name, Matrix4 initialValue, params ShaderProgram[] programs) : base(name, initialValue, programs)
     {
-        SetValue(Matrix4.Identity);
     }
 
-    public override void SetValue(Matrix4 matrix) => GL.UniformMatrix4(Location, false, ref matrix);
+    protected override void SetValue(int location, Matrix4 value)
+    {
+        GL.UniformMatrix4(location, false, ref value);
+    }
 }

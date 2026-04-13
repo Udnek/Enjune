@@ -15,7 +15,7 @@ public sealed class ExternalPath : ResourcePath
 
     public override ResourcePath Subdir(string subdir) => new ExternalPath(System.IO.Path.Combine(_absolutePath, subdir));
 
-    protected override Stream? Read(out string? error)
+    protected override Stream? Read(out Error? error)
     {
         try
         {

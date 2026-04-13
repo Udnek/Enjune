@@ -12,7 +12,7 @@ using OpenTK.Windowing.GraphicsLibraryFramework;
 
 namespace Enjune.Graphic.GraphicApi.OpenGL;
 
-public sealed class OpenGLApi : GLDisposable, IGraphicApi
+public sealed partial class OpenGlApi : GLDisposable, IGraphicApi
 {
     private unsafe Window* _window;
     
@@ -24,12 +24,15 @@ public sealed class OpenGLApi : GLDisposable, IGraphicApi
     private Ssbo<MaterialData> _materialSsbo = null!;
     private Ebo _ebo = null!;
     
-    private ShaderProgram _shaderProgram = null!;
+    private ShaderProgram _mainShader = null!;
+    private ShaderProgram _textShader = null!;
+    private ShaderProgram _currentShader = null!;
     private TextureArray _textureArray = null!;
     
     // storing it here fucking gc won't erase it
     private GLFWCallbacks.KeyCallback _keyCallback = null!;
     private GLFWCallbacks.CursorPosCallback _cursorCallback = null!;
+    private GLFWCallbacks.MouseButtonCallback _mouseButtonCallback = null!;
     private GLFWCallbacks.FramebufferSizeCallback _sizeChangeCallback = null!;
     private DebugProc _debugProc = null!;
     
@@ -40,7 +43,7 @@ public sealed class OpenGLApi : GLDisposable, IGraphicApi
     private Vector4Uniform _globalColor = null!;
     private TextureUniform _textureUniform = null!;
 
-    public void Init(CompiledAssets assets, int width, int height, string title,
+    public Error? Init(CompiledAssets assets, int width, int height, string title,
         IUserInputHandler keyHandler,
         IGraphicApi.WindowSizeChangeHandler windowSizeHandler)
     {
@@ -51,9 +54,9 @@ public sealed class OpenGLApi : GLDisposable, IGraphicApi
         {
             Logger.Error(this, $"{error}: {description}");
         });
-        
+
         if (!GLFW.Init())
-            throw new Exception("Unable to initialize GLFW");
+            return "unable to initialize GLFW";
 
         // GLFW configuration
         GLFW.DefaultWindowHints();
@@ -69,26 +72,31 @@ public sealed class OpenGLApi : GLDisposable, IGraphicApi
         {
             _window = GLFW.CreateWindow(width, height, title, null, null);
             if (_window == null)
-                throw new Exception("Failed to create GLFW window");
+                return "failed to create GLFW window";
             
             // callbacks
-            _keyCallback = (window, key, scancode, glAction, mods) =>
+            
+            IGraphicApi.KeyAction FromGlwf(InputAction glfw)
             {
-                var action = glAction switch
+                return glfw switch
                 {
                     InputAction.Release => IGraphicApi.KeyAction.Release,
                     InputAction.Press => IGraphicApi.KeyAction.Press,
                     InputAction.Repeat => IGraphicApi.KeyAction.Repeat,
-                    _ => throw new Exception($"Unknown key action: {glAction}")
+                    _ => throw new Exception($"unknown key action: {glfw}")
                 };
-                keyHandler.HandleKey(key, action);
-            };
+            }
+            
+            _keyCallback = (window, key, scancode, glAction, mods) => keyHandler.HandleKey(key, FromGlwf(glAction));
             GLFW.SetKeyCallback(_window, _keyCallback);
+            
+            _mouseButtonCallback = (window, button, action, mods) => keyHandler.HandleMouseKey(button, FromGlwf(action));
+            GLFW.SetMouseButtonCallback(_window, _mouseButtonCallback);
             
             _sizeChangeCallback = (_, newWidth, newHeight) => windowSizeHandler(newWidth, newHeight);
             GLFW.SetFramebufferSizeCallback(_window, _sizeChangeCallback);
 
-            _cursorCallback = (window, x, y) => keyHandler.HandleCursor(x, y);
+            _cursorCallback = (window, x, y) => keyHandler.HandleCursor((int)x, (int)y);
             GLFW.SetCursorPosCallback(_window, _cursorCallback);
             // end callbacks
 
@@ -102,11 +110,8 @@ public sealed class OpenGLApi : GLDisposable, IGraphicApi
                 
             
             GLFW.MakeContextCurrent(_window);
-            GLFW.SwapInterval(0); // enable vsync
             GLFW.ShowWindow(_window);
         }
-        
-
         
         // without that shit it won't work
         GL.LoadBindings(new GLFWBindingsContext());
@@ -142,13 +147,11 @@ public sealed class OpenGLApi : GLDisposable, IGraphicApi
         Logger.Log(this, $"max possible texture array layers: {maxArrayLayers}");
         
         // other components init
-        InitComponents();
+        return InitComponents();
     }
-
     
     private const string AttributePosition = "position";
     private const string AttributeTexture = "texcoord";
-    private const string AttributeMaterialId = "materialId";
     
     private const string UniformTexture = "textureArray";
     private const string UniformModel = "model";
@@ -156,28 +159,30 @@ public sealed class OpenGLApi : GLDisposable, IGraphicApi
     private const string UniformProjection = "projection";
     private const string UniformGlobalColor = "globalColor";
     
-    private void InitComponents()
+    private Error? InitComponents()
     {
-        _shaderProgram = new ShaderProgram(
-            AssemblyPath.Of(Enjune.Assembly,"OpenGL", "frag.frag"),
-            AssemblyPath.Of(Enjune.Assembly, "OpenGL", "vert.vert"));
-        
-        _shaderProgram.Bind();
+        _mainShader = new ShaderProgram();
+        var error = _mainShader.Init(
+            AssemblyPath.Of(Enjune.Assembly, "OpenGL", "Shaders", "Main", "frag.frag"),
+            AssemblyPath.Of(Enjune.Assembly, "OpenGL", "Shaders", "Main", "vert.vert"));
+        if (error != null) return error;
+
+        _textShader = new ShaderProgram();
+        error = _textShader.Init(
+            AssemblyPath.Of(Enjune.Assembly,"OpenGL", "Shaders", "Text", "frag.frag"),
+            AssemblyPath.Of(Enjune.Assembly, "OpenGL", "Shaders", "Text", "vert.vert"));
+        if (error != null) return error;
         
         // uniforms
-        _model = new Matrix4Uniform(_shaderProgram, UniformModel);
-        _view = new Matrix4Uniform(_shaderProgram, UniformView);
-        _projection = new Matrix4Uniform(_shaderProgram, UniformProjection);
-        _textureUniform = new TextureUniform(_shaderProgram, UniformTexture);
-        _globalColor = new Vector4Uniform(_shaderProgram, UniformGlobalColor);
+        _model = new Matrix4Uniform(UniformModel, Matrix4.Identity, _mainShader, _textShader);
+        _view = new Matrix4Uniform(UniformView, Matrix4.Identity, _mainShader, _textShader);
+        _projection = new Matrix4Uniform(UniformProjection, 
+            Matrix4.CreatePerspectiveFieldOfView(MathF.PI / 2, 1.0f, 0.1f, 1000.0f), 
+            _mainShader, _textShader);
+        _textureUniform = new TextureUniform(UniformTexture, 0, _mainShader, _textShader);
+        _globalColor = new Vector4Uniform(UniformGlobalColor, new Color(1f), _mainShader, _textShader);
         
-        // Set default for uniforms
-        {
-            _globalColor.SetValue(new Color(1));
-            var defaultProjection = Matrix4.CreatePerspectiveFieldOfView(MathF.PI / 2, 1.0f, 0.1f, 1000.0f);
-            _projection.SetValue(defaultProjection);  
-        }
-        
+
         // textures
         _textureArray = new TextureArray(_assets, TextureUnit.Texture0);
         
@@ -191,7 +196,7 @@ public sealed class OpenGLApi : GLDisposable, IGraphicApi
         
         // attributes
         {
-            var attributes = new VaoAttributes<VertexData>(_vao, _vertexVbo, _shaderProgram);
+            var attributes = new VaoAttributes<VertexData>(_vao, _vertexVbo, _mainShader, _textShader);
             attributes.Add<float>(VertexAttribPointerType.Float, AttributePosition, 3);
             attributes.Add<float>(VertexAttribPointerType.Float, AttributeTexture, 2);
             attributes.Compile();
@@ -204,72 +209,33 @@ public sealed class OpenGLApi : GLDisposable, IGraphicApi
             matBuffer.Put(_assets.Materials.Select(ToData).ToArray());
             _materialSsbo.BindAndPush(matBuffer);
         }
+        
+        SelectShader(_mainShader);
+        
+        return null;
     }
 
-    public void DumpTextures(ExternalPath path) => _textureArray.Dump(path);
-
-    public void UpdateEvents() => GLFW.PollEvents();
-
-    public void Title(string title) { unsafe { GLFW.SetWindowTitle(_window, title); } }
-
-    public void ViewPort(int x, int y, int width, int height) => GL.Viewport(x, y, width, height);
-
-    public void SetClearColor(Color color) => GL.ClearColor(color.X, color.Y, color.Z, color.W);
-    public void SetDrawMode(IGraphicApi.DrawMode mode)
+    private void SelectShader(ShaderProgram shader)
     {
-        switch (mode)
+        if (_currentShader == shader) return;
+        _currentShader = shader;
+        shader.Bind();
+    }
+    
+    public void SwitchShader(IGraphicApi.ShaderType type)
+    {
+        switch (type)
         {
-            case IGraphicApi.DrawMode.Fill:
-                GL.PolygonMode(TriangleFace.FrontAndBack, PolygonMode.Fill);
+            case IGraphicApi.ShaderType.Main:
+                SelectShader(_mainShader);
                 break;
-            case IGraphicApi.DrawMode.Wireframe:
-                GL.PolygonMode(TriangleFace.FrontAndBack, PolygonMode.Line);
+            case IGraphicApi.ShaderType.Text:
+                SelectShader(_textShader);
                 break;
             default:
-                Logger.Error(this, $"unknown graphic mode: {mode}");
-                break;
+                throw new ArgumentOutOfRangeException(nameof(type), type, null);
         }
     }
-
-    public IGraphicApi.CursorMode GetCursorMode()
-    {
-        unsafe
-        {
-            return GLFW.GetInputMode(_window, CursorStateAttribute.Cursor) switch
-            {
-                CursorModeValue.CursorNormal => IGraphicApi.CursorMode.Normal,
-                CursorModeValue.CursorHidden => IGraphicApi.CursorMode.Invisible,
-                CursorModeValue.CursorDisabled => IGraphicApi.CursorMode.Centered,
-                CursorModeValue.CursorCaptured => IGraphicApi.CursorMode.CanNotLeaveWindow,
-                _ => throw new ArgumentOutOfRangeException()
-            };
-        }
-    }
-
-    public void SetCursorMode(IGraphicApi.CursorMode mode)
-    {
-        var state = mode switch
-        {
-            IGraphicApi.CursorMode.Normal => CursorModeValue.CursorNormal,
-            IGraphicApi.CursorMode.Invisible => CursorModeValue.CursorHidden,
-            IGraphicApi.CursorMode.Centered => CursorModeValue.CursorDisabled,
-            IGraphicApi.CursorMode.CanNotLeaveWindow => CursorModeValue.CursorCaptured,
-            _ => throw new ArgumentOutOfRangeException()
-        };
-        unsafe
-        {
-            GLFW.SetInputMode(_window, CursorStateAttribute.Cursor, state);
-        }
-    }
-
-    public void ModelTransform(Matrix4 model) => _model.SetValue(model);
-    public void ProjectionTransform(Matrix4 proj) => _projection.SetValue(proj);
-    public void ViewTransform(Matrix4 view) => _view.SetValue(view);
-    public void GlobalColor(Color color) =>  _globalColor.SetValue(color);
-
-    public bool ShouldStop() { unsafe { return GLFW.WindowShouldClose(_window); } }
-    
-    public void ClearScreenBuffers() => GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
     public void RenderToScreenBuffer(VertexBuffer buffer)
     {
@@ -279,9 +245,7 @@ public sealed class OpenGLApi : GLDisposable, IGraphicApi
 
         GL.DrawElements(PrimitiveType.Triangles, buffer.Ebo.Count, DrawElementsType.UnsignedInt, 0);
     }
-    
-    public void UpdateScreen() { unsafe { GLFW.SwapBuffers(_window); } }
-    
+
     protected override void DisposeGLData()
     {
         _vao.Dispose();
@@ -289,7 +253,8 @@ public sealed class OpenGLApi : GLDisposable, IGraphicApi
         _matIdSsbo.Dispose();
         _vertexVbo.Dispose();
         _ebo.Dispose();
-        _shaderProgram.Dispose();
+        _mainShader.Dispose();
+        _textShader.Dispose();
         _textureArray.Dispose();
         
         unsafe

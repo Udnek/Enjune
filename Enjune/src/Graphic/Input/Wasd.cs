@@ -1,4 +1,4 @@
-namespace Enjune.Graphic;
+namespace Enjune.Graphic.InputHandler;
 
 public record Wasd(
     KeyBinds.Bind Forward,

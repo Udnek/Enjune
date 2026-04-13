@@ -1,7 +1,7 @@
 namespace Enjune;
 
-public interface IApp
+public interface IApp : IDisposable
 {
-    public void Init(out string? error);
+    public Error? Init();
     public void Run();
 }

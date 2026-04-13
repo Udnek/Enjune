@@ -2,7 +2,9 @@ namespace Enjune.Graphic.GraphicApi.OpenGL.Component.Uniform;
 
 public sealed class BoolUniform : Uniform<bool>
 {
-    public BoolUniform(ShaderProgram program, string name) : base(program, name) { }
+    public BoolUniform(string name, bool initialValue, params ShaderProgram[] programs) : base(name, initialValue, programs)
+    {
+    }
 
-    public override void SetValue(bool value) => GL.Uniform1(Location, value ? 1 : 0);
+    protected override void SetValue(int location, bool value) => GL.Uniform1(location, value ? 1 : 0);
 }

@@ -40,10 +40,8 @@ public class FlyingPlayerController
             _yaw %= 360;
             _pitch = Math.Clamp(_pitch, -90f, 90f);
         }
-
-
-
-        // todo rewrite using sins and cosins instead of matrix4 
+        
+        // todo rewrite using sins and cosines instead of matrix4 
         var yawRotation = Matrix4.CreateRotationY(MathHelper.DegreesToRadians(_yaw));
 
         // movement input

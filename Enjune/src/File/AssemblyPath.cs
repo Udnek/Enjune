@@ -50,7 +50,7 @@ public sealed class AssemblyPath : ResourcePath
         return $"{_assembly.GetName().Name}{splitter}Resources{splitter}{string.Join(splitter, _path)}";
     }
 
-    protected override Stream? Read(out string? error)
+    protected override Stream? Read(out Error? error)
     {
         var formedPath = GetSplitBy('.');
         var stream = _assembly.GetManifestResourceStream(formedPath);

@@ -18,7 +18,7 @@ public class App : IApp
     private int _windowWidth = 480*2;
     private int _windowHeight = 360*2;
     
-    private readonly IGraphicApi _grapi = new OpenGLApi();
+    private readonly IGraphicApi _grapi = new OpenGlApi();
     private readonly KeyBinds _binds;
     private readonly Wasd _wasd;
     private readonly KeyBinds.Bind _dumbTexturesBind;
@@ -27,11 +27,12 @@ public class App : IApp
     private FlyingPlayerController _controller = null!;
     
     private readonly VertexBuffer _vertexBuffer = new VertexBuffer(20_000);
-    private readonly List<Model> _models = new();
+    //private readonly List<Model> _models = new();
 
     private IGraphicApi.DrawMode _drawMode = IGraphicApi.DrawMode.Fill;
     private readonly KeyBinds.Bind _freeCursorBind;
     private Scene _scene;
+    private readonly EditorController _editorController;
 
     public App()
     {
@@ -41,9 +42,11 @@ public class App : IApp
         _binds.AddBind(_freeCursorBind);
         _dumbTexturesBind = _binds.AddBind(new KeyBinds.Bind("dumb_textures", GlfwKey.F2));
         
+        _scene = new Scene();
+        
         _inputHandler = new BasicInputHandler(_grapi, _binds);
         _controller = new FlyingPlayerController(_grapi, _inputHandler, _wasd, 0.2f);
-        
+        _editorController = new EditorController(_grapi, _inputHandler, _scene);
     }
     
     private void WindowSizeChangeHandler(int w, int h)
@@ -53,45 +56,47 @@ public class App : IApp
         _grapi.ViewPort(0, 0, w, h);
     }
     
-    public void Init(out string? error)
+    public Error? Init()
     {
-        var textureManager = new AssetManager();
+        var assetManager = new AssetManager();
 
-        var model = new DotObjModelReader(textureManager, AssemblyPath.Of(Enjune.Enjune.Assembly,"Models", "wt", "wooden watch tower2.obj"))
-            .Read(out error);
-        if (model == null) return;
+        var watchTower = new DotObjModelReader(assetManager, AssemblyPath.Of(Enjune.Enjune.Assembly,"Models", "wt", "wooden watch tower2.obj"))
+            .Read(out var error);
+        if (watchTower == null) return error;
 
-        model.Meshes[0].Item2.Raw.Color = (1, 1, 1, 1);
-        Logger.Log(this, $"model info: {model.Info()}");
-        _models.Add(model);
+        watchTower.Meshes[0].Item2.Raw.Color = (1, 1, 1, 1);
+        Logger.Log(this, $"{nameof(watchTower)} info: {watchTower.Info()}");
 
-        var byteImage = new FontLoader().Load(out error, AssemblyPath.Of(Enjune.Enjune.Assembly, "Fonts", "papyrus.ttf"));
-        if (byteImage == null) return;
-        textureManager.AddTexture(byteImage);
-        
-        var assets = textureManager.Compile();
+        var font = assetManager.AddFont(AssemblyPath.Of(Enjune.Enjune.Assembly, "Fonts", "papyrus.ttf"), 128, out error);
+        if (font == null) return error;
 
-        _grapi.Init(assets, _windowWidth, _windowHeight, "Enjune C#", _inputHandler, WindowSizeChangeHandler);
+        var assets = assetManager.Compile();
+
+        error = _grapi.Init(assets, _windowWidth, _windowHeight, "Enjune C#", _inputHandler, WindowSizeChangeHandler);
+        if (error != null) return error;
         _grapi.SetClearColor(new Color(0.2f, 0.2f, 0.2f, 0f));
         
         _grapi.SetCursorMode(IGraphicApi.CursorMode.Centered);
-
-        _scene = new Scene();
-        _scene.Objects.Add(new SObject(model));
+        
+        _scene.Objects.Add(new SObject(watchTower));
+        _scene.Objects.Add(new SObject(font.Generate("Niggers", 10f), true));
+        
         // _vertexBuffer.Clear();
         // foreach (var m in _models)
         // {
         //     _vertexBuffer.PutModel(m);
         // }
+        return null;
     }
 
     public void Run()
     {
         var delays = new List<long>(200);
+        int tick = 0;
         float deltaTime = 0;
         Utils.RunTargetFpsLoopWhile(100,
             out deltaTime,
-            (delay) =>
+            delay =>
             {
                 delays.Add(delay);
             },
@@ -101,11 +106,19 @@ public class App : IApp
                 
                 if (_inputHandler.IsPressed(_dumbTexturesBind)) 
                     _grapi.DumpTextures(ExternalPath.Of("."));
-                // if (_inputHandler.IsPressed(KeyBinds.SwitchDrawMode))
-                // {
-                //     _drawMode = (IGraphicApi.DrawMode)((int)(_drawMode + 1) % Enum.GetValues(typeof(IGraphicApi.DrawMode)).Length);
-                //     _grapi.SetDrawMode(_drawMode);
-                // }
+
+
+                var projection = Matrix4.CreatePerspectiveFieldOfView(
+                    MathF.PI / 2, (float) _windowWidth / _windowHeight, 0.1f, 1000f);
+                _grapi.ProjectionTransform(projection);
+
+                var view = _controller.View;
+                _grapi.ViewTransform(view);
+                
+                if (_inputHandler.IsPressed(_editorController.SelectBind))
+                {
+                    Logger.Log(this, _editorController.Trace(new Vector2i(_windowWidth, _windowHeight), view, projection));
+                }
  
                 
                 if (_inputHandler.IsPressed(_freeCursorBind))
@@ -113,10 +126,6 @@ public class App : IApp
                 
                 
                 _controller.Update(deltaTime);
-                _grapi.ProjectionTransform(Matrix4.CreatePerspectiveFieldOfView(
-                    MathF.PI / 2, (float) _windowWidth / _windowHeight, 0.1f, 1000f));
-                
-                _grapi.ViewTransform(_controller.View);
                 
                 // render
                 
@@ -124,11 +133,24 @@ public class App : IApp
                 
                 foreach (var sObject in _scene.Objects)
                 {
-                    sObject.Position.X += 1f*deltaTime;
-                    sObject.Rotation *= Quaternion.FromAxisAngle(Vector3.UnitZ, 1*deltaTime);
+                    // sObject.Position.X += 1f*deltaTime;
+                    // sObject.Rotation *= Quaternion.FromAxisAngle(Vector3.UnitZ, 1*deltaTime);
                     _vertexBuffer.Clear();
                     _vertexBuffer.PutModel(sObject.Model);
-                    _grapi.ModelTransform(Matrix4.CreateFromQuaternion(sObject.Rotation) * Matrix4.CreateTranslation(sObject.Position));
+                     _grapi.ModelTransform(Matrix4.CreateFromQuaternion(sObject.Rotation) * Matrix4.CreateTranslation(sObject.Position));
+                    // _grapi.SetDrawMode(IGraphicApi.DrawMode.Fill);
+                    // _grapi.RenderToScreenBuffer(_vertexBuffer);
+                    if (sObject.IsText)
+                    {
+                        //_grapi.SwitchShader(IGraphicApi.ShaderType.Text);
+                        _grapi.GlobalColor(new Color(MathF.Sin(tick/60f)/2 + 0.5f, MathF.Cos(tick/30f)/2 + 0.5f, 0, 0.6f));
+                    }
+                    else
+                    {
+                        //_grapi.SwitchShader(IGraphicApi.ShaderType.Main);
+                        _grapi.GlobalColor(new Color(1));
+                    }
+                    
                     _grapi.RenderToScreenBuffer(_vertexBuffer);
                 }
                 
@@ -136,10 +158,16 @@ public class App : IApp
                 _inputHandler.ClearForNextFrame();
                 _grapi.UpdateScreen();
                 _grapi.UpdateEvents();
+                tick += 1;
             });
         
         var avgDelay = delays.Sum(v => v) / delays.Count;
         Console.WriteLine($"Avg delay: {avgDelay}; avg possible fps: {Utils.NanoDelayToFps(avgDelay)}");
+        
+    }
+
+    public void Dispose()
+    {
         _grapi.Dispose();
     }
 }

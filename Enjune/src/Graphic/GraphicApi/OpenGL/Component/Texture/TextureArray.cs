@@ -55,6 +55,8 @@ public class TextureArray : GLDisposable
                 0, 0, layer,
                 _size, _size, 1,
                 (PixelFormat)pixelFormat, PixelType.UnsignedByte, texture.Data);
+            
+            GL.GenerateMipmap(GenerateMipmapTarget.Texture2DArray);
         }
     }
 

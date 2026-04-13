@@ -24,8 +24,7 @@ public static class Utils
     {
         return "["+string.Join(", ", array.Select(v => v?.ToString() ?? "null"))+"]";
     }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    
     public static void RunTargetFpsLoopWhile(
         Fps targetFps, out float deltaTime, Consumer<Nanoseconds> delayConsumer, Func<bool> shouldContinue, Action action)
     {

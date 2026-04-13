@@ -2,7 +2,9 @@ namespace Enjune.Graphic.GraphicApi.OpenGL.Component.Uniform;
 
 public sealed class TextureUniform : Uniform<int>
 {
-    public TextureUniform(ShaderProgram program, string name) : base(program, name) { }
-    
-    public override void SetValue(int value) => GL.Uniform1(Location, value);
+    public TextureUniform(string name, int initialValue, params ShaderProgram[] programs) : base(name, initialValue, programs)
+    {
+    }
+
+    protected override void SetValue(int location, int value) => GL.Uniform1(location, value);
 }

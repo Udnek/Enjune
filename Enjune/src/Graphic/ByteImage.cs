@@ -1,7 +1,9 @@
+using System.Collections;
+using System.Security.Cryptography;
 using Enjune.Misc;
 using StbImageSharp;
 
-namespace Enjune.Graphic.Asset;
+namespace Enjune.Graphic;
 
 public sealed class ByteImage
 {
@@ -9,6 +11,9 @@ public sealed class ByteImage
     public readonly int Height;
     public readonly ImType Type;
     public readonly byte[] Data;
+    
+    public static ByteImage Empty(int width, int height, ImType type) 
+        => new(width, height, type, new byte[width * height * type.Depth]);
     
     public ByteImage(int width, int height, ImType type, byte[] data)
     {
@@ -23,30 +28,61 @@ public sealed class ByteImage
         Type = type;
     }
 
-    public static ByteImage Empty(int width, int height, ImType type) 
-        => new(width, height, type, new byte[width * height * type.Depth]);
-
-    // public override bool Equals(object? obj)
-    // {
-    //     if (obj is null) return false;
-    //     if (obj is not ByteImage other) return false;
-    //     
-    //     return ype == other.Type && Data.SequenceEqual(other.Data);
-    // }
-
-    public struct ImType
+    public ByteImage Alpha8ToRgba32(byte r =  255, byte g = 255, byte b = 255)
     {
-        public readonly int Depth;
-        public readonly ColorComponents StbType;
-        
-        public static readonly ImType Rgba32 = new ImType(4 ,ColorComponents.RedGreenBlueAlpha);
-        public static readonly ImType Rgb24 = new ImType(3 ,ColorComponents.RedGreenBlue);
-        public static readonly ImType Grey8 = new ImType(1 ,ColorComponents.Grey);
-
-        private ImType(int depth, ColorComponents stbType)
+        if (Type.Depth != 1)
         {
-            Depth = depth;
-            StbType = stbType;
+            Logger.Warn(this, $"conversion only supports 1d images, but got: {Type.Depth}");
+            return this;
+        }
+        byte[] newData = new byte[Width * Height * 4];
+        for (int i = 0; i < Width * Height * 4; i+=4)
+        {
+            newData[i] = r;
+            newData[i+1] = g;
+            newData[i+2] = b;
+            newData[i+3] = Data[i/4];
+        }
+        return new ByteImage(Width, Height, ImType.Rgba32, newData);
+    }
+    
+    // private ByteImage AddLayerToBeginning(byte fillWith)
+    // {
+    //     var newData = new byte[Width * Height * Type.Depth];
+    //     Data.CopyTo(newData);
+    //     var newImage = new ByteImage(Width, Height, ImType.OfDepth(Type.Depth+1), newData);
+    //     for (int i = 0; i < Width*Height; i++)
+    //     {
+    //         newImage.Data[i] = fillWith;
+    //         newImage.Data[i+1] = Data[i];
+    //     }
+    //     return newImage;
+    // }
+    
+    
+    public override bool Equals(object? obj) 
+        => (obj as  ByteImage)?.GetHashCode() == GetHashCode();
+
+    public override int GetHashCode() 
+        => HashCode.Combine(Width, Height, Type, SHA1.HashData(Data));
+
+    public readonly record struct ImType(int Depth, ColorComponents StbType)
+    {
+        public static readonly ImType Rgba32 = new(4, ColorComponents.RedGreenBlueAlpha);
+        public static readonly ImType Rgb24 = new(3, ColorComponents.RedGreenBlue);
+        public static readonly ImType GreyAlpha16 = new(2, ColorComponents.GreyAlpha);
+        public static readonly ImType Alpha8 = new(1, ColorComponents.Grey);
+
+        public static ImType OfDepth(int depth)
+        {
+            return depth switch
+            {
+                1 => Alpha8,
+                2 => GreyAlpha16,
+                3 => Rgb24,
+                4 => Rgba32,
+                _ => throw new ArgumentOutOfRangeException(nameof(depth), depth, null)
+            };
         }
     }
 }

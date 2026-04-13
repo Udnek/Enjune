@@ -2,12 +2,17 @@ using OpenTK.Graphics.OpenGL4;
 
 namespace Enjune.Graphic;
 
-public struct TextureQuad(TextureCoord botLeft, TextureCoord topRight)
+public readonly record struct TextureQuad(
+    TextureCoord BotLeft, 
+    TextureCoord BotRight, 
+    TextureCoord TopRight, 
+    TextureCoord TopLeft)
 {
-    public TextureCoord BotLeft = botLeft;
-    public TextureCoord BotRight = new(topRight.X, botLeft.Y);
-    public TextureCoord TopRight = topRight;
-    public TextureCoord TopLeft = new(botLeft.X, topRight.Y);
+    public TextureQuad(TextureCoord botLeft, TextureCoord topRight) : this(
+        botLeft,
+        new TextureCoord(topRight.X, botLeft.Y),
+        topRight,
+        new TextureCoord(botLeft.X, topRight.Y)){}
 
     public static readonly TextureQuad Full = new((0, 0), (1, 1));
     
