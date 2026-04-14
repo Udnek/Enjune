@@ -1,7 +1,6 @@
 using Enjune.File;
 using Enjune.Graphic.Asset;
 using Enjune.Graphic.InputHandler;
-using Enjune.Misc;
 using OpenTK.Mathematics;
 
 namespace Enjune.Graphic.GraphicApi;
@@ -24,6 +23,7 @@ public interface IGraphicApi : IDisposable
     bool ShouldStop(); // should stop application
     void ClearScreenBuffers();
     void RenderToScreenBuffer(VertexBuffer buffer);
+    void RenderPixelsToScreenBuffer(FixedBuffer<Vector2> pixelPosition);
     void UpdateScreen();
     void UpdateEvents(); // such as keyboard, mouse, etc
     // general pipeline end
@@ -35,7 +35,8 @@ public interface IGraphicApi : IDisposable
     void SetCursorMode(CursorMode mode);
     void SetVsync(bool vsync);
     CursorMode GetCursorMode();
-
+    Vector2i GetWindowSize();
+    void SetWindowSize(Vector2i wh);
 
     // shader
     void SwitchShader(ShaderType type);

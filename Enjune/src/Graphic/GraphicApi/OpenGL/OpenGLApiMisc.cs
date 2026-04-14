@@ -75,6 +75,23 @@ public sealed partial class OpenGlApi
     public void ViewTransform(Matrix4 view) => _view.SetValue(_currentShader, view);
     public void GlobalColor(Color color) => _globalColor.SetValue(_currentShader, color);
 
+    public void SetWindowSize(Vector2i wh)
+    {
+        unsafe
+        {
+            GLFW.SetWindowSize(_window, wh.X, wh.Y);
+        }
+    }
+
+    public Vector2i GetWindowSize()
+    {
+        unsafe
+        {
+            GLFW.GetWindowSize(_window, out int width, out int height);
+            return new Vector2i(width, height);
+        }
+    }
+
     public bool ShouldStop()
     {
         unsafe

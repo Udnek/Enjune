@@ -11,6 +11,6 @@ out vec2 textureCoord;
 
 void main() {
     textureCoord = texcoord;
-    mat4 mvp = projection * view * model;
-    gl_Position = mvp * vec4(position, 1.0);
+    mat4 pvm = projection * view * model;
+    gl_Position = pvm * vec4(position, 1.0);
 }

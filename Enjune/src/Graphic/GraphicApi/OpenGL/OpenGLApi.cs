@@ -9,6 +9,7 @@ using Enjune.Graphic.InputHandler;
 using Enjune.Misc;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
+using BeginMode = OpenTK.Graphics.OpenGL.BeginMode;
 
 namespace Enjune.Graphic.GraphicApi.OpenGL;
 
@@ -23,9 +24,13 @@ public sealed partial class OpenGlApi : GLDisposable, IGraphicApi
     private Ssbo<MatId> _matIdSsbo = null!;
     private Ssbo<MaterialData> _materialSsbo = null!;
     private Ebo _ebo = null!;
+
+    private Vbo<Vector2> pixelVbo;
+    private Vao pixelVao;
     
     private ShaderProgram _mainShader = null!;
     private ShaderProgram _textShader = null!;
+    private ShaderProgram _pixelShader = null!;
     private ShaderProgram _currentShader = null!;
     private TextureArray _textureArray = null!;
     
@@ -64,7 +69,7 @@ public sealed partial class OpenGlApi : GLDisposable, IGraphicApi
         GLFW.WindowHint(WindowHintBool.Resizable, true);
         GLFW.WindowHint(WindowHintInt.ContextVersionMajor, 4);
         GLFW.WindowHint(WindowHintInt.ContextVersionMinor, 6);
-        GLFW.WindowHint(WindowHintOpenGlProfile.OpenGlProfile, OpenGlProfile.Core);
+        GLFW.WindowHint(WindowHintOpenGlProfile.OpenGlProfile, OpenGlProfile.Compat);
         GLFW.WindowHint(WindowHintBool.OpenGLForwardCompat, true);
 
         // window creation
@@ -161,8 +166,14 @@ public sealed partial class OpenGlApi : GLDisposable, IGraphicApi
     
     private Error? InitComponents()
     {
+        _pixelShader = new ShaderProgram();
+        var error = _pixelShader.Init(
+            AssemblyPath.Of(Enjune.Assembly, "OpenGL", "Shaders", "Point", "frag.frag"),
+            AssemblyPath.Of(Enjune.Assembly, "OpenGL", "Shaders", "Point", "vert.vert"));
+        if (error != null) return error;
+        
         _mainShader = new ShaderProgram();
-        var error = _mainShader.Init(
+        error = _mainShader.Init(
             AssemblyPath.Of(Enjune.Assembly, "OpenGL", "Shaders", "Main", "frag.frag"),
             AssemblyPath.Of(Enjune.Assembly, "OpenGL", "Shaders", "Main", "vert.vert"));
         if (error != null) return error;
@@ -180,7 +191,7 @@ public sealed partial class OpenGlApi : GLDisposable, IGraphicApi
             Matrix4.CreatePerspectiveFieldOfView(MathF.PI / 2, 1.0f, 0.1f, 1000.0f), 
             _mainShader, _textShader);
         _textureUniform = new TextureUniform(UniformTexture, 0, _mainShader, _textShader);
-        _globalColor = new Vector4Uniform(UniformGlobalColor, new Color(1f), _mainShader, _textShader);
+        _globalColor = new Vector4Uniform(UniformGlobalColor, new Color(1f), _mainShader, _textShader, _pixelShader);
         
 
         // textures
@@ -211,6 +222,15 @@ public sealed partial class OpenGlApi : GLDisposable, IGraphicApi
         }
         
         SelectShader(_mainShader);
+
+        pixelVao = new Vao();
+        pixelVao.Bind();
+        pixelVbo = new Vbo<Vector2>(99999);
+        {
+            var attributes = new VaoAttributes<Vector2>(pixelVao, pixelVbo, _pixelShader);
+            attributes.Add<float>(VertexAttribPointerType.Float, "pixelPosition", 2);
+            attributes.Compile();
+        }
         
         return null;
     }
@@ -237,8 +257,25 @@ public sealed partial class OpenGlApi : GLDisposable, IGraphicApi
         }
     }
 
+    // todo add officialy or remove
+    public void RenderPixelsToScreenBuffer(FixedBuffer<Vector2> pixelPosition)
+    {
+        GL.Disable(EnableCap.DepthTest);
+        _pixelShader.Bind();
+
+        pixelVao.Bind();
+        pixelVbo.BindAndPush(pixelPosition);
+        GL.DrawArrays(PrimitiveType.Points, 0, pixelPosition.Count*2);
+        
+        // bind back
+        _currentShader.Bind();
+
+        GL.Enable(EnableCap.DepthTest); 
+    }
+
     public void RenderToScreenBuffer(VertexBuffer buffer)
     {
+        _vao.Bind();
         _vertexVbo.BindAndPush(buffer.VertexVbo);
         _matIdSsbo.BindAndPush(buffer.MatIdSsbo);
         _ebo.BindAndPush(buffer.Ebo);

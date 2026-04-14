@@ -12,7 +12,7 @@ public class BasicInputHandler : IUserInputHandler
     private readonly HashSet<KeyBinds.Bind> _pressed = [];
     private readonly HashSet<KeyBinds.Bind> _shortPressed = [];
     private bool _firstCursorMove = true;
-    public Vector2i MousePosition = (0, 0);
+    public Vector2i CursorPosition = (0, 0);
     public Vector2i DeltaMousePosition { private set; get; } = (0, 0);
     //public Vector2i MousePosition { private set; get; }= (0, 0);
 
@@ -48,13 +48,13 @@ public class BasicInputHandler : IUserInputHandler
     {
         if (_firstCursorMove)
         {
-            MousePosition = (x, y);
+            CursorPosition = (x, y);
             _firstCursorMove = false;
             return;
         }
         // we += cause this function will be called several times between frames
-        DeltaMousePosition += (x, y) - MousePosition;
-        MousePosition = (x, y);
+        DeltaMousePosition += (x, y) - CursorPosition;
+        CursorPosition = (x, y);
     }
 
     public bool IsPressed(KeyBinds.Bind bind) => _pressed.Contains(bind) || _shortPressed.Contains(bind);

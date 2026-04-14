@@ -24,7 +24,7 @@ public class App : IApp
     private readonly KeyBinds.Bind _dumbTexturesBind;
     
     private readonly BasicInputHandler _inputHandler;
-    private FlyingPlayerController _controller = null!;
+    private FlyingPlayerController _wasdController = null!;
     
     private readonly VertexBuffer _vertexBuffer = new VertexBuffer(20_000);
     //private readonly List<Model> _models = new();
@@ -45,7 +45,7 @@ public class App : IApp
         _scene = new Scene();
         
         _inputHandler = new BasicInputHandler(_grapi, _binds);
-        _controller = new FlyingPlayerController(_grapi, _inputHandler, _wasd, 0.2f);
+        _wasdController = new FlyingPlayerController(_grapi, _inputHandler, _wasd, 0.2f);
         _editorController = new EditorController(_grapi, _inputHandler, _scene);
     }
     
@@ -91,6 +91,8 @@ public class App : IApp
 
     public void Run()
     {
+        var pixelBuffer = new FixedBuffer<Vector2>(9999999);
+
         var delays = new List<long>(200);
         int tick = 0;
         float deltaTime = 0;
@@ -103,29 +105,23 @@ public class App : IApp
             () => !_grapi.ShouldStop(),
             () =>
             {
+                _wasdController.Update(deltaTime);
                 
-                if (_inputHandler.IsPressed(_dumbTexturesBind)) 
-                    _grapi.DumpTextures(ExternalPath.Of("."));
-
-
                 var projection = Matrix4.CreatePerspectiveFieldOfView(
                     MathF.PI / 2, (float) _windowWidth / _windowHeight, 0.1f, 1000f);
                 _grapi.ProjectionTransform(projection);
 
-                var view = _controller.View;
+                var view = _wasdController.View;
                 _grapi.ViewTransform(view);
                 
-                if (_inputHandler.IsPressed(_editorController.SelectBind))
-                {
-                    Logger.Log(this, _editorController.Trace(new Vector2i(_windowWidth, _windowHeight), view, projection));
-                }
- 
+                _editorController.Update(view, projection);
                 
+                // other inputs
                 if (_inputHandler.IsPressed(_freeCursorBind))
                     _grapi.SetCursorMode(IGraphicApi.CursorMode.Normal);
                 
-                
-                _controller.Update(deltaTime);
+                if (_inputHandler.IsPressed(_dumbTexturesBind)) 
+                    _grapi.DumpTextures(ExternalPath.Of("."));
                 
                 // render
                 
@@ -135,11 +131,14 @@ public class App : IApp
                 {
                     // sObject.Position.X += 1f*deltaTime;
                     // sObject.Rotation *= Quaternion.FromAxisAngle(Vector3.UnitZ, 1*deltaTime);
+                    sObject.Scale.Y = 2;
                     _vertexBuffer.Clear();
                     _vertexBuffer.PutModel(sObject.Model);
-                     _grapi.ModelTransform(Matrix4.CreateFromQuaternion(sObject.Rotation) * Matrix4.CreateTranslation(sObject.Position));
+                     _grapi.ModelTransform(sObject.ModelMatrix);
                     // _grapi.SetDrawMode(IGraphicApi.DrawMode.Fill);
                     // _grapi.RenderToScreenBuffer(_vertexBuffer);
+
+                    
                     if (sObject.IsText)
                     {
                         //_grapi.SwitchShader(IGraphicApi.ShaderType.Text);
@@ -151,8 +150,19 @@ public class App : IApp
                         _grapi.GlobalColor(new Color(1));
                     }
                     
+                    if (sObject == _editorController.SelectedObject)
+                    {
+                        _grapi.GlobalColor((1, 0.5f, 0f, 1f));
+                    }
+                    else
+                    {
+                        _grapi.GlobalColor(new Color(1f));
+                    }
+                    
                     _grapi.RenderToScreenBuffer(_vertexBuffer);
                 }
+                
+                _grapi.RenderPixelsToScreenBuffer(pixelBuffer);
                 
                 // end
                 _inputHandler.ClearForNextFrame();

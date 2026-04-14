@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using System.Runtime.CompilerServices;
 using OpenTK.Mathematics;
 
@@ -10,7 +11,9 @@ public static class Utils
 {
     extension(Matrix4 matrix)
     {
+        [Pure]
         public Vector3 TransformDirection(Vector3 vector) => Vector3.TransformVector(vector, matrix);
+        [Pure]
         public Vector3 TransformPosition(Vector3 vector) => Vector3.TransformPosition(vector, matrix);
     }
 

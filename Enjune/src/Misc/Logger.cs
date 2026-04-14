@@ -20,7 +20,7 @@ public static class Logger
         if (color != null)
             Console.ForegroundColor = (ConsoleColor) color;
         
-        Console.Write($"[{time}] [{type}] {authorName}: {msg}\n");
+        Console.Write($"[{time}] [{type}] {authorName}: {msg ?? "null"}\n");
         Console.ForegroundColor = initialFrontColor;
     }
 }
