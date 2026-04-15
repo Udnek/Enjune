@@ -1,7 +1,6 @@
-using Enjune.Graphic.GraphicApi;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 
-namespace Enjune.Graphic.InputHandler;
+namespace Enjune.Graphic.GraphicApi;
 
 public interface IUserInputHandler
 {

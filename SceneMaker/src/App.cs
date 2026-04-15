@@ -6,7 +6,9 @@ using Enjune.Graphic.Asset;
 using Enjune.Graphic.Font;
 using Enjune.Graphic.GraphicApi;
 using Enjune.Graphic.GraphicApi.OpenGL;
-using Enjune.Graphic.InputHandler;
+using Enjune.Graphic.GraphicApi.Vertex.Colored;
+using Enjune.Graphic.GraphicApi.Vertex.Material;
+using Enjune.Graphic.Input;
 using Enjune.Misc;
 using Enjune.World;
 using OpenTK.Mathematics;
@@ -26,7 +28,8 @@ public class App : IApp
     private readonly BasicInputHandler _inputHandler;
     private FlyingPlayerController _wasdController = null!;
     
-    private readonly VertexBuffer _vertexBuffer = new VertexBuffer(20_000);
+    private readonly MaterialVertexBuffer _materialVertexBuffer = new MaterialVertexBuffer(20_000);
+    private readonly ColoredVertexBuffer _colorVertexBuffer = new ColoredVertexBuffer(20_000);
     //private readonly List<Model> _models = new();
 
     private IGraphicApi.DrawMode _drawMode = IGraphicApi.DrawMode.Fill;
@@ -60,7 +63,8 @@ public class App : IApp
     {
         var assetManager = new AssetManager();
 
-        var watchTower = new DotObjModelReader(assetManager, AssemblyPath.Of(Enjune.Enjune.Assembly,"Models", "wt", "wooden watch tower2.obj"))
+        var watchTower 
+            = new DotObjModelReader(assetManager, AssemblyPath.Of(Enjune.Enjune.Assembly,"Models", "wt", "wooden watch tower2.obj"))
             .Read(out var error);
         if (watchTower == null) return error;
 
@@ -81,17 +85,19 @@ public class App : IApp
         _scene.Objects.Add(new SObject(watchTower));
         _scene.Objects.Add(new SObject(font.Generate("Niggers", 10f), true));
         
-        // _vertexBuffer.Clear();
-        // foreach (var m in _models)
-        // {
-        //     _vertexBuffer.PutModel(m);
-        // }
         return null;
     }
 
     public void Run()
     {
-        var pixelBuffer = new FixedBuffer<Vector2>(9999999);
+        //var pixelBuffer = new FixedBuffer<Vector2>(9999999);
+
+        var gizmo = new Model<Color, Color>.Builder().Add(
+            new Mesh<Color>([(0, 0, 0), (1, 0, 0), (0, 1, 0), (0, 0, 1)], 
+                [Color.One, Color.UnitX, Color.UnitY, Color.UnitZ], 
+                [0, 1,    0, 2,  0, 3]),
+            Color.One
+        ).Build();
 
         var delays = new List<long>(200);
         int tick = 0;
@@ -109,10 +115,14 @@ public class App : IApp
                 
                 var projection = Matrix4.CreatePerspectiveFieldOfView(
                     MathF.PI / 2, (float) _windowWidth / _windowHeight, 0.1f, 1000f);
-                _grapi.ProjectionTransform(projection);
-
                 var view = _wasdController.View;
-                _grapi.ViewTransform(view);
+                
+                foreach (var sh in Enum.GetValues<IGraphicApi.ShaderType>())
+                {
+                    _grapi.SwitchShader(sh);
+                    _grapi.ProjectionTransform(projection);
+                    _grapi.ViewTransform(view);
+                }
                 
                 _editorController.Update(view, projection);
                 
@@ -129,26 +139,11 @@ public class App : IApp
                 
                 foreach (var sObject in _scene.Objects)
                 {
-                    // sObject.Position.X += 1f*deltaTime;
-                    // sObject.Rotation *= Quaternion.FromAxisAngle(Vector3.UnitZ, 1*deltaTime);
-                    sObject.Scale.Y = 2;
-                    _vertexBuffer.Clear();
-                    _vertexBuffer.PutModel(sObject.Model);
-                     _grapi.ModelTransform(sObject.ModelMatrix);
-                    // _grapi.SetDrawMode(IGraphicApi.DrawMode.Fill);
-                    // _grapi.RenderToScreenBuffer(_vertexBuffer);
-
+                    _grapi.SwitchShader(IGraphicApi.ShaderType.Main);
+                    _materialVertexBuffer.Clear();
+                    _materialVertexBuffer.PutModel(sObject.Model);
                     
-                    if (sObject.IsText)
-                    {
-                        //_grapi.SwitchShader(IGraphicApi.ShaderType.Text);
-                        _grapi.GlobalColor(new Color(MathF.Sin(tick/60f)/2 + 0.5f, MathF.Cos(tick/30f)/2 + 0.5f, 0, 0.6f));
-                    }
-                    else
-                    {
-                        //_grapi.SwitchShader(IGraphicApi.ShaderType.Main);
-                        _grapi.GlobalColor(new Color(1));
-                    }
+                    _grapi.ModelTransform(sObject.ModelMatrix);
                     
                     if (sObject == _editorController.SelectedObject)
                     {
@@ -159,10 +154,19 @@ public class App : IApp
                         _grapi.GlobalColor(new Color(1f));
                     }
                     
-                    _grapi.RenderToScreenBuffer(_vertexBuffer);
+                    _grapi.RenderToScreenBuffer(_materialVertexBuffer);
+                    // _grapi.SetDrawMode(IGraphicApi.DrawMode.Wireframe);
+                    // _grapi.RenderToScreenBuffer(_colorVertexBuffer);
                 }
                 
-                _grapi.RenderPixelsToScreenBuffer(pixelBuffer);
+                // gizmo
+                _grapi.ClearScreenBuffers(false, true);
+                _colorVertexBuffer.Clear();
+                _colorVertexBuffer.PutModel(gizmo);
+                _grapi.SwitchShader(IGraphicApi.ShaderType.Color);
+                _grapi.ModelTransform(Matrix4.CreateTranslation(0, 0, 0));
+                _grapi.ViewTransform(Matrix4.LookAt(-_wasdController.Direction*3, (0, 0, 0), Vector3.UnitY));
+                _grapi.RenderToScreenBuffer(_colorVertexBuffer, IGraphicApi.Primitive.Line);
                 
                 // end
                 _inputHandler.ClearForNextFrame();

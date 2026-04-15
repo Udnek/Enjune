@@ -1,9 +1,9 @@
 using System.Runtime.InteropServices;
 
-namespace Enjune.Graphic.GraphicApi;
+namespace Enjune.Graphic.GraphicApi.Vertex.Material;
 
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
-public struct VertexData(Position position, TextureCoord textureCoord)
+public struct MaterialVertexData(Position position, TextureCoord textureCoord)
 {
     public Position Position = position;
     public TextureCoord TextureCoord = textureCoord;

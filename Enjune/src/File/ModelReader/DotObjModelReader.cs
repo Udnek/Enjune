@@ -15,7 +15,7 @@ public class DotObjModelReader
     private RawMaterial? _selectedMaterial = null;
     private RawMaterial? _lastCreatedMaterial = null;  
     
-    private readonly Model.Builder _builder = new();
+    private readonly Model<TextureCoord, CompiledMaterial>.Builder _builder = new();
 
     public DotObjModelReader(AssetManager assetManager, ResourcePath path)
     {
@@ -23,7 +23,7 @@ public class DotObjModelReader
         _path = path;
     }
 
-    public Model? Read(out Error? error)
+    public Model<TextureCoord, CompiledMaterial>? Read(out Error? error)
     {
         var text = _path.LoadText(out error);
         if (text == null) return null;
@@ -208,7 +208,7 @@ public class DotObjModelReader
         else
             material = _assetManager.MissingMaterial;
 
-        _builder.Add(Mesh.Ngon(verPoses, texPoses), material);
+        _builder.Add(Mesh<TextureCoord>.Ngon(verPoses, texPoses), material);
         return null;
     }
 }

@@ -31,10 +31,26 @@ public sealed partial class OpenGlApi
             case IGraphicApi.DrawMode.Wireframe:
                 GL.PolygonMode(TriangleFace.FrontAndBack, PolygonMode.Line);
                 break;
+            case IGraphicApi.DrawMode.Point:
+                GL.PolygonMode(TriangleFace.FrontAndBack, PolygonMode.Point);
+                break;
             default:
                 Logger.Error(this, $"unknown graphic mode: {mode}");
                 break;
         }
+    }
+
+    private PrimitiveType fromApi(IGraphicApi.Primitive primitive)
+    {
+        return primitive switch
+        {
+            IGraphicApi.Primitive.Triangle => PrimitiveType.Triangles,
+            IGraphicApi.Primitive.LineStrip => PrimitiveType.LineStrip,
+            IGraphicApi.Primitive.LineLoop => PrimitiveType.LineLoop,
+            IGraphicApi.Primitive.Line => PrimitiveType.Lines,
+            IGraphicApi.Primitive.Point => PrimitiveType.Points,
+            _ => throw new ArgumentOutOfRangeException(nameof(primitive), primitive, null)
+        };
     }
 
     public void SetVsync(bool vsync) => GLFW.SwapInterval(vsync ? 1 : 0);
@@ -104,5 +120,10 @@ public sealed partial class OpenGlApi
     
     public void UpdateScreen() { unsafe { GLFW.SwapBuffers(_window); } }
     
-    public void ClearScreenBuffers() => GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+    public void ClearScreenBuffers(bool color, bool depth)
+    {
+        GL.Clear(
+            (color ? ClearBufferMask.ColorBufferBit : 0) 
+            | (depth ? ClearBufferMask.DepthBufferBit : 0));
+    }
 }

@@ -19,16 +19,16 @@ public class CompiledFont
         _initialFontSize = initialFontSize;
     }
     
-    public Model Generate(string text, float size)
+    public Model<TextureCoord, CompiledMaterial> Generate(string text, float size)
     {
-        Mesh[] meshes = new Mesh[text.Length];
+        var meshes = new Mesh<TextureCoord>[text.Length];
         float xOffset = 0;
         float sizeMul = 1f/_initialFontSize *size;
         for (var i = 0; i < text.Length; i++)
         {
             var ch = text[i];
             var glyph = _glyphs.GetValueOrDefault(ch, _fallbackGlyph);
-            var mesh = Mesh.Quad(
+            var mesh = Mesh<TextureCoord>.Quad(
                 (0f,0f, 0f),
                 (glyph.Width*sizeMul, 0, 0f),
                 (glyph.Width*sizeMul, glyph.Height*sizeMul, 0f),
@@ -39,6 +39,6 @@ public class CompiledFont
             meshes[i] = mesh;
         }
 
-        return Model.CreateFromOneMaterial(meshes, _material);
+        return Model<TextureCoord, CompiledMaterial>.CreateFromOneMaterial(meshes, _material);
     }
 }

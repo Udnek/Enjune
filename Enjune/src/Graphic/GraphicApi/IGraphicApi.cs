@@ -1,6 +1,8 @@
 using Enjune.File;
 using Enjune.Graphic.Asset;
-using Enjune.Graphic.InputHandler;
+using Enjune.Graphic.GraphicApi.OpenGL;
+using Enjune.Graphic.GraphicApi.Vertex.Colored;
+using Enjune.Graphic.GraphicApi.Vertex.Material;
 using OpenTK.Mathematics;
 
 namespace Enjune.Graphic.GraphicApi;
@@ -21,8 +23,9 @@ public interface IGraphicApi : IDisposable
     
     // general pipeliner
     bool ShouldStop(); // should stop application
-    void ClearScreenBuffers();
-    void RenderToScreenBuffer(VertexBuffer buffer);
+    void ClearScreenBuffers(bool color = true, bool depth = true);
+    void RenderToScreenBuffer(MaterialVertexBuffer buffer, Primitive primitive = Primitive.Triangle);
+    void RenderToScreenBuffer(ColoredVertexBuffer buffer, Primitive primitive = Primitive.Triangle);
     void RenderPixelsToScreenBuffer(FixedBuffer<Vector2> pixelPosition);
     void UpdateScreen();
     void UpdateEvents(); // such as keyboard, mouse, etc
@@ -44,15 +47,26 @@ public interface IGraphicApi : IDisposable
     enum ShaderType
     {
         Main,
-        Text
+        Text,
+        Color
     }
     
     delegate void WindowSizeChangeHandler(int width, int height);
 
+    enum Primitive
+    {
+        Triangle,
+        LineStrip,
+        LineLoop,
+        Line,
+        Point,
+    }
+    
     enum DrawMode
     {
         Fill,
-        Wireframe
+        Wireframe,
+        Point
     }
 
     enum CursorMode

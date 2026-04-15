@@ -2,19 +2,19 @@ using Enjune.Misc;
 
 namespace Enjune.Graphic;
 
-public class Mesh
+public class Mesh<T>
 {
     public readonly Position[] Vertices;
     public readonly int[] Indexes;
-    public readonly TextureCoord[] Textures;
+    public readonly T[] PerVertexData;
 
-    public Mesh(Position[] vertices, TextureCoord[] textures, int[] indexes)
+    public Mesh(Position[] vertices, T[] perVertexData, int[] indexes)
     {
-        if (!IsValid(vertices, textures, indexes, out var error)) 
+        if (!IsValid(vertices, perVertexData, indexes, out var error)) 
             Logger.Error(this, "constructing incorrect mesh: " + error);
         
         Vertices = vertices;
-        Textures = textures;
+        PerVertexData = perVertexData;
         Indexes = indexes;
     }
 
@@ -24,12 +24,12 @@ public class Mesh
             Vertices[i] += offset;
     }
     
-    public static Mesh Cuboid(
+    public static Mesh<TextureCoord> Cuboid(
         Position b1, Position b2, Position b3, Position b4,
         Position t1, Position t2, Position t3, Position t4,
         TextureQuad texture)
     {
-        return Merge(
+        return Mesh<TextureCoord>.Merge(
             Quad(b1, b2, b3, b4, texture), // bot
             Quad(t1, t2, t3, t4, texture), // top
             Quad(b1, b2, t2, t1, texture), // front
@@ -38,7 +38,7 @@ public class Mesh
             Quad(b4, b1, t1, t4, texture)); // left
     }
 
-    public static Mesh Cube(Position center, float size, TextureQuad texture)
+    public static Mesh<TextureCoord> Cube(Position center, float size, TextureQuad texture)
     {
         var hs = size / 2;
         return Cuboid(
@@ -57,25 +57,25 @@ public class Mesh
         );
     }
 
-    public static Mesh Quad(Position bl, Position br, Position tr, Position tl, TextureQuad tex)
+    public static Mesh<TextureCoord> Quad(Position bl, Position br, Position tr, Position tl, TextureQuad tex)
     {
-        return new Mesh([bl, br, tr, tl], 
+        return new Mesh<TextureCoord>([bl, br, tr, tl], 
             [tex.BotLeft, tex.BotRight, tex.TopRight, tex.TopLeft], 
             [0, 1, 2, 0, 2, 3]
             );
     }
     
-    public static Mesh Triangle(Position bl, Position br, Position tr, TextureQuad tex)
+    public static Mesh<TextureCoord> Triangle(Position bl, Position br, Position tr, TextureQuad tex)
     {
-        return new Mesh([bl, br, tr], 
+        return new Mesh<TextureCoord>([bl, br, tr], 
             [tex.BotLeft, tex.BotRight, tex.TopRight], 
             [0, 1, 2]);
     }
     
-    public static Mesh Ngon(Position[] poses, TextureCoord[] texCoords)
+    public static Mesh<T> Ngon(Position[] poses, T[] perVertexData)
     {
-        if (texCoords.Length != poses.Length)
-            throw new ArgumentException($"positions and text coordinates must have the same length: {poses.Length} != {texCoords.Length}");
+        if (perVertexData.Length != poses.Length)
+            throw new ArgumentException($"positions and text coordinates must have the same length: {poses.Length} != {perVertexData.Length}");
         List<int> indexes = [];
         for (int i = 1; i < poses.Length-1; i++)
         {
@@ -84,12 +84,12 @@ public class Mesh
             indexes.Add(i);
             indexes.Add(i + 1);
         }
-        return new Mesh(poses, texCoords.ToArray(), indexes.ToArray());
+        return new Mesh<T>(poses, perVertexData.ToArray(), indexes.ToArray());
     }
     
-    public static Mesh Merge(params Mesh[] meshes) => Merge((IEnumerable<Mesh>) meshes);
+    public static Mesh<T> Merge(params Mesh<T>[] meshes) => Merge((IEnumerable<Mesh<T>>) meshes);
     
-    public static Mesh Merge(IEnumerable<Mesh> meshes)
+    public static Mesh<T> Merge(IEnumerable<Mesh<T>> meshes)
     {
         int offset = 0;
         var indexes = new List<int>();
@@ -99,30 +99,30 @@ public class Mesh
                 indexes.Add(offset + index);
             offset += mesh.Vertices.Length;
         }
-        var textures = meshes.SelectMany(mesh => mesh.Textures).ToArray();
+        var perVertexData = meshes.SelectMany(mesh => mesh.PerVertexData).ToArray();
         var vertices = meshes.SelectMany(mesh => mesh.Vertices).ToArray();
-        return new Mesh(vertices, textures, indexes.ToArray());
+        return new Mesh<T>(vertices, perVertexData, indexes.ToArray());
     }
 
-    public static bool IsValid(Position[] vertices, TextureCoord[] textures, int[] indexes, out Error? error)
+    public static bool IsValid(Position[] vertices, T[] perVertexData, int[] indexes, out Error? error)
     {
         if (vertices.Length < 3)
         {
             error = "vertices array < 3: mesh doesn't really make sense";
             return false;
         }
-        if (vertices.Length != textures.Length)
+        if (vertices.Length != perVertexData.Length)
         {
-            error = $"vertices and texture sizes aren't equal: {vertices.Length} != {textures.Length}";
+            error = $"vertices and perVertexData sizes aren't equal: {vertices.Length} != {perVertexData.Length}";
             return false;
         }
-        var min = indexes.Min(i => i);
+        var min = indexes.Min();
         if (min != 0)
         {
             error = $"index must be > 0, but got: {min}";
             return false;
         }
-        var max = indexes.Max(i => i);
+        var max = indexes.Max();
         if (max >= vertices.Length)
         {
             error = $"index must be < lenght of vertices ({vertices.Length}), but got: {max}";

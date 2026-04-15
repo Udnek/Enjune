@@ -5,7 +5,8 @@ using Enjune.Graphic.GraphicApi.OpenGL.Component;
 using Enjune.Graphic.GraphicApi.OpenGL.Component.Array;
 using Enjune.Graphic.GraphicApi.OpenGL.Component.Texture;
 using Enjune.Graphic.GraphicApi.OpenGL.Component.Uniform;
-using Enjune.Graphic.InputHandler;
+using Enjune.Graphic.GraphicApi.Vertex.Colored;
+using Enjune.Graphic.GraphicApi.Vertex.Material;
 using Enjune.Misc;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
@@ -19,20 +20,27 @@ public sealed partial class OpenGlApi : GLDisposable, IGraphicApi
     
     private CompiledAssets _assets = null!;
     
-    private Vao _vao = null!;
-    private Vbo<VertexData> _vertexVbo = null!;
+    // buffers
+    private Vao _mainVao = null!;
+    private Vbo<MaterialVertexData> _matVertexVbo = null!;
     private Ssbo<MatId> _matIdSsbo = null!;
     private Ssbo<MaterialData> _materialSsbo = null!;
     private Ebo _ebo = null!;
-
-    private Vbo<Vector2> pixelVbo;
-    private Vao pixelVao;
     
+    private Vao _colorVao = null!;
+    private Vbo<ColoredVertexData> _colorVertexVbo = null!;
+
+    private TextureArray _textureArray = null!;
+    
+    private Vbo<Vector2> pixelVbo; // todo remove?
+    private Vao pixelVao; // todo remove?
+    
+    // shaders
     private ShaderProgram _mainShader = null!;
     private ShaderProgram _textShader = null!;
     private ShaderProgram _pixelShader = null!;
     private ShaderProgram _currentShader = null!;
-    private TextureArray _textureArray = null!;
+    private ShaderProgram _colorShader;
     
     // storing it here fucking gc won't erase it
     private GLFWCallbacks.KeyCallback _keyCallback = null!;
@@ -47,7 +55,7 @@ public sealed partial class OpenGlApi : GLDisposable, IGraphicApi
     private Matrix4Uniform _projection = null!;
     private Vector4Uniform _globalColor = null!;
     private TextureUniform _textureUniform = null!;
-
+    
     public Error? Init(CompiledAssets assets, int width, int height, string title,
         IUserInputHandler keyHandler,
         IGraphicApi.WindowSizeChangeHandler windowSizeHandler)
@@ -177,6 +185,12 @@ public sealed partial class OpenGlApi : GLDisposable, IGraphicApi
             AssemblyPath.Of(Enjune.Assembly, "OpenGL", "Shaders", "Main", "frag.frag"),
             AssemblyPath.Of(Enjune.Assembly, "OpenGL", "Shaders", "Main", "vert.vert"));
         if (error != null) return error;
+        
+        _colorShader = new ShaderProgram();
+        error = _colorShader.Init(
+            AssemblyPath.Of(Enjune.Assembly, "OpenGL", "Shaders", "Color", "frag.frag"),
+            AssemblyPath.Of(Enjune.Assembly, "OpenGL", "Shaders", "Color", "vert.vert"));
+        if (error != null) return error;
 
         _textShader = new ShaderProgram();
         error = _textShader.Init(
@@ -185,31 +199,41 @@ public sealed partial class OpenGlApi : GLDisposable, IGraphicApi
         if (error != null) return error;
         
         // uniforms
-        _model = new Matrix4Uniform(UniformModel, Matrix4.Identity, _mainShader, _textShader);
-        _view = new Matrix4Uniform(UniformView, Matrix4.Identity, _mainShader, _textShader);
+        _model = new Matrix4Uniform(UniformModel, Matrix4.Identity, _mainShader, _textShader, _colorShader);
+        _view = new Matrix4Uniform(UniformView, Matrix4.Identity, _mainShader, _textShader, _colorShader);
         _projection = new Matrix4Uniform(UniformProjection, 
             Matrix4.CreatePerspectiveFieldOfView(MathF.PI / 2, 1.0f, 0.1f, 1000.0f), 
-            _mainShader, _textShader);
+            _mainShader, _textShader, _colorShader);
         _textureUniform = new TextureUniform(UniformTexture, 0, _mainShader, _textShader);
-        _globalColor = new Vector4Uniform(UniformGlobalColor, new Color(1f), _mainShader, _textShader, _pixelShader);
+        _globalColor = new Vector4Uniform(UniformGlobalColor, new Color(1f), _mainShader, _textShader, _pixelShader, _colorShader);
         
 
         // textures
         _textureArray = new TextureArray(_assets, TextureUnit.Texture0);
         
         // buffers
-        _vao = new Vao();
+        _mainVao = new Vao();
         // todo better calc capacities
         _materialSsbo = new Ssbo<MaterialData>(0, 20);
         _matIdSsbo = new Ssbo<MatId>(1, (int)Math.Pow(2, 20));
-        _vertexVbo = new Vbo<VertexData>((int)Math.Pow(2, 20));
+        _matVertexVbo = new Vbo<MaterialVertexData>((int)Math.Pow(2, 20));
         _ebo = new Ebo((int)Math.Pow(2, 20));
+        _colorVao = new Vao();
+        _colorVertexVbo = new Vbo<ColoredVertexData>((int)Math.Pow(2, 20));
         
-        // attributes
+        // mat attributes
         {
-            var attributes = new VaoAttributes<VertexData>(_vao, _vertexVbo, _mainShader, _textShader);
+            var attributes = new VaoAttributes<MaterialVertexData>(_mainVao, _matVertexVbo, _mainShader, _textShader);
             attributes.Add<float>(VertexAttribPointerType.Float, AttributePosition, 3);
             attributes.Add<float>(VertexAttribPointerType.Float, AttributeTexture, 2);
+            attributes.Compile();
+        }
+        
+        // color attributes
+        {
+            var attributes = new VaoAttributes<ColoredVertexData>(_colorVao, _colorVertexVbo, _colorShader);
+            attributes.Add<float>(VertexAttribPointerType.Float, "inPosition", 3);
+            attributes.Add<float>(VertexAttribPointerType.Float,"inColor", 4);
             attributes.Compile();
         }
 
@@ -252,6 +276,9 @@ public sealed partial class OpenGlApi : GLDisposable, IGraphicApi
             case IGraphicApi.ShaderType.Text:
                 SelectShader(_textShader);
                 break;
+            case IGraphicApi.ShaderType.Color:
+                SelectShader(_colorShader);
+                break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(type), type, null);
         }
@@ -273,26 +300,43 @@ public sealed partial class OpenGlApi : GLDisposable, IGraphicApi
         GL.Enable(EnableCap.DepthTest); 
     }
 
-    public void RenderToScreenBuffer(VertexBuffer buffer)
+    public void RenderToScreenBuffer(MaterialVertexBuffer buffer, IGraphicApi.Primitive primitive = IGraphicApi.Primitive.Triangle)
     {
-        _vao.Bind();
-        _vertexVbo.BindAndPush(buffer.VertexVbo);
+        _mainVao.Bind();
+        _matVertexVbo.BindAndPush(buffer.VertexVbo);
         _matIdSsbo.BindAndPush(buffer.MatIdSsbo);
         _ebo.BindAndPush(buffer.Ebo);
+        
+        SelectShader(_mainShader);
 
-        GL.DrawElements(PrimitiveType.Triangles, buffer.Ebo.Count, DrawElementsType.UnsignedInt, 0);
+        GL.DrawElements(fromApi(primitive), buffer.Ebo.Count, DrawElementsType.UnsignedInt, 0);
     }
 
+    public void RenderToScreenBuffer(ColoredVertexBuffer buffer, IGraphicApi.Primitive primitive = IGraphicApi.Primitive.Triangle)
+    {
+        _colorVao.Bind();
+        _colorVertexVbo.BindAndPush(buffer.Vbo);
+        _ebo.BindAndPush(buffer.Ebo);
+        
+        SelectShader(_colorShader);
+
+        GL.DrawElements(fromApi(primitive), buffer.Ebo.Count, DrawElementsType.UnsignedInt, 0);
+    }
+    
     protected override void DisposeGLData()
     {
-        _vao.Dispose();
+        _mainVao.Dispose();
+        _colorVao.Dispose();
+        
         _materialSsbo.Dispose();
         _matIdSsbo.Dispose();
-        _vertexVbo.Dispose();
+        _matVertexVbo.Dispose();
+        _colorVertexVbo.Dispose();
         _ebo.Dispose();
         _mainShader.Dispose();
         _textShader.Dispose();
         _textureArray.Dispose();
+        _colorShader.Dispose();
         
         unsafe
         {

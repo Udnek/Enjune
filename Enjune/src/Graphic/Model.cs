@@ -1,35 +1,36 @@
+using System.Diagnostics.Contracts;
 using Enjune.Graphic.Asset;
 using Enjune.Misc;
 
 namespace Enjune.Graphic;
 
-public sealed class Model
+public sealed class Model<TPerVert, TPerMesh>
 {
-    public ValueTuple<Mesh, CompiledMaterial>[] Meshes;
+    public ValueTuple<Mesh<TPerVert>, TPerMesh>[] Meshes;
 
-    private Model(ValueTuple<Mesh, CompiledMaterial>[] meshes)
+    private Model(ValueTuple<Mesh<TPerVert>, TPerMesh>[] meshes)
     {
         if (meshes.Length == 0)
             Logger.Error(this,"constructing empty model");
         Meshes = meshes;
     }
 
-    public static Model CreateFromOneMaterial(Mesh[] meshes, CompiledMaterial material)
-        => CreateNotOptimized([(Mesh.Merge(meshes), material)]);
+    public static Model<TPerVert, TPerMesh> CreateFromOneMaterial(Mesh<TPerVert>[] meshes, TPerMesh perMeshData)
+        => CreateNotOptimized([(Mesh<TPerVert>.Merge(meshes), perMeshData)]);
     
-    public static Model CreateAndOptimize(ValueTuple<Mesh, CompiledMaterial>[] meshes)
+    public static Model<TPerVert, TPerMesh> CreateAndOptimize(ValueTuple<Mesh<TPerVert>, TPerMesh>[] meshes)
     {
-        List<ValueTuple<Mesh, CompiledMaterial>> newMeshes = [];
+        List<ValueTuple<Mesh<TPerVert>, TPerMesh>> newMeshes = [];
         foreach (var groupedByMat in meshes.GroupBy(e => e.Item2))
         {
             var mat = groupedByMat.Key;
-            var mergedMesh = Mesh.Merge(groupedByMat.Select(e => e.Item1));
+            var mergedMesh = Mesh<TPerVert>.Merge(groupedByMat.Select(e => e.Item1));
             newMeshes.Add((mergedMesh, mat));
         }
         return CreateNotOptimized(newMeshes.ToArray());
     }
     
-    public static Model CreateNotOptimized(ValueTuple<Mesh, CompiledMaterial>[] meshes) 
+    public static Model<TPerVert, TPerMesh> CreateNotOptimized(ValueTuple<Mesh<TPerVert>, TPerMesh>[] meshes) 
         => new(meshes);
 
 
@@ -42,16 +43,18 @@ public sealed class Model
 
     public class Builder
     {
-        private readonly List<ValueTuple<Mesh, CompiledMaterial>> _meshes = [];
+        private readonly List<ValueTuple<Mesh<TPerVert>, TPerMesh>> _meshes = [];
         
         public bool IsEmpty => _meshes.Count == 0;
         
-        public Builder Add(Mesh mesh, CompiledMaterial material)
+        public Builder Add(Mesh<TPerVert> mesh, TPerMesh perMeshData)
         {
-            _meshes.Add((mesh, material));
+            _meshes.Add((mesh, perMeshData));
             return this;
         }
 
-        public Model Build() => CreateAndOptimize(_meshes.ToArray());
+        [Pure]
+        public Model<TPerVert, TPerMesh> Build() 
+            => CreateAndOptimize(_meshes.ToArray());
     }
 }
