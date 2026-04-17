@@ -13,13 +13,13 @@ public class ColoredVertexBuffer
     }
 
 
-    public void PutAnyModel<T1, T2>(Model<T1, T2> model, Color color)
+    public void PutAnyModel(Model<object, object> model, Color color)
     {
         foreach (var (mesh, _) in model.Meshes)
             PutAnyMesh(mesh, color);
     }
 
-    public void PutAnyMesh<T>(Mesh<T> mesh, Color color)
+    public void PutAnyMesh(Mesh<object> mesh, Color color)
     {
         // ebo
         var eboOffset = Vbo.Count;

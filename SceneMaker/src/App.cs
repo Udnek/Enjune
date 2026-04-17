@@ -26,7 +26,7 @@ public class App : IApp
     private readonly KeyBinds.Bind _dumbTexturesBind;
     
     private readonly BasicInputHandler _inputHandler;
-    private FlyingPlayerController _wasdController = null!;
+    private readonly FlyingPlayerController _wasdController;
     
     private readonly MaterialVertexBuffer _materialVertexBuffer = new MaterialVertexBuffer(20_000);
     private readonly ColoredVertexBuffer _colorVertexBuffer = new ColoredVertexBuffer(20_000);
@@ -91,13 +91,7 @@ public class App : IApp
     public void Run()
     {
         //var pixelBuffer = new FixedBuffer<Vector2>(9999999);
-
-        var gizmo = new Model<Color, Color>.Builder().Add(
-            new Mesh<Color>([(0, 0, 0), (1, 0, 0), (0, 1, 0), (0, 0, 1)], 
-                [Color.One, Color.UnitX, Color.UnitY, Color.UnitZ], 
-                [0, 1,    0, 2,  0, 3]),
-            Color.One
-        ).Build();
+        _scene.Objects.Add(_editorController.AxisObject);
 
         var delays = new List<long>(200);
         int tick = 0;
@@ -137,36 +131,36 @@ public class App : IApp
                 
                 _grapi.ClearScreenBuffers();
                 
-                foreach (var sObject in _scene.Objects)
+                foreach (var obj in _scene.Objects)
                 {
+                    if (obj.Hidden) continue;
+                    
                     _grapi.SwitchShader(IGraphicApi.ShaderType.Main);
-                    _materialVertexBuffer.Clear();
-                    _materialVertexBuffer.PutModel(sObject.Model);
-                    
-                    _grapi.ModelTransform(sObject.ModelMatrix);
-                    
-                    if (sObject == _editorController.SelectedObject)
-                    {
+
+                    if (obj == _editorController.SelectedObject)
                         _grapi.GlobalColor((1, 0.5f, 0f, 1f));
-                    }
                     else
-                    {
                         _grapi.GlobalColor(new Color(1f));
-                    }
+
                     
-                    _grapi.RenderToScreenBuffer(_materialVertexBuffer);
-                    // _grapi.SetDrawMode(IGraphicApi.DrawMode.Wireframe);
-                    // _grapi.RenderToScreenBuffer(_colorVertexBuffer);
+                    foreach (var sh in Enum.GetValues<IGraphicApi.ShaderType>())
+                    {
+                        _grapi.SwitchShader(sh);
+                        _grapi.ModelTransform(obj.ModelMatrix);
+                    }
+                    if (obj.MatModel != null)
+                    {
+                        _materialVertexBuffer.Clear();
+                        _materialVertexBuffer.PutModel(obj.MatModel);
+                        _grapi.RenderToScreenBuffer(_materialVertexBuffer);
+                    } 
+                    else if (obj.ColorModel != null)
+                    {
+                        _colorVertexBuffer.Clear();
+                        _colorVertexBuffer.PutModel(obj.ColorModel);
+                        _grapi.RenderToScreenBuffer(_colorVertexBuffer, IGraphicApi.Primitive.Line);
+                    }
                 }
-                
-                // gizmo
-                _grapi.ClearScreenBuffers(false, true);
-                _colorVertexBuffer.Clear();
-                _colorVertexBuffer.PutModel(gizmo);
-                _grapi.SwitchShader(IGraphicApi.ShaderType.Color);
-                _grapi.ModelTransform(Matrix4.CreateTranslation(0, 0, 0));
-                _grapi.ViewTransform(Matrix4.LookAt(-_wasdController.Direction*3, (0, 0, 0), Vector3.UnitY));
-                _grapi.RenderToScreenBuffer(_colorVertexBuffer, IGraphicApi.Primitive.Line);
                 
                 // end
                 _inputHandler.ClearForNextFrame();

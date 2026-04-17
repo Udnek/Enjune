@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using Enjune.Graphic;
 using Enjune.Graphic.GraphicApi;
 using Enjune.Graphic.Input;
 using Enjune.Misc;
@@ -15,6 +16,10 @@ public class EditorController
     private readonly Scene _scene;
     private readonly KeyBinds.Bind _selectBind;
     public SObject? SelectedObject { get; private set; }
+    private readonly Dictionary<Mesh<Color>, Ax> _meshToAx = new(3);
+    private Ax? _selectedAx;
+
+    public readonly SObject AxisObject;
 
     public EditorController(IGraphicApi graphicApi, BasicInputHandler inputHandler, Scene scene)
     {
@@ -22,36 +27,115 @@ public class EditorController
         _inputHandler = inputHandler;
         _scene = scene;
         _selectBind = new KeyBinds.Bind("select", UniKey.Of(MouseButton.Left));
-        _inputHandler._binds.AddBind(_selectBind);
+        _inputHandler.Binds.AddBind(_selectBind);
+
+        var x = new Mesh<Color>([Vector3.Zero, Vector3.UnitX], [Color.One, Color.One], [0, 1]);
+        var y = new Mesh<Color>([Vector3.Zero, Vector3.UnitY], [Color.One, Color.One], [0, 1]);
+        var z = new Mesh<Color>([Vector3.Zero, Vector3.UnitZ], [Color.One, Color.One], [0, 1]);
+        AxisObject = new SObject
+        {
+            ColorModel = new Model<Color, Color>.Builder()
+                .Add(x, new Color(1f, 0f, 0f, 1f))
+                .Add(y, new Color(0f, 1f, 0f, 1f))
+                .Add(z, new Color(0f, 0f, 1f, 1f))
+                .Build(false),
+            Hidden = true
+        };
+        _meshToAx[x] = Ax.X;
+        _meshToAx[y] = Ax.Y;
+        _meshToAx[z] = Ax.Z;
     }
 
     public void Update(Matrix4 viewMat, Matrix4 projMat)
     {
+        if (SelectedObject != null) 
+            UpdateSelectedObject(viewMat, projMat);
+        
+        if (_selectedAx != null) return; // don't need to trace anything
         if (!_inputHandler.IsPressed(_selectBind)) return;
-        SelectedObject = Trace(_graphicApi.GetWindowSize(), viewMat, projMat);
-    }
-
-    private SObject? Trace(Vector2i screenSize, Matrix4 viewMat, Matrix4 projMat)
-    {
-        var cursorPosition = _inputHandler.CursorPosition;
-        if (_graphicApi.GetCursorMode() == IGraphicApi.CursorMode.Centered)
+        if (SelectedObject != null)
         {
-            cursorPosition = screenSize / 2;
+            // trying to trace axis first
+            var mesh = TraceLineObject(AxisObject, viewMat, projMat, 5);
+            if (mesh != null)
+            {
+                _selectedAx = _meshToAx[mesh];
+                // don't need to trace anything else
+                return;
+            }
         }
-        return Trace(screenSize, cursorPosition, viewMat, projMat);
+        SelectedObject = TraceObjects(viewMat, projMat);
+        AxisObject.Hidden = SelectedObject == null;
+    }
+    
+    private enum Ax
+    {
+        X, Y, Z
     }
 
-    private SObject? Trace(Vector2i screenSize, Vector2i rawCursorPos, Matrix4 viewMat, Matrix4 projMat)
+    private static Vector3 AxToVec(Ax ax)
     {
-        Vector2 cursorPos = (rawCursorPos.X, screenSize.Y - rawCursorPos.Y);
+        return ax switch
+        {
+            Ax.X => Vector3.UnitX,
+            Ax.Y => Vector3.UnitY,
+            Ax.Z => Vector3.UnitZ,
+            _ => throw new ArgumentOutOfRangeException(nameof(ax), ax, null)
+        };
+    }
+
+    private void UpdateSelectedObject(Matrix4 viewMat, Matrix4 projMat)
+    {
+        if (SelectedObject == null) return;
+        if (_inputHandler.IsJustReleased(_selectBind))
+            _selectedAx = null;
+        else if (_selectedAx != null) 
+            DragObject(viewMat, projMat);
+        
+        AxisObject.Position = SelectedObject.Position;
+    }
+
+    private void DragObject(Matrix4 viewMat, Matrix4 projMat)
+    {
+        if (SelectedObject == null || _selectedAx == null) return;
+        if (_inputHandler.DeltaCursorPosition == (0, 0)) return;
+        GetCursorVectors(viewMat, projMat, out var direction, out var camPos);
+
+        if (!Do(AxToVec((Ax)_selectedAx)))
+            Do(-1 * AxToVec((Ax)_selectedAx));
+            
+        bool Do(Vector3 axDir)
+        {
+            var projectedDir = MathUtils.ProjectVectorOnPlane(direction, camPos, AxisObject.Position, AxisObject.Position + axDir);
+            if (!MathUtils.VectorsIntersect(camPos, projectedDir,
+                    AxisObject.Position, axDir, out var intersection)) return false;
+            SelectedObject!.Position = intersection;
+            return true;
+        }
+    }
+
+    private Vector2 GetNdcCursorPosition()
+    {
+        var screenSize = _graphicApi.GetWindowSize();
+        Vector2i rawCursorPosition;
+        if (_graphicApi.GetCursorMode() == IGraphicApi.CursorMode.Centered) 
+            rawCursorPosition = screenSize / 2;
+        else
+            rawCursorPosition = _inputHandler.CursorPosition;
+        
+        Vector2 cursorPos = (rawCursorPosition.X, screenSize.Y - rawCursorPosition.Y);
         var ndc = new Vector2(
             (cursorPos.X / screenSize.X) * 2f - 1f,
             (cursorPos.Y / screenSize.Y) * 2f - 1f
         );
-        
+        return ndc;
+    }
+
+    private void GetCursorVectors(Matrix4 viewMat, Matrix4 projMat, out Vector3 direction, out Vector3 cameraPos)
+    {
+        var ndc = GetNdcCursorPosition();
         var nearClip = new Vector4(ndc.X, ndc.Y, -1f, 1f);
         var farClip  = new Vector4(ndc.X, ndc.Y, 1f, 1f);
-        
         var unProject = (projMat.Transposed() * viewMat.Transposed()).Inverted(); // we must transpose this shit
         var nearWorld = unProject * nearClip;
         var farWorld = unProject * farClip;
@@ -59,15 +143,52 @@ public class EditorController
         nearWorld /= nearWorld.W;
         farWorld /= farWorld.W;
         
-        var direction = (farWorld - nearWorld).Xyz.Normalized();
+        direction = (farWorld - nearWorld).Xyz.Normalized();
+        cameraPos = viewMat.Inverted().ExtractTranslation();
+    }
+    
+    private Mesh<Color>? TraceLineObject(SObject obj, Matrix4 viewMat, Matrix4 projMat, float minimumAngleDegrees)
+    {
+        if (obj.ColorModel == null) return null;
+        GetCursorVectors(viewMat, projMat, out var direction, out var cameraPos);
+        
+        var modelMatInv = obj.ModelMatrix.Inverted();
+        
+        direction = modelMatInv.TransformDirection(direction).Normalized();
+        cameraPos = modelMatInv.TransformPosition(cameraPos);
 
-        var cameraPos = viewMat.Inverted().ExtractTranslation();
+        Mesh<Color>? nearestMesh = null;
+        var minDist = float.MaxValue;
+        foreach (var pair in obj.ColorModel.Meshes)
+        {
+            var mesh = pair.Item1;
+            for (var indexIndex = 0; indexIndex < mesh.Indexes.Length; indexIndex+=2)
+            {
+                var verIndex0 = mesh.Indexes[indexIndex];
+                var verIndex1 = mesh.Indexes[indexIndex+1];
+                if (!MathUtils.RayIntersectsLine(cameraPos, direction, mesh.Vertices[verIndex0], mesh.Vertices[verIndex1], out var cosAngle))
+                    continue;
+                
+                var degAngle = MathHelper.RadiansToDegrees(MathF.Acos(cosAngle));
+                if (degAngle < minimumAngleDegrees && degAngle < minDist)
+                {
+                    nearestMesh = mesh;
+                    minDist = degAngle;
+                }
+            }
+        }
+        return nearestMesh;
+    }
+
+    private SObject? TraceObjects(Matrix4 viewMat, Matrix4 projMat)
+    {
+        GetCursorVectors(viewMat, projMat, out var direction, out var cameraPos);
 
         SObject? closest =  null;
         var closestDistance = float.MaxValue;
         foreach (var obj in _scene.Objects)
         {
-            if (!Trace(cameraPos, direction, obj, out var distance)) continue;
+            if (!TraceObject(cameraPos, direction, obj, out var distance)) continue;
             if (distance >= closestDistance) continue;
             closestDistance = distance;
             closest = obj;
@@ -76,21 +197,26 @@ public class EditorController
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private bool Trace(Vector3 cameraPos, Vector3 direction, SObject obj, out float distance)
+    private static bool TraceObject(Vector3 cameraPos, Vector3 direction, SObject obj, out float distance)
     {
+        if (obj.MatModel == null)
+        {
+            distance = 0;
+            return false;
+        }
         var modelMatInv = obj.ModelMatrix.Inverted();
         
         var localDirection = modelMatInv.TransformDirection(direction).Normalized();
         var localCameraPos = modelMatInv.TransformPosition(cameraPos);
         
-        foreach (var (mesh, _) in obj.Model.Meshes)
+        foreach (var (mesh, _) in obj.MatModel.Meshes)
         {
             for (var indexIndex = 0; indexIndex < mesh.Indexes.Length; indexIndex+=3)
             {
                 var verIndex0 = mesh.Indexes[indexIndex];
                 var verIndex1 = mesh.Indexes[indexIndex+1];
                 var verIndex2 = mesh.Indexes[indexIndex+2];
-                if (RayIntersectionDistance(localCameraPos, localDirection,
+                if (MathUtils.RayIntersectsTriangle(localCameraPos, localDirection,
                         mesh.Vertices[verIndex0], mesh.Vertices[verIndex1], mesh.Vertices[verIndex2], out distance))
                 {
                     return true;
@@ -100,35 +226,5 @@ public class EditorController
 
         distance = 0;
         return false;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static bool RayIntersectionDistance(Position origin, Vector3 dir, Position p0, Position p1, Position p2, out float distance)
-    {
-        distance = 0;
-        
-        var e1 = p1 - p0;
-        var e2 = p2 - p0;
-
-        var pvec = Vector3.Cross(dir, e2);
-        var det = Vector3.Dot(e1, pvec);
-
-        // parallel
-        if (det < 1e-8 && det > -1e-8) 
-            return false;
-
-        var invDet = 1 / det;
-        var tvec = origin - p0;
-        var u = Vector3.Dot(tvec, pvec) * invDet;
-        if (u < 0 || 1 < u) 
-            return false;
-
-        var qvec = Vector3.Cross(tvec, e1);
-        float v = Vector3.Dot(dir, qvec) * invDet;
-        if (v < 0 || 1 < u + v)
-            return false;
-        
-        distance = Vector3.Dot(e2, qvec) * invDet;
-        return true;
     }
 }

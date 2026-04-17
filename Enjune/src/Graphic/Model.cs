@@ -4,14 +4,15 @@ using Enjune.Misc;
 
 namespace Enjune.Graphic;
 
+
 public sealed class Model<TPerVert, TPerMesh>
 {
-    public ValueTuple<Mesh<TPerVert>, TPerMesh>[] Meshes;
+    public readonly ValueTuple<Mesh<TPerVert>, TPerMesh>[] Meshes;
 
     private Model(ValueTuple<Mesh<TPerVert>, TPerMesh>[] meshes)
     {
         if (meshes.Length == 0)
-            Logger.Error(this,"constructing empty model");
+            Logger.Warn(this,"constructing empty model");
         Meshes = meshes;
     }
 
@@ -54,7 +55,7 @@ public sealed class Model<TPerVert, TPerMesh>
         }
 
         [Pure]
-        public Model<TPerVert, TPerMesh> Build() 
-            => CreateAndOptimize(_meshes.ToArray());
+        public Model<TPerVert, TPerMesh> Build(bool mergeSimilarMeshes = true) 
+            => mergeSimilarMeshes ? CreateAndOptimize(_meshes.ToArray()) : CreateNotOptimized(_meshes.ToArray());
     }
 }

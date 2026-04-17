@@ -13,6 +13,8 @@ public static class Logger
         string authorName;
         if (author is Type authorType)
             authorName = authorType.Name;
+        else if (author is string authorString)
+            authorName = authorString;
         else
             authorName = author.GetType().Name;
         

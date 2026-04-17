@@ -12,9 +12,9 @@ public class FlyingPlayerController
     private readonly Wasd _wasd;
     private readonly float _sensitivity;
 
-    public Position _position = new(0f, 0f, 5f);
+    private Position _position = new(0f, 0f, 5f);
     private float _pitch = 0f;
-    public float _yaw = 0f;
+    private float _yaw = 0f;
     
     public FlyingPlayerController(IGraphicApi graphicApi, BasicInputHandler inputHandler, Wasd wasd, float sensitivity)
     {
@@ -45,15 +45,12 @@ public class FlyingPlayerController
     {
         if (_graphicApi.GetCursorMode() == IGraphicApi.CursorMode.Centered)
         {
-            _yaw += _sensitivity * _inputHandler.DeltaMousePosition.X;
-            _pitch -= _sensitivity * _inputHandler.DeltaMousePosition.Y;
+            _yaw += _sensitivity * _inputHandler.DeltaCursorPosition.X;
+            _pitch -= _sensitivity * _inputHandler.DeltaCursorPosition.Y;
             _yaw %= 360;
             _pitch = Math.Clamp(_pitch, -89f, 89f);
         }
         
-        // todo rewrite using sins and cosines instead of matrix4 
-        var cos = MathF.Cos(MathHelper.DegreesToRadians(_yaw));
-        var sin = MathF.Sin(MathHelper.DegreesToRadians(_yaw));
         var forward = Direction;
         forward.Y = 0;
         forward.Normalize();

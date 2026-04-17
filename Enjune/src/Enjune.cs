@@ -21,6 +21,10 @@ public static class Enjune
 
             app.Run();
         }
+        catch (Exception e)
+        {
+            Logger.Error(typeof(Enjune), $"exception in app: {e}");
+        }
         finally
         {
             app.Dispose();

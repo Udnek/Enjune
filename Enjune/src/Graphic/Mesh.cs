@@ -2,16 +2,16 @@ using Enjune.Misc;
 
 namespace Enjune.Graphic;
 
-public class Mesh<T>
+public sealed class Mesh<TPerVertex>
 {
     public readonly Position[] Vertices;
     public readonly int[] Indexes;
-    public readonly T[] PerVertexData;
+    public readonly TPerVertex[] PerVertexData;
 
-    public Mesh(Position[] vertices, T[] perVertexData, int[] indexes)
+    public Mesh(Position[] vertices, TPerVertex[] perVertexData, int[] indexes)
     {
         if (!IsValid(vertices, perVertexData, indexes, out var error)) 
-            Logger.Error(this, "constructing incorrect mesh: " + error);
+            Logger.Error(this, "constructing invalid mesh: " + error);
         
         Vertices = vertices;
         PerVertexData = perVertexData;
@@ -72,7 +72,7 @@ public class Mesh<T>
             [0, 1, 2]);
     }
     
-    public static Mesh<T> Ngon(Position[] poses, T[] perVertexData)
+    public static Mesh<TPerVertex> Ngon(Position[] poses, TPerVertex[] perVertexData)
     {
         if (perVertexData.Length != poses.Length)
             throw new ArgumentException($"positions and text coordinates must have the same length: {poses.Length} != {perVertexData.Length}");
@@ -84,12 +84,12 @@ public class Mesh<T>
             indexes.Add(i);
             indexes.Add(i + 1);
         }
-        return new Mesh<T>(poses, perVertexData.ToArray(), indexes.ToArray());
+        return new Mesh<TPerVertex>(poses, perVertexData.ToArray(), indexes.ToArray());
     }
     
-    public static Mesh<T> Merge(params Mesh<T>[] meshes) => Merge((IEnumerable<Mesh<T>>) meshes);
+    public static Mesh<TPerVertex> Merge(params Mesh<TPerVertex>[] meshes) => Merge((IEnumerable<Mesh<TPerVertex>>) meshes);
     
-    public static Mesh<T> Merge(IEnumerable<Mesh<T>> meshes)
+    public static Mesh<TPerVertex> Merge(IEnumerable<Mesh<TPerVertex>> meshes)
     {
         int offset = 0;
         var indexes = new List<int>();
@@ -101,14 +101,14 @@ public class Mesh<T>
         }
         var perVertexData = meshes.SelectMany(mesh => mesh.PerVertexData).ToArray();
         var vertices = meshes.SelectMany(mesh => mesh.Vertices).ToArray();
-        return new Mesh<T>(vertices, perVertexData, indexes.ToArray());
+        return new Mesh<TPerVertex>(vertices, perVertexData, indexes.ToArray());
     }
 
-    public static bool IsValid(Position[] vertices, T[] perVertexData, int[] indexes, out Error? error)
+    public static bool IsValid(Position[] vertices, TPerVertex[] perVertexData, int[] indexes, out Error? error)
     {
-        if (vertices.Length < 3)
+        if (vertices.Length <= 1)
         {
-            error = "vertices array < 3: mesh doesn't really make sense";
+            error = "vertices array <= 1: mesh doesn't really make sense";
             return false;
         }
         if (vertices.Length != perVertexData.Length)
