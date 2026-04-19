@@ -53,12 +53,11 @@ public static class MathUtils
         else
             k = FindK(b.Yz, -directionB.Yz, detYz);
 
-        if (k <= 0)
+        if (k < 0)
         {
             intersection = originA;
             return false;
         }
-        //Logger.Log(typeof(MathUtils), $"{originB}");
 
         intersection = originA + directionA * k;
         return true;

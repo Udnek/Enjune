@@ -17,16 +17,18 @@ public static class Utils
         public Vector3 TransformPosition(Vector3 vector) => Vector3.TransformPosition(vector, matrix);
     }
 
+    public static Vector3 ToTk(this System.Numerics.Vector3 vector) => new(vector.X, vector.Y, vector.Z);
+    
+    public static string ContentToString<T>(this IEnumerable<T> array)
+        => "["+string.Join(", ", array.Select(v => v?.ToString() ?? "null"))+"]";
+
     private static readonly float NanosInSec = 1_000_000_000.0f;
     public static Nanoseconds FpsToNanoDelay(Fps fps) => (Nanoseconds)(NanosInSec / fps);
     public static float NanosToSeconds(Nanoseconds nanos) => nanos / NanosInSec;
     public static Fps NanoDelayToFps(Nanoseconds nanos) => NanosInSec / nanos;
     private static Nanoseconds TicksToNanos(long ticks) => (Nanoseconds)(ticks * (NanosInSec / Stopwatch.Frequency));
 
-    public static string ContentToString<T>(T?[] array)
-    {
-        return "["+string.Join(", ", array.Select(v => v?.ToString() ?? "null"))+"]";
-    }
+
     
     public static void RunTargetFpsLoopWhile(
         Fps targetFps, out float deltaTime, Consumer<Nanoseconds> delayConsumer, Func<bool> shouldContinue, Action action)

@@ -233,14 +233,13 @@ public class MathUtilsTests
     public void RayIntersectsTriangle_ShouldReturnFalse_WhenRayMissesTriangle()
     {
         // Arrange
-        var origin = new Position(0, 0, 0);
         var direction = new Vector3(0, 0, 1);
         var p0 = new Position(-1, -1, 5);
         var p1 = new Position(1, -1, 5);
         var p2 = new Position(0, 1, 5);
 
         // луч смещён в сторону
-        origin = new Position(10, 0, 0);
+        var origin = new Position(10, 0, 0);
 
         // Act
         bool result = MathUtils.RayIntersectsTriangle(origin, direction, p0, p1, p2, out float distance);

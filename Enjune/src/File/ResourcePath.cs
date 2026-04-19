@@ -35,6 +35,13 @@ public abstract class ResourcePath
     public abstract override int GetHashCode();
 
     // misc
+
+    public void LoadStream(out Error? error, Consumer<Stream> streamConsumer)
+    {
+        using var stream = Read(out error);
+        if (stream == null) return;
+        streamConsumer(stream);
+    }
     
     public string? LoadText(out Error? error)
     {

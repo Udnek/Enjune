@@ -73,13 +73,13 @@ public class EditorController
         X, Y, Z
     }
 
-    private static Vector3 AxToVec(Ax ax)
+    private Vector3 AxToVec(Ax ax)
     {
         return ax switch
         {
-            Ax.X => Vector3.UnitX,
-            Ax.Y => Vector3.UnitY,
-            Ax.Z => Vector3.UnitZ,
+            Ax.X => AxisObject.Rotation * Vector3.UnitX,
+            Ax.Y => AxisObject.Rotation * Vector3.UnitY,
+            Ax.Z => AxisObject.Rotation * Vector3.UnitZ,
             _ => throw new ArgumentOutOfRangeException(nameof(ax), ax, null)
         };
     }
@@ -93,6 +93,7 @@ public class EditorController
             DragObject(viewMat, projMat);
         
         AxisObject.Position = SelectedObject.Position;
+        AxisObject.Rotation = SelectedObject.Rotation;
     }
 
     private void DragObject(Matrix4 viewMat, Matrix4 projMat)
@@ -101,8 +102,14 @@ public class EditorController
         if (_inputHandler.DeltaCursorPosition == (0, 0)) return;
         GetCursorVectors(viewMat, projMat, out var direction, out var camPos);
 
-        if (!Do(AxToVec((Ax)_selectedAx)))
-            Do(-1 * AxToVec((Ax)_selectedAx));
+        
+        
+        var axToVec = AxToVec((Ax)_selectedAx);
+        Logger.Log(this, direction);
+        Logger.Log(this, axToVec);
+        
+        if (!Do(axToVec))
+            Do(-1 * axToVec);
             
         bool Do(Vector3 axDir)
         {

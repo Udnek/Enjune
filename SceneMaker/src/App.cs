@@ -67,6 +67,21 @@ public class App : IApp
             = new DotObjModelReader(assetManager, AssemblyPath.Of(Enjune.Enjune.Assembly,"Models", "wt", "wooden watch tower2.obj"))
             .Read(out var error);
         if (watchTower == null) return error;
+        _scene.Objects.Add(new SObject(watchTower)
+        {
+            Rotation = Quaternion.FromEulerAngles(0, MathHelper.DegreesToRadians(45), MathHelper.DegreesToRadians(45))
+        });
+
+        var mapModel 
+            = new DotMapReader(assetManager, AssemblyPath.Of(Enjune.Enjune.Assembly, "Maps", "test.map"))
+                .Read(out error);
+        if (mapModel == null) return error;
+        _scene.Objects.Add(new SObject()
+        {
+            MatModel = mapModel,
+            Scale = Vector3.One * 1/16f,
+            Rotation = Quaternion.FromEulerAngles(new Vector3(MathHelper.DegreesToRadians(-90), 0, 0))
+        });
 
         watchTower.Meshes[0].Item2.Raw.Color = (1, 1, 1, 1);
         Logger.Log(this, $"{nameof(watchTower)} info: {watchTower.Info()}");
@@ -82,7 +97,6 @@ public class App : IApp
         
         _grapi.SetCursorMode(IGraphicApi.CursorMode.Centered);
         
-        _scene.Objects.Add(new SObject(watchTower));
         _scene.Objects.Add(new SObject(font.Generate("Niggers", 10f), true));
         
         return null;
