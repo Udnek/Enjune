@@ -6,22 +6,15 @@ using Sledge.Formats.Map.Objects;
 
 namespace Enjune.File.ModelReader;
 
-public class DotMapReader
+public class DotMapReader : AbstractReader
 {
-    private readonly AssetManager _assetManager;
-    private readonly ResourcePath _path;
-
-    public DotMapReader(AssetManager assetManager, ResourcePath path)
-    {
-        _assetManager = assetManager;
-        _path = path;
-    }
-
-    public Model<TextureCoord, CompiledMaterial>? Read(out Error? error)
+    public DotMapReader(AssetManager assetManager, ResourcePath path) : base(assetManager, path){}
+    
+    public override Model<TextureCoord, CompiledMaterial>? Read(out Error? error)
     {
         var mapFormat = new QuakeMapFormat();
         MapFile? mapFile = null;
-        _path.LoadStream(out error, s => { mapFile = mapFormat.Read(s); });
+        Path.LoadStream(out error, s => { mapFile = mapFormat.Read(s); });
         if (mapFile == null)
         {
             error = "can not load map: " + error;
@@ -52,7 +45,7 @@ public class DotMapReader
                     Logger.Log(this, $"u: {u}; v: {v}");
                     texCoords[i] = (u, v);
                 }
-                var material = _assetManager.AddMaterialAndGetCompiled(RawMaterial.FromTexture(_path.ResolveRaw(face.TextureName)));
+                var material = AssetManager.AddMaterialAndGetCompiled(RawMaterial.FromTexture(Path.ResolveRaw(face.TextureName)));
                 builder.Add(Mesh<TextureCoord>.Ngon(positions, texCoords), material);
             }
 

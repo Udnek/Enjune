@@ -5,10 +5,8 @@ using Buffer = System.Buffer;
 
 namespace Enjune.File.ModelReader;
 
-public class DotObjModelReader
+public class DotObjModelReader : AbstractReader
 {
-    private readonly AssetManager _assetManager;
-    private readonly ResourcePath _path;
     private readonly List<Position> _loadedVertices = [];
     private readonly List<TextureCoord> _loadedTextureCoords = [];
     private readonly Dictionary<string, RawMaterial> _materialByName = new();
@@ -17,15 +15,11 @@ public class DotObjModelReader
     
     private readonly Model<TextureCoord, CompiledMaterial>.Builder _builder = new();
 
-    public DotObjModelReader(AssetManager assetManager, ResourcePath path)
-    {
-        _assetManager = assetManager;
-        _path = path;
-    }
+    public DotObjModelReader(AssetManager assetManager, ResourcePath path) : base(assetManager, path){}
 
-    public Model<TextureCoord, CompiledMaterial>? Read(out Error? error)
+    public override Model<TextureCoord, CompiledMaterial>? Read(out Error? error)
     {
-        var text = _path.LoadText(out error);
+        var text = Path.LoadText(out error);
         if (text == null) return null;
         var lines = text.Replace("\r", "").Split("\n");
         for (var i = 0; i < lines.Length; i++)
@@ -34,7 +28,7 @@ public class DotObjModelReader
             var lineError = ProcessLine(line.Split(' '));
             if (lineError != null)
             {
-                Logger.Warn(this, $"error in line {i + 1} \"{line}\" in file {_path}: {lineError}");
+                Logger.Warn(this, $"error in line {i + 1} \"{line}\" in file {Path}: {lineError}");
             }
         }
 
@@ -87,7 +81,7 @@ public class DotObjModelReader
     private Error? MaterialLib(string[] args)
     {
         if (args.Length == 0) return "not enough args";
-        var matPath = _path.ResolveRaw(string.Join(" ", args));
+        var matPath = Path.ResolveRaw(string.Join(" ", args));
         var mat = matPath.LoadText(out var error);
         if (mat == null) return error;
         var lines = mat.Replace("\r", "").Split("\n");
@@ -117,7 +111,7 @@ public class DotObjModelReader
     {
         if (args.Length == 0) return "not enough args";
         if (_lastCreatedMaterial == null) return "material hasn't created";
-        _lastCreatedMaterial.TexturePath = _path.ResolveRaw(string.Join(" ", args));
+        _lastCreatedMaterial.TexturePath = Path.ResolveRaw(string.Join(" ", args));
         return null;
     }
     
@@ -204,9 +198,9 @@ public class DotObjModelReader
         
         CompiledMaterial material;
         if (_selectedMaterial != null)
-            material = _assetManager.AddMaterialAndGetCompiled(_selectedMaterial);
+            material = AssetManager.AddMaterialAndGetCompiled(_selectedMaterial);
         else
-            material = _assetManager.MissingMaterial;
+            material = AssetManager.MissingMaterial;
 
         _builder.Add(Mesh<TextureCoord>.Ngon(verPoses, texPoses), material);
         return null;

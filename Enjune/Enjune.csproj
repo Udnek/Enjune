@@ -14,6 +14,7 @@
       <PackageReference Include="OpenTK.Mathematics" Version="4.9.4" />
       <PackageReference Include="OpenTK.Windowing.GraphicsLibraryFramework" Version="4.9.4" />
       <PackageReference Include="RectpackSharp" Version="1.2.0" />
+      <PackageReference Include="SharpGLTF.Core" Version="1.0.6" />
       <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
       <PackageReference Include="Sledge.Formats.Map" Version="1.2.8" />
       <PackageReference Include="StbImageSharp" Version="2.30.15" />
