@@ -40,7 +40,7 @@ public class AssetManager
             {
                 if (glyph.Width == 0 || glyph.Height == 0)
                 {
-                    Logger.Warn(typeof(FontLoader), $"char '{ch}' ({(byte)ch}) has zero size: {glyph}");
+                    Logger.Log(typeof(FontLoader), $"char '{ch}' ({(byte)ch}) has zero size: {glyph}");
                     continue;
                 }
                 var rectangle = new PackingRectangle(0, 0, glyph.Width, glyph.Height, id:ch);
@@ -66,7 +66,7 @@ public class AssetManager
         
         var atlas = new ByteImage(atlasSize, atlasSize, ByteImage.ImType.Alpha8, atlasBuffer.Data);
         atlas = atlas.Alpha8ToRgba32();
-        var material = AddMaterialAndGetCompiled(RawMaterial.FromTexture(atlas));
+        var material = AddMaterialAndGetCompiled(RawMaterial.FromTexture(atlas, path.ToString()));
 
 
         Dictionary<char, PackingRectangle> charBounds = rectangles.ToDictionary(rec => (char)rec.Id);
@@ -133,7 +133,7 @@ public class AssetManager
             // check if it has already been added to invalid
             else if (_invalidPaths.Contains(texturePath))
             {
-                return MissingMaterial;
+                texId = MissingMaterial.TextureId;
             }
             else // probably should add new
             {
@@ -153,7 +153,7 @@ public class AssetManager
         
         // add new
         MatId matId = _materials.Count;
-        var compiledMaterial = new CompiledMaterial(rawMaterial, texId, matId);
+        var compiledMaterial = new CompiledMaterial(rawMaterial, matId, texId);
         _materials.Add(rawMaterial, compiledMaterial);
         Logger.Log(this, $"added material {compiledMaterial};");
         return compiledMaterial;

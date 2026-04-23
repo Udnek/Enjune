@@ -56,7 +56,7 @@ public sealed partial class OpenGlApi : GLDisposable, IGraphicApi
     private Vector4Uniform _globalColor = null!;
     private TextureUniform _textureUniform = null!;
     
-    public Error? Init(CompiledAssets assets, int width, int height, string title,
+    public Error? Init(CompiledAssets assets, int width, int height, string title, int verticesCapacity,
         IUserInputHandler keyHandler,
         IGraphicApi.WindowSizeChangeHandler windowSizeHandler)
     {
@@ -160,7 +160,7 @@ public sealed partial class OpenGlApi : GLDisposable, IGraphicApi
         Logger.Log(this, $"max possible texture array layers: {maxArrayLayers}");
         
         // other components init
-        return InitComponents();
+        return InitComponents(verticesCapacity);
     }
     
     private const string AttributePosition = "position";
@@ -172,7 +172,7 @@ public sealed partial class OpenGlApi : GLDisposable, IGraphicApi
     private const string UniformProjection = "projection";
     private const string UniformGlobalColor = "globalColor";
     
-    private Error? InitComponents()
+    private Error? InitComponents(int verticesCapacity)
     {
         _pixelShader = new ShaderProgram();
         var error = _pixelShader.Init(
@@ -215,11 +215,11 @@ public sealed partial class OpenGlApi : GLDisposable, IGraphicApi
         _mainVao = new Vao();
         // todo better calc capacities
         _materialSsbo = new Ssbo<MaterialData>(0, 20);
-        _matIdSsbo = new Ssbo<MatId>(1, (int)Math.Pow(2, 20));
-        _matVertexVbo = new Vbo<MaterialVertexData>((int)Math.Pow(2, 20));
-        _ebo = new Ebo((int)Math.Pow(2, 20));
+        _matIdSsbo = new Ssbo<MatId>(1, verticesCapacity);
+        _matVertexVbo = new Vbo<MaterialVertexData>(verticesCapacity);
+        _ebo = new Ebo(verticesCapacity);
         _colorVao = new Vao();
-        _colorVertexVbo = new Vbo<ColoredVertexData>((int)Math.Pow(2, 20));
+        _colorVertexVbo = new Vbo<ColoredVertexData>(verticesCapacity);
         
         // mat attributes
         {

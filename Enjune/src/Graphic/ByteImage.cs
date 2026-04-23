@@ -73,6 +73,19 @@ public sealed class ByteImage
         public static readonly ImType GreyAlpha16 = new(2, ColorComponents.GreyAlpha);
         public static readonly ImType Alpha8 = new(1, ColorComponents.Grey);
 
+        public static ImType FromStb(ColorComponents comps)
+        {
+            return comps switch
+            {
+                ColorComponents.Grey => Alpha8,
+                ColorComponents.GreyAlpha => GreyAlpha16,
+                ColorComponents.RedGreenBlue => Rgb24,
+                ColorComponents.RedGreenBlueAlpha => Rgba32,
+                ColorComponents.Default => throw new ArgumentOutOfRangeException(nameof(comps), comps, null),
+                _ => throw new ArgumentOutOfRangeException(nameof(comps), comps, null)
+            };
+        }
+        
         public static ImType OfDepth(int depth)
         {
             return depth switch

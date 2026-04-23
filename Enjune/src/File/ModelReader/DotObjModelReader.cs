@@ -101,7 +101,7 @@ public class DotObjModelReader : AbstractReader
     {
         if (args.Length == 0) return "not enough args";
         var name = string.Join(" ", args);
-        var mat = RawMaterial.FromColor(new Color(0.8f, 0.8f, 0.8f, 1f)); // default color in .obj
+        var mat = RawMaterial.FromColor(new Color(0.8f, 0.8f, 0.8f, 1f), name); // default color in .obj
         _materialByName[name] = mat;
         _lastCreatedMaterial = mat;
         return null;

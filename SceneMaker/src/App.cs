@@ -12,6 +12,7 @@ using Enjune.Graphic.Input;
 using Enjune.Misc;
 using Enjune.World;
 using OpenTK.Mathematics;
+using OpenTK.Windowing.GraphicsLibraryFramework;
 
 namespace SceneMaker;
 
@@ -27,13 +28,13 @@ public class App : IApp
     
     private readonly BasicInputHandler _inputHandler;
     private readonly FlyingPlayerController _wasdController;
-    
-    private readonly MaterialVertexBuffer _materialVertexBuffer = new MaterialVertexBuffer(20_000);
-    private readonly ColoredVertexBuffer _colorVertexBuffer = new ColoredVertexBuffer(20_000);
-    //private readonly List<Model> _models = new();
+
+    private MaterialVertexBuffer _materialVertexBuffer = null!;
+    private ColoredVertexBuffer _colorVertexBuffer = null!;
 
     private IGraphicApi.DrawMode _drawMode = IGraphicApi.DrawMode.Fill;
     private readonly KeyBinds.Bind _freeCursorBind;
+    private readonly KeyBinds.Bind _lockCursorBind;
     private Scene _scene;
     private readonly EditorController _editorController;
 
@@ -41,8 +42,9 @@ public class App : IApp
     {
         _binds = KeyBinds.CreateEmpty();
         KeyBinds.AddWasd(_binds, out _wasd);
-        _freeCursorBind = new KeyBinds.Bind("free_cursor", GlfwKey.Escape);
-        _binds.AddBind(_freeCursorBind);
+        _freeCursorBind = _binds.AddBind(new KeyBinds.Bind("free_cursor", GlfwKey.Escape));
+        _lockCursorBind = _binds.AddBind(new KeyBinds.Bind("lock_cursor", MouseButton.Right));
+        
         _dumbTexturesBind = _binds.AddBind(new KeyBinds.Bind("dumb_textures", GlfwKey.F2));
         
         _scene = new Scene();
@@ -67,10 +69,11 @@ public class App : IApp
             = new DotObjModelReader(assetManager, AssemblyPath.Of(Enjune.Enjune.Assembly,"Models", "wt", "wooden watch tower2.obj"))
             .Read(out var error);
         if (watchTower == null) return error;
-        _scene.Objects.Add(new SObject(watchTower)
-        {
-            Rotation = Quaternion.FromEulerAngles(0, MathHelper.DegreesToRadians(45), MathHelper.DegreesToRadians(45))
-        });
+        watchTower.Meshes[0].Item2.Raw.Color = (1, 1, 1, 1);
+        // _scene.Objects.Add(new SObject(watchTower)
+        // {
+        //     Rotation = Quaternion.FromEulerAngles(0, MathHelper.DegreesToRadians(45), MathHelper.DegreesToRadians(45))
+        // });
 
         // var mapModel 
         //     = new DotMapReader(assetManager, AssemblyPath.Of(Enjune.Enjune.Assembly, "Maps", "test.map"))
@@ -83,21 +86,34 @@ public class App : IApp
         //     Rotation = Quaternion.FromEulerAngles(new Vector3(MathHelper.DegreesToRadians(-90), 0, 0))
         // });
 
-        watchTower.Meshes[0].Item2.Raw.Color = (1, 1, 1, 1);
-        Logger.Log(this, $"{nameof(watchTower)} info: {watchTower.Info()}");
+        var toyCar = new DotGlbReader(assetManager, AssemblyPath.Of(Enjune.Enjune.Assembly, "Models", "ToyCar.glb"))
+            .Read(out error);
+        if (toyCar == null) return error;
+        _scene.Objects.Add(new SObject(toyCar)
+        {
+            Scale = new Vector3(0.05f),
+            Rotation = Quaternion.FromEulerAngles(MathHelper.DegreesToRadians(90), 0, 0)
+        });
 
+        Logger.Log(this, $"{nameof(toyCar)} info: {toyCar.Info()}");
+
+        
         var font = assetManager.AddFont(AssemblyPath.Of(Enjune.Enjune.Assembly, "Fonts", "papyrus.ttf"), 128, out error);
         if (font == null) return error;
 
         var assets = assetManager.Compile();
 
-        error = _grapi.Init(assets, _windowWidth, _windowHeight, "Enjune C#", _inputHandler, WindowSizeChangeHandler);
+        var verticesCapacity = (int)Math.Pow(2, 20);
+        _materialVertexBuffer = new MaterialVertexBuffer(verticesCapacity);
+        _colorVertexBuffer = new ColoredVertexBuffer(verticesCapacity);
+        
+        error = _grapi.Init(assets, _windowWidth, _windowHeight, "Enjune C#", verticesCapacity, _inputHandler, WindowSizeChangeHandler);
         if (error != null) return error;
         _grapi.SetClearColor(new Color(0.2f, 0.2f, 0.2f, 0f));
         
         _grapi.SetCursorMode(IGraphicApi.CursorMode.Centered);
         
-        _scene.Objects.Add(new SObject(font.Generate("Niggers", 10f), true));
+        //_scene.Objects.Add(new SObject(font.Generate("Niggers", 10f), true));
         
         return null;
     }
@@ -137,6 +153,9 @@ public class App : IApp
                 // other inputs
                 if (_inputHandler.IsPressed(_freeCursorBind))
                     _grapi.SetCursorMode(IGraphicApi.CursorMode.Normal);
+                else if (_inputHandler.IsPressed(_lockCursorBind))
+                    _grapi.SetCursorMode(IGraphicApi.CursorMode.Centered);
+                
                 
                 if (_inputHandler.IsPressed(_dumbTexturesBind)) 
                     _grapi.DumpTextures(ExternalPath.Of("."));

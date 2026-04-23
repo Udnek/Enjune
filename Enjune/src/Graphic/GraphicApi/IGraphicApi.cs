@@ -9,7 +9,7 @@ namespace Enjune.Graphic.GraphicApi;
 
 public interface IGraphicApi : IDisposable
 {
-    Error? Init(CompiledAssets assets, int width, int height, string title, 
+    Error? Init(CompiledAssets assets, int width, int height, string title, int verticesCapacity,
         IUserInputHandler userInputHandler, WindowSizeChangeHandler windowSizeHandler);
     
     void ViewPort(int x, int y, int width, int height);
