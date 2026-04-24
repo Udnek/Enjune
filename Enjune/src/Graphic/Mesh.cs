@@ -75,8 +75,8 @@ public sealed class Mesh<TPerVertex>
     public static Mesh<TPerVertex> Ngon(Position[] poses, TPerVertex[] perVertexData)
     {
         if (perVertexData.Length != poses.Length)
-            throw new ArgumentException($"positions and text coordinates must have the same length: {poses.Length} != {perVertexData.Length}");
-        List<int> indexes = [];
+            throw new ArgumentException($"positions and perVertexData must have the same length: {poses.Length} != {perVertexData.Length}");
+        List<int> indexes = new (poses.Length*3);
         for (int i = 1; i < poses.Length-1; i++)
         {
             // fan-like
@@ -84,7 +84,7 @@ public sealed class Mesh<TPerVertex>
             indexes.Add(i);
             indexes.Add(i + 1);
         }
-        return new Mesh<TPerVertex>(poses, perVertexData.ToArray(), indexes.ToArray());
+        return new Mesh<TPerVertex>(poses, perVertexData, indexes.ToArray());
     }
     
     public static Mesh<TPerVertex> Merge(params Mesh<TPerVertex>[] meshes) => Merge((IEnumerable<Mesh<TPerVertex>>) meshes);

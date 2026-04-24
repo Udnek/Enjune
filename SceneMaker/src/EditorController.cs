@@ -101,8 +101,6 @@ public class EditorController
         if (SelectedObject == null || _selectedAx == null) return;
         if (_inputHandler.DeltaCursorPosition == (0, 0)) return;
         GetCursorVectors(viewMat, projMat, out var direction, out var camPos);
-
-        
         
         var axToVec = AxToVec((Ax)_selectedAx);
         Logger.Log(this, direction);
@@ -168,7 +166,7 @@ public class EditorController
         var minDist = float.MaxValue;
         foreach (var pair in obj.ColorModel.Meshes)
         {
-            var mesh = pair.Item1;
+            var mesh = pair.Mesh;
             for (var indexIndex = 0; indexIndex < mesh.Indexes.Length; indexIndex+=2)
             {
                 var verIndex0 = mesh.Indexes[indexIndex];

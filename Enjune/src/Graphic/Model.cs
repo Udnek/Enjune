@@ -7,7 +7,7 @@ namespace Enjune.Graphic;
 
 public sealed class Model<TPerVert, TPerMesh>
 {
-    public readonly (Mesh<TPerVert> mesh, TPerMesh perMesh)[] Meshes;
+    public readonly (Mesh<TPerVert> Mesh, TPerMesh PerMesh)[] Meshes;
 
     private Model(ValueTuple<Mesh<TPerVert>, TPerMesh>[] meshes)
     {
@@ -38,8 +38,8 @@ public sealed class Model<TPerVert, TPerMesh>
     public string Info()
     {
         return $"meshes: {Meshes.Length}; " +
-               $"vertices: {Meshes.Select(mc => mc.mesh.Vertices.Length).Sum()}; " +
-               $"triangles: {Meshes.Select(mc => mc.mesh.Indexes.Length).Sum()/3};";
+               $"vertices: {Meshes.Select(mc => mc.Mesh.Vertices.Length).Sum()}; " +
+               $"triangles: {Meshes.Select(mc => mc.Mesh.Indexes.Length).Sum()/3};";
     }
 
     public class Builder
