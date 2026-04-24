@@ -19,9 +19,9 @@ public class CompiledFont
         _initialFontSize = initialFontSize;
     }
     
-    public Model<TextureCoord, CompiledMaterial> Generate(string text, float size)
+    public Model<(TextureCoord, Vector3),CompiledMaterial> Generate(string text, float size)
     {
-        var meshes = new Mesh<TextureCoord>[text.Length];
+        var meshes = new Mesh<(TextureCoord, Vector3)>[text.Length];
         float xOffset = 0;
         float sizeMul = 1f/_initialFontSize *size;
         for (var i = 0; i < text.Length; i++)
@@ -39,6 +39,6 @@ public class CompiledFont
             meshes[i] = mesh;
         }
 
-        return Model<TextureCoord, CompiledMaterial>.CreateFromOneMaterial(meshes, _material);
+        return Model<(TextureCoord, Vector3), CompiledMaterial>.CreateFromOneMaterial(meshes, _material);
     }
 }

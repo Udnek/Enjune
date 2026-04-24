@@ -10,7 +10,7 @@ public class DotMapReader : AbstractReader
 {
     public DotMapReader(AssetManager assetManager, ResourcePath path) : base(assetManager, path){}
     
-    public override Model<TextureCoord, CompiledMaterial>? Read(out Error? error)
+    public override Model<(TextureCoord, Vector3), CompiledMaterial>? Read(out Error? error)
     {
         var mapFormat = new QuakeMapFormat();
         MapFile? mapFile = null;
@@ -23,9 +23,9 @@ public class DotMapReader : AbstractReader
         return ProceedMap(mapFile);
     }
 
-    private Model<TextureCoord, CompiledMaterial> ProceedMap(MapFile map)
+    private Model<(TextureCoord, Vector3), CompiledMaterial>? ProceedMap(MapFile map)
     {
-        var builder = new Model<TextureCoord, CompiledMaterial>.Builder();
+        var builder = new Model<(TextureCoord, Vector3), CompiledMaterial>.Builder();
         List<Mesh<Color>> meshes = [];
         var solids = map.Worldspawn.Find(mo => mo is Solid).Cast<Solid>();
         
@@ -46,22 +46,8 @@ public class DotMapReader : AbstractReader
                     texCoords[i] = (u, v);
                 }
                 var material = AssetManager.AddMaterialAndGetCompiled(RawMaterial.FromTexture(Path.ResolveRaw(face.TextureName)));
-                builder.Add(Mesh<TextureCoord>.Ngon(positions, texCoords), material);
+                builder.Add(Mesh<TextureCoord>.NgonWithNormals(positions, texCoords), material);
             }
-
-            // foreach (var mesh in solid.Meshes)
-            // {
-            //     var vertices = new Position[mesh.Points.Count];
-            //     var texCoords = new TextureCoord[mesh.Points.Count];
-            //     for (var i = 0; i < mesh.Points.Count; i++)
-            //     {
-            //         var meshPoint = mesh.Points[i];
-            //         vertices[i] = new Position(meshPoint.Position.X, meshPoint.Position.Y, meshPoint.Position.Z);
-            //         texCoords[i] = new TextureCoord(meshPoint.Texture.X, meshPoint.Texture.Y);
-            //     }
-            //     var material = _assetManager.AddMaterialAndGetCompiled(RawMaterial.FromTexture(_path.ResolveRaw(mesh.TextureName)));
-            //     builder.Add(Mesh<TextureCoord>.Ngon(vertices, texCoords), material);
-            // }
         }
 
         return builder.Build();

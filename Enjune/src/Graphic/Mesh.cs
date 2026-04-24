@@ -17,19 +17,27 @@ public sealed class Mesh<TPerVertex>
         PerVertexData = perVertexData;
         Indexes = indexes;
     }
-
+    
     public void Offset(Position offset)
     {
         for (var i = 0; i < Vertices.Length; i++) 
             Vertices[i] += offset;
     }
+
+    public static Mesh<(TextureCoord texCoord, Vector3 normal)> CreateWithNormals(
+        Position[] vertices, TextureCoord[] texCoords, int[] indexes)
+    {
+        var normals = GenerateSmoothNormals(vertices, indexes);
+        return new Mesh<(TextureCoord texCoord, Vector3 normal)>
+            (vertices, texCoords.JoinToTuple(normals), indexes);
+    }
     
-    public static Mesh<TextureCoord> Cuboid(
+    public static Mesh<(TextureCoord texCoord, Vector3 normal)> Cuboid(
         Position b1, Position b2, Position b3, Position b4,
         Position t1, Position t2, Position t3, Position t4,
         TextureQuad texture)
     {
-        return Mesh<TextureCoord>.Merge(
+        return Mesh<(TextureCoord texCoord, Vector3 normal)>.Merge(
             Quad(b1, b2, b3, b4, texture), // bot
             Quad(t1, t2, t3, t4, texture), // top
             Quad(b1, b2, t2, t1, texture), // front
@@ -38,7 +46,7 @@ public sealed class Mesh<TPerVertex>
             Quad(b4, b1, t1, t4, texture)); // left
     }
 
-    public static Mesh<TextureCoord> Cube(Position center, float size, TextureQuad texture)
+    public static Mesh<(TextureCoord texCoord, Vector3 normal)> Cube(Position center, float size, TextureQuad texture)
     {
         var hs = size / 2;
         return Cuboid(
@@ -57,21 +65,38 @@ public sealed class Mesh<TPerVertex>
         );
     }
 
-    public static Mesh<TextureCoord> Quad(Position bl, Position br, Position tr, Position tl, TextureQuad tex)
+    public static Mesh<(TextureCoord texCoord, Vector3 normal)> Quad(Position bl, Position br, Position tr, Position tl, TextureQuad tex)
     {
-        return new Mesh<TextureCoord>([bl, br, tr, tl], 
-            [tex.BotLeft, tex.BotRight, tex.TopRight, tex.TopLeft], 
-            [0, 1, 2, 0, 2, 3]
-            );
+        return CreateWithNormals([bl, br, tr, tl],
+                [tex.BotLeft, tex.BotRight, tex.TopRight, tex.TopLeft],
+                [0, 1, 2, 0, 2, 3]);
     }
     
-    public static Mesh<TextureCoord> Triangle(Position bl, Position br, Position tr, TextureQuad tex)
+    public static Mesh<(TextureCoord texCoord, Vector3 normal)> Triangle(Position bl, Position br, Position tr, TextureQuad tex)
     {
-        return new Mesh<TextureCoord>([bl, br, tr], 
-            [tex.BotLeft, tex.BotRight, tex.TopRight], 
+        return CreateWithNormals([bl, br, tr],
+            [tex.BotLeft, tex.BotRight, tex.TopRight],
             [0, 1, 2]);
     }
     
+    
+    public static Mesh<(TPerVertex, Vector3)> NgonWithNormals(Position[] poses, TPerVertex[] perVertexData)
+    {
+        if (perVertexData.Length != poses.Length)
+            throw new ArgumentException($"positions and perVertexData must have the same length: {poses.Length} != {perVertexData.Length}");
+        List<int> indexes = new (poses.Length*3);
+        for (int i = 1; i < poses.Length-1; i++)
+        {
+            // fan-like
+            indexes.Add(0);
+            indexes.Add(i);
+            indexes.Add(i + 1);
+        }
+
+        var arrayIndexes = indexes.ToArray();
+        var normals = GenerateSmoothNormals(poses, arrayIndexes);
+        return new Mesh<(TPerVertex, Vector3)>(poses, perVertexData.JoinToTuple(normals), arrayIndexes);
+    }
     public static Mesh<TPerVertex> Ngon(Position[] poses, TPerVertex[] perVertexData)
     {
         if (perVertexData.Length != poses.Length)
@@ -85,6 +110,39 @@ public sealed class Mesh<TPerVertex>
             indexes.Add(i + 1);
         }
         return new Mesh<TPerVertex>(poses, perVertexData, indexes.ToArray());
+    }
+
+    public static Vector3[] GenerateSmoothNormals(Position[] vertices, int[] indexes)
+    {
+        if (vertices.Length <= 2)
+        {
+            Logger.Error(typeof(Mesh<object>), "trying to generate smooth normals for < 3 verices");
+            return Enumerable.Repeat(Vector3.UnitX, vertices.Length).ToArray();
+        }
+
+        if (indexes.Length % 3 != 0)
+        {
+            Logger.Error(typeof(Mesh<object>), "trying to generate smooth normals for indexes length % 3 != 0");
+            return Enumerable.Repeat(Vector3.UnitX, vertices.Length).ToArray();
+        }
+        Vector3[] normals = new Vector3[vertices.Length];
+        for (int iIndex = 0; iIndex < indexes.Length; iIndex+=3)
+        {
+            var v0Idx = indexes[iIndex];
+            var v1Idx = indexes[iIndex+1];
+            var v2Idx = indexes[iIndex+2];
+            
+            // we do not normalize, cause final norm will be impacted by square of triangle
+            var norm = MathUtils.PlaneNormNotNormalized(
+                vertices[v0Idx], vertices[v1Idx], vertices[v2Idx]);
+            normals[v0Idx] += norm;
+            normals[v1Idx] += norm;
+            normals[v2Idx] += norm;
+        }
+        for (var i = 0; i < normals.Length; i++) 
+            normals[i] = normals[i].Normalized();
+        
+        return normals;
     }
     
     public static Mesh<TPerVertex> Merge(params Mesh<TPerVertex>[] meshes) => Merge((IEnumerable<Mesh<TPerVertex>>) meshes);

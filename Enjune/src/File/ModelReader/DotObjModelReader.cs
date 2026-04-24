@@ -13,11 +13,11 @@ public class DotObjModelReader : AbstractReader
     private RawMaterial? _selectedMaterial = null;
     private RawMaterial? _lastCreatedMaterial = null;  
     
-    private readonly Model<TextureCoord, CompiledMaterial>.Builder _builder = new();
+    private readonly Model<(TextureCoord, Vector3), CompiledMaterial>.Builder _builder = new();
 
     public DotObjModelReader(AssetManager assetManager, ResourcePath path) : base(assetManager, path){}
 
-    public override Model<TextureCoord, CompiledMaterial>? Read(out Error? error)
+    public override Model<(TextureCoord, Vector3), CompiledMaterial>? Read(out Error? error)
     {
         var text = Path.LoadText(out error);
         if (text == null) return null;
@@ -202,7 +202,7 @@ public class DotObjModelReader : AbstractReader
         else
             material = AssetManager.MissingMaterial;
 
-        _builder.Add(Mesh<TextureCoord>.Ngon(verPoses, texPoses), material);
+        _builder.Add(Mesh<TextureCoord>.NgonWithNormals(verPoses, texPoses), material);
         return null;
     }
 }

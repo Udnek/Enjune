@@ -4,9 +4,9 @@ using OpenTK.Mathematics;
 
 namespace Enjune.World;
 
-public class SObject(Model<TextureCoord, CompiledMaterial>? matModel = null, bool isText = false)
+public class SObject(Model<(TextureCoord, Vector3), CompiledMaterial>? matModel = null, bool isText = false)
 {
-    public Model<TextureCoord, CompiledMaterial>? MatModel = matModel;
+    public Model<(TextureCoord, Vector3), CompiledMaterial>? MatModel = matModel;
     public Model<Color, Color>? ColorModel = null;
     public Position Position = (0, 0, 0);
     public Quaternion Rotation = Quaternion.Identity;

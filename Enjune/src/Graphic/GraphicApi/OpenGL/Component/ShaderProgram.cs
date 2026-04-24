@@ -6,6 +6,7 @@ namespace Enjune.Graphic.GraphicApi.OpenGL.Component;
 public class ShaderProgram : GLDisposable
 {
     private int _program;
+    private string _vertexShaderName;
     private int _vertexShader;
     private int _fragmentShader;
 
@@ -28,6 +29,8 @@ public class ShaderProgram : GLDisposable
         GL.BindFragDataLocation(_program, 0, "fragColor");
         GL.LinkProgram(_program);
 
+        _vertexShaderName = vertexPath.ToString();
+        
         // check init
         GL.GetProgram(_program, GetProgramParameterName.LinkStatus, out int linkStatus);
         if (linkStatus == (int)All.True) return null;
@@ -68,7 +71,7 @@ public class ShaderProgram : GLDisposable
     public int GetAttributeLocation(string name)
     {
         var location = GL.GetAttribLocation(_program, name);
-        if (location == -1) Logger.Error(this, "can not find attribute location " + name);
+        if (location == -1) Logger.Error(this, $"can not find attribute location {name} in shader {_vertexShaderName}");
         return location;
     }
 

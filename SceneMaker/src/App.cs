@@ -109,6 +109,7 @@ public class App : IApp
         
         error = _grapi.Init(assets, _windowWidth, _windowHeight, "Enjune C#", verticesCapacity, _inputHandler, WindowSizeChangeHandler);
         if (error != null) return error;
+        _grapi.SetVsync(false);
         _grapi.SetClearColor(new Color(0.2f, 0.2f, 0.2f, 0f));
         
         _grapi.SetCursorMode(IGraphicApi.CursorMode.Centered);
@@ -120,7 +121,6 @@ public class App : IApp
 
     public void Run()
     {
-        //var pixelBuffer = new FixedBuffer<Vector2>(9999999);
         _scene.Objects.Add(_editorController.AxisObject);
 
         var delays = new List<long>(200);
@@ -136,7 +136,7 @@ public class App : IApp
             () =>
             {
                 _wasdController.Update(deltaTime);
-                
+
                 var projection = Matrix4.CreatePerspectiveFieldOfView(
                     MathF.PI / 2, (float) _windowWidth / _windowHeight, 0.1f, 1000f);
                 var view = _wasdController.View;
@@ -161,40 +161,45 @@ public class App : IApp
                     _grapi.DumpTextures(ExternalPath.Of("."));
                 
                 // render
-                
                 _grapi.ClearScreenBuffers();
                 
+                
+                _grapi.SwitchShader(IGraphicApi.ShaderType.Main);
                 foreach (var obj in _scene.Objects)
                 {
                     if (obj.Hidden) continue;
-                    
-                    _grapi.SwitchShader(IGraphicApi.ShaderType.Main);
+                    if (obj.MatModel is null) continue;
 
+                    _grapi.ModelTransform(obj.ModelMatrix);
+                    
+                    _materialVertexBuffer.Clear();
+                    _materialVertexBuffer.PutModel(obj.MatModel);
+                    
                     if (obj == _editorController.SelectedObject)
                         _grapi.GlobalColor((1, 0.5f, 0f, 1f));
                     else
                         _grapi.GlobalColor(new Color(1f));
-
                     
-                    foreach (var sh in Enum.GetValues<IGraphicApi.ShaderType>())
-                    {
-                        _grapi.SwitchShader(sh);
-                        _grapi.ModelTransform(obj.ModelMatrix);
-                    }
-                    if (obj.MatModel != null)
-                    {
-                        _materialVertexBuffer.Clear();
-                        _materialVertexBuffer.PutModel(obj.MatModel);
-                        _grapi.RenderToScreenBuffer(_materialVertexBuffer);
-                    } 
-                    else if (obj.ColorModel != null)
-                    {
-                        _colorVertexBuffer.Clear();
-                        _colorVertexBuffer.PutModel(obj.ColorModel);
-                        _grapi.RenderToScreenBuffer(_colorVertexBuffer, IGraphicApi.Primitive.Line);
-                    }
+                    _grapi.RenderToScreenBuffer(_materialVertexBuffer);
                 }
                 
+                _grapi.ClearScreenBuffers(false, true);
+                
+                _grapi.SwitchShader(IGraphicApi.ShaderType.Color);
+                _grapi.GlobalColor(new Color(1f));
+                foreach (var obj in _scene.Objects)
+                {
+                    if (obj.Hidden) continue;
+                    if (obj.ColorModel is null) continue;
+
+                    _grapi.ModelTransform(obj.ModelMatrix);
+
+                    _colorVertexBuffer.Clear();
+                    _colorVertexBuffer.PutModel(obj.ColorModel);
+                    
+                    _grapi.RenderToScreenBuffer(_colorVertexBuffer, IGraphicApi.Primitive.Line);
+                }
+
                 // end
                 _inputHandler.ClearForNextFrame();
                 _grapi.UpdateScreen();

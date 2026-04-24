@@ -27,6 +27,9 @@ public static class Utils
     public static string ContentToString<T>(this IEnumerable<T> array)
         => "["+string.Join(", ", array.Select(v => v?.ToString() ?? "null"))+"]";
 
+    public static (T0, T1)[] JoinToTuple<T0, T1>(this T0[] array, T1[] other)
+        => array.Select((v, i) => (v, other[i])).ToArray();
+
     private static readonly float NanosInSec = 1_000_000_000.0f;
     public static Nanoseconds FpsToNanoDelay(Fps fps) => (Nanoseconds)(NanosInSec / fps);
     public static float NanosToSeconds(Nanoseconds nanos) => nanos / NanosInSec;
@@ -40,14 +43,14 @@ public static class Utils
     {
         var targetDelay = FpsToNanoDelay(targetFps);
         
-        var frameEnd = TicksToNanos(Stopwatch.GetTimestamp());
+        var frameStart = TicksToNanos(Stopwatch.GetTimestamp());
         while (true)
         { 
-            var frameStart = TicksToNanos(Stopwatch.GetTimestamp());
-            deltaTime = NanosToSeconds(frameStart - frameEnd);
+            deltaTime = NanosToSeconds(TicksToNanos(Stopwatch.GetTimestamp()) - frameStart);
+            frameStart = TicksToNanos(Stopwatch.GetTimestamp());
             if (!shouldContinue()) break;
             action();
-            frameEnd = TicksToNanos(Stopwatch.GetTimestamp());
+            var frameEnd = TicksToNanos(Stopwatch.GetTimestamp());
             var took = frameEnd - frameStart;
             delayConsumer(took);
             var sleepTime = targetDelay - took;

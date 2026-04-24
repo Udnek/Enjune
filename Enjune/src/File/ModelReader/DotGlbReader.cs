@@ -12,7 +12,7 @@ public class DotGlbReader : AbstractReader
 {
     public DotGlbReader(AssetManager assetManager, ResourcePath path) : base(assetManager, path) { }
 
-    public override Model<TextureCoord, CompiledMaterial>? Read(out Error? error)
+    public override Model<(TextureCoord, Vector3), CompiledMaterial>? Read(out Error? error)
     {
         ModelRoot? gltfModel = null;
         Path.LoadStream(out error, stream =>
@@ -21,7 +21,7 @@ public class DotGlbReader : AbstractReader
         });
         if (gltfModel == null) return null;
 
-        var builder = new Model<TextureCoord, CompiledMaterial>.Builder();
+        var builder = new Model<(TextureCoord, Vector3), CompiledMaterial>.Builder();
         foreach (var mesh in gltfModel.LogicalMeshes)
         {
             foreach (var primitive in mesh.Primitives)
@@ -38,7 +38,7 @@ public class DotGlbReader : AbstractReader
 
                 var material = primitive.Material;
                 var compiledMat = GetMaterial(material);
-                builder.Add(new Mesh<TextureCoord>(poses, texPoses, indices), compiledMat);
+                builder.Add(Mesh<(TextureCoord, Vector3)>.CreateWithNormals(poses, texPoses, indices), compiledMat);
             }
         }
 

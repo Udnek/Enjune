@@ -40,7 +40,7 @@ public sealed partial class OpenGlApi : GLDisposable, IGraphicApi
     private ShaderProgram _textShader = null!;
     private ShaderProgram _pixelShader = null!;
     private ShaderProgram _currentShader = null!;
-    private ShaderProgram _colorShader;
+    private ShaderProgram _colorShader = null!;
     
     // storing it here fucking gc won't erase it
     private GLFWCallbacks.KeyCallback _keyCallback = null!;
@@ -223,9 +223,10 @@ public sealed partial class OpenGlApi : GLDisposable, IGraphicApi
         
         // mat attributes
         {
-            var attributes = new VaoAttributes<MaterialVertexData>(_mainVao, _matVertexVbo, _mainShader, _textShader);
+            var attributes = new VaoAttributes<MaterialVertexData>(_mainVao, _matVertexVbo, _mainShader);
             attributes.Add<float>(VertexAttribPointerType.Float, AttributePosition, 3);
             attributes.Add<float>(VertexAttribPointerType.Float, AttributeTexture, 2);
+            attributes.Add<float>(VertexAttribPointerType.Float, "inNorm", 3);
             attributes.Compile();
         }
         

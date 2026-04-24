@@ -17,13 +17,13 @@ public sealed class MaterialVertexBuffer
         MatIdSsbo = new FixedBuffer<MatId>(matVboCap);
     }
 
-    public void PutModel(Model<TextureCoord, CompiledMaterial> model)
+    public void PutModel(Model<(TextureCoord, Vector3), CompiledMaterial> model)
     {
         foreach (var (mesh, material) in model.Meshes)
             PutMesh(mesh, material.Id);
     }
     
-    public void PutMesh(Mesh<TextureCoord> mesh, MatId matId)
+    public void PutMesh(Mesh<(TextureCoord, Vector3)> mesh, MatId matId)
     {
         // ebo
         var eboOffset = VertexVbo.Count;
@@ -32,7 +32,9 @@ public sealed class MaterialVertexBuffer
         
         // vertices
         for (var i = 0; i < mesh.Vertices.Length; i++)
-            VertexVbo.Put(new MaterialVertexData(mesh.Vertices[i], mesh.PerVertexData[i]));
+            VertexVbo.Put(new MaterialVertexData(
+                mesh.Vertices[i], mesh.PerVertexData[i].Item1, mesh.PerVertexData[i].Item2)
+            );
         
         // materials
         for (var _ = 0; _ < mesh.Indexes.Length / 3; _++)
