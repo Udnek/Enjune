@@ -19,6 +19,7 @@ public interface IGraphicApi : IDisposable
     void ViewTransform(Matrix4 view);
     void ProjectionTransform(Matrix4 proj);
     void GlobalColor(Color color);
+    void ViewPosition(Position position);
     // uniforms end
     
     // general pipeliner

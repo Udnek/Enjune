@@ -12,7 +12,7 @@ public class FlyingPlayerController
     private readonly Wasd _wasd;
     private readonly float _sensitivity;
 
-    private Position _position = new(0f, 0f, 5f);
+    public Position Position = new(0f, 0f, 5f);
     private float _pitch = 0f;
     private float _yaw = 0f;
     
@@ -24,7 +24,7 @@ public class FlyingPlayerController
         _sensitivity = sensitivity;
     }
 
-    public Matrix4 View => Matrix4.LookAt(_position, _position + Direction, Vector3.UnitY);
+    public Matrix4 View => Matrix4.LookAt(Position, Position + Direction, Vector3.UnitY);
 
     public Vector3 Direction
     {
@@ -73,6 +73,6 @@ public class FlyingPlayerController
         else if (_inputHandler.IsPressed(_wasd.Downward))
             move += new Vector3(0f, -1f, 0f);
         
-        _position += move * 8f * deltaTime;
+        Position += move * 8f * deltaTime;
     }
 }

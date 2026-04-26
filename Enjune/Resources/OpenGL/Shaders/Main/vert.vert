@@ -9,13 +9,13 @@ uniform mat4 view;
 uniform mat4 projection;
 
 out vec2 textureCoord;
-out vec3 normal;
-out vec3 inWorldPos;
+out vec3 nonNormNormal;
+out vec3 fragPos;
 
 void main() {
     textureCoord = texcoord;
-    normal = inNorm;
-    inWorldPos = vec3(model * vec4(position, 1.0));
+    nonNormNormal = inNorm;
+    fragPos = vec3(model * vec4(position, 1.0));
     mat4 pvm = projection * view * model;
     gl_Position = pvm * vec4(position, 1.0);
 }

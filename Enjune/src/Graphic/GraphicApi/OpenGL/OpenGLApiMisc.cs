@@ -89,6 +89,7 @@ public sealed partial class OpenGlApi
     public void ModelTransform(Matrix4 model) => _model.SetValue(_currentShader, model);
     public void ProjectionTransform(Matrix4 proj) => _projection.SetValue(_currentShader, proj);
     public void ViewTransform(Matrix4 view) => _view.SetValue(_currentShader, view);
+    public void ViewPosition(Position position) => _viewPos.SetValue(_currentShader, position);
     public void GlobalColor(Color color) => _globalColor.SetValue(_currentShader, color);
 
     public void SetWindowSize(Vector2i wh)

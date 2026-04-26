@@ -163,8 +163,8 @@ public class App : IApp
                 // render
                 _grapi.ClearScreenBuffers();
                 
-                
                 _grapi.SwitchShader(IGraphicApi.ShaderType.Main);
+                _grapi.ViewPosition(_wasdController.Position);
                 foreach (var obj in _scene.Objects)
                 {
                     if (obj.Hidden) continue;

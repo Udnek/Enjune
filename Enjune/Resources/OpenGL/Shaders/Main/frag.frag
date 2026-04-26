@@ -12,11 +12,12 @@ layout ( std430, binding = 1) readonly buffer MatIdBuffer {
 };
 
 in vec2 textureCoord;
-in vec3 normal;
-in vec3 inWorldPos;
+in vec3 nonNormNormal;
+in vec3 fragPos;
 
 uniform sampler2DArray textureArray;
 uniform vec4 globalColor;
+uniform vec3 viewPos;
 
 out vec4 fragColor;
 
@@ -24,15 +25,24 @@ void main() {
     Material mat = materials[matIds[gl_PrimitiveID]];
     vec4 textureColor = texture(textureArray, vec3(textureCoord, mat.textureId));
     
-    vec4 col = mat.color * textureColor * globalColor;
-    if (col.a < 0.1) discard;
+    vec4 baseColor = mat.color * textureColor * globalColor;
+    if (baseColor.a < 0.1) discard;
+    
+    vec3 norm = normalize(nonNormNormal);
+    vec3 lightPos = vec3(0, 0, 0);
+    vec3 lightDir = normalize(fragPos-lightPos);
+    
+    // ambient
+    vec3 ambient = vec3(0.1);
     
     // diffuse
-    vec3 lightPos = vec3(0, 0, 0);
-    vec3 n = normalize(normal);
-    vec3 lightDir = normalize(lightPos - inWorldPos);
-    col.xyz *= max(0, dot(n, lightDir));
+    vec3 diffuse = vec3(max(0, dot(norm, -lightDir)));
     
-    
-    fragColor = col; //vec4(normal, 1);
+    // specular
+    vec3 viewDir = normalize(fragPos-viewPos);
+    vec3 reflectDir = reflect(lightDir, norm);
+    vec3 specular = vec3(pow(max(0, dot(viewDir, -reflectDir)), 32) * 0.7);
+
+    baseColor.xyz *= (ambient + diffuse + specular);
+    fragColor = baseColor;
 }

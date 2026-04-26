@@ -54,6 +54,7 @@ public sealed partial class OpenGlApi : GLDisposable, IGraphicApi
     private Matrix4Uniform _view = null!;
     private Matrix4Uniform _projection = null!;
     private Vector4Uniform _globalColor = null!;
+    private Vector3Uniform _viewPos = null!;
     private TextureUniform _textureUniform = null!;
     
     public Error? Init(CompiledAssets assets, int width, int height, string title, int verticesCapacity,
@@ -201,6 +202,7 @@ public sealed partial class OpenGlApi : GLDisposable, IGraphicApi
         // uniforms
         _model = new Matrix4Uniform(UniformModel, Matrix4.Identity, _mainShader, _textShader, _colorShader);
         _view = new Matrix4Uniform(UniformView, Matrix4.Identity, _mainShader, _textShader, _colorShader);
+        _viewPos = new Vector3Uniform("viewPos", Vector3.Zero, _mainShader);
         _projection = new Matrix4Uniform(UniformProjection, 
             Matrix4.CreatePerspectiveFieldOfView(MathF.PI / 2, 1.0f, 0.1f, 1000.0f), 
             _mainShader, _textShader, _colorShader);
