@@ -40,19 +40,6 @@ public sealed partial class OpenGlApi
         }
     }
 
-    private PrimitiveType fromApi(IGraphicApi.Primitive primitive)
-    {
-        return primitive switch
-        {
-            IGraphicApi.Primitive.Triangle => PrimitiveType.Triangles,
-            IGraphicApi.Primitive.LineStrip => PrimitiveType.LineStrip,
-            IGraphicApi.Primitive.LineLoop => PrimitiveType.LineLoop,
-            IGraphicApi.Primitive.Line => PrimitiveType.Lines,
-            IGraphicApi.Primitive.Point => PrimitiveType.Points,
-            _ => throw new ArgumentOutOfRangeException(nameof(primitive), primitive, null)
-        };
-    }
-
     public void SetVsync(bool vsync) => GLFW.SwapInterval(vsync ? 1 : 0);
 
     public IGraphicApi.CursorMode GetCursorMode()
@@ -85,12 +72,6 @@ public sealed partial class OpenGlApi
             GLFW.SetInputMode(_window, CursorStateAttribute.Cursor, state);
         }
     }
-
-    public void ModelTransform(Matrix4 model) => _model.SetValue(_currentShader, model);
-    public void ProjectionTransform(Matrix4 proj) => _projection.SetValue(_currentShader, proj);
-    public void ViewTransform(Matrix4 view) => _view.SetValue(_currentShader, view);
-    public void ViewPosition(Position position) => _viewPos.SetValue(_currentShader, position);
-    public void GlobalColor(Color color) => _globalColor.SetValue(_currentShader, color);
 
     public void SetWindowSize(Vector2i wh)
     {

@@ -1,18 +1,17 @@
 using Enjune.File;
+using Enjune.Graphic.GraphicApi.OpenGL.Component.Uniform;
 using Enjune.Misc;
 
 namespace Enjune.Graphic.GraphicApi.OpenGL.Component;
 
-public class ShaderProgram : GLDisposable
+public abstract class ShaderProgram : GLDisposable
 {
     private int _program;
-    private string _vertexShaderName;
+    private string _vertexShaderName = null!;
     private int _vertexShader;
     private int _fragmentShader;
 
-    public ShaderProgram(){}
-
-    public Error? Init(ResourcePath fragmentPath, ResourcePath vertexPath)
+    public Error? Init(ResourcePath fragmentPath, ResourcePath vertexPath, Consumer<VaoAttributes> vaoAttrConsumer)
     {
         _program = GL.CreateProgram();
 
@@ -33,11 +32,24 @@ public class ShaderProgram : GLDisposable
         
         // check init
         GL.GetProgram(_program, GetProgramParameterName.LinkStatus, out int linkStatus);
-        if (linkStatus == (int)All.True) return null;
-        
-        string infoLog = GL.GetProgramInfoLog(_program);
-        return $"shader program linking failed: {infoLog}";
+        if (linkStatus != (int)All.True)
+        {
+            string infoLog = GL.GetProgramInfoLog(_program);
+            return $"shader program linking failed: {infoLog}";
+        }
+        // uniforms
+        InitUniforms();
+        var vaoAttributes = CreateEmptyAttributes();
+        vaoAttrConsumer(vaoAttributes);
+        vaoAttributes.Compile(this);
+        return null;
     }
+    
+    protected abstract void InitUniforms();
+    protected abstract VaoAttributes CreateEmptyAttributes();
+    
+    public void Bind() => GL.UseProgram(_program);
+    public static void Unbind() => GL.UseProgram(0);
     
     private int InitShader(ShaderType type, string source, out Error? error)
     {
@@ -57,10 +69,7 @@ public class ShaderProgram : GLDisposable
         error = null;
         return shader;
     }
-
-    public void Bind() => GL.UseProgram(_program);
-    public void Unbind() => GL.UseProgram(0);
-
+    
     public int GetUniformLocation(string name)
     {
         var location = GL.GetUniformLocation(_program, name);

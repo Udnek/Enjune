@@ -4,23 +4,17 @@ namespace Enjune.Graphic.GraphicApi.OpenGL.Component.Uniform;
 
 public abstract class Uniform<T>
 {
-    private readonly Dictionary<ShaderProgram, int> _shaderToLocation;
+    private readonly int _location;
 
-    public Uniform(string name, T initialValue, params ShaderProgram[] programs)
+    protected Uniform(string name, T initialValue, ShaderProgram program)
     {
-        _shaderToLocation = new Dictionary<ShaderProgram, int>(programs.Length);
-        foreach (var program in programs)
-        {
-            program.Bind();
-            _shaderToLocation.Add(program, program.GetUniformLocation(name));
-            SetValue(program, initialValue);
-            program.Unbind();
-        }
+        program.Bind();
+        _location = program.GetUniformLocation(name);
+        SetValue(initialValue);
+        ShaderProgram.Unbind();
     }
     
+    public void SetValue(T value) => SetValue(_location, value);
     
-    public void SetValue(ShaderProgram shader, T value) => SetValue(_shaderToLocation[shader], value);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     protected abstract void SetValue(int location, T value);
 }

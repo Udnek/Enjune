@@ -141,65 +141,66 @@ public class App : IApp
                     MathF.PI / 2, (float) _windowWidth / _windowHeight, 0.1f, 1000f);
                 var view = _wasdController.View;
                 
-                foreach (var sh in Enum.GetValues<IGraphicApi.ShaderType>())
-                {
-                    _grapi.SwitchShader(sh);
-                    _grapi.ProjectionTransform(projection);
-                    _grapi.ViewTransform(view);
-                }
-                
-                _editorController.Update(view, projection);
-                
-                // other inputs
                 if (_inputHandler.IsPressed(_freeCursorBind))
                     _grapi.SetCursorMode(IGraphicApi.CursorMode.Normal);
                 else if (_inputHandler.IsPressed(_lockCursorBind))
                     _grapi.SetCursorMode(IGraphicApi.CursorMode.Centered);
                 
-                
                 if (_inputHandler.IsPressed(_dumbTexturesBind)) 
                     _grapi.DumpTextures(ExternalPath.Of("."));
+                
+                _editorController.Update(view, projection);
                 
                 // render
                 _grapi.ClearScreenBuffers();
                 
-                _grapi.SwitchShader(IGraphicApi.ShaderType.Main);
-                _grapi.ViewPosition(_wasdController.Position);
-                foreach (var obj in _scene.Objects)
+                _grapi.UseShader<IShader.IMaterial>(s =>
                 {
-                    if (obj.Hidden) continue;
-                    if (obj.MatModel is null) continue;
+                    s.ProjectionTransform(projection);
+                    s.ViewTransform(view);
+                    s.ViewPosition(_wasdController.Position);
+                    
+                    foreach (var obj in _scene.Objects)
+                    {
+                        if (obj.Hidden) continue;
+                        if (obj.MatModel is null) continue;
 
-                    _grapi.ModelTransform(obj.ModelMatrix);
+                        s.ModelTransform(obj.ModelMatrix);
                     
-                    _materialVertexBuffer.Clear();
-                    _materialVertexBuffer.PutModel(obj.MatModel);
+                        _materialVertexBuffer.Clear();
+                        _materialVertexBuffer.PutModel(obj.MatModel);
                     
-                    if (obj == _editorController.SelectedObject)
-                        _grapi.GlobalColor((1, 0.5f, 0f, 1f));
-                    else
-                        _grapi.GlobalColor(new Color(1f));
+                        if (obj == _editorController.SelectedObject)
+                            s.GlobalColor((1, 0.5f, 0f, 1f));
+                        else
+                            s.GlobalColor(new Color(1f));
                     
-                    _grapi.RenderToScreenBuffer(_materialVertexBuffer);
-                }
+                        s.RenderToScreenBuffer(_materialVertexBuffer);
+                    }
+                });
                 
+                // drawing everything else over
                 _grapi.ClearScreenBuffers(false, true);
                 
-                _grapi.SwitchShader(IGraphicApi.ShaderType.Color);
-                _grapi.GlobalColor(new Color(1f));
-                foreach (var obj in _scene.Objects)
+                _grapi.UseShader<IShader.IColor>(s =>
                 {
-                    if (obj.Hidden) continue;
-                    if (obj.ColorModel is null) continue;
-
-                    _grapi.ModelTransform(obj.ModelMatrix);
-
-                    _colorVertexBuffer.Clear();
-                    _colorVertexBuffer.PutModel(obj.ColorModel);
+                    s.ProjectionTransform(projection);
+                    s.ViewTransform(view);
                     
-                    _grapi.RenderToScreenBuffer(_colorVertexBuffer, IGraphicApi.Primitive.Line);
-                }
+                    foreach (var obj in _scene.Objects)
+                    {
+                        if (obj.Hidden) continue;
+                        if (obj.ColorModel is null) continue;
 
+                        s.ModelTransform(obj.ModelMatrix);
+
+                        _colorVertexBuffer.Clear();
+                        _colorVertexBuffer.PutModel(obj.ColorModel);
+                    
+                        s.RenderToScreenBuffer(_colorVertexBuffer, IGraphicApi.Primitive.Line);
+                    }
+                });
+                
                 // end
                 _inputHandler.ClearForNextFrame();
                 _grapi.UpdateScreen();

@@ -3,82 +3,80 @@ using Enjune.Misc;
 
 namespace Enjune.Graphic.GraphicApi.OpenGL.Component;
 
-public sealed class VaoAttributes<T> where T : unmanaged
+public sealed class VaoAttributes
 {
     private readonly List<Attribute> _attributes = [];
     private readonly Vao _vao;
-    private readonly AbstractBuffer<T> _vbo;
-    private readonly ShaderProgram[] _shaderPrograms;
+    private readonly IVbo _vbo;
     private bool _compiled = false;
     
-    public VaoAttributes(Vao vao, Vbo<T> vbo, params ShaderProgram[] programs)
+    public VaoAttributes(Vao vao, IVbo vbo)
     {
         _vao = vao;
         _vbo = vbo;
-        _shaderPrograms = programs;
     }
     
-    public void Add<TT>(VertexAttribPointerType pType, string name, int elements, bool perInstance = false) where TT : unmanaged
+    public VaoAttributes Add<TT>(VertexAttribPointerType pType, string name, int elements, bool perInstance = false) where TT : unmanaged
     {
         if (_compiled)
         {
-            Logger.Error(this, "trying to compiled already compiled");
-            return;
+            Logger.Error(this, "trying to modify, but already compiled");
+            return this;
         }
         unsafe
         {
             int size =  sizeof(TT) * elements;
-            _attributes.Add(new Attribute(size, name, elements, pType, perInstance));   
+            _attributes.Add(new Attribute(size, name, elements, pType, perInstance));
+            return this;
         }
     }
 
-    public void Compile()
+    public void Compile(ShaderProgram program)
     {
         if (_compiled)
         {
-            Logger.Error(this, "trying to compiled already compiled");
+            Logger.Error(this, "trying to compile, but already compiled");
             return;
         }
         _compiled = true;
         
         _vao.Bind();
         _vbo.Bind();
-        foreach (var program in _shaderPrograms)
+        program.Bind();
+        
+        int stride = _attributes.Sum(a => a.SizeBytes);
+        int offset = 0;
+        foreach (var attr in _attributes)
         {
-            int stride = _attributes.Sum(a => a.SizeBytes);
-            int offset = 0;
-            foreach (var attr in _attributes)
+            int location = program.GetAttributeLocation(attr.Name);
+            GL.EnableVertexAttribArray(location);
+            var allIntPointerTypes = (int[]) Enum.GetValues(typeof(VertexAttribIntegerType));
+            if (allIntPointerTypes.Contains((int) attr.PointerType)) // so it means we need to use integer pointer
             {
-                int location = program.GetAttributeLocation(attr.Name);
-                GL.EnableVertexAttribArray(location);
-                var allIntPointerTypes = (int[]) Enum.GetValues(typeof(VertexAttribIntegerType));
-                if (allIntPointerTypes.Contains((int) attr.PointerType)) // so it means we need to use integer pointer
-                {
-                    GL.VertexAttribIPointer(
-                        location,
-                        attr.Elements,
-                        (VertexAttribIntegerType) attr.PointerType,
-                        stride,
-                        offset);
-                }
-                else
-                {
-                    GL.VertexAttribPointer(
-                        location,
-                        attr.Elements,
-                        attr.PointerType,
-                        false,
-                        stride,
-                        offset);
-                }
+                GL.VertexAttribIPointer(
+                    location,
+                    attr.Elements,
+                    (VertexAttribIntegerType) attr.PointerType,
+                    stride,
+                    offset);
+            }
+            else
+            {
+                GL.VertexAttribPointer(
+                    location,
+                    attr.Elements,
+                    attr.PointerType,
+                    false,
+                    stride,
+                    offset);
+            }
 
-                if (attr.PerInstance)
-                {
-                    GL.VertexAttribDivisor(location, 1);
-                }
-                offset += attr.SizeBytes;
-            }   
-        }
+            if (attr.PerInstance)
+            {
+                GL.VertexAttribDivisor(location, 1);
+            }
+            offset += attr.SizeBytes;
+        }   
     }
     
     private record struct Attribute(int SizeBytes, string Name, 

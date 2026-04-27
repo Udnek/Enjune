@@ -2,12 +2,12 @@
 
 in vec4 color;
 
-uniform vec4 globalColor;
+uniform vec4 uGlobalColor;
 
 out vec4 fragColor;
 
 void main() {
-    vec4 col = color * globalColor;
+    vec4 col = color * uGlobalColor;
     if (col.a < 0.1) discard;
     fragColor = col;
 }

@@ -1,16 +1,16 @@
 #version 430 core
 
-in vec3 inPosition;
-in vec4 inColor;
+in vec3 aPos;
+in vec4 aColor;
 
-uniform mat4 model;
-uniform mat4 view;
-uniform mat4 projection;
+uniform mat4 uModel;
+uniform mat4 uView;
+uniform mat4 uProjection;
 
 out vec4 color;
 
 void main() {
-    color = inColor;
-    mat4 pvm = projection * view * model;
-    gl_Position = pvm * vec4(inPosition, 1.0);
+    color = aColor;
+    mat4 pvm = uProjection * uView * uModel;
+    gl_Position = pvm * vec4(aPos, 1.0);
 }

@@ -2,8 +2,8 @@ using OpenTK.Mathematics;
 
 namespace Enjune.Graphic.GraphicApi.OpenGL.Component.Uniform;
 
-public sealed class Matrix4Uniform(string name, Matrix4 initialValue, params ShaderProgram[] programs)
-    : Uniform<Matrix4>(name, initialValue, programs)
+public sealed class Matrix4Uniform(string name, Matrix4 initialValue, ShaderProgram program)
+    : Uniform<Matrix4>(name, initialValue, program)
 {
     protected override void SetValue(int location, Matrix4 value)
     {
