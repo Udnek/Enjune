@@ -13,7 +13,7 @@ public class SObject(Model<(TextureCoord, Vector3), CompiledMaterial>? matModel 
     public Vector3 Scale = Vector3.One;
 
     public Matrix4 ModelMatrix =>
-        Matrix4.CreateTranslation(Position) * Matrix4.CreateFromQuaternion(Rotation) * Matrix4.CreateScale(Scale);
+        Matrix4.CreateScale(Scale) * Matrix4.CreateFromQuaternion(Rotation) * Matrix4.CreateTranslation(Position); // todo wtf why this order works?
     
     public bool IsText = isText;
 

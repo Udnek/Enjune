@@ -44,7 +44,7 @@ public interface IGraphicApi : IDisposable
         LineStrip,
         LineLoop,
         Line,
-        Point,
+        Point
     }
     
     enum DrawMode

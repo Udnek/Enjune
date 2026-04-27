@@ -103,12 +103,11 @@ public class EditorController
         GetCursorVectors(viewMat, projMat, out var direction, out var camPos);
         
         var axToVec = AxToVec((Ax)_selectedAx);
-        Logger.Log(this, direction);
-        Logger.Log(this, axToVec);
-        
+
         if (!Do(axToVec))
             Do(-1 * axToVec);
-            
+        return;    
+        
         bool Do(Vector3 axDir)
         {
             var projectedDir = MathUtils.ProjectVectorOnPlane(direction, camPos, AxisObject.Position, AxisObject.Position + axDir);

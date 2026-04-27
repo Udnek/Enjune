@@ -13,7 +13,7 @@ public sealed class AssemblyPath : ResourcePath
     private AssemblyPath(Assembly assembly, params string[] path)
     {
         if (path.Length == 0 || path.Any(v => v.Length == 0)) 
-            Logger.Error(this,$"trying to create path with incorrect parameter: {Utils.ContentToString(path)}");
+            Logger.Error(this,$"trying to create path with incorrect parameter: {path.ContentToString()}");
         
         _assembly = assembly;
         _path = path;
