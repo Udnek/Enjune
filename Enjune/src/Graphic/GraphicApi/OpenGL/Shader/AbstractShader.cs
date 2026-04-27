@@ -3,7 +3,7 @@ using Enjune.Graphic.GraphicApi.OpenGL.Component.Uniform;
 
 namespace Enjune.Graphic.GraphicApi.OpenGL.Shader;
 
-public abstract class BaseShader : ShaderProgram, IShader
+public abstract class AbstractShader : ShaderProgram, IShader
 {
     private Matrix4Uniform _model = null!;
     private Matrix4Uniform _view = null!;

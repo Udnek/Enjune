@@ -4,7 +4,7 @@ using Enjune.Graphic.GraphicApi.Vertex.Colored;
 
 namespace Enjune.Graphic.GraphicApi.OpenGL.Shader;
 
-public sealed class ColorShader : BaseShader, IShader.IColor
+public sealed class ColorShader : AbstractShader, IShader.IColor
 {
     private readonly Vao _vao;
     private readonly Vbo<ColoredVertexData> _vertexVbo;

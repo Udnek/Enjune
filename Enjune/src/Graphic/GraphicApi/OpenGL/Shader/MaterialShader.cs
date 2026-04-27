@@ -5,9 +5,10 @@ using Enjune.Graphic.GraphicApi.Vertex.Material;
 
 namespace Enjune.Graphic.GraphicApi.OpenGL.Shader;
 
-public sealed class MaterialShader : BaseShader, IShader.IMaterial
+public sealed class MaterialShader : AbstractShader, IShader.IMaterial
 {
     private Vector3Uniform _viewPos = null!;
+    private IntUniform _lightsLength = null!;
     private TextureUniform _textureUniform = null!;
     
     private readonly Vao _vao;
@@ -15,14 +16,16 @@ public sealed class MaterialShader : BaseShader, IShader.IMaterial
     private readonly Ssbo<MatId> _matIdSsbo;
     private readonly Ebo _ebo;
     private readonly int _textureSampler;
+    private readonly Ssbo<PointLightData> _lightSsbo;
 
-    public MaterialShader(Vao vao, Vbo<MaterialVertexData> vertexVbo, Ssbo<MatId> matIdSsbo, Ebo ebo, int textureSampler)
+    public MaterialShader(Vao vao, Vbo<MaterialVertexData> vertexVbo, Ssbo<MatId> matIdSsbo, Ebo ebo, int textureSampler, Ssbo<PointLightData> lightSsbo)
     {
         _vao = vao;
         _vertexVbo = vertexVbo;
         _matIdSsbo = matIdSsbo;
         _ebo = ebo;
         _textureSampler = textureSampler;
+        _lightSsbo = lightSsbo;
     }
     
     protected override VaoAttributes CreateEmptyAttributes() => new(_vao, _vertexVbo);
@@ -32,6 +35,14 @@ public sealed class MaterialShader : BaseShader, IShader.IMaterial
         base.InitUniforms();
         _viewPos = new Vector3Uniform("uViewPos", Vector3.Zero, this);
         _textureUniform = new TextureUniform("uTextures", _textureSampler, this);
+        _lightsLength = new IntUniform("uLightsLength", 0, this);
+    }
+
+
+    public void Lights(IEnumerable<PointLight> lights)
+    {
+        _lightSsbo.BindAndPush(lights.Select(l => new PointLightData(l.Position, l.Color)).ToArray());
+        _lightsLength.SetValue(lights.Count());
     }
 
     public void ViewPosition(Position position) => _viewPos.SetValue(position);

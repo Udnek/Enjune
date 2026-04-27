@@ -26,6 +26,12 @@ public abstract class AbstractBuffer<T> : GLDisposable where T : unmanaged
         Bind();
         GL.BufferSubData(Target, 0, fixedBuffer.Count*ElementSize, fixedBuffer.Data);
     }
+    
+    public void BindAndPush(T[] array)
+    {
+        Bind();
+        GL.BufferSubData(Target, 0, array.Length*ElementSize, array);
+    }
 
     protected override void DisposeGLData() => GL.DeleteBuffer(Handle);
 }

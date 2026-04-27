@@ -24,55 +24,55 @@ public sealed class Mesh<TPerVertex>
             Vertices[i] += offset;
     }
 
-    public static Mesh<(TextureCoord texCoord, Vector3 normal)> CreateWithNormals(
+    public static Mesh<(TextureCoord texCoord, Normal normal)> CreateWithNormals(
         Position[] vertices, TextureCoord[] texCoords, int[] indexes)
     {
         var normals = GenerateSmoothNormals(vertices, indexes);
-        return new Mesh<(TextureCoord texCoord, Vector3 normal)>
+        return new Mesh<(TextureCoord texCoord, Normal normal)>
             (vertices, texCoords.JoinToTuple(normals), indexes);
     }
     
-    public static Mesh<(TextureCoord texCoord, Vector3 normal)> Cuboid(
+    public static Mesh<(TextureCoord texCoord, Normal normal)> Cuboid(
         Position b1, Position b2, Position b3, Position b4,
         Position t1, Position t2, Position t3, Position t4,
         TextureQuad texture)
     {
-        return Mesh<(TextureCoord texCoord, Vector3 normal)>.Merge(
+        return Mesh<(TextureCoord texCoord, Normal normal)>.Merge(
             Quad(b1, b2, b3, b4, texture), // bot
-            Quad(t1, t2, t3, t4, texture), // top
-            Quad(b1, b2, t2, t1, texture), // front
-            Quad(b2, b3, t3, t2, texture), // right
-            Quad(b3, b4, t4, t3, texture), // back
-            Quad(b4, b1, t1, t4, texture)); // left
+            Quad(t4, t3, t2, t1, texture), // top
+            Quad(t1, t2, b2, b1, texture), // front
+            Quad(t2, t3, b3, b2, texture), // right
+            Quad(t3, t4, b4, b3, texture), // back
+            Quad(t4, t1, b1, b4, texture)); // left
     }
 
-    public static Mesh<(TextureCoord texCoord, Vector3 normal)> Cube(Position center, float size, TextureQuad texture)
+    public static Mesh<(TextureCoord texCoord, Normal normal)> Cube(Position center, float size, TextureQuad texture)
     {
         var hs = size / 2;
         return Cuboid(
             // bottom
             center + (-hs, -hs, -hs), //-x -z
-            center + (-hs, -hs, +hs), //+x -z
+            center + (+hs, -hs, -hs), //+x -z
             center + (+hs, -hs, +hs), //+x +z
-            center + (+hs, -hs, -hs), //-x +z
+            center + (-hs, -hs, +hs), //-x +z
             // top
-            center + (-hs, hs, -hs), //-x -z
-            center + (-hs, hs, +hs), //+x -z
-            center + (+hs, hs, +hs), //+x +z
-            center + (+hs, hs, -hs), //-x +z
+            center + (-hs, +hs, -hs), //-x -z
+            center + (+hs, +hs, -hs), //+x -z
+            center + (+hs, +hs, +hs), //+x +z
+            center + (-hs, +hs, +hs), //-x +z
 
             texture
         );
     }
 
-    public static Mesh<(TextureCoord texCoord, Vector3 normal)> Quad(Position bl, Position br, Position tr, Position tl, TextureQuad tex)
+    public static Mesh<(TextureCoord texCoord, Normal normal)> Quad(Position bl, Position br, Position tr, Position tl, TextureQuad tex)
     {
         return CreateWithNormals([bl, br, tr, tl],
                 [tex.BotLeft, tex.BotRight, tex.TopRight, tex.TopLeft],
                 [0, 1, 2, 0, 2, 3]);
     }
     
-    public static Mesh<(TextureCoord texCoord, Vector3 normal)> Triangle(Position bl, Position br, Position tr, TextureQuad tex)
+    public static Mesh<(TextureCoord texCoord, Normal normal)> Triangle(Position bl, Position br, Position tr, TextureQuad tex)
     {
         return CreateWithNormals([bl, br, tr],
             [tex.BotLeft, tex.BotRight, tex.TopRight],
@@ -80,7 +80,7 @@ public sealed class Mesh<TPerVertex>
     }
     
     
-    public static Mesh<(TPerVertex, Vector3)> NgonWithNormals(Position[] poses, TPerVertex[] perVertexData)
+    public static Mesh<(TPerVertex, Normal)> NgonWithNormals(Position[] poses, TPerVertex[] perVertexData)
     {
         if (perVertexData.Length != poses.Length)
             throw new ArgumentException($"positions and perVertexData must have the same length: {poses.Length} != {perVertexData.Length}");

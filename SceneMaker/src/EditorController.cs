@@ -39,6 +39,7 @@ public class EditorController
                 .Add(y, new Color(0f, 1f, 0f, 1f))
                 .Add(z, new Color(0f, 0f, 1f, 1f))
                 .Build(false),
+            Scale = new Vector3(2f),
             Hidden = true
         };
         _meshToAx[x] = Ax.X;

@@ -12,6 +12,7 @@ public interface IShader
     
     public interface IMaterial : IShader
     {
+        void Lights(IEnumerable<PointLight> lights);
         void ViewPosition(Position position);
         void RenderToScreenBuffer(MaterialVertexBuffer buffer);
     }

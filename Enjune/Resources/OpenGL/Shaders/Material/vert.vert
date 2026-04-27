@@ -14,7 +14,7 @@ out vec3 fragPos;
 
 void main() {
     texPos = aTexPos;
-    nonNormNormal = aNorm;
+    nonNormNormal = (uModel * vec4(aNorm, 1)).xyz;
     fragPos = vec3(uModel * vec4(aPos, 1.0));
     mat4 pvm = uProjection * uView * uModel;
     gl_Position = pvm * vec4(aPos, 1.0);

@@ -85,7 +85,36 @@ public class App : IApp
         //     Scale = Vector3.One * 1/16f,
         //     Rotation = Quaternion.FromEulerAngles(new Vector3(MathHelper.DegreesToRadians(-90), 0, 0))
         // });
-
+        
+        
+        _scene.Objects.Add(new SObject()
+        {
+            MatModel = new Model<(TextureCoord texCoord, Normal normal), CompiledMaterial>.Builder()
+                .Add(Mesh<(TextureCoord texCoord, Normal normal)>.Cube(Position.Zero, 0.5f, TextureQuad.Full), assetManager.WhiteMaterial)
+                .Build(),
+            Position = (0, 10, 0),
+            PointLight = new PointLight(Position.Zero, Color.UnitX)
+        });
+        
+        _scene.Objects.Add(new SObject()
+        {
+            MatModel = new Model<(TextureCoord texCoord, Normal normal), CompiledMaterial>.Builder()
+                .Add(Mesh<(TextureCoord texCoord, Normal normal)>.Cube(Position.Zero, 0.5f, TextureQuad.Full), assetManager.WhiteMaterial)
+                .Build(),
+            Position = (6, 8, 0),
+            PointLight = new PointLight(Position.Zero, Color.UnitY)
+        });
+        
+        _scene.Objects.Add(new SObject()
+        {
+            MatModel = new Model<(TextureCoord texCoord, Normal normal), CompiledMaterial>.Builder()
+                .Add(Mesh<(TextureCoord texCoord, Normal normal)>.Cube(Position.Zero, 0.5f, TextureQuad.Full), assetManager.WhiteMaterial)
+                .Build(),
+            Position = (-6, 8, 0),
+            PointLight = new PointLight(Position.Zero, Color.UnitZ)
+        });
+        
+        
         var toyCar = new DotGlbReader(assetManager, AssemblyPath.Of(Enjune.Enjune.Assembly, "Models", "ToyCar.glb"))
             .Read(out error);
         if (toyCar == null) return error;
@@ -159,6 +188,13 @@ public class App : IApp
                     s.ProjectionTransform(projection);
                     s.ViewTransform(view);
                     s.ViewPosition(_wasdController.Position);
+
+                    _scene.Objects.ForEach(o => o.PointLight?.Position = o.Position);
+                    
+                    var lights = _scene.Objects
+                        .Where(o => o.PointLight is not null)
+                        .Select(o => o.PointLight!).ToList();
+                    s.Lights(lights);
                     
                     foreach (var obj in _scene.Objects)
                     {

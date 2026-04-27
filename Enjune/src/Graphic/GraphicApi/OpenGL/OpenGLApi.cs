@@ -43,8 +43,9 @@ public sealed partial class OpenGlApi : GLDisposable, IGraphicApi
     private GLFWCallbacks.MouseButtonCallback _mouseButtonCallback = null!;
     private GLFWCallbacks.FramebufferSizeCallback _sizeChangeCallback = null!;
     private DebugProc _debugProc = null!;
-    
-    
+    private Ssbo<PointLightData> _lightSsbo = null!;
+
+
     public Error? Init(CompiledAssets assets, int width, int height, string title, int verticesCapacity,
         IUserInputHandler keyHandler,
         IGraphicApi.WindowSizeChangeHandler windowSizeHandler)
@@ -160,13 +161,14 @@ public sealed partial class OpenGlApi : GLDisposable, IGraphicApi
         _mainVao = new Vao();
         _materialSsbo = new Ssbo<MaterialData>(0, _assets.Materials.Length);
         _matIdSsbo = new Ssbo<MatId>(1, verticesCapacity);
+        _lightSsbo = new Ssbo<PointLightData>(2, 10);
         _matVertexVbo = new Vbo<MaterialVertexData>(verticesCapacity);
         _ebo = new Ebo(verticesCapacity);
         _colorVao = new Vao();
         _colorVertexVbo = new Vbo<ColoredVertexData>(verticesCapacity);
         
         // loading shaders
-        _materialShader = new MaterialShader(_mainVao, _matVertexVbo, _matIdSsbo, _ebo, 0);
+        _materialShader = new MaterialShader(_mainVao, _matVertexVbo, _matIdSsbo, _ebo, 0, _lightSsbo);
         var error = _materialShader.Init(
             AssemblyPath.Of(Enjune.Assembly, "OpenGL", "Shaders", "Material", "frag.frag"),
             AssemblyPath.Of(Enjune.Assembly, "OpenGL", "Shaders", "Material", "vert.vert"),
@@ -190,9 +192,7 @@ public sealed partial class OpenGlApi : GLDisposable, IGraphicApi
         // loading materials
         {
             MaterialData ToData(CompiledMaterial mat) => new(mat.Raw.Color, mat.TextureId);
-            var matBuffer = new FixedBuffer<MaterialData>(_assets.Materials.Length);
-            matBuffer.Put(_assets.Materials.Select(ToData).ToArray());
-            _materialSsbo.BindAndPush(matBuffer);
+            _materialSsbo.BindAndPush(_assets.Materials.Select(ToData).ToArray());
         }
         
         return null;
@@ -200,7 +200,7 @@ public sealed partial class OpenGlApi : GLDisposable, IGraphicApi
 
     public void UseShader<T>(Consumer<T> consumer) where T : IShader
     {
-        BaseShader shader;
+        AbstractShader shader;
         if (typeof(T) == typeof(IShader.IMaterial))
             shader = _materialShader;
         else if (typeof(T) == typeof(IShader.IColor))
@@ -223,6 +223,7 @@ public sealed partial class OpenGlApi : GLDisposable, IGraphicApi
         
         _materialSsbo.Dispose();
         _matIdSsbo.Dispose();
+        _lightSsbo.Dispose();
         
         _matVertexVbo.Dispose();
         _colorVertexVbo.Dispose();
