@@ -7,18 +7,13 @@ using SixLabors.ImageSharp.PixelFormats;
 
 namespace Enjune.Graphic.GraphicApi.OpenGL.Component.Texture;
 
-public class TextureArray : GLDisposable
+public sealed class TextureArray : AbstractTexture
 {
-    private readonly int _handler;
     private readonly int _size;
     private readonly int _layers;
     
-    public TextureArray(CompiledAssets compiledAssets, TextureUnit unit)
+    public TextureArray(CompiledAssets compiledAssets, TextureUnit unit) : base(TextureTarget.Texture2DArray, unit)
     {
-        _handler = GL.GenTexture();
-        GL.ActiveTexture(unit);
-        GL.BindTexture(TextureTarget.Texture2DArray, _handler);
-
         var textures = compiledAssets.Textures;
         _size = compiledAssets.TextureSize;
         _layers = textures.Count;
@@ -28,11 +23,11 @@ public class TextureArray : GLDisposable
             SizedInternalFormat.Rgba8, _size, _size, _layers);
         
         // params
-        GL.TexParameter(TextureTarget.Texture2DArray, TextureParameterName.TextureWrapS, (int) TextureWrapMode.Repeat);
-        GL.TexParameter(TextureTarget.Texture2DArray, TextureParameterName.TextureWrapT, (int) TextureWrapMode.Repeat);
+        // GL.TexParameter(TextureTarget.Texture2DArray, TextureParameterName.TextureWrapS, (int) TextureWrapMode.Repeat);
+        // GL.TexParameter(TextureTarget.Texture2DArray, TextureParameterName.TextureWrapT, (int) TextureWrapMode.Repeat);
         // mipmap generation
-        GL.TexParameter(TextureTarget.Texture2DArray, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
-        GL.TexParameter(TextureTarget.Texture2DArray, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest);
+        GL.TexParameter(Target, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
+        GL.TexParameter(Target, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest);
         
         // loading into
         for (var layer = 0; layer < textures.Count; layer++)
@@ -50,7 +45,7 @@ public class TextureArray : GLDisposable
                 Logger.Error(this, $"unsupported depth: {texture.Type.Depth}");
                 continue;
             }
-            GL.TexSubImage3D(TextureTarget.Texture2DArray,
+            GL.TexSubImage3D(Target,
                 0, // mipmap
                 0, 0, layer,
                 _size, _size, 1,
@@ -60,14 +55,14 @@ public class TextureArray : GLDisposable
         }
     }
 
-    public void Dump(ExternalPath path)
+    public override Error? Dump(ExternalPath dir, string namePrefix)
     {
-        path = (ExternalPath)path.ThisDirectory();
-        Logger.Log(this, $"dumping textures into {path}");
+        dir = dir.ThisDirectory();
+        Logger.Log(this, $"dumping textures into {dir}");
         int layerSize = _size * _size * 4;
         byte[] data = new byte[layerSize * _layers];
 
-        GL.GetTexImage(TextureTarget.Texture2DArray, 0, PixelFormat.Rgba, PixelType.UnsignedByte, data);
+        GL.GetTextureImage(Handle, 0, PixelFormat.Rgba, PixelType.UnsignedByte, data.Length, data);
 
         for (TexId layer = 0; layer < _layers; layer++)
         {
@@ -77,15 +72,14 @@ public class TextureArray : GLDisposable
             try
             {
                 using var image = Image.LoadPixelData<Rgba32>(layerData, _size, _size);
-                image.Save(Path.GetFullPath($"{path}/texture_id_{layer}.png"), new PngEncoder());
+                image.Save(dir.ResolveRaw($"{namePrefix}_layer_{layer}.png").ToString(), new PngEncoder());
             }
             catch (Exception e)
             {
-                Logger.Error(this, $"can not dump texture {layer}: {e.Message}");
+                return $"can not dump texture {layer}: {e.Message}";
             }
         }
         Logger.Log(this, "done dumping");
+        return null;
     }
-    
-    protected override void DisposeGLData() => GL.DeleteTexture(_handler);
 }

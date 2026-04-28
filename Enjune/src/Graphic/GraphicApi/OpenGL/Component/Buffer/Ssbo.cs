@@ -2,7 +2,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using Enjune.Misc;
 
-namespace Enjune.Graphic.GraphicApi.OpenGL.Component.Array;
+namespace Enjune.Graphic.GraphicApi.OpenGL.Component.Buffer;
 
 public class Ssbo<T> : AbstractBuffer<T> where T : unmanaged
 {

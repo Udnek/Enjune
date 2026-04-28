@@ -5,16 +5,16 @@ public sealed class ExternalPath : ResourcePath
     private readonly string _absolutePath;
     
     public static ExternalPath Of(params string[] path) 
-        => new(System.IO.Path.GetFullPath(System.IO.Path.Combine(path)));
+        => new(Path.GetFullPath(Path.Combine(path)));
     
     private ExternalPath(string absolutePath) => _absolutePath = absolutePath;
 
-    public override ResourcePath Parent() => new ExternalPath(System.IO.Path.GetFullPath(System.IO.Path.Combine(_absolutePath, "..")));
+    public override ExternalPath Parent() => new(Path.GetFullPath(Path.Combine(_absolutePath, "..")));
 
-    public override ResourcePath ThisDirectory() => new ExternalPath(System.IO.Path.GetFullPath(System.IO.Path.Combine(_absolutePath, ".")));
+    public override ExternalPath ThisDirectory() => new(Path.GetFullPath(Path.Combine(_absolutePath, ".")));
 
-    public override ResourcePath Subdir(string subdir) => new ExternalPath(System.IO.Path.Combine(_absolutePath, subdir));
-
+    public override ExternalPath Subdir(string subdir) => new(Path.Combine(_absolutePath, subdir));
+    
     protected override Stream? Read(out Error? error)
     {
         try

@@ -1,4 +1,4 @@
-namespace Enjune.Graphic.GraphicApi.OpenGL.Component.Array;
+namespace Enjune.Graphic.GraphicApi.OpenGL.Component.Buffer;
 
 public sealed class Ebo: AbstractBuffer<int>
 {

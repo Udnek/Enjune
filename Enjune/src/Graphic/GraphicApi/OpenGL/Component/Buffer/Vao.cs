@@ -1,6 +1,6 @@
-namespace Enjune.Graphic.GraphicApi.OpenGL.Component.Array;
+namespace Enjune.Graphic.GraphicApi.OpenGL.Component.Buffer;
 
-public class Vao : GLDisposable
+public class Vao : GlDisposable
 {
     private readonly int _handle;
 
@@ -12,5 +12,5 @@ public class Vao : GLDisposable
     public void Bind() => GL.BindVertexArray(_handle);
     public void Unbind() => GL.BindVertexArray(0);
 
-    protected override void DisposeGLData() => GL.DeleteVertexArray(_handle);
+    protected override void DisposeGlData() => GL.DeleteVertexArray(_handle);
 }

@@ -31,8 +31,7 @@ public class App : IApp
 
     private MaterialVertexBuffer _materialVertexBuffer = null!;
     private ColoredVertexBuffer _colorVertexBuffer = null!;
-
-    private IGraphicApi.DrawMode _drawMode = IGraphicApi.DrawMode.Fill;
+    
     private readonly KeyBinds.Bind _freeCursorBind;
     private readonly KeyBinds.Bind _lockCursorBind;
     private Scene _scene;
@@ -58,18 +57,20 @@ public class App : IApp
     {
         _windowWidth = w;
         _windowHeight = h;
-        _grapi.ViewPort(0, 0, w, h);
     }
-    
+
     public Error? Init()
     {
         var assetManager = new AssetManager();
 
-        var watchTower 
-            = new DotObjModelReader(assetManager, AssemblyPath.Of(Enjune.Enjune.Assembly,"Models", "wt", "wooden watch tower2.obj"))
-            .Read(out var error);
+        var watchTower
+            = new DotObjModelReader(assetManager,
+                    AssemblyPath.Of(Enjune.Enjune.Assembly, "Models", "wt", "wooden watch tower2.obj"))
+                .Read(out var error);
         if (watchTower == null) return error;
-        watchTower.Meshes[0].Item2.Raw.Color = (1, 1, 1, 1);
+        watchTower.Meshes[0].PerMesh.Raw.Color = (1, 1, 1, 1);
+        
+        
         // _scene.Objects.Add(new SObject(watchTower)
         // {
         //     Rotation = Quaternion.FromEulerAngles(0, MathHelper.DegreesToRadians(45), MathHelper.DegreesToRadians(45))
@@ -85,46 +86,53 @@ public class App : IApp
         //     Scale = Vector3.One * 1/16f,
         //     Rotation = Quaternion.FromEulerAngles(new Vector3(MathHelper.DegreesToRadians(-90), 0, 0))
         // });
-        
-        
-        _scene.Objects.Add(new SObject()
-        {
-            MatModel = new Model<(TextureCoord texCoord, Normal normal), CompiledMaterial>.Builder()
-                .Add(Mesh<(TextureCoord texCoord, Normal normal)>.Cube(Position.Zero, 0.5f, TextureQuad.Full), assetManager.WhiteMaterial)
-                .Build(),
-            Position = (0, 10, 0),
-            PointLight = new PointLight(Position.Zero, Color.UnitX)
-        });
-        
-        _scene.Objects.Add(new SObject()
-        {
-            MatModel = new Model<(TextureCoord texCoord, Normal normal), CompiledMaterial>.Builder()
-                .Add(Mesh<(TextureCoord texCoord, Normal normal)>.Cube(Position.Zero, 0.5f, TextureQuad.Full), assetManager.WhiteMaterial)
-                .Build(),
-            Position = (6, 8, 0),
-            PointLight = new PointLight(Position.Zero, Color.UnitY)
-        });
-        
-        _scene.Objects.Add(new SObject()
-        {
-            MatModel = new Model<(TextureCoord texCoord, Normal normal), CompiledMaterial>.Builder()
-                .Add(Mesh<(TextureCoord texCoord, Normal normal)>.Cube(Position.Zero, 0.5f, TextureQuad.Full), assetManager.WhiteMaterial)
-                .Build(),
-            Position = (-6, 8, 0),
-            PointLight = new PointLight(Position.Zero, Color.UnitZ)
-        });
-        
-        
-        var toyCar = new DotGlbReader(assetManager, AssemblyPath.Of(Enjune.Enjune.Assembly, "Models", "ToyCar.glb"))
-            .Read(out error);
-        if (toyCar == null) return error;
-        _scene.Objects.Add(new SObject(toyCar)
-        {
-            Scale = new Vector3(0.05f),
-            Rotation = Quaternion.FromEulerAngles(MathHelper.DegreesToRadians(90), 0, 0)
-        });
 
-        Logger.Log(this, $"{nameof(toyCar)} info: {toyCar.Info()}");
+        {
+            _scene.Objects.Add(new SObject()
+            {
+                MatModel = new Model<(TextureCoord texCoord, Normal normal), CompiledMaterial>.Builder()
+                    .Add(Mesh<(TextureCoord texCoord, Normal normal)>.Cube(Position.Zero, 0.5f, TextureQuad.Full), assetManager.WhiteMaterial)
+                    .Build(),
+                Position = (0, 10, 0),
+                PointLight = new PointLight(Position.Zero, Color.UnitX)
+            });
+        
+            _scene.Objects.Add(new SObject()
+            {
+                MatModel = new Model<(TextureCoord texCoord, Normal normal), CompiledMaterial>.Builder()
+                    .Add(Mesh<(TextureCoord texCoord, Normal normal)>.Cube(Position.Zero, 0.5f, TextureQuad.Full), assetManager.WhiteMaterial)
+                    .Build(),
+                Position = (6, 8, 0),
+                PointLight = new PointLight(Position.Zero, Color.UnitY)
+            });
+        
+            _scene.Objects.Add(new SObject()
+            {
+                MatModel = new Model<(TextureCoord texCoord, Normal normal), CompiledMaterial>.Builder()
+                    .Add(Mesh<(TextureCoord texCoord, Normal normal)>.Cube(Position.Zero, 0.5f, TextureQuad.Full), assetManager.WhiteMaterial)
+                    .Build(),
+                Position = (-6, 8, 0),
+                PointLight = new PointLight(Position.Zero, Color.UnitZ)
+            });
+        }
+
+        
+        var calavera = new DotGlbReader(assetManager, AssemblyPath.Of(Enjune.Enjune.Assembly, "Models", "Calavera", "Calavera.glb"))
+            .Read(out error);
+        if (calavera == null) return error;
+        _scene.Objects.Add(new SObject(calavera));
+        
+
+        // var toyCar = new DotGlbReader(assetManager, AssemblyPath.Of(Enjune.Enjune.Assembly, "Models", "ToyCar.glb"))
+        //     .Read(out error);
+        // if (toyCar == null) return error;
+        // _scene.Objects.Add(new SObject(toyCar)
+        // {
+        //     Scale = new Vector3(0.05f),
+        //     Rotation = Quaternion.FromEulerAngles(MathHelper.DegreesToRadians(90), 0, 0)
+        // });
+        //
+        // Logger.Log(this, $"{nameof(toyCar)} info: {toyCar.Info()}");
 
         
         var font = assetManager.AddFont(AssemblyPath.Of(Enjune.Enjune.Assembly, "Fonts", "papyrus.ttf"), 128, out error);
@@ -142,20 +150,21 @@ public class App : IApp
         _grapi.SetClearColor(new Color(0.2f, 0.2f, 0.2f, 0f));
         
         _grapi.SetCursorMode(IGraphicApi.CursorMode.Centered);
+        _grapi.SetVsync(false);
         
         //_scene.Objects.Add(new SObject(font.Generate("Niggers", 10f), true));
         
         return null;
     }
 
-    public void Run()
+    public void MainCycle()
     {
         _scene.Objects.Add(_editorController.AxisObject);
 
-        var delays = new List<long>(200);
+        var delays = new List<Nanoseconds>(200);
         int tick = 0;
-        float deltaTime = 0;
-        Utils.RunTargetFpsLoopWhile(100,
+        Seconds deltaTime = 0;
+        Utils.RunTargetFpsLoopWhile(200,
             out deltaTime,
             delay =>
             {
@@ -183,7 +192,7 @@ public class App : IApp
                 // render
                 _grapi.ClearScreenBuffers();
                 
-                _grapi.UseShader<IShader.IMaterial>(s =>
+                _grapi.UseShader<IShader.I3D.IMaterial>(s =>
                 {
                     s.ProjectionTransform(projection);
                     s.ViewTransform(view);
@@ -211,14 +220,14 @@ public class App : IApp
                         else
                             s.GlobalColor(new Color(1f));
                     
-                        s.RenderToScreenBuffer(_materialVertexBuffer);
+                        s.Render(_materialVertexBuffer);
                     }
                 });
                 
                 // drawing everything else over
                 _grapi.ClearScreenBuffers(false, true);
                 
-                _grapi.UseShader<IShader.IColor>(s =>
+                _grapi.UseShader<IShader.I3D.IColor>(s =>
                 {
                     s.ProjectionTransform(projection);
                     s.ViewTransform(view);
@@ -233,7 +242,7 @@ public class App : IApp
                         _colorVertexBuffer.Clear();
                         _colorVertexBuffer.PutModel(obj.ColorModel);
                     
-                        s.RenderToScreenBuffer(_colorVertexBuffer, IGraphicApi.Primitive.Line);
+                        s.Render(_colorVertexBuffer, IGraphicApi.Primitive.Line);
                     }
                 });
                 
@@ -249,8 +258,5 @@ public class App : IApp
         
     }
 
-    public void Dispose()
-    {
-        _grapi.Dispose();
-    }
+    public void Dispose() => _grapi.Dispose();
 }

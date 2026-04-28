@@ -1,4 +1,10 @@
-namespace Enjune.Graphic.GraphicApi.OpenGL.Component.Array;
+namespace Enjune.Graphic.GraphicApi.OpenGL.Component.Buffer;
+
+
+public interface IVbo
+{
+    public void Bind();
+}
 
 public sealed class Vbo<T> : AbstractBuffer<T>, IVbo where T : unmanaged
 {

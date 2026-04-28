@@ -10,7 +10,7 @@ public class DotMapReader : AbstractReader
 {
     public DotMapReader(AssetManager assetManager, ResourcePath path) : base(assetManager, path){}
     
-    public override Model<(TextureCoord, Vector3), CompiledMaterial>? Read(out Error? error)
+    public override Model<(TextureCoord texCoord, Normal normal), CompiledMaterial>? Read(out Error? error)
     {
         var mapFormat = new QuakeMapFormat();
         MapFile? mapFile = null;

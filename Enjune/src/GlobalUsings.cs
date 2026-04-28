@@ -15,6 +15,7 @@ global using Normal = OpenTK.Mathematics.Vector3;
 global using GlfwKey = OpenTK.Windowing.GraphicsLibraryFramework.Keys;
 global using Nanoseconds = long;
 global using Fps = float;
+global using Seconds = float;
 
 
 global using EntityId = ushort; // (n=16) n-bits Entity ID -> 2^n entities are allowed to exist

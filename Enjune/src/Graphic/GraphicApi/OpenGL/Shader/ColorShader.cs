@@ -1,28 +1,22 @@
 using Enjune.Graphic.GraphicApi.OpenGL.Component;
-using Enjune.Graphic.GraphicApi.OpenGL.Component.Array;
+using Enjune.Graphic.GraphicApi.OpenGL.Component.Buffer;
 using Enjune.Graphic.GraphicApi.Vertex.Colored;
 
 namespace Enjune.Graphic.GraphicApi.OpenGL.Shader;
 
-public sealed class ColorShader : AbstractShader, IShader.IColor
+public sealed class ColorShader : Shader3D<ColoredVertexData>, IShader.I3D.IColor
 {
-    private readonly Vao _vao;
-    private readonly Vbo<ColoredVertexData> _vertexVbo;
     private readonly Ebo _ebo;
 
-    public ColorShader(Vao vao, Vbo<ColoredVertexData> vertexVbo, Ebo ebo)
+    public ColorShader(Vao vao, Vbo<ColoredVertexData> vbo, Ebo ebo) : base(vao, vbo)
     {
-        _vao = vao;
-        _vertexVbo = vertexVbo;
         _ebo = ebo;
     }
 
-    protected override VaoAttributes CreateEmptyAttributes() => new(_vao, _vertexVbo);
-
-    public void RenderToScreenBuffer(ColoredVertexBuffer buffer, IGraphicApi.Primitive primitive = IGraphicApi.Primitive.Triangle)
+    public void Render(ColoredVertexBuffer buffer, IGraphicApi.Primitive primitive = IGraphicApi.Primitive.Triangle)
     {
-        _vao.Bind();
-        _vertexVbo.BindAndPush(buffer.Vbo);
+        Vao.Bind();
+        Vbo.BindAndPush(buffer.Vbo);
         _ebo.BindAndPush(buffer.Ebo);
         GL.DrawElements(PrimitiveFromApi(primitive), buffer.Ebo.Count, DrawElementsType.UnsignedInt, 0);
     }

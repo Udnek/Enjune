@@ -1,4 +1,4 @@
-using Enjune.Graphic.GraphicApi.OpenGL.Component.Array;
+using Enjune.Graphic.GraphicApi.OpenGL.Component.Buffer;
 using Enjune.Misc;
 
 namespace Enjune.Graphic.GraphicApi.OpenGL.Component;

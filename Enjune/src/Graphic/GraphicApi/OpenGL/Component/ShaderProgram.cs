@@ -4,7 +4,7 @@ using Enjune.Misc;
 
 namespace Enjune.Graphic.GraphicApi.OpenGL.Component;
 
-public abstract class ShaderProgram : GLDisposable
+public abstract class ShaderProgram : GlDisposable
 {
     private int _program;
     private string _vertexShaderName = null!;
@@ -84,7 +84,7 @@ public abstract class ShaderProgram : GLDisposable
         return location;
     }
 
-    protected override void DisposeGLData()
+    protected override void DisposeGlData()
     {
         GL.DeleteShader(_fragmentShader);
         GL.DeleteShader(_vertexShader);

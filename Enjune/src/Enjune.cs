@@ -9,25 +9,37 @@ public static class Enjune
     
     public static void Run(IApp app, string[] args)
     {
+        var error = RunUntilError(app);
+        if (error != null)
+        {
+            Logger.Error(typeof(Enjune), error);
+        }
+        app.Dispose();
+    }
+
+    private static Error? RunUntilError(IApp app)
+    {
+        Error? error;
         try
         {
-            var error = app.Init();
-            if (error != null)
-            {
-                error = $"can not init app: {error}";
-                Logger.Error(typeof(Enjune), error);
-                throw new Exception(error);
-            }
-
-            app.Run();
+            error = app.Init();
         }
         catch (Exception e)
         {
-            Logger.Error(typeof(Enjune), $"exception in app: {e}");
+             return $"can not init app: {e}";
         }
-        finally
+        
+        if (error != null) return $"can not init app: {error}";
+        
+        try
         {
-            app.Dispose();
+            app.MainCycle();
         }
+        catch (Exception e)
+        {
+            return $"error during app main cycle: {e}";
+        }
+
+        return null;
     }
 }

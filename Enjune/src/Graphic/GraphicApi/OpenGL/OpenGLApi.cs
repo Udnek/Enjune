@@ -2,7 +2,7 @@ using System.Runtime.InteropServices;
 using Enjune.File;
 using Enjune.Graphic.Asset;
 using Enjune.Graphic.GraphicApi.OpenGL.Component;
-using Enjune.Graphic.GraphicApi.OpenGL.Component.Array;
+using Enjune.Graphic.GraphicApi.OpenGL.Component.Buffer;
 using Enjune.Graphic.GraphicApi.OpenGL.Component.Texture;
 using Enjune.Graphic.GraphicApi.OpenGL.Component.Uniform;
 using Enjune.Graphic.GraphicApi.OpenGL.Shader;
@@ -15,18 +15,23 @@ using BeginMode = OpenTK.Graphics.OpenGL.BeginMode;
 
 namespace Enjune.Graphic.GraphicApi.OpenGL;
 
-public sealed partial class OpenGlApi : GLDisposable, IGraphicApi
+public sealed partial class OpenGlApi : GlDisposable, IGraphicApi
 {
     private unsafe Window* _window;
     
     private CompiledAssets _assets = null!;
     
     // buffers
-    private Vao _mainVao = null!;
-    private Vbo<MaterialVertexData> _matVertexVbo = null!;
+    private Vao _materialVao = null!;
+    private Vbo<MaterialVertexData> _materialVbo = null!;
     private Ssbo<MatId> _matIdSsbo = null!;
+    private Ssbo<PointLightData> _lightSsbo = null!;
     private Ssbo<MaterialData> _materialSsbo = null!;
     private Ebo _ebo = null!;
+    private Vao _screenVao = null!;
+    private Vbo<(Vector2 position, TextureCoord texCoord)> _screenVbo = null!;
+
+    private Fbo _mainFbo = null!;
     
     private Vao _colorVao = null!;
     private Vbo<ColoredVertexData> _colorVertexVbo = null!;
@@ -36,14 +41,14 @@ public sealed partial class OpenGlApi : GLDisposable, IGraphicApi
     // shaders
     private MaterialShader _materialShader = null!;
     private ColorShader _colorShader = null!;
+    private ScreenShader _screenShader = null!;
     
     // storing it here fucking gc won't erase it
     private GLFWCallbacks.KeyCallback _keyCallback = null!;
     private GLFWCallbacks.CursorPosCallback _cursorCallback = null!;
     private GLFWCallbacks.MouseButtonCallback _mouseButtonCallback = null!;
-    private GLFWCallbacks.FramebufferSizeCallback _sizeChangeCallback = null!;
+    private GLFWCallbacks.FramebufferSizeCallback _windowSizeChangeCallback = null!;
     private DebugProc _debugProc = null!;
-    private Ssbo<PointLightData> _lightSsbo = null!;
 
 
     public Error? Init(CompiledAssets assets, int width, int height, string title, int verticesCapacity,
@@ -53,10 +58,7 @@ public sealed partial class OpenGlApi : GLDisposable, IGraphicApi
         _assets = assets;
         
         // error callback
-        GLFW.SetErrorCallback((error, description) =>
-        {
-            Logger.Error(this, $"{error}: {description}");
-        });
+        GLFW.SetErrorCallback((error, description) => Logger.Error(this, $"{error}: {description}"));
 
         if (!GLFW.Init())
             return "unable to initialize GLFW";
@@ -96,8 +98,13 @@ public sealed partial class OpenGlApi : GLDisposable, IGraphicApi
             _mouseButtonCallback = (window, button, action, mods) => keyHandler.HandleMouseKey(button, FromGlwf(action));
             GLFW.SetMouseButtonCallback(_window, _mouseButtonCallback);
             
-            _sizeChangeCallback = (_, newWidth, newHeight) => windowSizeHandler(newWidth, newHeight);
-            GLFW.SetFramebufferSizeCallback(_window, _sizeChangeCallback);
+            _windowSizeChangeCallback = (_, newWidth, newHeight) =>
+            {
+                ViewPort(newWidth, newHeight);
+                _mainFbo.Resize((newWidth, newHeight));
+                windowSizeHandler(newWidth, newHeight);
+            };
+            GLFW.SetFramebufferSizeCallback(_window, _windowSizeChangeCallback);
 
             _cursorCallback = (window, x, y) => keyHandler.HandleCursor((int)x, (int)y);
             GLFW.SetCursorPosCallback(_window, _cursorCallback);
@@ -137,8 +144,8 @@ public sealed partial class OpenGlApi : GLDisposable, IGraphicApi
                 Logger.Error(this, message);
                 throw new Exception(message);  
             }
-            else
-                Logger.Log(this, message);
+
+            Logger.Log(this, message);
 
         };
         GL.DebugMessageCallback(_debugProc, IntPtr.Zero);
@@ -158,17 +165,26 @@ public sealed partial class OpenGlApi : GLDisposable, IGraphicApi
     {
         // loading comps
         _textureArray = new TextureArray(_assets, TextureUnit.Texture0);
-        _mainVao = new Vao();
+        _materialVao = new Vao();
         _materialSsbo = new Ssbo<MaterialData>(0, _assets.Materials.Length);
         _matIdSsbo = new Ssbo<MatId>(1, verticesCapacity);
         _lightSsbo = new Ssbo<PointLightData>(2, 10);
-        _matVertexVbo = new Vbo<MaterialVertexData>(verticesCapacity);
+        _materialVbo = new Vbo<MaterialVertexData>(verticesCapacity);
         _ebo = new Ebo(verticesCapacity);
         _colorVao = new Vao();
         _colorVertexVbo = new Vbo<ColoredVertexData>(verticesCapacity);
+        _screenVao = new Vao();
+        _screenVbo = new Vbo<(Vector2 position, TextureCoord texCoord)>(6);
+        _mainFbo = new Fbo(GetWindowSize(), TextureUnit.Texture1);
+
+        
+        _screenVbo.BindAndPush([
+            ((-1, -1), (0, 0)), ((1, -1), (1, 0)), ((1, 1), (1, 1)), // first triangle
+            ((-1, -1), (0, 0)), ((1, 1), (1, 1)), ((-1, 1), (0, 1)) // second
+        ]);
         
         // loading shaders
-        _materialShader = new MaterialShader(_mainVao, _matVertexVbo, _matIdSsbo, _ebo, 0, _lightSsbo);
+        _materialShader = new MaterialShader(_materialVao, _materialVbo, _matIdSsbo, _ebo, _textureArray, _lightSsbo);
         var error = _materialShader.Init(
             AssemblyPath.Of(Enjune.Assembly, "OpenGL", "Shaders", "Material", "frag.frag"),
             AssemblyPath.Of(Enjune.Assembly, "OpenGL", "Shaders", "Material", "vert.vert"),
@@ -189,21 +205,49 @@ public sealed partial class OpenGlApi : GLDisposable, IGraphicApi
             );
         if (error != null) return error;
         
+        _screenShader = new ScreenShader(_screenVao, _screenVbo, _mainFbo.Texture);
+        error = _screenShader.Init(
+            AssemblyPath.Of(Enjune.Assembly, "OpenGL", "Shaders", "Screen", "frag.frag"),
+            AssemblyPath.Of(Enjune.Assembly, "OpenGL", "Shaders", "Screen", "vert.vert"),
+            a => a
+                .Add<float>(VertexAttribPointerType.Float, "aPos", 2)
+                .Add<float>(VertexAttribPointerType.Float, "aTexPos", 2)
+        );
+        if (error != null) return error;
+        
         // loading materials
         {
             MaterialData ToData(CompiledMaterial mat) => new(mat.Raw.Color, mat.TextureId);
             _materialSsbo.BindAndPush(_assets.Materials.Select(ToData).ToArray());
         }
         
+        // enabling off-screen rendering
+        _mainFbo.Bind();
+        
         return null;
     }
 
+    public void UpdateScreen()
+    {
+        // rendering to window
+        Fbo.BindDefault();
+        GL.Disable(EnableCap.DepthTest);
+        _screenShader.Bind();
+        _screenShader.Render();
+        unsafe { GLFW.SwapBuffers(_window); }
+        
+        // backing off-screen rendering
+        GL.Enable(EnableCap.DepthTest);
+        ShaderProgram.Unbind();
+        _mainFbo.Bind();
+    }
+    
     public void UseShader<T>(Consumer<T> consumer) where T : IShader
     {
-        AbstractShader shader;
-        if (typeof(T) == typeof(IShader.IMaterial))
+        ShaderProgram shader;
+        if (typeof(T) == typeof(IShader.I3D.IMaterial))
             shader = _materialShader;
-        else if (typeof(T) == typeof(IShader.IColor))
+        else if (typeof(T) == typeof(IShader.I3D.IColor))
             shader = _colorShader;
         else
         {
@@ -214,25 +258,17 @@ public sealed partial class OpenGlApi : GLDisposable, IGraphicApi
         consumer((T)(object)shader); // todo probably fuck around it?
         ShaderProgram.Unbind();
     }
-
-
-    protected override void DisposeGLData()
+    
+    public void ClearScreenBuffers(bool color = true, bool depth = true)
     {
-        _mainVao.Dispose();
-        _colorVao.Dispose();
-        
-        _materialSsbo.Dispose();
-        _matIdSsbo.Dispose();
-        _lightSsbo.Dispose();
-        
-        _matVertexVbo.Dispose();
-        _colorVertexVbo.Dispose();
-        
-        _ebo.Dispose();
-        _materialShader.Dispose();
-        _colorShader.Dispose();
-        
-        _textureArray.Dispose();
+        GL.Clear(
+            (color ? ClearBufferMask.ColorBufferBit : 0) 
+            | (depth ? ClearBufferMask.DepthBufferBit : 0));
+    }
+
+    protected override void DisposeGlData()
+    {
+        Utils.DisposeAllFields(this);
         
         unsafe
         {

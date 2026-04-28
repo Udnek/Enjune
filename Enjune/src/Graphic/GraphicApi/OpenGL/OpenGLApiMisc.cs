@@ -1,13 +1,33 @@
+using System.Runtime.CompilerServices;
 using Enjune.File;
 using Enjune.Misc;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
+using ErrorCode = OpenTK.Graphics.OpenGL4.ErrorCode;
 
 namespace Enjune.Graphic.GraphicApi.OpenGL;
 
 public sealed partial class OpenGlApi
 {
-    public void DumpTextures(ExternalPath path) => _textureArray.Dump(path);
+
+    public static Error? GetGlError()
+    {
+        var errorCode = GL.GetError();
+        if (errorCode == ErrorCode.NoError) return null;
+        return $"GL error: {Enum.GetName(errorCode)}";
+    }
+
+    public static void CheckGlError()
+    {
+        var error = GetGlError();
+        if (error != null) throw new Exception(error);
+    }
+    
+    public void DumpTextures(ExternalPath path)
+    {
+        _textureArray.Dump(path, "main")?.Log(this);
+        _mainFbo.Texture.Dump(path, "screen")?.Log(this);
+    }
 
     public void Title(string title)
     {
@@ -17,7 +37,8 @@ public sealed partial class OpenGlApi
         }
     }
 
-    public void ViewPort(int x, int y, int width, int height) => GL.Viewport(x, y, width, height);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void ViewPort(int width, int height) => GL.Viewport(0, 0, width, height);
     
     public void SetClearColor(Color color) => GL.ClearColor(color.X, color.Y, color.Z, color.W);
 
@@ -99,13 +120,4 @@ public sealed partial class OpenGlApi
     }
 
     public void UpdateEvents() => GLFW.PollEvents();
-    
-    public void UpdateScreen() { unsafe { GLFW.SwapBuffers(_window); } }
-    
-    public void ClearScreenBuffers(bool color, bool depth)
-    {
-        GL.Clear(
-            (color ? ClearBufferMask.ColorBufferBit : 0) 
-            | (depth ? ClearBufferMask.DepthBufferBit : 0));
-    }
 }

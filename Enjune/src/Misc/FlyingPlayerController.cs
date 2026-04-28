@@ -41,7 +41,7 @@ public class FlyingPlayerController
         }
     }
 
-    public void Update(float deltaTime)
+    public void Update(Seconds deltaTime)
     {
         if (_graphicApi.GetCursorMode() == IGraphicApi.CursorMode.Centered)
         {
