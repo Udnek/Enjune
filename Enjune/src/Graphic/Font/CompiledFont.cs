@@ -28,7 +28,7 @@ public class CompiledFont
         {
             var ch = text[i];
             var glyph = _glyphs.GetValueOrDefault(ch, _fallbackGlyph);
-            var mesh = Mesh<TextureCoord>.Quad(
+            var mesh = Mesh.Quad(
                 (0f,0f, 0f),
                 (glyph.Width*sizeMul, 0, 0f),
                 (glyph.Width*sizeMul, glyph.Height*sizeMul, 0f),

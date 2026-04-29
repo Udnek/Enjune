@@ -1,5 +1,3 @@
-using OpenTK.Graphics.OpenGL4;
-
 namespace Enjune.Graphic;
 
 public readonly record struct TextureQuad(

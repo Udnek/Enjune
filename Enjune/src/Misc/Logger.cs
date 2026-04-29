@@ -10,14 +10,13 @@ public static class Logger
     private static void Write(object author, object? msg, string type, ConsoleColor? color = null)
     {
         string time = DateTime.Now.ToString("HH:mm:ss.fff");
-        string authorName;
-        if (author is Type authorType)
-            authorName = authorType.Name;
-        else if (author is string authorString)
-            authorName = authorString;
-        else
-            authorName = author.GetType().Name;
-        
+        string authorName = author switch
+        {
+            Type authorType => authorType.Name,
+            string authorString => authorString,
+            _ => author.GetType().Name
+        };
+
         var initialFrontColor = Console.ForegroundColor;
         if (color != null)
             Console.ForegroundColor = (ConsoleColor) color;

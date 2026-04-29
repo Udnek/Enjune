@@ -202,7 +202,7 @@ public class DotObjModelReader : AbstractReader
         else
             material = AssetManager.MissingMaterial;
 
-        _builder.Add(Mesh<TextureCoord>.NgonWithNormals(verPoses, texPoses), material);
+        _builder.Add(Mesh.NgonWithNormals(verPoses, texPoses), material);
         return null;
     }
 }

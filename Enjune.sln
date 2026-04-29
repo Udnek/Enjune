@@ -6,6 +6,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SceneMaker", "SceneMaker\Sc
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{45393459-3B37-443C-8B2E-935E5A254E5C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenGLApi", "OpenGLApi\OpenGLApi.csproj", "{750B02ED-2264-49D2-8EE8-3F647FCF74FB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +26,9 @@ Global
 		{45393459-3B37-443C-8B2E-935E5A254E5C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{45393459-3B37-443C-8B2E-935E5A254E5C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{45393459-3B37-443C-8B2E-935E5A254E5C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{750B02ED-2264-49D2-8EE8-3F647FCF74FB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{750B02ED-2264-49D2-8EE8-3F647FCF74FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{750B02ED-2264-49D2-8EE8-3F647FCF74FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{750B02ED-2264-49D2-8EE8-3F647FCF74FB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

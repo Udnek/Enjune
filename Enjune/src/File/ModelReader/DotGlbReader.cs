@@ -4,6 +4,7 @@ using Enjune.Misc;
 using SharpGLTF.Schema2;
 using SixLabors.ImageSharp;
 using Image = SixLabors.ImageSharp.Image;
+using Mesh = Enjune.Graphic.Mesh;
 
 
 namespace Enjune.File.ModelReader;
@@ -38,7 +39,7 @@ public class DotGlbReader : AbstractReader
 
                 var material = primitive.Material;
                 var compiledMat = GetMaterial(material);
-                builder.Add(Mesh<(TextureCoord, Vector3)>.CreateWithNormals(poses, texPoses, indices), compiledMat);
+                builder.Add(Mesh.CreateWithNormals(poses, texPoses, indices), compiledMat);
             }
         }
 

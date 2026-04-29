@@ -1,6 +1,3 @@
-using Enjune.Graphic.GraphicApi.Vertex.Colored;
-using Enjune.Graphic.GraphicApi.Vertex.Material;
-
 namespace Enjune.Graphic.GraphicApi;
 
 public interface IShader
@@ -16,14 +13,8 @@ public interface IShader
         {
             void Lights(IEnumerable<PointLight> lights);
             void ViewPosition(Position position);
-            void Render(MaterialVertexBuffer buffer);
         }
     
-        public interface IColor: I3D
-        {
-            void Render(ColoredVertexBuffer buffer, IGraphicApi.Primitive primitive = IGraphicApi.Primitive.Triangle);
-        }
+        public interface IColor: I3D;
     }
-    
-
 }

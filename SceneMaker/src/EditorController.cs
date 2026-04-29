@@ -5,8 +5,6 @@ using Enjune.Graphic.Input;
 using Enjune.Misc;
 using Enjune.World;
 using OpenTK.Mathematics;
-using OpenTK.Windowing.GraphicsLibraryFramework;
-
 namespace SceneMaker;
 
 public class EditorController
@@ -26,22 +24,24 @@ public class EditorController
         _graphicApi = graphicApi;
         _inputHandler = inputHandler;
         _scene = scene;
-        _selectBind = new KeyBinds.Bind("select", UniKey.Of(MouseButton.Left));
+        _selectBind = new KeyBinds.Bind("select", KeyCode.LeftMouseButton);
         _inputHandler.Binds.AddBind(_selectBind);
 
         var x = new Mesh<Color>([Vector3.Zero, Vector3.UnitX], [Color.One, Color.One], [0, 1]);
         var y = new Mesh<Color>([Vector3.Zero, Vector3.UnitY], [Color.One, Color.One], [0, 1]);
         var z = new Mesh<Color>([Vector3.Zero, Vector3.UnitZ], [Color.One, Color.One], [0, 1]);
+        var model = new Model<Color, Color>.Builder()
+            .Add(x, new Color(1f, 0f, 0f, 1f))
+            .Add(y, new Color(0f, 1f, 0f, 1f))
+            .Add(z, new Color(0f, 0f, 1f, 1f))
+            .Build(false);
         AxisObject = new SObject
         {
-            ColorModel = new Model<Color, Color>.Builder()
-                .Add(x, new Color(1f, 0f, 0f, 1f))
-                .Add(y, new Color(0f, 1f, 0f, 1f))
-                .Add(z, new Color(0f, 0f, 1f, 1f))
-                .Build(false),
-            Scale = new Vector3(2f),
+            ColorModel = model,
+            RColorModel = _graphicApi.CompileModel(model),
             Hidden = true
         };
+        AxisObject.Scale = new Vector3(2.5f);
         _meshToAx[x] = Ax.X;
         _meshToAx[y] = Ax.Y;
         _meshToAx[z] = Ax.Z;
@@ -157,7 +157,7 @@ public class EditorController
         if (obj.ColorModel == null) return null;
         GetCursorVectors(viewMat, projMat, out var direction, out var cameraPos);
         
-        var modelMatInv = obj.ModelMatrix.Inverted();
+        var modelMatInv = obj.ModelTransform.Inverted();
         
         direction = modelMatInv.TransformDirection(direction).Normalized();
         cameraPos = modelMatInv.TransformPosition(cameraPos);
@@ -209,7 +209,7 @@ public class EditorController
             distance = 0;
             return false;
         }
-        var modelMatInv = obj.ModelMatrix.Inverted();
+        var modelMatInv = obj.ModelTransform.Inverted();
         
         var localDirection = modelMatInv.TransformDirection(direction).Normalized();
         var localCameraPos = modelMatInv.TransformPosition(cameraPos);

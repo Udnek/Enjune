@@ -10,7 +10,7 @@ public sealed class Mesh<TPerVertex>
 
     public Mesh(Position[] vertices, TPerVertex[] perVertexData, int[] indexes)
     {
-        if (!IsValid(vertices, perVertexData, indexes, out var error)) 
+        if (!Mesh.IsValid(vertices, perVertexData, indexes, out var error)) 
             Logger.Error(this, "constructing invalid mesh: " + error);
         
         Vertices = vertices;
@@ -23,7 +23,10 @@ public sealed class Mesh<TPerVertex>
         for (var i = 0; i < Vertices.Length; i++) 
             Vertices[i] += offset;
     }
+}
 
+public static class Mesh
+{
     public static Mesh<(TextureCoord texCoord, Normal normal)> CreateWithNormals(
         Position[] vertices, TextureCoord[] texCoords, int[] indexes)
     {
@@ -37,7 +40,7 @@ public sealed class Mesh<TPerVertex>
         Position t1, Position t2, Position t3, Position t4,
         TextureQuad texture)
     {
-        return Mesh<(TextureCoord texCoord, Normal normal)>.Merge(
+        return Merge(
             Quad(b1, b2, b3, b4, texture), // bot
             Quad(t4, t3, t2, t1, texture), // top
             Quad(t1, t2, b2, b1, texture), // front
@@ -80,7 +83,40 @@ public sealed class Mesh<TPerVertex>
     }
     
     
-    public static Mesh<(TPerVertex, Normal)> NgonWithNormals(Position[] poses, TPerVertex[] perVertexData)
+    public static Mesh<TPerVertex> Ngon<TPerVertex>(Position[] poses, TPerVertex[] perVertexData)
+    {
+        if (perVertexData.Length != poses.Length)
+            throw new ArgumentException($"positions and perVertexData must have the same length: {poses.Length} != {perVertexData.Length}");
+        List<int> indexes = new (poses.Length*3);
+        for (int i = 1; i < poses.Length-1; i++)
+        {
+            // fan-like
+            indexes.Add(0);
+            indexes.Add(i);
+            indexes.Add(i + 1);
+        }
+        return new Mesh<TPerVertex>(poses, perVertexData, indexes.ToArray());
+    }
+    
+    
+    public static Mesh<TPerVertex> Merge<TPerVertex>(params Mesh<TPerVertex>[] meshes) => Merge((IEnumerable<Mesh<TPerVertex>>) meshes);
+    
+    public static Mesh<TPerVertex> Merge<TPerVertex>(IEnumerable<Mesh<TPerVertex>> meshes)
+    {
+        int offset = 0;
+        var indexes = new List<int>();
+        foreach (var mesh in meshes)
+        {
+            foreach (var index in mesh.Indexes) 
+                indexes.Add(offset + index);
+            offset += mesh.Vertices.Length;
+        }
+        var perVertexData = meshes.SelectMany(mesh => mesh.PerVertexData).ToArray();
+        var vertices = meshes.SelectMany(mesh => mesh.Vertices).ToArray();
+        return new Mesh<TPerVertex>(vertices, perVertexData, indexes.ToArray());
+    }
+    
+    public static Mesh<(TPerVertex, Normal)> NgonWithNormals<TPerVertex>(Position[] poses, TPerVertex[] perVertexData)
     {
         if (perVertexData.Length != poses.Length)
             throw new ArgumentException($"positions and perVertexData must have the same length: {poses.Length} != {perVertexData.Length}");
@@ -97,21 +133,7 @@ public sealed class Mesh<TPerVertex>
         var normals = GenerateSmoothNormals(poses, arrayIndexes);
         return new Mesh<(TPerVertex, Vector3)>(poses, perVertexData.JoinToTuple(normals), arrayIndexes);
     }
-    public static Mesh<TPerVertex> Ngon(Position[] poses, TPerVertex[] perVertexData)
-    {
-        if (perVertexData.Length != poses.Length)
-            throw new ArgumentException($"positions and perVertexData must have the same length: {poses.Length} != {perVertexData.Length}");
-        List<int> indexes = new (poses.Length*3);
-        for (int i = 1; i < poses.Length-1; i++)
-        {
-            // fan-like
-            indexes.Add(0);
-            indexes.Add(i);
-            indexes.Add(i + 1);
-        }
-        return new Mesh<TPerVertex>(poses, perVertexData, indexes.ToArray());
-    }
-
+    
     public static Vector3[] GenerateSmoothNormals(Position[] vertices, int[] indexes)
     {
         if (vertices.Length <= 2)
@@ -145,24 +167,7 @@ public sealed class Mesh<TPerVertex>
         return normals;
     }
     
-    public static Mesh<TPerVertex> Merge(params Mesh<TPerVertex>[] meshes) => Merge((IEnumerable<Mesh<TPerVertex>>) meshes);
-    
-    public static Mesh<TPerVertex> Merge(IEnumerable<Mesh<TPerVertex>> meshes)
-    {
-        int offset = 0;
-        var indexes = new List<int>();
-        foreach (var mesh in meshes)
-        {
-            foreach (var index in mesh.Indexes) 
-                indexes.Add(offset + index);
-            offset += mesh.Vertices.Length;
-        }
-        var perVertexData = meshes.SelectMany(mesh => mesh.PerVertexData).ToArray();
-        var vertices = meshes.SelectMany(mesh => mesh.Vertices).ToArray();
-        return new Mesh<TPerVertex>(vertices, perVertexData, indexes.ToArray());
-    }
-
-    public static bool IsValid(Position[] vertices, TPerVertex[] perVertexData, int[] indexes, out Error? error)
+    public static bool IsValid<TPerVertex>(Position[] vertices, TPerVertex[] perVertexData, int[] indexes, out Error? error)
     {
         if (vertices.Length <= 1)
         {
