@@ -5,19 +5,32 @@ using OpenTK.Mathematics;
 
 namespace Enjune.World;
 
-public class SObject(Model<(TextureCoord texCoord, Normal normal), CompiledMaterial>? matModel = null, bool isText = false)
+public class SObject
 {
-    public Model<(TextureCoord texCoord, Normal normal), CompiledMaterial>? MatModel = matModel;
-    public Model<Color, Color>? ColorModel = null;
-    public Position Position = (0, 0, 0);
-    public Quaternion Rotation = Quaternion.Identity;
-    public Vector3 Scale = Vector3.One;
+    public IRenderableModel<IShader.I3D.IMaterial>? RMatModel = null;
+    public IRenderableModel<IShader.I3D.IColor>? RColorModel = null;
+    
+    public MaterialModel? MatModel = null;
+    public ColorModel? ColorModel = null;
+    
     public PointLight? PointLight;
 
-    public Matrix4 ModelMatrix =>
-        Matrix4.CreateScale(Scale) * Matrix4.CreateFromQuaternion(Rotation) * Matrix4.CreateTranslation(Position); // todo wtf why this order works?
-    
-    public bool IsText = isText;
+
+    public Quaternion Rotation { get; set; } = Quaternion.Identity;
+    public Vector3 Scale { get; set; } = Vector3.One;
+    public Position Position
+    {
+        get;
+        set
+        {
+            field = value;
+            PointLight?.Position = value;
+        }
+    }
+
+    // todo optimize by calculating on when changed
+    public Matrix4 ModelTransform 
+        => Matrix4.CreateScale(Scale) * Matrix4.CreateFromQuaternion(Rotation) * Matrix4.CreateTranslation(Position); // todo wtf why this order works?
 
     public bool Hidden = false;
 }

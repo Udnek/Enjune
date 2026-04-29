@@ -3,6 +3,7 @@ using Enjune.Graphic.Asset;
 using Enjune.Misc;
 using Sledge.Formats.Map.Formats;
 using Sledge.Formats.Map.Objects;
+using Mesh = Enjune.Graphic.Mesh;
 
 namespace Enjune.File.ModelReader;
 
@@ -10,7 +11,7 @@ public class DotMapReader : AbstractReader
 {
     public DotMapReader(AssetManager assetManager, ResourcePath path) : base(assetManager, path){}
     
-    public override Model<(TextureCoord texCoord, Normal normal), CompiledMaterial>? Read(out Error? error)
+    public override MaterialModel? Read(out Error? error)
     {
         var mapFormat = new QuakeMapFormat();
         MapFile? mapFile = null;
@@ -23,9 +24,9 @@ public class DotMapReader : AbstractReader
         return ProceedMap(mapFile);
     }
 
-    private Model<(TextureCoord, Vector3), CompiledMaterial>? ProceedMap(MapFile map)
+    private MaterialModel ProceedMap(MapFile map)
     {
-        var builder = new Model<(TextureCoord, Vector3), CompiledMaterial>.Builder();
+        var builder = new MaterialModel.Builder();
         List<Mesh<Color>> meshes = [];
         var solids = map.Worldspawn.Find(mo => mo is Solid).Cast<Solid>();
         
@@ -46,7 +47,7 @@ public class DotMapReader : AbstractReader
                     texCoords[i] = (u, v);
                 }
                 var material = AssetManager.AddMaterialAndGetCompiled(RawMaterial.FromTexture(Path.ResolveRaw(face.TextureName)));
-                builder.Add(Mesh<TextureCoord>.NgonWithNormals(positions, texCoords), material);
+                builder.Add(Mesh.NgonWithNormals(positions, texCoords), material);
             }
         }
 

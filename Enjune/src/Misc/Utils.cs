@@ -3,6 +3,7 @@ using System.Diagnostics.Contracts;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text;
 using OpenTK.Mathematics;
 
 namespace Enjune.Misc;
@@ -38,17 +39,30 @@ public static class Utils
         }
     }
 
+    private static int _disposeDepth = 0;
     public static void DisposeAllFields(object obj)
     {
+        var tab = new string(' ', _disposeDepth*2);
+        _disposeDepth++;
+        
         var objType = obj.GetType();
         var fields = objType.GetFields(BindingFlags.Public | BindingFlags.NonPublic| BindingFlags.Instance);
+        bool disposedAtLestOne = false;
+        Logger.Log(typeof(Utils), $"{tab}- stared disposing {objType.Name}:");
+
         foreach (var field in fields)
         {
             var value = field.GetValue(obj);
             if (value is not IDisposable disposable) continue;
             disposable.Dispose();
-            Logger.Log(typeof(Utils),$"{objType.Name}.{field.Name} disposed");
+            disposedAtLestOne = true;
+            Logger.Log(typeof(Utils),$"{tab}{objType.Name}.{field.Name} disposed");
         }
+        if (!disposedAtLestOne)
+            Logger.Warn(typeof(Utils), $"{tab}Nothing disposed in {objType.Name}. Something might be wrong");
+        Logger.Log(typeof(Utils), $"{tab}- finished disposing {objType.Name}");
+        
+        _disposeDepth--;
     }
     
 }

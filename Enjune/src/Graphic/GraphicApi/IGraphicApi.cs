@@ -1,8 +1,5 @@
 using Enjune.File;
 using Enjune.Graphic.Asset;
-using Enjune.Graphic.GraphicApi.OpenGL;
-using Enjune.Graphic.GraphicApi.Vertex.Colored;
-using Enjune.Graphic.GraphicApi.Vertex.Material;
 using Enjune.Misc;
 using OpenTK.Mathematics;
 
@@ -15,11 +12,15 @@ public interface IGraphicApi : IDisposable
     Error? Init(CompiledAssets assets, int width, int height, string title, int verticesCapacity,
         IUserInputHandler userInputHandler, WindowSizeChangeHandler windowSizeHandler);
     
-    void Title(string title);
+    // preparation
+    public IRenderableModel<IShader.I3D.IMaterial> CompileModel(MaterialModel model);
+    public IRenderableModel<IShader.I3D.IColor> CompileModel(ColorModel model);
+    // preparation end
     
     // general pipeliner
     bool ShouldStop(); // should stop application
     void ClearScreenBuffers(bool color = true, bool depth = true);
+    void UseShader<T>(Consumer<T> consumer) where T : IShader;
     void UpdateScreen();
     void UpdateEvents(); // such as keyboard, mouse, etc
     // general pipeline end
@@ -33,9 +34,8 @@ public interface IGraphicApi : IDisposable
     CursorMode GetCursorMode();
     Vector2i GetWindowSize();
     void SetWindowSize(Vector2i wh);
-    
-    // shader
-    void UseShader<T>(Consumer<T> consumer) where T : IShader;
+    void Title(string title);
+    // misc end
 
     enum Primitive
     {

@@ -14,5 +14,5 @@ public abstract class AbstractReader
         Path = path;
     }
 
-    public abstract Model<(TextureCoord texCoord, Normal normal), CompiledMaterial>? Read(out Error? error);
+    public abstract MaterialModel? Read(out Error? error);
 }

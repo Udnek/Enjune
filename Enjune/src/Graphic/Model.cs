@@ -4,12 +4,11 @@ using Enjune.Misc;
 
 namespace Enjune.Graphic;
 
-
 public sealed class Model<TPerVert, TPerMesh>
 {
     public readonly (Mesh<TPerVert> Mesh, TPerMesh PerMesh)[] Meshes;
 
-    private Model(ValueTuple<Mesh<TPerVert>, TPerMesh>[] meshes)
+    protected Model(ValueTuple<Mesh<TPerVert>, TPerMesh>[] meshes)
     {
         if (meshes.Length == 0)
             Logger.Warn(this,"constructing empty model");
@@ -17,7 +16,7 @@ public sealed class Model<TPerVert, TPerMesh>
     }
 
     public static Model<TPerVert, TPerMesh> CreateFromOneMaterial(Mesh<TPerVert>[] meshes, TPerMesh perMeshData)
-        => CreateNotOptimized([(Mesh<TPerVert>.Merge(meshes), perMeshData)]);
+        => CreateNotOptimized([(Mesh.Merge(meshes), perMeshData)]);
     
     public static Model<TPerVert, TPerMesh> CreateAndOptimize(ValueTuple<Mesh<TPerVert>, TPerMesh>[] meshes)
     {
@@ -25,7 +24,7 @@ public sealed class Model<TPerVert, TPerMesh>
         foreach (var groupedByMat in meshes.GroupBy(e => e.Item2))
         {
             var mat = groupedByMat.Key;
-            var mergedMesh = Mesh<TPerVert>.Merge(groupedByMat.Select(e => e.Item1));
+            var mergedMesh = Mesh.Merge(groupedByMat.Select(e => e.Item1));
             newMeshes.Add((mergedMesh, mat));
         }
         return CreateNotOptimized(newMeshes.ToArray());

@@ -15,6 +15,8 @@ public static class Enjune
             Logger.Error(typeof(Enjune), error);
         }
         app.Dispose();
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
     }
 
     private static Error? RunUntilError(IApp app)

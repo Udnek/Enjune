@@ -1,6 +1,5 @@
 using Enjune.Graphic.GraphicApi;
 using OpenTK.Mathematics;
-using OpenTK.Windowing.GraphicsLibraryFramework;
 
 namespace Enjune.Graphic.Input;
 
@@ -23,16 +22,12 @@ public class BasicInputHandler : IUserInputHandler
         Binds = binds;
     }
 
-    public void HandleKey(GlfwKey key, IGraphicApi.KeyAction action) => Handle(UniKey.Of(key), action);
-    
-    public void HandleMouseKey(MouseButton key, IGraphicApi.KeyAction action) => Handle(UniKey.Of(key), action);
-
-    private void Handle(UniKey uniKey, IGraphicApi.KeyAction action)
+    public void HandleKey(KeyCode keyCode, IGraphicApi.KeyAction action)
     {
-        if (!Binds.TryGet(uniKey, out var bind))
+        if (!Binds.TryGet(keyCode, out var bind))
             return;
         
-        if (bind.ContinuousPress)
+        if (bind!.ContinuousPress)
         {
             if (action == IGraphicApi.KeyAction.Press) 
                 _pressed.Add(bind);
