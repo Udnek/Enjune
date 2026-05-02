@@ -5,6 +5,9 @@ using Path = System.IO.Path;
 
 namespace Tests;
 
+/// <summary>
+/// human slop
+/// </summary>
 public class FileTests
 {
     

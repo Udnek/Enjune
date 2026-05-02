@@ -3,7 +3,7 @@ using OpenGLApi.Component.Buffer;
 using OpenGLApi.Component.Texture;
 using OpenTK.Mathematics;
 
-namespace OpenGLApi.Component;
+namespace OpenGLApi.Pack;
 
 public sealed class ScreenPack : GlDisposable
 {
@@ -13,7 +13,7 @@ public sealed class ScreenPack : GlDisposable
 
     public ScreenPack(Vector2i initialSize, TextureUnit textureUnit)
     {
-        Fbo = new Fbo();
+        Fbo = new Fbo(initialSize);
         Rbo = new Rbo(initialSize);
         Texture = new EmptyTexture(textureUnit, initialSize);
         
@@ -27,6 +27,7 @@ public sealed class ScreenPack : GlDisposable
 
     public void Resize(Vector2i size)
     {
+        Fbo.Resize(size);
         Texture.Resize(size);
         Rbo.Resize(size);
         

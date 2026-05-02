@@ -2,16 +2,16 @@ using Enjune.Misc;
 using OpenGLApi.Component.Buffer;
 using OpenGLApi.Component.Texture;
 
-namespace OpenGLApi.Component;
+namespace OpenGLApi.Pack;
 
-public class ShadowMapPack : GlDisposable
+public sealed class ShadowMapPack : GlDisposable
 {
     public readonly Fbo Fbo;
     public readonly TextureArray Maps;
     
     public ShadowMapPack(int shadowResolution, TextureUnit textureUnit, int maxLights)
     {
-        Fbo = new Fbo();
+        Fbo = new Fbo((shadowResolution, shadowResolution));
         Maps = TextureArray.Empty(textureUnit, (shadowResolution, shadowResolution), maxLights,
             SizedInternalFormat.DepthComponent32f, PixelFormat.DepthComponent);
         Fbo.SetEmptyColorBuffer();

@@ -2,19 +2,25 @@ namespace Enjune.Graphic.GraphicApi;
 
 public interface IShader
 {
-    public interface I3D : IShader
+    
+    public interface IShadowMap : IShader
+    {
+        void ForEachLight(Action action);
+        void ModelTransform(Matrix4 model);
+    }
+    
+    public interface ICamera : IShader
     {
         void ModelTransform(Matrix4 model);
         void ViewTransform(Matrix4 view);
         void ProjectionTransform(Matrix4 proj);
         void GlobalColor(Color color);
         
-        public interface IMaterial : I3D
+        public interface IMaterial : ICamera
         {
-            void Lights(IEnumerable<PointLight> lights);
             void ViewPosition(Position position);
         }
     
-        public interface IColor: I3D;
+        public interface IColor: ICamera;
     }
 }

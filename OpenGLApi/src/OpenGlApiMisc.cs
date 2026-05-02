@@ -77,6 +77,7 @@ public sealed partial class OpenGlApi
     {
         _textureArray.Dump(path, "main")?.Log(this);
         _screenPack.Texture.Dump(path, "screen")?.Log(this);
+        _shadowMapPack.Maps.Dump(path, "shadow_map")?.Log(this);
     }
 
     public void Title(string title)
@@ -86,9 +87,6 @@ public sealed partial class OpenGlApi
             GLFW.SetWindowTitle(_window, title);
         }
     }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void ViewPort(int width, int height) => GL.Viewport(0, 0, width, height);
     
     public void SetClearColor(Color color) => GL.ClearColor(color.X, color.Y, color.Z, color.W);
 
@@ -109,6 +107,19 @@ public sealed partial class OpenGlApi
                 Logger.Error(this, $"unknown graphic mode: {mode}");
                 break;
         }
+    }
+
+    public static PrimitiveType ToGl(IGraphicApi.Primitive type)
+    {
+        return type switch
+        {
+            IGraphicApi.Primitive.Triangle => PrimitiveType.Triangles,
+            IGraphicApi.Primitive.LineStrip => PrimitiveType.LineStrip,
+            IGraphicApi.Primitive.LineLoop => PrimitiveType.LineLoop,
+            IGraphicApi.Primitive.Line => PrimitiveType.Lines,
+            IGraphicApi.Primitive.Point => PrimitiveType.Points,
+            _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
+        };
     }
 
     public void SetVsync(bool vsync) => GLFW.SwapInterval(vsync ? 1 : 0);
@@ -144,11 +155,11 @@ public sealed partial class OpenGlApi
         }
     }
 
-    public void SetWindowSize(Vector2i wh)
+    public void SetWindowSize(Vector2i size)
     {
         unsafe
         {
-            GLFW.SetWindowSize(_window, wh.X, wh.Y);
+            GLFW.SetWindowSize(_window, size.X, size.Y);
         }
     }
 

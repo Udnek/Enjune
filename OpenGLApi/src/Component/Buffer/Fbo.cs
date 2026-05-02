@@ -1,13 +1,18 @@
 using Enjune.Misc;
+using OpenTK.Mathematics;
+using OpenTK.Windowing.GraphicsLibraryFramework;
 
 namespace OpenGLApi.Component.Buffer;
 
 public sealed class Fbo : GlDisposable
 {
+    public static Vector2i DefaultSize = new(1, 1);
+    private Vector2i _size;
     private readonly int _handle;
     
-    public Fbo()
+    public Fbo(Vector2i size)
     {
+        _size = size;
         _handle = GL.GenFramebuffer();
     }
     
@@ -24,11 +29,20 @@ public sealed class Fbo : GlDisposable
         GL.DrawBuffer(DrawBufferMode.None);
         GL.ReadBuffer(ReadBufferMode.None);
     }
+
+    public void Resize(Vector2i size) => _size = size;
     
-    public void Bind() => GL.BindFramebuffer(FramebufferTarget.Framebuffer, _handle);
-    public void Unbind() => BindDefault();
-    
-    public static void BindDefault() => GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-    
+    public void Bind()
+    {
+        GL.Viewport(0, 0, _size.X, _size.Y);
+        GL.BindFramebuffer(FramebufferTarget.Framebuffer, _handle);
+    }
+
+    public static void BindDefault()
+    {
+        GL.Viewport(0, 0, DefaultSize.X, DefaultSize.Y);
+        GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+    }
+
     protected override void DisposeGlData() => GL.DeleteFramebuffer(_handle);
 }

@@ -1,16 +1,18 @@
 using Enjune.Graphic.GraphicApi;
 using OpenGLApi.Component;
+using OpenGLApi.Component.Buffer;
 using OpenGLApi.Component.Uniform;
 
 namespace OpenGLApi.Shader;
 
-public abstract class Shader3D : AbstractShader, IShader.I3D
+public abstract class CameraShader(Fbo fbo) : AbstractShader, IShader.ICamera
 {
     private Matrix4Uniform _model = null!;
     private Matrix4Uniform _view = null!;
     private Matrix4Uniform _projection = null!;
     private Vector4Uniform _globalColor = null!;
-    
+    private readonly Fbo _fbo = fbo;
+
     protected override void InitUniforms()
     {
         _model = new Matrix4Uniform("uModel", Matrix4.Identity, this);
@@ -25,17 +27,6 @@ public abstract class Shader3D : AbstractShader, IShader.I3D
     public void ProjectionTransform(Matrix4 proj) => _projection.SetValue(proj);
     public void ViewTransform(Matrix4 view) => _view.SetValue(view);
     public void GlobalColor(Color color) => _globalColor.SetValue(color);
-    
-    protected static PrimitiveType PrimitiveFromApi(IGraphicApi.Primitive primitive)
-    {
-        return primitive switch
-        {
-            IGraphicApi.Primitive.Triangle => PrimitiveType.Triangles,
-            IGraphicApi.Primitive.LineStrip => PrimitiveType.LineStrip,
-            IGraphicApi.Primitive.LineLoop => PrimitiveType.LineLoop,
-            IGraphicApi.Primitive.Line => PrimitiveType.Lines,
-            IGraphicApi.Primitive.Point => PrimitiveType.Points,
-            _ => throw new ArgumentOutOfRangeException(nameof(primitive), primitive, null)
-        };
-    }
+
+    public override void AfterBind() => _fbo.Bind();
 }

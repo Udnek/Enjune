@@ -4,13 +4,13 @@ using OpenGLApi.Component.Buffer;
 using OpenGLApi.Data;
 using OpenGLApi.Shader;
 
-namespace OpenGLApi;
+namespace OpenGLApi.Model;
 
-public class GlMaterialModel : GlDisposable, IRenderableModel<IShader.I3D.IMaterial>
+public class GlMaterialModel : GlDisposable, IRenderableModel.IMaterial
 {
     private readonly Vao _vao;
     private readonly Vbo<MaterialVertexData> _vbo;
-    private readonly Ssbo<MatId> _ssbo;
+    private readonly SsboArray<MatId> _ssbo;
     private readonly Ebo _ebo;
     
     public GlMaterialModel(MaterialShader shader, int ssboMatIdBinding, MaterialModel model)
@@ -36,7 +36,7 @@ public class GlMaterialModel : GlDisposable, IRenderableModel<IShader.I3D.IMater
         _vao = new Vao();
         _vbo = new Vbo<MaterialVertexData>(vboBuf.Count, vboBuf.ToArray());
         _ebo = new Ebo(eboBuf.Count, eboBuf.ToArray());
-        _ssbo = new Ssbo<MatId>(ssboMatIdBinding, ssboBuf.Count, ssboBuf.ToArray());
+        _ssbo = new SsboArray<MatId>(ssboMatIdBinding, ssboBuf.Count, ssboBuf.ToArray());
         
         new VaoAttributes(_vao, _vbo)
             .Add<float>(VertexAttribPointerType.Float, "aPos", 3)
@@ -44,8 +44,8 @@ public class GlMaterialModel : GlDisposable, IRenderableModel<IShader.I3D.IMater
             .Add<float>(VertexAttribPointerType.Float, "aNorm", 3)
             .Compile(shader);
     }
-    
-    public void Render(IShader.I3D.IMaterial shader)
+
+    private void Render()
     {
         _vao.Bind();
         _vbo.Bind();
@@ -53,6 +53,10 @@ public class GlMaterialModel : GlDisposable, IRenderableModel<IShader.I3D.IMater
         _ssbo.Bind();
         GL.DrawElements(BeginMode.Triangles, _ebo.Capacity, DrawElementsType.UnsignedInt, 0);
     }
+
+    public void Render(IShader.ICamera.IMaterial shader) => Render();
+
+    public void Render(IShader.IShadowMap shader) => Render();
 
     protected override void DisposeGlData()
     {

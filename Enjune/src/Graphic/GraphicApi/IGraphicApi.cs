@@ -13,13 +13,16 @@ public interface IGraphicApi : IDisposable
         IUserInputHandler userInputHandler, WindowSizeChangeHandler windowSizeHandler);
     
     // preparation
-    public IRenderableModel<IShader.I3D.IMaterial> CompileModel(MaterialModel model);
-    public IRenderableModel<IShader.I3D.IColor> CompileModel(ColorModel model);
+    public IRenderableModel.IMaterial CompileModel(MaterialModel model);
+    public IRenderableModel.IColor CompileModel(ColorModel model);
     // preparation end
+    
+    
+    void SetLights(IEnumerable<SpotLight> lights);
     
     // general pipeliner
     bool ShouldStop(); // should stop application
-    void ClearScreenBuffers(bool color = true, bool depth = true);
+    void ClearRenderBuffer(bool color = true, bool depth = true);
     void UseShader<T>(Consumer<T> consumer) where T : IShader;
     void UpdateScreen();
     void UpdateEvents(); // such as keyboard, mouse, etc
@@ -33,7 +36,7 @@ public interface IGraphicApi : IDisposable
     void SetVsync(bool vsync);
     CursorMode GetCursorMode();
     Vector2i GetWindowSize();
-    void SetWindowSize(Vector2i wh);
+    void SetWindowSize(Vector2i size);
     void Title(string title);
     // misc end
 

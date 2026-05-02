@@ -1,10 +1,4 @@
-﻿using Enjune.File;
-using Enjune.File.ModelReader;
-using Enjune.Graphic.Asset;
-using Enjune.Graphic.Font;
-using Enjune.Misc;
-
-namespace SceneMaker;
+﻿namespace SceneMaker;
 
 class Program
 {

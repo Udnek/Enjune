@@ -3,6 +3,9 @@ using FluentAssertions;
 
 namespace Tests;
 
+/// <summary>
+/// DeepSeek slop
+/// </summary>
 public class MathUtilsTests
 {
     private const float Epsilon = MathUtils.Epsilon;

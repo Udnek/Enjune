@@ -4,9 +4,9 @@ using OpenGLApi.Component.Buffer;
 using OpenGLApi.Data;
 using OpenGLApi.Shader;
 
-namespace OpenGLApi;
+namespace OpenGLApi.Model;
 
-public class GlColorModel : GlDisposable, IRenderableModel<IShader.I3D.IColor>
+public class GlColorModel : GlDisposable, IRenderableModel.IColor
 {
     private readonly Vao _vao;
     private readonly Vbo<ColoredVertexData> _vbo;
@@ -38,12 +38,12 @@ public class GlColorModel : GlDisposable, IRenderableModel<IShader.I3D.IColor>
             .Compile(shader);
     }
     
-    public void Render(IShader.I3D.IColor shader)
+    public void Render(IShader.ICamera.IColor shader, IGraphicApi.Primitive primitive)
     {
         _vao.Bind();
         _vbo.Bind();
         _ebo.Bind();
-        GL.DrawElements(BeginMode.Lines, _ebo.Capacity, DrawElementsType.UnsignedInt, 0);
+        GL.DrawElements(OpenGlApi.ToGl(primitive), _ebo.Capacity, DrawElementsType.UnsignedInt, 0);
     }
 
     protected override void DisposeGlData()

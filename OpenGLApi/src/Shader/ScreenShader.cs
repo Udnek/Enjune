@@ -6,6 +6,7 @@ namespace OpenGLApi.Shader;
 
 public sealed class ScreenShader : AbstractShader
 {
+    private readonly Fbo _fbo;
     private readonly Vao _vao;
     private readonly Vbo<(Vector2 position, TextureCoord texCoord)> _vbo;
     private TextureUniform _texture = null!;
@@ -21,6 +22,18 @@ public sealed class ScreenShader : AbstractShader
     protected override void InitUniforms()
     {
         _texture = new TextureUniform("uScreenTexture", _textureUnitId, this);
+    }
+
+    public override void AfterBind()
+    {
+        Fbo.BindDefault();
+        GL.Disable(EnableCap.DepthTest);
+    }
+
+    public override void BeforeUnbind()
+    {
+        base.BeforeUnbind();
+        GL.Enable(EnableCap.DepthTest);
     }
 
     public void Render()

@@ -7,6 +7,12 @@ public abstract class AbstractTexture : GlDisposable
     protected int Handle;
     protected readonly TextureTarget Target;
     protected readonly TextureUnit Unit;
+
+    // public static int? PixelFormatToDepth(PixelFormat pixelFormat)
+    // {
+    //     return pixelFormat switch {}
+    // }
+    
     
     public AbstractTexture(TextureTarget target, TextureUnit unit)
     {
@@ -15,7 +21,7 @@ public abstract class AbstractTexture : GlDisposable
         Handle = GL.GenTexture();
         BindTo(Unit);
     }
-
+    
     public abstract Error? Dump(ExternalPath dir, string namePrefix);
     
     public int GetUnitId()
@@ -28,12 +34,6 @@ public abstract class AbstractTexture : GlDisposable
     {
         GL.ActiveTexture(unit);
         GL.BindTexture(Target, Handle);
-    }
-
-    protected void UnbindFrom(TextureUnit unit)
-    {
-        GL.ActiveTexture(unit);
-        GL.BindTexture(Target, 0);
     }
 
     protected override void DisposeGlData() => GL.DeleteTexture(Handle);

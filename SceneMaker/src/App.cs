@@ -121,13 +121,14 @@ public class App : AbstractDisposable, IApp
                 var m = new Model<(TextureCoord texCoord, Normal normal), CompiledMaterial>.Builder()
                     .Add(Mesh.Cube(Position.Zero, 0.5f, TextureQuad.Full), assetManager.WhiteMaterial)
                     .Build();
-                _scene.Objects.Add(new SObject()
+                var light = new SObject()
                 {
                     MatModel = m,
                     RMatModel = _grapi.CompileModel(m),
-                    Position = (0, 8, 0),
-                    PointLight = new PointLight(Position.Zero, Color.UnitX)
-                });
+                    Position = (0, 20, -25/2f),
+                    PointLight = SpotLight.Ortho(new Vector3(0.3f, -1, 0.3f), new Color(244/255f, 233/255f, 155/255f, 1f)*1.5f, (30, 30))
+                };
+                _scene.Objects.Add(light);
             }
 
             {
@@ -138,23 +139,23 @@ public class App : AbstractDisposable, IApp
                 {
                     MatModel = m,
                     RMatModel = _grapi.CompileModel(m),
-                    Position = (6, 8, 0),
-                    PointLight = new PointLight(Position.Zero, Color.UnitY)
+                    Position = (6, 4, 0),
+                    PointLight = SpotLight.Perspective(-Vector3.UnitY, new Color(1, 1, 0, 1), 45f)
                 });  
             }
 
-            {
-                var m = new Model<(TextureCoord texCoord, Normal normal), CompiledMaterial>.Builder()
-                    .Add(Mesh.Cube(Position.Zero, 0.5f, TextureQuad.Full), assetManager.WhiteMaterial)
-                    .Build();
-                _scene.Objects.Add(new SObject()
-                {
-                    MatModel = m,
-                    RMatModel = _grapi.CompileModel(m),
-                    Position = (-6, 8, 0),
-                    PointLight = new PointLight(Position.Zero, Color.UnitZ)
-                });
-            }
+            // {
+            //     var m = new Model<(TextureCoord texCoord, Normal normal), CompiledMaterial>.Builder()
+            //         .Add(Mesh.Cube(Position.Zero, 0.5f, TextureQuad.Full), assetManager.WhiteMaterial)
+            //         .Build();
+            //     _scene.Objects.Add(new SObject()
+            //     {
+            //         MatModel = m,
+            //         RMatModel = _grapi.CompileModel(m),
+            //         Position = (-6, 8, 0),
+            //         PointLight = SpotLight.Ortho(Position.Zero, -Vector3.UnitY, Color.UnitZ)
+            //     });
+            // }
         }
         
         _scene.Objects.Add(new SObject()
@@ -185,7 +186,7 @@ public class App : AbstractDisposable, IApp
                 _wasdController.Update(deltaTime);
 
                 var projection = Matrix4.CreatePerspectiveFieldOfView(
-                    MathF.PI / 2, (float) _windowWidth / _windowHeight, 0.1f, 1000f);
+                    MathF.PI / 2, (float) _windowWidth / _windowHeight, 0.1f, 100f);
                 var view = _wasdController.View;
                 
                 if (_inputHandler.IsPressed(_freeCursorBind))
@@ -199,23 +200,41 @@ public class App : AbstractDisposable, IApp
                 _editorController.Update(view, projection);
                 
                 // render
-                _grapi.ClearScreenBuffers();
                 
-                _grapi.UseShader<IShader.I3D.IMaterial>(s =>
+                var lights = _scene.Objects
+                    .Where(o => o.PointLight is not null)
+                    .Select(o =>
+                    {
+                        o.PointLight!.Position = o.Position;
+                        o.PointLight!.UpdateView();
+                        return o.PointLight!;
+                    });
+                    
+                _grapi.SetLights(lights);
+                
+                _grapi.UseShader<IShader.IShadowMap>(s =>
                 {
+                    s.ForEachLight(() =>
+                    {
+                        _grapi.ClearRenderBuffer();
+                        foreach (var obj in _scene.Objects)
+                        {
+                            if (obj.Hidden) continue;
+                            if (obj.RMatModel is null) continue;
+                            if (obj.PointLight is not null) continue;
+                            
+                            s.ModelTransform(obj.ModelTransform);
+                            obj.RMatModel.Render(s);
+                        }
+                    });
+                });
+                
+                _grapi.UseShader<IShader.ICamera.IMaterial>(s =>
+                {
+                    _grapi.ClearRenderBuffer();
                     s.ProjectionTransform(projection);
                     s.ViewTransform(view);
                     s.ViewPosition(_wasdController.Position);
-
-                    
-                    var lights = _scene.Objects
-                        .Where(o => o.PointLight is not null)
-                        .Select(o =>
-                        {
-                            o.PointLight!.Position = o.Position;
-                            return o.PointLight!;
-                        }).ToList();
-                    s.Lights(lights);
                     
                     foreach (var obj in _scene.Objects)
                     {
@@ -232,11 +251,10 @@ public class App : AbstractDisposable, IApp
                     }
                 });
                 
-                // drawing everything else over
-                _grapi.ClearScreenBuffers(false, true);
-                
-                _grapi.UseShader<IShader.I3D.IColor>(s =>
+                _grapi.UseShader<IShader.ICamera.IColor>(s =>
                 {
+                    // drawing everything else over
+                    _grapi.ClearRenderBuffer(false, true);
                     s.ProjectionTransform(projection);
                     s.ViewTransform(view);
                     

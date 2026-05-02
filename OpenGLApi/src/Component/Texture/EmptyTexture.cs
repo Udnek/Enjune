@@ -5,6 +5,8 @@ using OpenTK.Mathematics;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
+using StbImageSharp;
 
 namespace OpenGLApi.Component.Texture;
 
@@ -46,14 +48,15 @@ public sealed class EmptyTexture : AbstractTexture
     public override Error? Dump(ExternalPath dir, string namePrefix)
     {
         dir = dir.ThisDirectory();
-        Logger.Log(this, $"dumping texture into {dir}");
-        byte[] data = new byte[_size.X * _size.Y * 3];
+        Logger.Log(this, $"dumping '{namePrefix}' texture into {dir}");
+        byte[] data = new byte[_size.X * _size.Y * 4];
         
-        GL.GetTextureImage(Handle, 0, PixelFormat.Rgb, PixelType.UnsignedByte, data.Length, data);
+        GL.GetTextureImage(Handle, 0, PixelFormat.Rgba, PixelType.UnsignedByte, data.Length, data);
         
         try
         {
-            using var image = Image.LoadPixelData<Rgb24>(data, _size.X, _size.Y);
+            using var image = Image.Load<Rgba32>(data);
+            image.Mutate(c => c.Flip(FlipMode.Vertical));
             image.Save(dir.ResolveRaw($"{namePrefix}.png").ToString(), new PngEncoder());
         }
         catch (Exception e)

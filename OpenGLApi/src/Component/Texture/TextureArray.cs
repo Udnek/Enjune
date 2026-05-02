@@ -7,6 +7,7 @@ using OpenTK.Mathematics;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
 
 namespace OpenGLApi.Component.Texture;
 
@@ -83,11 +84,11 @@ public sealed class TextureArray : AbstractTexture
     public override Error? Dump(ExternalPath dir, string namePrefix)
     {
         dir = dir.ThisDirectory();
-        Logger.Log(this, $"dumping textures into {dir}");
+        Logger.Log(this, $"dumping '{namePrefix}' textures into {dir}");
         int layerSize = _size.X * _size.Y * 4;
         byte[] data = new byte[layerSize * _layers];
 
-        GL.GetTextureImage(Handle, 0, PixelFormat.Rgba, PixelType.UnsignedByte, data.Length, data);
+        GL.GetTextureImage(Handle, 0, _pixelFormat, PixelType.UnsignedByte, data.Length, data);
 
         for (TexId layer = 0; layer < _layers; layer++)
         {
@@ -97,6 +98,7 @@ public sealed class TextureArray : AbstractTexture
             try
             {
                 using var image = Image.LoadPixelData<Rgba32>(layerData, _size.X, _size.Y);
+                //image.Mutate(c => c.Flip(FlipMode.Horizontal));
                 image.Save(dir.ResolveRaw($"{namePrefix}_layer_{layer}.png").ToString(), new PngEncoder());
             }
             catch (Exception e)

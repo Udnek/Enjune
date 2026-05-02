@@ -7,19 +7,19 @@ using OpenGLApi.Data;
 
 namespace OpenGLApi.Shader;
 
-public sealed class MaterialShader : Shader3D, IShader.I3D.IMaterial
+public sealed class MaterialShader : CameraShader, IShader.ICamera.IMaterial
 {
     private Vector3Uniform _viewPos = null!;
-    private IntUniform _lightsLength = null!;
     private TextureUniform _textureUniform = null!;
+    private TextureUniform _shadowMapsUniform = null!;
     
     private readonly int _textureUnitId;
-    private readonly Ssbo<PointLightData> _lightSsbo;
+    private readonly int _shadowMapsUnitId;
 
-    public MaterialShader(TextureArray textures, Ssbo<PointLightData> lightSsbo)
+    public MaterialShader(Fbo fbo, TextureArray textures, TextureArray shadowMaps) : base(fbo)
     {
         _textureUnitId = textures.GetUnitId();
-        _lightSsbo = lightSsbo;
+        _shadowMapsUnitId = shadowMaps.GetUnitId();
     }
 
     protected override void InitUniforms()
@@ -27,21 +27,7 @@ public sealed class MaterialShader : Shader3D, IShader.I3D.IMaterial
         base.InitUniforms();
         _viewPos = new Vector3Uniform("uViewPos", Vector3.Zero, this);
         _textureUniform = new TextureUniform("uTextures", _textureUnitId, this);
-        _lightsLength = new IntUniform("uLightsLength", 0, this);
-    }
-
-
-    public void Lights(IEnumerable<PointLight> lights)
-    {
-        int count = lights.Count();
-        if (count > _lightSsbo.Capacity)
-        {
-            Logger.Warn(this,$"lights size to big: {count}, but max capacity is {_lightSsbo.Capacity}");
-            count = _lightSsbo.Capacity;
-        }
-
-        _lightSsbo.BindAndPush(lights.Select(l => new PointLightData(l.Position, l.Color)).ToArray());
-        _lightsLength.SetValue(count);
+        _shadowMapsUniform = new TextureUniform("uShadowMaps", _shadowMapsUnitId, this);
     }
 
     public void ViewPosition(Position position) => _viewPos.SetValue(position);

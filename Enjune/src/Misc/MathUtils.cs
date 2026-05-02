@@ -18,7 +18,7 @@ public static class MathUtils
         var leftAngle = Acos(CosAngleBetween(projected, p0));
         var rightAngle = Acos(CosAngleBetween(projected, p1));
         var sumAngle = Acos(CosAngleBetween(p0, p1));
-        if (Abs(sumAngle - (leftAngle + rightAngle)) < Epsilon*10) // increasing epsilon cos Acos sucks
+        if (Abs(sumAngle - (leftAngle + rightAngle)) < Epsilon*10) // increasing epsilon 'cause Acos sucks
         {
             cosDistance = CosAngleBetween(direction, projected);
             return true;
