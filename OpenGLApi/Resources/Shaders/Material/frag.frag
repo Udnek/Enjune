@@ -1,26 +1,3 @@
-#version 430 core
-
-struct Material {
-    vec4 color;
-    int textureId;
-};
-struct SpotLight {
-    mat4 view;
-    mat4 projection;
-    vec4 color;
-    vec3 pos;
-};
-
-layout ( std430, binding = 0) readonly buffer MaterialBuffer {
-    Material materials[];
-};
-layout ( std430, binding = 1) readonly buffer MatIdBuffer {
-    int matIds[];
-};
-layout ( std430, binding = 2) readonly buffer SpotLightBuffer {
-    int lightsLength;
-    SpotLight spotLights[];
-};
 
 in vec2 texPos;
 in vec3 nonNormNormal;
@@ -37,10 +14,11 @@ out vec4 fragColor;
 bool isLightedBy(int lightId, vec3 lightDir, vec3 fragNorm);
 vec3 calcLightColor();
 void main() {
-    Material mat = materials[matIds[gl_PrimitiveID]];
+    PerPrimitive perPrim = perPrimitives[gl_PrimitiveID];
+    Material mat = materials[perPrim.matId];
     vec4 textureColor = texture(uTextures, vec3(texPos, mat.textureId));
     
-    vec4 baseColor = mat.color * textureColor * uGlobalColor;
+    vec4 baseColor = perPrim.color * mat.color * textureColor * uGlobalColor;
     if (baseColor.a < 0.1) discard;
     
     baseColor.xyz *= calcLightColor();

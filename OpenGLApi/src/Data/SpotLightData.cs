@@ -9,7 +9,7 @@ public struct SpotLightData(Matrix4 view, Matrix4 projection, Color color, Posit
     public Matrix4 Projection = projection; // 64+64 -> 128
     public Color Color = color; // 128+16 -> 144
     public Position Position = position; // 144+12 -> 156
-    private int _padding0; // 156+4 -> 160 = 16*10
+    private int _padding; // 156+4 -> 160 = 16*10
 }
 
 [StructLayout(LayoutKind.Sequential, Pack = 1)]

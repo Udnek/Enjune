@@ -4,57 +4,63 @@ using Enjune.Misc;
 
 namespace Enjune.Graphic;
 
-public sealed class Model<TPerVert, TPerMesh>
+public class Model<TPerVert, TPerMesh>
 {
-    public readonly (Mesh<TPerVert> Mesh, TPerMesh PerMesh)[] Meshes;
-
-    protected Model(ValueTuple<Mesh<TPerVert>, TPerMesh>[] meshes)
+    public (Mesh<TPerVert> mesh, TPerMesh perMesh)[] Meshes = [];
+    
+    public Model(ValueTuple<Mesh<TPerVert>, TPerMesh>[] meshes)
     {
         if (meshes.Length == 0)
             Logger.Warn(this,"constructing empty model");
-        Meshes = meshes;
-    }
-
-    public static Model<TPerVert, TPerMesh> CreateFromOneMaterial(Mesh<TPerVert>[] meshes, TPerMesh perMeshData)
-        => CreateNotOptimized([(Mesh.Merge(meshes), perMeshData)]);
-    
-    public static Model<TPerVert, TPerMesh> CreateAndOptimize(ValueTuple<Mesh<TPerVert>, TPerMesh>[] meshes)
-    {
-        List<ValueTuple<Mesh<TPerVert>, TPerMesh>> newMeshes = [];
-        foreach (var groupedByMat in meshes.GroupBy(e => e.Item2))
-        {
-            var mat = groupedByMat.Key;
-            var mergedMesh = Mesh.Merge(groupedByMat.Select(e => e.Item1));
-            newMeshes.Add((mergedMesh, mat));
-        }
-        return CreateNotOptimized(newMeshes.ToArray());
+        
     }
     
-    public static Model<TPerVert, TPerMesh> CreateNotOptimized(ValueTuple<Mesh<TPerVert>, TPerMesh>[] meshes) 
-        => new(meshes);
 
-
+    [Pure]
     public string Info()
     {
         return $"meshes: {Meshes.Length}; " +
-               $"vertices: {Meshes.Select(mc => mc.Mesh.Vertices.Length).Sum()}; " +
-               $"triangles: {Meshes.Select(mc => mc.Mesh.Indexes.Length).Sum()/3};";
+               $"vertices: {Meshes.Select(mc => mc.mesh.Vertices.Length).Sum()}; " +
+               $"triangles: {Meshes.Select(mc => mc.mesh.Indexes.Length).Sum()/3};";
     }
+}
 
-    public class Builder
+public static class Model
+{
+    public class Builder<TModel, TPerVert, TPerMesh> where TModel : Model<TPerVert, TPerMesh>, new()
     {
-        private readonly List<ValueTuple<Mesh<TPerVert>, TPerMesh>> _meshes = [];
+        private readonly List<(Mesh<TPerVert> mesh, TPerMesh perMesh)> _meshes = [];
         
         public bool IsEmpty => _meshes.Count == 0;
         
-        public Builder Add(Mesh<TPerVert> mesh, TPerMesh perMeshData)
+        public Builder<TModel, TPerVert, TPerMesh> Add(Mesh<TPerVert> mesh, TPerMesh perMeshData)
         {
             _meshes.Add((mesh, perMeshData));
             return this;
         }
 
         [Pure]
-        public Model<TPerVert, TPerMesh> Build(bool mergeSimilarMeshes = true) 
-            => mergeSimilarMeshes ? CreateAndOptimize(_meshes.ToArray()) : CreateNotOptimized(_meshes.ToArray());
+        public Model<TPerVert, TPerMesh> Build(bool mergeSimilarMeshes = true)
+        {
+            if (mergeSimilarMeshes)
+            {
+                return new TModel
+                {
+                    Meshes = _meshes.ToArray()
+                };
+            }
+            List<(Mesh<TPerVert> Mesh, TPerMesh PerMesh)> newMeshes = [];
+            foreach (var groupedByMat in _meshes.GroupBy(e => e.perMesh))
+            {
+                var mat = groupedByMat.Key;
+                var mergedMesh = Mesh.Merge(groupedByMat.Select(e => e.mesh));
+                newMeshes.Add((mergedMesh, mat));
+            }
+
+            return new TModel
+            {
+                Meshes = newMeshes.ToArray()
+            };
+        }
     }
 }

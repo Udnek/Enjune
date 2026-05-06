@@ -1,4 +1,6 @@
-﻿namespace SceneMaker;
+﻿using Enjune.Graphic.Input.UI;
+
+namespace SceneMaker;
 
 class Program
 {

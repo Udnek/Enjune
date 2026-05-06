@@ -37,8 +37,9 @@ public class EditorController
             .Build(false);
         AxisObject = new SObject
         {
+            IsRealistic = false,
             ColorModel = model,
-            RColorModel = _graphicApi.CompileModel(model),
+            RenderableModel = _graphicApi.CreateStaticRenderable(model, IGraphicApi.Primitive.Line),
             Hidden = true
         };
         AxisObject.Scale = new Vector3(2.5f);
@@ -166,7 +167,7 @@ public class EditorController
         var minDist = float.MaxValue;
         foreach (var pair in obj.ColorModel.Meshes)
         {
-            var mesh = pair.Mesh;
+            var mesh = pair.mesh;
             for (var indexIndex = 0; indexIndex < mesh.Indexes.Length; indexIndex+=2)
             {
                 var verIndex0 = mesh.Indexes[indexIndex];

@@ -6,7 +6,7 @@ namespace OpenGLApi.Component.Buffer;
 
 public sealed class Fbo : GlDisposable
 {
-    public static Vector2i DefaultSize = new(1, 1);
+    public static Vector2i SizeOfDefault = new(1, 1);
     private Vector2i _size;
     private readonly int _handle;
     
@@ -40,7 +40,7 @@ public sealed class Fbo : GlDisposable
 
     public static void BindDefault()
     {
-        GL.Viewport(0, 0, DefaultSize.X, DefaultSize.Y);
+        GL.Viewport(0, 0, SizeOfDefault.X, SizeOfDefault.Y);
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
     }
 

@@ -23,6 +23,12 @@ public sealed class Mesh<TPerVertex>
         for (var i = 0; i < Vertices.Length; i++) 
             Vertices[i] += offset;
     }
+
+    public void Multiply(Vector3 vector)
+    {
+        for (int i = 0; i < Vertices.Length; i++) 
+            Vertices[i] *= vector;
+    }
 }
 
 public static class Mesh
@@ -74,6 +80,21 @@ public static class Mesh
                 [tex.BotLeft, tex.BotRight, tex.TopRight, tex.TopLeft],
                 [0, 1, 2, 0, 2, 3]);
     }
+    
+    public static Mesh<TPerVert> Quad<TPerVert>(Position bl, Position br, Position tr, Position tl, TPerVert pv1, TPerVert pv2, TPerVert pv3, TPerVert pv4)
+    {
+        return new Mesh<TPerVert>([bl, br, tr, tl],
+            [pv1, pv2, pv3, pv4],
+            [0, 1, 2, 0, 2, 3]);
+    }
+    
+    public static Mesh<TPerVert> Triangle<TPerVert>(Position p1, Position p2, Position p3, TPerVert pv1, TPerVert pv2, TPerVert pv3)
+    {
+        return new Mesh<TPerVert>([p1, p2, p3],
+            [pv1, pv2, pv3],
+            [0, 1, 2]);
+    }
+
     
     public static Mesh<(TextureCoord texCoord, Normal normal)> Triangle(Position bl, Position br, Position tr, TextureQuad tex)
     {

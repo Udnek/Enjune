@@ -1,17 +1,19 @@
 using Enjune.Graphic.GraphicApi;
 using OpenGLApi.Component;
 using OpenGLApi.Component.Buffer;
+using OpenGLApi.Component.Texture;
 using OpenGLApi.Component.Uniform;
+using SharpGLTF.Schema2;
 
 namespace OpenGLApi.Shader;
 
-public abstract class CameraShader(Fbo fbo) : AbstractShader, IShader.ICamera
+public abstract class CameraShader(Fbo fbo, TextureArray textures) : AbstractShader, IShader.ICamera
 {
     private Matrix4Uniform _model = null!;
     private Matrix4Uniform _view = null!;
     private Matrix4Uniform _projection = null!;
     private Vector4Uniform _globalColor = null!;
-    private readonly Fbo _fbo = fbo;
+    private TextureUniform _textureUniform;
 
     protected override void InitUniforms()
     {
@@ -21,6 +23,7 @@ public abstract class CameraShader(Fbo fbo) : AbstractShader, IShader.ICamera
             Matrix4.CreatePerspectiveFieldOfView(MathF.PI / 2, 1.0f, 0.1f, 1000.0f), 
             this);
         _globalColor = new Vector4Uniform("uGlobalColor", Color.One, this);
+        _textureUniform = new TextureUniform("uTextures", textures.GetUnitId(), this);
     }
 
     public void ModelTransform(Matrix4 model) => _model.SetValue(model);
@@ -28,5 +31,5 @@ public abstract class CameraShader(Fbo fbo) : AbstractShader, IShader.ICamera
     public void ViewTransform(Matrix4 view) => _view.SetValue(view);
     public void GlobalColor(Color color) => _globalColor.SetValue(color);
 
-    public override void AfterBind() => _fbo.Bind();
+    public override void AfterBind() => fbo.Bind();
 }

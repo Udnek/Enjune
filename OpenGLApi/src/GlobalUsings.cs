@@ -9,7 +9,7 @@ global using Error = Enjune.Misc.Error;
 // aliases
 global using Position = OpenTK.Mathematics.Vector3;
 global using Color = OpenTK.Mathematics.Vector4;
-global using TextureCoord = OpenTK.Mathematics.Vector2;
+global using TexturePos = OpenTK.Mathematics.Vector2;
 global using Normal = OpenTK.Mathematics.Vector3;
 
 global using GlfwKey = OpenTK.Windowing.GraphicsLibraryFramework.Keys;
@@ -20,5 +20,6 @@ global using Seconds = float;
 global using TexId = int;
 global using MatId = int;
 
-global using MaterialModel = Enjune.Graphic.Model<(OpenTK.Mathematics.Vector2 texCoord, OpenTK.Mathematics.Vector3 normal), Enjune.Graphic.Asset.CompiledMaterial>;
+global using MaterialModel = Enjune.Graphic.Model<(OpenTK.Mathematics.Vector2 texPos, OpenTK.Mathematics.Vector3 normal), Enjune.Graphic.Asset.CompiledMaterial>;
+global using SimpleMaterialModel = Enjune.Graphic.Model<OpenTK.Mathematics.Vector2, Enjune.Graphic.Asset.CompiledMaterial>;
 global using ColorModel = Enjune.Graphic.Model<OpenTK.Mathematics.Vector4, OpenTK.Mathematics.Vector4>;

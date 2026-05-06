@@ -10,7 +10,7 @@ public abstract class ShaderProgram : GlDisposable
     private int _vertexShader;
     private int _fragmentShader;
 
-    public Error? Init(ResourcePath fragmentPath, ResourcePath vertexPath)
+    public Error? Init(ResourcePath fragmentPath, ResourcePath vertexPath, ResourcePath common)
     {
         _program = GL.CreateProgram();
 
@@ -18,10 +18,12 @@ public abstract class ShaderProgram : GlDisposable
         if (fragText == null) return $"fragment shader can not be loaded: {error}";
         var vertText = vertexPath.LoadText(out error);
         if (vertText == null) return $"vertex shader can not be loaded: {error}";
+        var commonText = common.LoadText(out error);
+        if (commonText == null) return $"common can not be loaded: {error}";
 
-        _fragmentShader = InitShader(ShaderType.FragmentShader, fragText, out error);
+        _fragmentShader = InitShader(ShaderType.FragmentShader, $"{commonText}\n{fragText}", out error);
         if (error != null) return error;
-        _vertexShader = InitShader(ShaderType.VertexShader, vertText, out error);
+        _vertexShader = InitShader(ShaderType.VertexShader, $"{commonText}\n{vertText}", out error);
         if (error != null) return error;
 
         GL.BindFragDataLocation(_program, 0, "fragColor");

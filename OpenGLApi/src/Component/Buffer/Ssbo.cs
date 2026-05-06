@@ -12,12 +12,19 @@ public sealed class SsboDataAndArray<TData, TArray> : GlDisposable where TArray 
     private readonly int _dataSize;
     private readonly int _arrayElementSize;
     public readonly int ArrayCapacity;
+    public readonly bool Final;
 
     public TData CurrentData = new();
 
-    public SsboDataAndArray(int binding, int arrayCapacity)
+    public SsboDataAndArray(int binding, int arrayCapacity, bool final)
     {
         _binding = binding;
+        Final = final;
+        if (arrayCapacity <= 0)
+        {
+            Logger.Error(this, "array capacity must be positive");
+            arrayCapacity = 1;
+        }
         ArrayCapacity = arrayCapacity;
         _handle = GL.GenBuffer();
         unsafe
@@ -28,9 +35,30 @@ public sealed class SsboDataAndArray<TData, TArray> : GlDisposable where TArray 
         SsboUtils.CheckStd430<TData>(false, 0)?.Log(this);
         SsboUtils.CheckStd430<TArray>(true, Marshal.SizeOf<TData>())?.Log(this);
         Bind();
-        GL.BufferStorage(BufferTarget.ShaderStorageBuffer, _dataSize + arrayCapacity*_arrayElementSize, IntPtr.Zero, BufferStorageFlags.DynamicStorageBit);
+        if (final) 
+            GL.BufferStorage(BufferTarget.ShaderStorageBuffer, _dataSize + arrayCapacity*_arrayElementSize, IntPtr.Zero, BufferStorageFlags.DynamicStorageBit);
+        else 
+            GL.BufferData(BufferTarget.ShaderStorageBuffer, _dataSize + arrayCapacity*_arrayElementSize, IntPtr.Zero, BufferUsageHint.DynamicDraw);
     }
 
+    public void Reallocate(int newArrayCapacity)
+    {
+        if (Final)
+        {
+            Logger.Error(this, "trying to reallocate final buffer");
+            return;
+        }
+        if (newArrayCapacity <= 0)
+        {
+            Logger.Error(this, "array capacity must be positive");
+            newArrayCapacity = 1;
+        }
+        Bind();
+        GL.BufferData(BufferTarget.ShaderStorageBuffer, _dataSize + newArrayCapacity*_arrayElementSize, IntPtr.Zero, BufferUsageHint.DynamicDraw);
+        Logger.Log(this, $"array capacity increased: {ArrayCapacity} -> {newArrayCapacity}");
+    }
+    
+    
     public void Bind()
     {
         GL.BindBuffer(BufferTarget.ShaderStorageBuffer, _handle);
@@ -59,10 +87,11 @@ public class SsboArray<T> : AbstractBuffer<T> where T : unmanaged
 {
     private readonly int _binding;
 
-    public SsboArray(int binding, int capacity, T[]? initialData = null) : base(BufferTarget.ShaderStorageBuffer, capacity, initialData)
+    public SsboArray(int binding, int capacity, bool final, T[]? initialData = null) 
+        : base(BufferTarget.ShaderStorageBuffer, capacity, final, initialData)
     {
         _binding = binding;
-        SsboUtils.CheckStd430<T>(false, 0)?.Log(this);
+        SsboUtils.CheckStd430<T>(true, 0)?.Log(this);
         Bind();
     }
 
@@ -78,6 +107,7 @@ public static class SsboUtils
 {
     public static Error? CheckStd430<T>(bool isArray, int previousStructSize) where T : unmanaged
     {
+        // TODO ADD CACHING FOR CHECKED TYPES
         var type = typeof(T);
         Logger.Log(typeof(SsboUtils),"-----------------------------------------");
         Logger.Log(typeof(SsboUtils),$"checking for correct struct '{type.Name}' alignment:");
@@ -85,12 +115,9 @@ public static class SsboUtils
         if (!type.IsPrimitive)
         {
             var structLayout = type.StructLayoutAttribute;
-            Logger.Highlight(typeof(SsboUtils), structLayout?.Pack);
             if (structLayout == null || structLayout.Value != LayoutKind.Sequential || structLayout.Pack != 1)
                 return $"struct '{type.Name}' must have [StructLayout(LayoutKind.Sequential), Pack = 1] attribute";
         }
-
-        
         
         var alignment = Alignment<T>();
         if (previousStructSize % alignment != 0)
@@ -109,7 +136,7 @@ public static class SsboUtils
 
             if (offset % Alignment(size) != 0 && !field.Name.ToLower().Contains("padding"))
             {
-                return "field must be padding, else it won't be used";
+                return $"field {field.Name} must be padding, else it won't be used";
             }
         }
         
@@ -117,7 +144,7 @@ public static class SsboUtils
         Logger.Log(typeof(SsboUtils), $"total size: {structSize}");
         
         if (isArray && structSize % alignment != 0)
-            return $"cause it is array, total struct size must % {alignment} = 0, but got {structSize} % {alignment}";
+            return $"cause it is array, total struct size must be divisible by {alignment}, but got {structSize} % {alignment}";
         
         Logger.Log(typeof(SsboUtils), "check complete, everything seems correct");
         Logger.Log(typeof(SsboUtils), "-----------------------------------------");

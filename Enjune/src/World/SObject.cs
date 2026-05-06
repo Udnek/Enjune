@@ -1,14 +1,14 @@
 using Enjune.Graphic;
 using Enjune.Graphic.Asset;
 using Enjune.Graphic.GraphicApi;
+using Enjune.Misc;
 using OpenTK.Mathematics;
 
 namespace Enjune.World;
 
 public class SObject
 {
-    public IRenderableModel.IMaterial? RMatModel = null;
-    public IRenderableModel.IColor? RColorModel = null;
+    public IRenderableModel? RenderableModel = null;
     
     public MaterialModel? MatModel = null;
     public ColorModel? ColorModel = null;
@@ -18,10 +18,11 @@ public class SObject
     public Quaternion Rotation { get; set; } = Quaternion.Identity;
     public Vector3 Scale { get; set; } = Vector3.One;
     public Position Position { get; set; } = Position.Zero;
+
+    public bool IsRealistic = true;
     
     // todo optimize by calculating on when changed
-    public Matrix4 ModelTransform 
-        => Matrix4.CreateScale(Scale) * Matrix4.CreateFromQuaternion(Rotation) * Matrix4.CreateTranslation(Position); // todo wtf why this order works?
+    public Matrix4 ModelTransform => MathUtils.CreateModelTransform(Position, Rotation, Scale);
 
     public bool Hidden = false;
 }

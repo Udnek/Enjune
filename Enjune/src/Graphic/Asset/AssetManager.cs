@@ -216,7 +216,10 @@ public class AssetManager
         }
 
         Logger.Log(this, "done compiling");
-        return new CompiledAssets(targetSize, resizedImages, 
+        return new CompiledAssets(
+            WhiteMaterial,
+            MissingMaterial,
+            targetSize, resizedImages, 
             _materials
                 .OrderBy(e => e.Value.Id)
                 .Select(e => e.Value).ToArray());

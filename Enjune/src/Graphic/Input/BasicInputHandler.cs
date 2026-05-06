@@ -5,7 +5,6 @@ namespace Enjune.Graphic.Input;
 
 public class BasicInputHandler : IUserInputHandler
 {
-    private readonly IGraphicApi _graphicApi;
     public readonly KeyBinds Binds;
     
     private readonly HashSet<KeyBinds.Bind> _pressed = [];
@@ -14,12 +13,21 @@ public class BasicInputHandler : IUserInputHandler
     
     private bool _firstCursorMove = true;
     public Vector2i CursorPosition = (0, 0);
-    public Vector2i DeltaCursorPosition { private set; get; } = (0, 0);
+    public Vector2i DeltaCursorPosition { get; private set; } = (0, 0);
+    public Vector2 DeltaWheelScroll { get; private set; } = (0, 0);
+    public Vector2i WindowSize { get; private  set; }
+    public bool WindowSizeChanged { get; private set; } = false;
 
-    public BasicInputHandler(IGraphicApi graphicApi, KeyBinds binds)
+    public BasicInputHandler(KeyBinds binds, Vector2i initialWindowSize)
     {
-        _graphicApi = graphicApi;
         Binds = binds;
+        WindowSize = initialWindowSize;
+    }
+
+    public void HandleWindowSizeChange(Vector2i newSize)
+    {
+        WindowSize = newSize;
+        WindowSizeChanged = true;
     }
 
     public void HandleKey(KeyCode keyCode, IGraphicApi.KeyAction action)
@@ -59,6 +67,8 @@ public class BasicInputHandler : IUserInputHandler
         CursorPosition = (x, y);
     }
 
+    public void HandleScroll(float x, float y) => DeltaWheelScroll += (x, y);
+
     public bool IsPressed(KeyBinds.Bind bind) => _pressed.Contains(bind) || _shortPressed.Contains(bind);
     public bool IsJustReleased(KeyBinds.Bind bind) => _justReleased.Contains(bind);
     
@@ -67,5 +77,7 @@ public class BasicInputHandler : IUserInputHandler
         _shortPressed.Clear();
         _justReleased.Clear();
         DeltaCursorPosition = (0, 0);
+        DeltaWheelScroll = (0, 0);
+        WindowSizeChanged = false;
     }
 }

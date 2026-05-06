@@ -9,6 +9,9 @@ public static class MathUtils
 {
     public const float Epsilon = 1e-6f; // don't fucking touch it, increasing accuracy may brake everything
     
+    public static Matrix4 CreateModelTransform(Position pos, Quaternion rot, Vector3 scale) 
+        => Matrix4.CreateScale(scale) * Matrix4.CreateFromQuaternion(rot) * Matrix4.CreateTranslation(pos); // todo wtf why this order works?
+    
     public static bool RayIntersectsLine(Position origin, Vector3 direction, Position p0, Position p1, out float cosDistance)
     {
         p0 -= origin;

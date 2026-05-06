@@ -3,6 +3,7 @@ using Enjune.File;
 using Enjune.Graphic.GraphicApi;
 using Enjune.Graphic.Input;
 using Enjune.Misc;
+using OpenGLApi.Model;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using ErrorCode = OpenTK.Graphics.OpenGL4.ErrorCode;
@@ -168,8 +169,37 @@ public sealed partial class OpenGlApi
         unsafe
         {
             GLFW.GetWindowSize(_window, out int width, out int height);
-            return new Vector2i(width, height);
+            return (width, height);
         }
+    }
+
+
+    public IRenderableModel CreateStaticRenderable(MaterialModel model, IGraphicApi.Primitive primitive = IGraphicApi.Primitive.Triangle)
+    {
+        var materialModel = new GlModel(_materialShader, PerPrimitiveSsboBinding, true, _assets.WhiteMaterial.Id);
+        materialModel.Refit(model, primitive);
+        return materialModel;
+    }
+
+    public IRenderableModel CreateStaticRenderable(ColorModel model, IGraphicApi.Primitive primitive = IGraphicApi.Primitive.Triangle)
+    {
+        var materialModel = new GlModel(_materialShader, PerPrimitiveSsboBinding, true, _assets.WhiteMaterial.Id);
+        materialModel.Refit(model, primitive);
+        return materialModel;
+    }
+
+    public IRenderableModel.IDynamic CreateDynamicRenderable(MaterialModel model, IGraphicApi.Primitive primitive = IGraphicApi.Primitive.Triangle)
+    {
+        var materialModel = new GlModel(_materialShader, PerPrimitiveSsboBinding, false, _assets.WhiteMaterial.Id);
+        materialModel.Refit(model, primitive);
+        return materialModel;
+    }
+
+    public IRenderableModel.IDynamic CreateDynamicRenderable(ColorModel model, IGraphicApi.Primitive primitive = IGraphicApi.Primitive.Triangle)
+    {
+        var materialModel = new GlModel(_materialShader, PerPrimitiveSsboBinding, false, _assets.WhiteMaterial.Id);
+        materialModel.Refit(model, primitive);
+        return materialModel;
     }
 
     public bool ShouldStop()

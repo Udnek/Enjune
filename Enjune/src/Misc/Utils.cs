@@ -19,26 +19,25 @@ public static class Utils
     private static Nanoseconds TicksToNanos(long ticks) => ticks * (NanosInSec / Stopwatch.Frequency);
     
     public static void RunTargetFpsLoopWhile(
-        Fps targetFps, out Seconds deltaTime, Consumer<Nanoseconds> delayConsumer, Func<bool> shouldContinue, Action action)
+        Fps targetFps, Func<bool> shouldContinue, Action<Seconds> action)
     {
         var targetDelay = FpsToNanoDelay(targetFps);
         
         var frameStart = TicksToNanos(Stopwatch.GetTimestamp());
         while (true)
         { 
-            deltaTime = NanosToSeconds(TicksToNanos(Stopwatch.GetTimestamp()) - frameStart);
-            frameStart = TicksToNanos(Stopwatch.GetTimestamp());
             if (!shouldContinue()) break;
-            action();
+            var deltaTime = NanosToSeconds(TicksToNanos(Stopwatch.GetTimestamp()) - frameStart);
+            frameStart = TicksToNanos(Stopwatch.GetTimestamp());
+            action(deltaTime);
             var frameEnd = TicksToNanos(Stopwatch.GetTimestamp());
-            var took = frameEnd - frameStart;
-            delayConsumer(took);
-            var sleepTime = targetDelay - took;
+            Nanoseconds took = frameEnd - frameStart;
+            Nanoseconds sleepTime = targetDelay - took;
             if (sleepTime > 0)
                 Thread.Sleep(TimeSpan.FromMicroseconds(sleepTime / 1000));
         }
     }
-
+    
     private static int _disposeDepth = 0;
     public static void DisposeAllFields(object obj)
     {

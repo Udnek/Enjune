@@ -20,8 +20,8 @@ public static class Extensions
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector2 ToTk(this System.Numerics.Vector2 vector) => new(vector.X, vector.Y);
     
-    public static string ContentToString<T>(this IEnumerable<T> array)
-        => "["+string.Join(", ", array.Select(v => v?.ToString() ?? "null"))+"]";
+    public static string ContentToString<T>(this IEnumerable<T> array, string prefix="[", string separator = ", ", string postfix="]")
+        => prefix+string.Join(separator, array.Select(v => v?.ToString() ?? "null"))+postfix;
 
     public static (T0, T1)[] JoinToTuple<T0, T1>(this T0[] array, T1[] other)
         => array.Select((v, i) => (v, other[i])).ToArray();

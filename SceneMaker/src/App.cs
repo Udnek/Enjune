@@ -6,6 +6,7 @@ using Enjune.Graphic.Asset;
 using Enjune.Graphic.Font;
 using Enjune.Graphic.GraphicApi;
 using Enjune.Graphic.Input;
+using Enjune.Graphic.Input.UI;
 using Enjune.Misc;
 using Enjune.World;
 using OpenGLApi;
@@ -16,24 +17,22 @@ namespace SceneMaker;
 
 public class App : AbstractDisposable, IApp
 {
-    private int _windowWidth = 480*2;
-    private int _windowHeight = 360*2;
+    private static readonly Vector2i InitialWindowSize = (480*2, 360*2);
     
-    private readonly IGraphicApi _grapi = new OpenGlApi();
+    private IGraphicApi _grapi;
     private readonly KeyBinds _binds;
     private readonly Wasd _wasd;
     private readonly KeyBinds.Bind _dumbTexturesBind;
     
     private readonly BasicInputHandler _inputHandler;
-    private readonly FlyingPlayerController _wasdController;
-
-    // private MaterialVertexBuffer _materialVertexBuffer = null!;
-    // private ColoredVertexBuffer _colorVertexBuffer = null!;
+    private FlyingPlayerController _wasdController;
     
     private readonly KeyBinds.Bind _freeCursorBind;
     private readonly KeyBinds.Bind _lockCursorBind;
-    private Scene _scene;
+    private readonly Scene _scene;
     private EditorController _editorController = null!;
+    private Ui _ui;
+    private IRenderableModel.IDynamic _uiModel;
 
     public App()
     {
@@ -43,17 +42,8 @@ public class App : AbstractDisposable, IApp
         _lockCursorBind = _binds.AddBind(new KeyBinds.Bind("lock_cursor", KeyCode.RightMouseButton));
         
         _dumbTexturesBind = _binds.AddBind(new KeyBinds.Bind("dumb_textures", KeyCode.F2));
-        
+        _inputHandler = new BasicInputHandler(_binds, InitialWindowSize);
         _scene = new Scene();
-        
-        _inputHandler = new BasicInputHandler(_grapi, _binds);
-        _wasdController = new FlyingPlayerController(_grapi, _inputHandler, _wasd, 0.2f);
-    }
-    
-    private void WindowSizeChangeHandler(int w, int h)
-    {
-        _windowWidth = w;
-        _windowHeight = h;
     }
 
     public Error? Init()
@@ -100,19 +90,22 @@ public class App : AbstractDisposable, IApp
         // });
         //
         // Logger.Log(this, $"{nameof(toyCar)} info: {toyCar.Info()}");
-
+        
         
         var font = assetManager.AddFont(AssemblyPath.Of(Enjune.Enjune.Assembly, "Fonts", "papyrus.ttf"), 128, out error);
         if (font == null) return error;
 
         var assets = assetManager.Compile();
-        
-        error = _grapi.Init(assets, _windowWidth, _windowHeight, "Enjune C#", 42, _inputHandler, WindowSizeChangeHandler);
-        if (error != null) return error;
+
+        var grapi = new OpenGlApi().Init(assets, InitialWindowSize, "Enjune C#", _inputHandler, out error);
+        if (grapi == null) return error;
+        _grapi = grapi;
         _grapi.SetVsync(false);
         _grapi.SetClearColor(new Color(0.2f, 0.2f, 0.2f, 0f));
         _grapi.SetCursorMode(IGraphicApi.CursorMode.Centered);
         _grapi.SetVsync(false);
+        
+        _wasdController = new FlyingPlayerController(_grapi, _inputHandler, _wasd, 0.2f);
         
         _editorController = new EditorController(_grapi, _inputHandler, _scene);
         
@@ -124,7 +117,7 @@ public class App : AbstractDisposable, IApp
                 var light = new SObject()
                 {
                     MatModel = m,
-                    RMatModel = _grapi.CompileModel(m),
+                    RenderableModel = _grapi.CreateStaticRenderable(m),
                     Position = (0, 20, -25/2f),
                     PointLight = SpotLight.Ortho(new Vector3(0.3f, -1, 0.3f), new Color(244/255f, 233/255f, 155/255f, 1f)*1.5f, (30, 30))
                 };
@@ -138,7 +131,7 @@ public class App : AbstractDisposable, IApp
                 _scene.Objects.Add(new SObject()
                 {
                     MatModel = m,
-                    RMatModel = _grapi.CompileModel(m),
+                    RenderableModel = _grapi.CreateStaticRenderable(m),
                     Position = (6, 4, 0),
                     PointLight = SpotLight.Perspective(-Vector3.UnitY, new Color(1, 1, 0, 1), 45f)
                 });  
@@ -161,32 +154,55 @@ public class App : AbstractDisposable, IApp
         _scene.Objects.Add(new SObject()
         {
             MatModel = calavera,
-            RMatModel = _grapi.CompileModel(calavera)
+            RenderableModel = _grapi.CreateStaticRenderable(calavera)
         });
         
         _scene.Objects.Add(_editorController.AxisObject);
+        
+        _ui = new Ui(
+            new UiButton(Anchor.StretchWithMarginInside(0.1f), Margin.Inside(20), 0, [
+                new UiButton(Anchor.FixedAtCenter, Margin.Outsize(10), 1)
+            ]))
+        {
+            Size = InitialWindowSize,
+            PixelsPerUnit = 2
+        };
+        _uiModel = _grapi.CreateDynamicRenderable(_ui.UpdateAndCreateModel());
         
         return null;
     }
 
     public void MainCycle()
     {
-        var delays = new List<Nanoseconds>(200);
+        var projection = Matrix4.CreatePerspectiveFieldOfView(
+            MathF.PI / 2, (float) _inputHandler.WindowSize.X / _inputHandler.WindowSize.Y, 0.1f, 100f);
         int tick = 0;
-        Seconds deltaTime = 0;
-        Utils.RunTargetFpsLoopWhile(200,
-            out deltaTime,
-            delay =>
-            {
-                delays.Add(delay);
-            },
+        Utils.RunTargetFpsLoopWhile(500,
             () => !_grapi.ShouldStop(),
-            () =>
+            deltaTime =>
             {
                 _wasdController.Update(deltaTime);
 
-                var projection = Matrix4.CreatePerspectiveFieldOfView(
-                    MathF.PI / 2, (float) _windowWidth / _windowHeight, 0.1f, 100f);
+                bool updateUi = false;
+                if (_inputHandler.DeltaWheelScroll.Y != 0)
+                {
+                    updateUi = true;
+                    _ui.PixelsPerUnit += _inputHandler.DeltaWheelScroll.Y * 0.1f;
+                }
+                if (_inputHandler.WindowSizeChanged)
+                {
+                    updateUi = true;
+                    projection = Matrix4.CreatePerspectiveFieldOfView(
+                        MathF.PI / 2, (float) _inputHandler.WindowSize.X / _inputHandler.WindowSize.Y, 0.1f, 100f);
+                }
+
+                if (updateUi)
+                {
+                    _ui.Size = _inputHandler.WindowSize;
+                    _ui.LogHierarchy();
+                    _uiModel.Refit(_ui.UpdateAndCreateModel());
+                }
+                
                 var view = _wasdController.View;
                 
                 if (_inputHandler.IsPressed(_freeCursorBind))
@@ -219,12 +235,13 @@ public class App : AbstractDisposable, IApp
                         _grapi.ClearRenderBuffer();
                         foreach (var obj in _scene.Objects)
                         {
+                            if (!obj.IsRealistic) continue;
                             if (obj.Hidden) continue;
-                            if (obj.RMatModel is null) continue;
+                            if (obj.RenderableModel is null) continue;
                             if (obj.PointLight is not null) continue;
                             
                             s.ModelTransform(obj.ModelTransform);
-                            obj.RMatModel.Render(s);
+                            obj.RenderableModel.Render(s);
                         }
                     });
                 });
@@ -238,8 +255,9 @@ public class App : AbstractDisposable, IApp
                     
                     foreach (var obj in _scene.Objects)
                     {
+                        if (!obj.IsRealistic) continue;
                         if (obj.Hidden) continue;
-                        if (obj.RMatModel is null) continue;
+                        if (obj.RenderableModel is null) continue;
                     
                         if (obj == _editorController.SelectedObject)
                             s.GlobalColor((1, 0.5f, 0f, 1f));
@@ -247,7 +265,7 @@ public class App : AbstractDisposable, IApp
                             s.GlobalColor(new Color(1f));
                     
                         s.ModelTransform(obj.ModelTransform);
-                        obj.RMatModel.Render(s);
+                        obj.RenderableModel.Render(s);
                     }
                 });
                 
@@ -260,13 +278,21 @@ public class App : AbstractDisposable, IApp
                     
                     foreach (var obj in _scene.Objects)
                     {
+                        if (obj.IsRealistic) continue;
                         if (obj.Hidden) continue;
-                        if (obj.RColorModel is null) continue;
+                        if (obj.RenderableModel is null) continue;
                 
                         s.ModelTransform(obj.ModelTransform);
                 
-                        obj.RColorModel.Render(s);
+                        obj.RenderableModel.Render(s);
                     }
+                    
+                    _grapi.ClearRenderBuffer(false, true);
+                    s.ModelTransform(_ui.ModelTransform);
+                    s.ViewTransform(_ui.ViewTransform);
+                    s.ProjectionTransform(_ui.ProjectionTransform);
+                    
+                    _uiModel.Render(s);
                 });
                 
                 // end
@@ -275,20 +301,15 @@ public class App : AbstractDisposable, IApp
                 _grapi.UpdateEvents();
                 tick += 1;
             });
-        
-        var avgDelay = delays.Sum(v => v) / delays.Count;
-        Console.WriteLine($"Avg delay: {avgDelay}; avg possible fps: {Utils.NanoDelayToFps(avgDelay)}");
-        
     }
 
     protected override void DisposeData()
     {
         foreach (var o in _scene.Objects)
         {
-            o.RMatModel?.Dispose();
-            o.RColorModel?.Dispose();
+            o.RenderableModel?.Dispose();
         }
-
+        
         Utils.DisposeAllFields(this);
     }
 }
