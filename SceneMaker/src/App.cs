@@ -179,7 +179,7 @@ public class App : AbstractDisposable, IApp
             MathF.PI / 2, (float) _inputHandler.WindowSize.X / _inputHandler.WindowSize.Y, 0.1f, 100f);
         int tick = 0;
         var fpsStopWatch = Stopwatch.StartNew();
-        Utils.RunTargetFpsLoopWhile(500,
+        Utils.RunTargetFpsLoopWhile(100,
             () => !_grapi.ShouldStop(),
             deltaTime =>
             {

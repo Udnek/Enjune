@@ -19,6 +19,7 @@ public class GlModel : GlDisposable, IRenderableModel.IDynamic
     private Vbo<VertexData> _vbo = null!;
     private SsboArray<PerPrimitiveData> _ssbo = null!;
     private Ebo _ebo = null!;
+    private int _currentEboLen;
 
     public IGraphicApi.Primitive CurrentPrimitive { get; private set; }
 
@@ -32,7 +33,7 @@ public class GlModel : GlDisposable, IRenderableModel.IDynamic
     
     private void Render()
     {
-        if (_vao == null)
+        if (_vao == null || _currentEboLen == 0)
         {
             Logger.Error(this, "can not render: model is empty");
             return;
@@ -41,7 +42,7 @@ public class GlModel : GlDisposable, IRenderableModel.IDynamic
         _vbo.Bind();
         _ebo.Bind();
         _ssbo.Bind();
-        GL.DrawElements(OpenGlApi.ToGl(CurrentPrimitive), _ebo.Capacity, DrawElementsType.UnsignedInt, 0);
+        GL.DrawElements(OpenGlApi.ToGl(CurrentPrimitive), _currentEboLen, DrawElementsType.UnsignedInt, 0);
     }
     
     public void Render(IShader.ICamera.IColor shader) => Render();
@@ -73,6 +74,7 @@ public class GlModel : GlDisposable, IRenderableModel.IDynamic
         }
         _vbo.BindAndPush(vboBuf.ToArray());
         _ebo.BindAndPush(eboBuf.ToArray());
+        _currentEboLen = eboBuf.Length;
         _ssbo.BindAndPush(ssboBuf.ToArray());
     }
     

@@ -48,8 +48,8 @@ public class CompiledFont
             var y = -(glyph.Height - glyph.BearingY) * sizeMul;
             // minY = MathF.Min(y, minY);
             // maxY = MathF.Max(height + y, maxY);
-            mesh.Offset((xOffset + glyph.BearingX * sizeMul, y, 0f));
-            xOffset += glyph.Advance * sizeMul;
+            mesh.Offset(((xOffset + glyph.BearingX) * sizeMul, y, 0f));
+            xOffset += glyph.Advance;
             
             consumer(mesh);
         }
