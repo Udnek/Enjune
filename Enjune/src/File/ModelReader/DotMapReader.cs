@@ -11,7 +11,7 @@ public class DotMapReader : AbstractReader
 {
     public DotMapReader(AssetManager assetManager, ResourcePath path) : base(assetManager, path){}
     
-    public override MaterialModel? Read(out Error? error)
+    public override Model? Read(out Error? error)
     {
         var mapFormat = new QuakeMapFormat();
         MapFile? mapFile = null;
@@ -24,10 +24,10 @@ public class DotMapReader : AbstractReader
         return ProceedMap(mapFile);
     }
 
-    private MaterialModel ProceedMap(MapFile map)
+    private Model ProceedMap(MapFile map)
     {
-        var builder = new MaterialModel.Builder();
-        List<Mesh<Color>> meshes = [];
+        var builder = new Model.Builder();
+        List<AbstractMesh<Color>> meshes = [];
         var solids = map.Worldspawn.Find(mo => mo is Solid).Cast<Solid>();
         
         foreach (var solid in solids)
@@ -35,7 +35,7 @@ public class DotMapReader : AbstractReader
             foreach (var face in solid.Faces)
             {
                 var positions = new Position[face.Vertices.Count];
-                var texCoords = new TextureCoord[face.Vertices.Count];
+                var texCoords = new TexturePos[face.Vertices.Count];
                 for (var i = 0; i < face.Vertices.Count; i++)
                 {
                     var faceVertex = face.Vertices[i];
@@ -47,7 +47,7 @@ public class DotMapReader : AbstractReader
                     texCoords[i] = (u, v);
                 }
                 var material = AssetManager.AddMaterialAndGetCompiled(RawMaterial.FromTexture(Path.ResolveRaw(face.TextureName)));
-                builder.Add(Mesh.NgonWithNormals(positions, texCoords), material);
+                builder.Add(Mesh.NgonWithNormals(positions, texCoords), new Model.PerMesh(material));
             }
         }
 

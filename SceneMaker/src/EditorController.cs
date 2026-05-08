@@ -14,7 +14,7 @@ public class EditorController
     private readonly Scene _scene;
     private readonly KeyBinds.Bind _selectBind;
     public SObject? SelectedObject { get; private set; }
-    private readonly Dictionary<Mesh<Color>, Ax> _meshToAx = new(3);
+    private readonly Dictionary<Mesh, Ax> _meshToAx = new(3);
     private Ax? _selectedAx;
 
     public readonly SObject AxisObject;
@@ -27,18 +27,20 @@ public class EditorController
         _selectBind = new KeyBinds.Bind("select", KeyCode.LeftMouseButton);
         _inputHandler.Binds.AddBind(_selectBind);
 
-        var x = new Mesh<Color>([Vector3.Zero, Vector3.UnitX], [Color.One, Color.One], [0, 1]);
-        var y = new Mesh<Color>([Vector3.Zero, Vector3.UnitY], [Color.One, Color.One], [0, 1]);
-        var z = new Mesh<Color>([Vector3.Zero, Vector3.UnitZ], [Color.One, Color.One], [0, 1]);
-        var model = new Model<Color, Color>.Builder()
-            .Add(x, new Color(1f, 0f, 0f, 1f))
-            .Add(y, new Color(0f, 1f, 0f, 1f))
-            .Add(z, new Color(0f, 0f, 1f, 1f))
+        var x = new Mesh([Vector3.Zero, Vector3.UnitX], 
+            [default, default], 
+            [0, 1]);
+        var y = new Mesh([Vector3.Zero, Vector3.UnitY], [default, default], [0, 1]);
+        var z = new Mesh([Vector3.Zero, Vector3.UnitZ], [default, default], [0, 1]);
+        var model = new Model.Builder()
+            .Add(x, new Model.PerMesh(new Color(1f, 0f, 0f, 1f)))
+            .Add(y, new Model.PerMesh(new Color(0f, 1f, 0f, 1f)))
+            .Add(z, new Model.PerMesh(new Color(0f, 0f, 1f, 1f)))
             .Build(false);
         AxisObject = new SObject
         {
             IsRealistic = false,
-            ColorModel = model,
+            Model = model,
             RenderableModel = _graphicApi.CreateStaticRenderable(model, IGraphicApi.Primitive.Line),
             Hidden = true
         };
@@ -153,9 +155,9 @@ public class EditorController
         cameraPos = viewMat.Inverted().ExtractTranslation();
     }
     
-    private Mesh<Color>? TraceLineObject(SObject obj, Matrix4 viewMat, Matrix4 projMat, float minimumAngleDegrees)
+    private Mesh? TraceLineObject(SObject obj, Matrix4 viewMat, Matrix4 projMat, float minimumAngleDegrees)
     {
-        if (obj.ColorModel == null) return null;
+        if (obj.Model == null) return null;
         GetCursorVectors(viewMat, projMat, out var direction, out var cameraPos);
         
         var modelMatInv = obj.ModelTransform.Inverted();
@@ -163,11 +165,11 @@ public class EditorController
         direction = modelMatInv.TransformDirection(direction).Normalized();
         cameraPos = modelMatInv.TransformPosition(cameraPos);
 
-        Mesh<Color>? nearestMesh = null;
+        Mesh? nearestMesh = null;
         var minDist = float.MaxValue;
-        foreach (var pair in obj.ColorModel.Meshes)
+        foreach (var pair in obj.Model.Meshes)
         {
-            var mesh = pair.mesh;
+            var mesh = pair.Mesh;
             for (var indexIndex = 0; indexIndex < mesh.Indexes.Length; indexIndex+=2)
             {
                 var verIndex0 = mesh.Indexes[indexIndex];
@@ -205,7 +207,7 @@ public class EditorController
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static bool TraceObject(Vector3 cameraPos, Vector3 direction, SObject obj, out float distance)
     {
-        if (obj.MatModel == null)
+        if (obj.Model == null || obj.RenderableModel?.CurrentPrimitive != IGraphicApi.Primitive.Triangle)
         {
             distance = 0;
             return false;
@@ -215,7 +217,7 @@ public class EditorController
         var localDirection = modelMatInv.TransformDirection(direction).Normalized();
         var localCameraPos = modelMatInv.TransformPosition(cameraPos);
         
-        foreach (var (mesh, _) in obj.MatModel.Meshes)
+        foreach (var (mesh, _) in obj.Model.Meshes)
         {
             for (var indexIndex = 0; indexIndex < mesh.Indexes.Length; indexIndex+=3)
             {

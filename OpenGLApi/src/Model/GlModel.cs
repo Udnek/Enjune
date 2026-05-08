@@ -1,3 +1,4 @@
+using Enjune.Graphic;
 using Enjune.Graphic.GraphicApi;
 using Enjune.Misc;
 using OpenGLApi.Component;
@@ -18,7 +19,8 @@ public class GlModel : GlDisposable, IRenderableModel.IDynamic
     private Vbo<VertexData> _vbo = null!;
     private SsboArray<PerPrimitiveData> _ssbo = null!;
     private Ebo _ebo = null!;
-    private PrimitiveType _glPrimitive;
+
+    public IGraphicApi.Primitive CurrentPrimitive { get; private set; }
 
     public GlModel(MaterialShader shader, int ssboBinding, bool final, MatId whiteMaterialId)
     {
@@ -27,7 +29,6 @@ public class GlModel : GlDisposable, IRenderableModel.IDynamic
         _final = final;
         _whiteMaterialId = whiteMaterialId;
     }
-
     
     private void Render()
     {
@@ -40,21 +41,17 @@ public class GlModel : GlDisposable, IRenderableModel.IDynamic
         _vbo.Bind();
         _ebo.Bind();
         _ssbo.Bind();
-        GL.DrawElements(_glPrimitive, _ebo.Capacity, DrawElementsType.UnsignedInt, 0);
+        GL.DrawElements(OpenGlApi.ToGl(CurrentPrimitive), _ebo.Capacity, DrawElementsType.UnsignedInt, 0);
     }
     
-
     public void Render(IShader.ICamera.IColor shader) => Render();
     public void Render(IShader.ICamera.IMaterial shader) => Render();
     public void Render(IShader.IShadowMap shader) => Render();
 
     protected override void DisposeGlData() => Utils.DisposeAllFields(this);
 
-    private void Refit(VertexData[] vboBuf, int[] eboBuf, PerPrimitiveData[] ssboBuf,
-        IGraphicApi.Primitive primitive)
+    private void Refit(VertexData[] vboBuf, int[] eboBuf, PerPrimitiveData[] ssboBuf)
     {
-        _glPrimitive = OpenGlApi.ToGl(primitive);
-        
         if (_vao == null)
         {
             _vao = new Vao();
@@ -79,13 +76,15 @@ public class GlModel : GlDisposable, IRenderableModel.IDynamic
         _ssbo.BindAndPush(ssboBuf.ToArray());
     }
     
-    public void Refit(MaterialModel model, IGraphicApi.Primitive primitive = IGraphicApi.Primitive.Triangle)
+    public void Refit(Enjune.Graphic.Model model, IGraphicApi.Primitive primitive = IGraphicApi.Primitive.Triangle)
     {
+        CurrentPrimitive = primitive;
+        
         List<VertexData> vboBuf = [];
         List<int> eboBuf = [];
         List<PerPrimitiveData> ssboBuf = [];
 
-        foreach (var (mesh, material) in model.Meshes)
+        foreach (var (mesh, perMesh) in model.Meshes)
         {
             var eboOffset = vboBuf.Count;
             foreach (var meshIndex in mesh.Indexes) 
@@ -93,42 +92,14 @@ public class GlModel : GlDisposable, IRenderableModel.IDynamic
             
             // vertices
             for (var i = 0; i < mesh.Vertices.Length; i++)
-                vboBuf.Add(new VertexData(mesh.Vertices[i], mesh.PerVertexData[i].texCoord, mesh.PerVertexData[i].normal));
+                vboBuf.Add(new VertexData(mesh.Vertices[i], mesh.PerVertexData[i].TexPos, mesh.PerVertexData[i].Normal));
             
             // materials
+            var mat = perMesh.Material?.Id ?? _whiteMaterialId;
             for (var _ = 0; _ < IGraphicApi.PrimitivesAmountFromIndexes(primitive, mesh.Indexes.Length); _++) 
-                ssboBuf.Add(new PerPrimitiveData(material.Id, Color.One));
+                ssboBuf.Add(new PerPrimitiveData(mat, perMesh.MeshColor));
         }
         
-        Refit(vboBuf.ToArray(), eboBuf.ToArray(), ssboBuf.ToArray(), primitive);
-    }
-
-    public void Refit(ColorModel model, IGraphicApi.Primitive primitive = IGraphicApi.Primitive.Triangle)
-    {
-        List<VertexData> vboBuf = [];
-        List<int> eboBuf = [];
-        List<PerPrimitiveData> ssboBuf = [];
-
-        foreach (var (mesh, color) in model.Meshes)
-        {
-            var eboOffset = vboBuf.Count;
-            foreach (var meshIndex in mesh.Indexes) 
-                eboBuf.Add(eboOffset + meshIndex);
-            
-            // vertices
-            for (var i = 0; i < mesh.Vertices.Length; i++)
-                vboBuf.Add(new VertexData(mesh.Vertices[i], default, default));
-            
-            // materials
-            int indexId = 0;
-            int stride = IGraphicApi.IndexStridePerPrimitive(primitive);
-            for (var _ = 0; _ < IGraphicApi.PrimitivesAmountFromIndexes(primitive, mesh.Indexes.Length); _++)
-            {
-                ssboBuf.Add(new PerPrimitiveData(_whiteMaterialId, mesh.PerVertexData[mesh.Indexes[indexId]] * color));
-                indexId += stride;
-            }
-        }
-        
-        Refit(vboBuf.ToArray(), eboBuf.ToArray(), ssboBuf.ToArray(), primitive);
+        Refit(vboBuf.ToArray(), eboBuf.ToArray(), ssboBuf.ToArray());
     }
 }

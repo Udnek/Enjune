@@ -25,4 +25,25 @@ public static class Extensions
 
     public static (T0, T1)[] JoinToTuple<T0, T1>(this T0[] array, T1[] other)
         => array.Select((v, i) => (v, other[i])).ToArray();
+
+    public static void ForEachIndexed<T>(this List<T> list, Action<int, T> action)
+    {
+        for (var i = 0; i < list.Count; i++) 
+            action(i, list[i]);
+    }
+    
+    public static void ForEach<T>(this T[] array, Action<T> action)
+    {
+        foreach (var t in array) action(t);
+    }
+
+    // public static Tv GetValueOrDefault<Tk, Tv>(this Dictionary<Tk, Tv> dict, Tk key, Func<Tv> computeDefault) where Tk : notnull
+    // {
+    //     if (dict.TryGetValue(key, out var value))
+    //     {
+    //         return value;
+    //     }
+    // }
 }
+
+

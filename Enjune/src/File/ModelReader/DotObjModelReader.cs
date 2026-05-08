@@ -8,16 +8,16 @@ namespace Enjune.File.ModelReader;
 public class DotObjModelReader : AbstractReader
 {
     private readonly List<Position> _loadedVertices = [];
-    private readonly List<TextureCoord> _loadedTextureCoords = [];
+    private readonly List<TexturePos> _loadedTextureCoords = [];
     private readonly Dictionary<string, RawMaterial> _materialByName = new();
     private RawMaterial? _selectedMaterial = null;
     private RawMaterial? _lastCreatedMaterial = null;  
     
-    private readonly Model<(TextureCoord, Vector3), CompiledMaterial>.Builder _builder = new();
+    private readonly Model.Builder _builder = new();
 
     public DotObjModelReader(AssetManager assetManager, ResourcePath path) : base(assetManager, path){}
 
-    public override Model<(TextureCoord texCoord, Normal normal), CompiledMaterial>? Read(out Error? error)
+    public override Model? Read(out Error? error)
     {
         var text = Path.LoadText(out error);
         if (text == null) return null;
@@ -61,7 +61,7 @@ public class DotObjModelReader : AbstractReader
         if (float.TryParse(args[0], out float u)
             && float.TryParse(args[1], out float v))
         {
-            _loadedTextureCoords.Add(new TextureCoord(u, v));
+            _loadedTextureCoords.Add(new TexturePos(u, v));
             return null;
         }
         return "can not parse vertex textures";
@@ -183,10 +183,10 @@ public class DotObjModelReader : AbstractReader
         }
         
         var verPoses = verIndexes.Select(i => GetById(_loadedVertices, i)).ToArray();
-        TextureCoord[] texPoses;
+        TexturePos[] texPoses;
         if (texIndexes.Count == 0) // then we filling it by ourselves 
         {
-            var texPosesList = new List<TextureCoord>();
+            var texPosesList = new List<TexturePos>();
             for (var i = 0; i < verIndexes.Count; i++)
             {
                 texPosesList.Add(TextureQuad.Full[i % 4]);
@@ -202,7 +202,7 @@ public class DotObjModelReader : AbstractReader
         else
             material = AssetManager.MissingMaterial;
 
-        _builder.Add(Mesh.NgonWithNormals(verPoses, texPoses), material);
+        _builder.Add(Mesh.NgonWithNormals(verPoses, texPoses), new Model.PerMesh(material));
         return null;
     }
 }

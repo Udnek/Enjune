@@ -4,11 +4,12 @@ global using Vector4 = OpenTK.Mathematics.Vector4;
 global using Quaternion = OpenTK.Mathematics.Quaternion;
 global using Matrix4 = OpenTK.Mathematics.Matrix4;
 global using Error = Enjune.Misc.Error;
+global using MathF = System.MathF;
 
 // aliases
 global using Position = OpenTK.Mathematics.Vector3;
 global using Color = OpenTK.Mathematics.Vector4;
-global using TextureCoord = OpenTK.Mathematics.Vector2;
+global using TexturePos = OpenTK.Mathematics.Vector2;
 global using Normal = OpenTK.Mathematics.Vector3;
 
 
@@ -22,6 +23,3 @@ global using SignatureInteger = uint; // (n=32) n-bits mask -> n components per 
 
 global using TexId = int;
 global using MatId = int;
-
-global using MaterialModel = Enjune.Graphic.Model<(OpenTK.Mathematics.Vector2 texCoord, OpenTK.Mathematics.Vector3 normal), Enjune.Graphic.Asset.CompiledMaterial>;
-global using ColorModel = Enjune.Graphic.Model<OpenTK.Mathematics.Vector4, OpenTK.Mathematics.Vector4>;

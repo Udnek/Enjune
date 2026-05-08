@@ -1,3 +1,5 @@
+using System.Diagnostics;
+using System.Globalization;
 using Enjune;
 using Enjune.File;
 using Enjune.File.ModelReader;
@@ -31,8 +33,9 @@ public class App : AbstractDisposable, IApp
     private readonly KeyBinds.Bind _lockCursorBind;
     private readonly Scene _scene;
     private EditorController _editorController = null!;
-    private Ui _ui;
     private IRenderableModel.IDynamic _uiModel;
+    private Ui _ui;
+    private UiText _fpsUiElement;
 
     public App()
     {
@@ -42,7 +45,7 @@ public class App : AbstractDisposable, IApp
         _lockCursorBind = _binds.AddBind(new KeyBinds.Bind("lock_cursor", KeyCode.RightMouseButton));
         
         _dumbTexturesBind = _binds.AddBind(new KeyBinds.Bind("dumb_textures", KeyCode.F2));
-        _inputHandler = new BasicInputHandler(_binds, InitialWindowSize);
+        _inputHandler = new BasicInputHandler(_binds, InitialWindowSize, 0.5f);
         _scene = new Scene();
     }
 
@@ -103,7 +106,6 @@ public class App : AbstractDisposable, IApp
         _grapi.SetVsync(false);
         _grapi.SetClearColor(new Color(0.2f, 0.2f, 0.2f, 0f));
         _grapi.SetCursorMode(IGraphicApi.CursorMode.Centered);
-        _grapi.SetVsync(false);
         
         _wasdController = new FlyingPlayerController(_grapi, _inputHandler, _wasd, 0.2f);
         
@@ -111,12 +113,12 @@ public class App : AbstractDisposable, IApp
         
         {
             {
-                var m = new Model<(TextureCoord texCoord, Normal normal), CompiledMaterial>.Builder()
-                    .Add(Mesh.Cube(Position.Zero, 0.5f, TextureQuad.Full), assetManager.WhiteMaterial)
+                var m = new Model.Builder()
+                    .Add(Mesh.Cube(Position.Zero, 0.5f, TextureQuad.Full), new Model.PerMesh(assetManager.WhiteMaterial))
                     .Build();
                 var light = new SObject()
                 {
-                    MatModel = m,
+                    Model = m,
                     RenderableModel = _grapi.CreateStaticRenderable(m),
                     Position = (0, 20, -25/2f),
                     PointLight = SpotLight.Ortho(new Vector3(0.3f, -1, 0.3f), new Color(244/255f, 233/255f, 155/255f, 1f)*1.5f, (30, 30))
@@ -125,12 +127,12 @@ public class App : AbstractDisposable, IApp
             }
 
             {
-                var m = new Model<(TextureCoord texCoord, Normal normal), CompiledMaterial>.Builder()
-                    .Add(Mesh.Cube(Position.Zero, 0.5f, TextureQuad.Full), assetManager.WhiteMaterial)
+                var m = new Model.Builder()
+                    .Add(Mesh.Cube(Position.Zero, 0.5f, TextureQuad.Full), new Model.PerMesh(assetManager.WhiteMaterial))
                     .Build();
                 _scene.Objects.Add(new SObject()
                 {
-                    MatModel = m,
+                    Model = m,
                     RenderableModel = _grapi.CreateStaticRenderable(m),
                     Position = (6, 4, 0),
                     PointLight = SpotLight.Perspective(-Vector3.UnitY, new Color(1, 1, 0, 1), 45f)
@@ -153,21 +155,19 @@ public class App : AbstractDisposable, IApp
         
         _scene.Objects.Add(new SObject()
         {
-            MatModel = calavera,
+            Model = calavera,
             RenderableModel = _grapi.CreateStaticRenderable(calavera)
         });
         
         _scene.Objects.Add(_editorController.AxisObject);
-        
+
+        _fpsUiElement = new UiText(Anchor.FixedAt(0, 1), new Margin(0, 10, 10, -40), 1, font, "fps");
         _ui = new Ui(
-            new UiButton(Anchor.StretchWithMarginInside(0.1f), Margin.Inside(20), 0, [
-                new UiButton(Anchor.FixedAtCenter, Margin.Outsize(10), 1)
-            ]))
-        {
-            Size = InitialWindowSize,
-            PixelsPerUnit = 2
-        };
-        _uiModel = _grapi.CreateDynamicRenderable(_ui.UpdateAndCreateModel());
+            InitialWindowSize,
+            _fpsUiElement
+        );
+        
+        _uiModel = _grapi.CreateDynamicRenderable(_ui.CreateModel()); 
         
         return null;
     }
@@ -177,10 +177,13 @@ public class App : AbstractDisposable, IApp
         var projection = Matrix4.CreatePerspectiveFieldOfView(
             MathF.PI / 2, (float) _inputHandler.WindowSize.X / _inputHandler.WindowSize.Y, 0.1f, 100f);
         int tick = 0;
+        var fpsStopWatch = Stopwatch.StartNew();
         Utils.RunTargetFpsLoopWhile(500,
             () => !_grapi.ShouldStop(),
             deltaTime =>
             {
+                _inputHandler.PrepareAtFrameStart();
+                
                 _wasdController.Update(deltaTime);
 
                 bool updateUi = false;
@@ -188,19 +191,30 @@ public class App : AbstractDisposable, IApp
                 {
                     updateUi = true;
                     _ui.PixelsPerUnit += _inputHandler.DeltaWheelScroll.Y * 0.1f;
+                    _ui.UpdateEntire();
                 }
                 if (_inputHandler.WindowSizeChanged)
                 {
+                    _grapi.SetRenderSize(_inputHandler.WindowSize);
+                    
+                    _ui.Size = _inputHandler.WindowSize;
+                    _ui.UpdateEntire();
                     updateUi = true;
+                    
                     projection = Matrix4.CreatePerspectiveFieldOfView(
                         MathF.PI / 2, (float) _inputHandler.WindowSize.X / _inputHandler.WindowSize.Y, 0.1f, 100f);
                 }
-
-                if (updateUi)
+                
+                if (fpsStopWatch.ElapsedMilliseconds > 1000)
                 {
-                    _ui.Size = _inputHandler.WindowSize;
-                    _ui.LogHierarchy();
-                    _uiModel.Refit(_ui.UpdateAndCreateModel());
+                    fpsStopWatch.Restart();
+                    _fpsUiElement.Text = (1f / deltaTime).ToString("0.00");
+                    _fpsUiElement.UpdateMeshes();
+                    updateUi = true;
+                }
+
+                if (updateUi){
+                    _uiModel.Refit(_ui.CreateModel());
                 }
                 
                 var view = _wasdController.View;

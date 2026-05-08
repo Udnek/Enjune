@@ -11,7 +11,7 @@ public sealed class SsboDataAndArray<TData, TArray> : GlDisposable where TArray 
     private readonly int _handle;
     private readonly int _dataSize;
     private readonly int _arrayElementSize;
-    public readonly int ArrayCapacity;
+    public int ArrayCapacity { get; private set; }
     public readonly bool Final;
 
     public TData CurrentData = new();
@@ -56,6 +56,7 @@ public sealed class SsboDataAndArray<TData, TArray> : GlDisposable where TArray 
         Bind();
         GL.BufferData(BufferTarget.ShaderStorageBuffer, _dataSize + newArrayCapacity*_arrayElementSize, IntPtr.Zero, BufferUsageHint.DynamicDraw);
         Logger.Log(this, $"array capacity increased: {ArrayCapacity} -> {newArrayCapacity}");
+        ArrayCapacity = newArrayCapacity;
     }
     
     

@@ -3,16 +3,10 @@ using Enjune.Graphic.Asset;
 
 namespace Enjune.File.ModelReader;
 
-public abstract class AbstractReader
+public abstract class AbstractReader(AssetManager assetManager, ResourcePath path)
 {
-    protected readonly AssetManager AssetManager;
-    protected readonly ResourcePath Path;
+    protected readonly AssetManager AssetManager = assetManager;
+    protected readonly ResourcePath Path = path;
 
-    public AbstractReader(AssetManager assetManager, ResourcePath path)
-    {
-        AssetManager = assetManager;
-        Path = path;
-    }
-
-    public abstract MaterialModel? Read(out Error? error);
+    public abstract Model? Read(out Error? error);
 }

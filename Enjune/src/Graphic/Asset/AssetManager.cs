@@ -27,9 +27,9 @@ public class AssetManager
         WhiteMaterial = AddMaterialAndGetCompiled(RawMaterial.FromTexture(AssemblyPath.Of(Enjune.Assembly,"WhitePixel.png")));
     }
 
-    public CompiledFont? AddFont(ResourcePath path, uint resolution, out Error? error)
+    public CompiledFont? AddFont(ResourcePath path, uint height, out Error? error)
     {
-        FontLoader.Load(out error, resolution, path, out var rawGlyphs);
+        FontLoader.Load(out error, height, path, out var rawGlyphs);
         if (rawGlyphs == null) return null;
         
         // packing
@@ -96,7 +96,7 @@ public class AssetManager
         }
 
         error = null;
-        return new CompiledFont(glyphs, material, resolution);
+        return new CompiledFont(glyphs, material, height);
     }
     
     public CompiledMaterial AddMaterialAndGetCompiled(RawMaterial rawMaterial)

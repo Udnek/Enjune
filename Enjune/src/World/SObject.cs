@@ -9,9 +9,7 @@ namespace Enjune.World;
 public class SObject
 {
     public IRenderableModel? RenderableModel = null;
-    
-    public MaterialModel? MatModel = null;
-    public ColorModel? ColorModel = null;
+    public Model? Model = null;
     
     public SpotLight? PointLight;
     

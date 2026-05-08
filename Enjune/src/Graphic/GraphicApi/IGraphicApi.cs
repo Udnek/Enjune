@@ -8,10 +8,8 @@ namespace Enjune.Graphic.GraphicApi;
 
 public interface IGraphicApi : IDisposable
 {
-    public IRenderableModel CreateStaticRenderable(MaterialModel model, Primitive primitive = Primitive.Triangle);
-    public IRenderableModel CreateStaticRenderable(ColorModel model, Primitive primitive = Primitive.Triangle);
-    public IRenderableModel.IDynamic CreateDynamicRenderable(MaterialModel model, Primitive primitive = Primitive.Triangle);
-    public IRenderableModel.IDynamic CreateDynamicRenderable(ColorModel model, Primitive primitive = Primitive.Triangle);
+    public IRenderableModel CreateStaticRenderable(Model model, Primitive primitive = Primitive.Triangle);
+    public IRenderableModel.IDynamic CreateDynamicRenderable(Model model, Primitive primitive = Primitive.Triangle);
     
     void SetLights(IEnumerable<SpotLight> lights);
     
@@ -24,6 +22,7 @@ public interface IGraphicApi : IDisposable
     // general pipeline end
 
     // misc
+    void SetRenderSize(Vector2i size);
     void SetClearColor(Color color);
     void DumpTextures(ExternalPath path);
     void SetDrawMode(DrawMode mode);

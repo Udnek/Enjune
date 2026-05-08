@@ -2,46 +2,24 @@ using Enjune.Misc;
 
 namespace Enjune.Graphic;
 
-public sealed class Mesh<TPerVertex>
+public class Mesh : AbstractMesh<Mesh.PerVertex>
 {
-    public readonly Position[] Vertices;
-    public readonly int[] Indexes;
-    public readonly TPerVertex[] PerVertexData;
+    public record struct PerVertex(Vector2 TexPos, Vector3 Normal);
 
-    public Mesh(Position[] vertices, TPerVertex[] perVertexData, int[] indexes)
-    {
-        if (!Mesh.IsValid(vertices, perVertexData, indexes, out var error)) 
-            Logger.Error(this, "constructing invalid mesh: " + error);
-        
-        Vertices = vertices;
-        PerVertexData = perVertexData;
-        Indexes = indexes;
-    }
+    public Mesh(Position[] vertices, PerVertex[] perVertexData, int[] indexes) : base(vertices, perVertexData, indexes){}
     
-    public void Offset(Position offset)
-    {
-        for (var i = 0; i < Vertices.Length; i++) 
-            Vertices[i] += offset;
-    }
-
-    public void Multiply(Vector3 vector)
-    {
-        for (int i = 0; i < Vertices.Length; i++) 
-            Vertices[i] *= vector;
-    }
-}
-
-public static class Mesh
-{
-    public static Mesh<(TextureCoord texCoord, Normal normal)> CreateWithNormals(
-        Position[] vertices, TextureCoord[] texCoords, int[] indexes)
+    // STATIC
+    
+      public static Mesh CreateWithNormals(
+        Position[] vertices, TexturePos[] texPos, int[] indexes)
     {
         var normals = GenerateSmoothNormals(vertices, indexes);
-        return new Mesh<(TextureCoord texCoord, Normal normal)>
-            (vertices, texCoords.JoinToTuple(normals), indexes);
+        return new Mesh(vertices, 
+            texPos.Select((tc, i) => new PerVertex(tc, normals[i])).ToArray(), 
+            indexes);
     }
-    
-    public static Mesh<(TextureCoord texCoord, Normal normal)> Cuboid(
+
+    public static Mesh Cuboid(
         Position b1, Position b2, Position b3, Position b4,
         Position t1, Position t2, Position t3, Position t4,
         TextureQuad texture)
@@ -55,7 +33,7 @@ public static class Mesh
             Quad(t4, t1, b1, b4, texture)); // left
     }
 
-    public static Mesh<(TextureCoord texCoord, Normal normal)> Cube(Position center, float size, TextureQuad texture)
+    public static Mesh Cube(Position center, float size, TextureQuad texture)
     {
         var hs = size / 2;
         return Cuboid(
@@ -74,75 +52,60 @@ public static class Mesh
         );
     }
 
-    public static Mesh<(TextureCoord texCoord, Normal normal)> Quad(Position bl, Position br, Position tr, Position tl, TextureQuad tex)
+    public static Mesh Quad(Position bl, Position br, Position tr, Position tl,
+        TextureQuad tex)
     {
         return CreateWithNormals([bl, br, tr, tl],
-                [tex.BotLeft, tex.BotRight, tex.TopRight, tex.TopLeft],
-                [0, 1, 2, 0, 2, 3]);
-    }
-    
-    public static Mesh<TPerVert> Quad<TPerVert>(Position bl, Position br, Position tr, Position tl, TPerVert pv1, TPerVert pv2, TPerVert pv3, TPerVert pv4)
-    {
-        return new Mesh<TPerVert>([bl, br, tr, tl],
-            [pv1, pv2, pv3, pv4],
+            [tex.BotLeft, tex.BotRight, tex.TopRight, tex.TopLeft],
             [0, 1, 2, 0, 2, 3]);
     }
-    
-    public static Mesh<TPerVert> Triangle<TPerVert>(Position p1, Position p2, Position p3, TPerVert pv1, TPerVert pv2, TPerVert pv3)
+
+
+    public static Mesh Triangle<TPerVert>(Position p1, Position p2, Position p3, 
+        Mesh.PerVertex pv1, Mesh.PerVertex pv2, Mesh.PerVertex pv3)
     {
-        return new Mesh<TPerVert>([p1, p2, p3],
+        return new Mesh([p1, p2, p3],
             [pv1, pv2, pv3],
             [0, 1, 2]);
     }
 
-    
-    public static Mesh<(TextureCoord texCoord, Normal normal)> Triangle(Position bl, Position br, Position tr, TextureQuad tex)
+
+    public static Mesh Triangle(Position bl, Position br, Position tr,
+        TextureQuad tex)
     {
         return CreateWithNormals([bl, br, tr],
             [tex.BotLeft, tex.BotRight, tex.TopRight],
             [0, 1, 2]);
     }
-    
-    
-    public static Mesh<TPerVertex> Ngon<TPerVertex>(Position[] poses, TPerVertex[] perVertexData)
+
+
+    public static Mesh Ngon(Position[] poses, Mesh.PerVertex[] perVertexData)
     {
         if (perVertexData.Length != poses.Length)
-            throw new ArgumentException($"positions and perVertexData must have the same length: {poses.Length} != {perVertexData.Length}");
-        List<int> indexes = new (poses.Length*3);
-        for (int i = 1; i < poses.Length-1; i++)
+            throw new ArgumentException(
+                $"positions and perVertexData must have the same length: {poses.Length} != {perVertexData.Length}");
+        List<int> indexes = new(poses.Length * 3);
+        for (var i = 1; i < poses.Length - 1; i++)
         {
             // fan-like
             indexes.Add(0);
             indexes.Add(i);
             indexes.Add(i + 1);
         }
-        return new Mesh<TPerVertex>(poses, perVertexData, indexes.ToArray());
+
+        return new Mesh(poses, perVertexData, indexes.ToArray());
     }
-    
-    
-    public static Mesh<TPerVertex> Merge<TPerVertex>(params Mesh<TPerVertex>[] meshes) => Merge((IEnumerable<Mesh<TPerVertex>>) meshes);
-    
-    public static Mesh<TPerVertex> Merge<TPerVertex>(IEnumerable<Mesh<TPerVertex>> meshes)
+
+
+
+
+    public static Mesh NgonWithNormals(Position[] poses, TexturePos[] texPoses)
     {
-        int offset = 0;
-        var indexes = new List<int>();
-        foreach (var mesh in meshes)
-        {
-            foreach (var index in mesh.Indexes) 
-                indexes.Add(offset + index);
-            offset += mesh.Vertices.Length;
-        }
-        var perVertexData = meshes.SelectMany(mesh => mesh.PerVertexData).ToArray();
-        var vertices = meshes.SelectMany(mesh => mesh.Vertices).ToArray();
-        return new Mesh<TPerVertex>(vertices, perVertexData, indexes.ToArray());
-    }
-    
-    public static Mesh<(TPerVertex, Normal)> NgonWithNormals<TPerVertex>(Position[] poses, TPerVertex[] perVertexData)
-    {
-        if (perVertexData.Length != poses.Length)
-            throw new ArgumentException($"positions and perVertexData must have the same length: {poses.Length} != {perVertexData.Length}");
-        List<int> indexes = new (poses.Length*3);
-        for (int i = 1; i < poses.Length-1; i++)
+        if (texPoses.Length != poses.Length)
+            throw new ArgumentException(
+                $"positions and texPoses must have the same length: {poses.Length} != {texPoses.Length}");
+        List<int> indexes = new(poses.Length * 3);
+        for (var i = 1; i < poses.Length - 1; i++)
         {
             // fan-like
             indexes.Add(0);
@@ -152,29 +115,32 @@ public static class Mesh
 
         var arrayIndexes = indexes.ToArray();
         var normals = GenerateSmoothNormals(poses, arrayIndexes);
-        return new Mesh<(TPerVertex, Vector3)>(poses, perVertexData.JoinToTuple(normals), arrayIndexes);
+        return new Mesh(poses, 
+            texPoses.Select((tc, i) => new Mesh.PerVertex(tc, normals[i])).ToArray(), 
+            arrayIndexes);
     }
-    
+
     public static Vector3[] GenerateSmoothNormals(Position[] vertices, int[] indexes)
     {
         if (vertices.Length <= 2)
         {
-            Logger.Error(typeof(Mesh<object>), "trying to generate smooth normals for < 3 verices");
+            Logger.Error(typeof(AbstractMesh<object>), "trying to generate smooth normals for < 3 verices");
             return Enumerable.Repeat(Vector3.UnitX, vertices.Length).ToArray();
         }
 
         if (indexes.Length % 3 != 0)
         {
-            Logger.Error(typeof(Mesh<object>), "trying to generate smooth normals for indexes length % 3 != 0");
+            Logger.Error(typeof(AbstractMesh<object>), "trying to generate smooth normals for indexes length % 3 != 0");
             return Enumerable.Repeat(Vector3.UnitX, vertices.Length).ToArray();
         }
+
         Vector3[] normals = new Vector3[vertices.Length];
-        for (int iIndex = 0; iIndex < indexes.Length; iIndex+=3)
+        for (int iIndex = 0; iIndex < indexes.Length; iIndex += 3)
         {
             var v0Idx = indexes[iIndex];
-            var v1Idx = indexes[iIndex+1];
-            var v2Idx = indexes[iIndex+2];
-            
+            var v1Idx = indexes[iIndex + 1];
+            var v2Idx = indexes[iIndex + 2];
+
             // we do not normalize, cause final norm will be impacted by square of triangle
             var norm = MathUtils.PlaneNormNotNormalized(
                 vertices[v0Idx], vertices[v1Idx], vertices[v2Idx]);
@@ -182,44 +148,29 @@ public static class Mesh
             normals[v1Idx] += norm;
             normals[v2Idx] += norm;
         }
-        for (var i = 0; i < normals.Length; i++) 
+
+        for (var i = 0; i < normals.Length; i++)
             normals[i] = normals[i].Normalized();
-        
+
         return normals;
     }
     
-    public static bool IsValid<TPerVertex>(Position[] vertices, TPerVertex[] perVertexData, int[] indexes, out Error? error)
+    public static Mesh Merge(params Mesh[] meshes)
+        => Merge((IEnumerable<Mesh>) meshes);
+
+    public static Mesh Merge(IEnumerable<Mesh> meshes)
     {
-        if (vertices.Length <= 1)
+        int offset = 0;
+        var indexes = new List<int>();
+        foreach (var mesh in meshes)
         {
-            error = "vertices array <= 1: mesh doesn't really make sense";
-            return false;
+            foreach (var index in mesh.Indexes)
+                indexes.Add(offset + index);
+            offset += mesh.Vertices.Length;
         }
-        if (vertices.Length != perVertexData.Length)
-        {
-            error = $"vertices and perVertexData sizes aren't equal: {vertices.Length} != {perVertexData.Length}";
-            return false;
-        }
-        var min = indexes.Min();
-        if (min != 0)
-        {
-            error = $"index must be > 0, but got: {min}";
-            return false;
-        }
-        var max = indexes.Max();
-        if (max >= vertices.Length)
-        {
-            error = $"index must be < lenght of vertices ({vertices.Length}), but got: {max}";
-            return false;
-        }
-        for (int i=0; i<vertices.Length; i++)
-        {
-            if (indexes.Contains(i)) continue;
-            error = $"unused vertex at: {i}";
-            return false;
-        }
-        
-        error = null;
-        return true;
+
+        var perVertexData = meshes.SelectMany(mesh => mesh.PerVertexData).ToArray();
+        var vertices = meshes.SelectMany(mesh => mesh.Vertices).ToArray();
+        return new Mesh(vertices, perVertexData, indexes.ToArray());
     }
 }

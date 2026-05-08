@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using Enjune.File;
+using Enjune.Graphic;
 using Enjune.Graphic.GraphicApi;
 using Enjune.Graphic.Input;
 using Enjune.Misc;
@@ -174,28 +175,14 @@ public sealed partial class OpenGlApi
     }
 
 
-    public IRenderableModel CreateStaticRenderable(MaterialModel model, IGraphicApi.Primitive primitive = IGraphicApi.Primitive.Triangle)
+    public IRenderableModel CreateStaticRenderable(Enjune.Graphic.Model model, IGraphicApi.Primitive primitive = IGraphicApi.Primitive.Triangle)
     {
         var materialModel = new GlModel(_materialShader, PerPrimitiveSsboBinding, true, _assets.WhiteMaterial.Id);
         materialModel.Refit(model, primitive);
         return materialModel;
     }
 
-    public IRenderableModel CreateStaticRenderable(ColorModel model, IGraphicApi.Primitive primitive = IGraphicApi.Primitive.Triangle)
-    {
-        var materialModel = new GlModel(_materialShader, PerPrimitiveSsboBinding, true, _assets.WhiteMaterial.Id);
-        materialModel.Refit(model, primitive);
-        return materialModel;
-    }
-
-    public IRenderableModel.IDynamic CreateDynamicRenderable(MaterialModel model, IGraphicApi.Primitive primitive = IGraphicApi.Primitive.Triangle)
-    {
-        var materialModel = new GlModel(_materialShader, PerPrimitiveSsboBinding, false, _assets.WhiteMaterial.Id);
-        materialModel.Refit(model, primitive);
-        return materialModel;
-    }
-
-    public IRenderableModel.IDynamic CreateDynamicRenderable(ColorModel model, IGraphicApi.Primitive primitive = IGraphicApi.Primitive.Triangle)
+    public IRenderableModel.IDynamic CreateDynamicRenderable(Enjune.Graphic.Model model, IGraphicApi.Primitive primitive = IGraphicApi.Primitive.Triangle)
     {
         var materialModel = new GlModel(_materialShader, PerPrimitiveSsboBinding, false, _assets.WhiteMaterial.Id);
         materialModel.Refit(model, primitive);

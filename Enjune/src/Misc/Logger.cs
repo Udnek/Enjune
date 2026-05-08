@@ -49,6 +49,6 @@ public static class Logger
 
         if (!authorType.IsGenericType) return authorType.Name;
         var generics = authorType.GetGenericArguments();
-        return $"{authorType.Name}{generics.ContentToString("<", ", ", ">")}";
+        return $"{authorType.Name}{generics.Select(g => g.Name).ContentToString("<", ", ", ">")}";
     }
 }

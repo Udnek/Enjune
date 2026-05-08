@@ -19,7 +19,3 @@ global using Seconds = float;
 
 global using TexId = int;
 global using MatId = int;
-
-global using MaterialModel = Enjune.Graphic.Model<(OpenTK.Mathematics.Vector2 texPos, OpenTK.Mathematics.Vector3 normal), Enjune.Graphic.Asset.CompiledMaterial>;
-global using SimpleMaterialModel = Enjune.Graphic.Model<OpenTK.Mathematics.Vector2, Enjune.Graphic.Asset.CompiledMaterial>;
-global using ColorModel = Enjune.Graphic.Model<OpenTK.Mathematics.Vector4, OpenTK.Mathematics.Vector4>;

@@ -8,7 +8,7 @@ public abstract class AbstractBuffer<T> : GlDisposable where T : unmanaged
     protected readonly int Handle;
     private readonly int _elementSize;
     private readonly BufferTarget _target;
-    public readonly int Capacity;
+    public int Capacity { get; private set; }
     public readonly bool Final;
 
     protected AbstractBuffer(BufferTarget target, int capacity, bool final, T[]? initialData = null)
@@ -47,6 +47,7 @@ public abstract class AbstractBuffer<T> : GlDisposable where T : unmanaged
         Bind();
         GL.BufferData(_target, newCapacity*_elementSize, IntPtr.Zero, BufferUsageHint.DynamicDraw);
         Logger.Log(this, $"capacity increased: {Capacity} -> {newCapacity}");
+        Capacity = newCapacity;
     }
     
     public void Bind() => GL.BindBuffer(_target, Handle);

@@ -68,8 +68,8 @@ public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicAp
         Dispose();
         return null;
     }
-    
-    public IGraphicApi? InitInternal(CompiledAssets assets, Vector2i initialWindowSize, string title, IUserInputHandler inputHandler,
+
+    private IGraphicApi? InitInternal(CompiledAssets assets, Vector2i initialWindowSize, string title, IUserInputHandler inputHandler,
         out Error? error)
     {
         _assets = assets;
@@ -134,8 +134,6 @@ public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicAp
             _windowSizeChangeCallback = (_, newWidth, newHeight) =>
             {
                 var newSize = new Vector2i(newWidth, newHeight);
-                Fbo.SizeOfDefault = newSize;
-                _screenPack.Resize(newSize);
                 inputHandler.HandleWindowSizeChange(newSize);
             };
             GLFW.SetFramebufferSizeCallback(_window, _windowSizeChangeCallback);
@@ -269,6 +267,12 @@ public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicAp
             count = MaxLights;
         }
         _lightSsbo.BindAndPush(new LightsLengthData(count), lights.Select(l => new SpotLightData(l.View, l.Projection, l.Color, l.Position)).ToArray());
+    }
+
+    public void SetRenderSize(Vector2i size)
+    {
+        Fbo.SizeOfDefault = size;
+        _screenPack.Resize(size);
     }
 
     public void UpdateScreen()

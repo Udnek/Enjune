@@ -9,7 +9,7 @@ global using Error = Enjune.Misc.Error;
 // aliases
 global using Position = OpenTK.Mathematics.Vector3;
 global using Color = OpenTK.Mathematics.Vector4;
-global using TextureCoord = OpenTK.Mathematics.Vector2;
+global using TexturePos = OpenTK.Mathematics.Vector2;
 global using Normal = OpenTK.Mathematics.Vector3;
 
 global using GlfwKey = OpenTK.Windowing.GraphicsLibraryFramework.Keys;

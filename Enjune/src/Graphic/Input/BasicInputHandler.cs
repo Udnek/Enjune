@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Enjune.Graphic.GraphicApi;
 using OpenTK.Mathematics;
 
@@ -6,28 +7,36 @@ namespace Enjune.Graphic.Input;
 public class BasicInputHandler : IUserInputHandler
 {
     public readonly KeyBinds Binds;
-    
+
     private readonly HashSet<KeyBinds.Bind> _pressed = [];
     private readonly HashSet<KeyBinds.Bind> _shortPressed = [];
     private readonly HashSet<KeyBinds.Bind> _justReleased = [];
     
+    // keys and mouse
     private bool _firstCursorMove = true;
     public Vector2i CursorPosition = (0, 0);
     public Vector2i DeltaCursorPosition { get; private set; } = (0, 0);
     public Vector2 DeltaWheelScroll { get; private set; } = (0, 0);
-    public Vector2i WindowSize { get; private  set; }
+    
+    // window 
+    private readonly Stopwatch _lastWindowChange;
+    private Vector2i _pendingWindowSize;
+    private readonly Seconds _debouncingDelay;
+    public Vector2i WindowSize { get; private set; }
     public bool WindowSizeChanged { get; private set; } = false;
 
-    public BasicInputHandler(KeyBinds binds, Vector2i initialWindowSize)
+    public BasicInputHandler(KeyBinds binds, Vector2i initialWindowSize, Seconds debouncingDelay)
     {
         Binds = binds;
+        _debouncingDelay = debouncingDelay;
         WindowSize = initialWindowSize;
+        _lastWindowChange = Stopwatch.StartNew();
     }
 
     public void HandleWindowSizeChange(Vector2i newSize)
     {
-        WindowSize = newSize;
-        WindowSizeChanged = true;
+        _pendingWindowSize = newSize;
+        _lastWindowChange.Restart();
     }
 
     public void HandleKey(KeyCode keyCode, IGraphicApi.KeyAction action)
@@ -71,6 +80,17 @@ public class BasicInputHandler : IUserInputHandler
 
     public bool IsPressed(KeyBinds.Bind bind) => _pressed.Contains(bind) || _shortPressed.Contains(bind);
     public bool IsJustReleased(KeyBinds.Bind bind) => _justReleased.Contains(bind);
+
+    public void PrepareAtFrameStart()
+    {
+        if (_pendingWindowSize == default) return;
+        // debouncing check
+        if (_lastWindowChange.ElapsedMilliseconds < _debouncingDelay * 1000)
+            return;
+        WindowSizeChanged = true;
+        WindowSize = _pendingWindowSize;
+        _pendingWindowSize = default;
+    }
     
     public void ClearForNextFrame()
     {
