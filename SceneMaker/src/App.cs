@@ -4,11 +4,12 @@ using Enjune;
 using Enjune.File;
 using Enjune.File.ModelReader;
 using Enjune.Graphic;
+using Enjune.Graphic.Api;
 using Enjune.Graphic.Asset;
 using Enjune.Graphic.Font;
-using Enjune.Graphic.GraphicApi;
-using Enjune.Graphic.Input;
-using Enjune.Graphic.Input.UI;
+using Enjune.Graphic.Key;
+using Enjune.Graphic.UI;
+using Enjune.KitStart;
 using Enjune.Misc;
 using Enjune.World;
 using OpenGLApi;
@@ -40,7 +41,7 @@ public class App : AbstractDisposable, IApp
     public App()
     {
         _binds = KeyBinds.CreateEmpty();
-        KeyBinds.AddWasd(_binds, out _wasd);
+        _wasd = Wasd.AddTo(_binds);
         _freeCursorBind = _binds.AddBind(new KeyBinds.Bind("free_cursor", KeyCode.Escape));
         _lockCursorBind = _binds.AddBind(new KeyBinds.Bind("lock_cursor", KeyCode.RightMouseButton));
         
@@ -100,10 +101,10 @@ public class App : AbstractDisposable, IApp
 
         var assets = assetManager.Compile();
 
-        var grapi = new OpenGlApi().Init(assets, InitialWindowSize, "Enjune C#", _inputHandler, out error);
+        var grapi = new OpenGlApi().Init(assets, InitialWindowSize, "SceneMaker", _inputHandler, out error);
         if (grapi == null) return error;
         _grapi = grapi;
-        _grapi.SetVsync(false);
+        _grapi.SetVsync(true);
         _grapi.SetClearColor(new Color(0.2f, 0.2f, 0.2f, 0f));
         _grapi.SetCursorMode(IGraphicApi.CursorMode.Centered);
         

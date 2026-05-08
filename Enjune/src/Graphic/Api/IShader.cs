@@ -1,4 +1,4 @@
-namespace Enjune.Graphic.GraphicApi;
+namespace Enjune.Graphic.Api;
 
 public interface IShader
 {

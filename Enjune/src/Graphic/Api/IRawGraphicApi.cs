@@ -1,7 +1,7 @@
 using Enjune.Graphic.Asset;
 using OpenTK.Mathematics;
 
-namespace Enjune.Graphic.GraphicApi;
+namespace Enjune.Graphic.Api;
 
 public interface IRawGraphicApi
 {

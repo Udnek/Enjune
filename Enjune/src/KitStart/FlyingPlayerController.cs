@@ -1,9 +1,7 @@
-using Enjune.Graphic;
-using Enjune.Graphic.GraphicApi;
-using Enjune.Graphic.Input;
+using Enjune.Graphic.Api;
 using OpenTK.Mathematics;
 
-namespace Enjune.Misc;
+namespace Enjune.KitStart;
 
 public class FlyingPlayerController
 {

@@ -1,7 +1,7 @@
-using Enjune.Graphic.Input;
+using Enjune.Graphic.Key;
 using OpenTK.Mathematics;
 
-namespace Enjune.Graphic.GraphicApi;
+namespace Enjune.Graphic.Api;
 
 public interface IUserInputHandler
 {

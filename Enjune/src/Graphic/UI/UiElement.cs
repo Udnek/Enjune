@@ -1,6 +1,6 @@
 using Enjune.Misc;
 
-namespace Enjune.Graphic.Input.UI;
+namespace Enjune.Graphic.UI;
 
 public abstract class UiElement(Rect anchor, Margin margin, float z, params UiElement[] children)
 {
@@ -16,7 +16,7 @@ public abstract class UiElement(Rect anchor, Margin margin, float z, params UiEl
     public readonly UiElement[]? Children = children.Length == 0 ? null : children;
     
     // updates rect only if provided parent rect
-    public virtual void UpdateAndRegenerateMeshes(Rect? parentRect, float pixelsPerUnit)
+    public virtual void UpdateAndRegenerateMeshes(Rect? parentRect)
     {
         if (parentRect.HasValue)
         {
@@ -28,8 +28,8 @@ public abstract class UiElement(Rect anchor, Margin margin, float z, params UiEl
             GlobalAnchor_DebugOnly = glAnchor;
         
             GlobalRect = new Rect(
-                (glAnchor.Min.X + Margin.Left*pixelsPerUnit, glAnchor.Min.Y + Margin.Bottom*pixelsPerUnit),
-                (glAnchor.Max.X - Margin.Right*pixelsPerUnit, glAnchor.Max.Y - Margin.Top*pixelsPerUnit)
+                (glAnchor.Min.X + Margin.Left, glAnchor.Min.Y + Margin.Bottom),
+                (glAnchor.Max.X - Margin.Right, glAnchor.Max.Y - Margin.Top)
             );
         }
         

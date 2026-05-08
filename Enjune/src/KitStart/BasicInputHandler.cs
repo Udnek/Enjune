@@ -1,8 +1,9 @@
 using System.Diagnostics;
-using Enjune.Graphic.GraphicApi;
+using Enjune.Graphic.Api;
+using Enjune.Graphic.Key;
 using OpenTK.Mathematics;
 
-namespace Enjune.Graphic.Input;
+namespace Enjune.KitStart;
 
 public class BasicInputHandler : IUserInputHandler
 {

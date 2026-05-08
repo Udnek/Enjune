@@ -1,8 +1,8 @@
 using System.Runtime.InteropServices;
 using Enjune.File;
 using Enjune.Graphic;
+using Enjune.Graphic.Api;
 using Enjune.Graphic.Asset;
-using Enjune.Graphic.GraphicApi;
 using Enjune.Misc;
 using OpenGLApi.Component;
 using OpenGLApi.Component.Buffer;

@@ -1,9 +1,6 @@
-using System.Diagnostics.CodeAnalysis;
-using System.Security.Cryptography;
 using Enjune.Misc;
-using OpenTK.Mathematics;
 
-namespace Enjune.Graphic.Input.UI;
+namespace Enjune.Graphic.UI;
 
 public sealed class Ui
 {
@@ -13,7 +10,7 @@ public sealed class Ui
     public readonly Matrix4 ModelTransform = Matrix4.Identity;
     public readonly Matrix4 ViewTransform = Matrix4.Identity;
     public Matrix4 ProjectionTransform 
-        => Matrix4.CreateOrthographicOffCenter(0, Size.X, 0, Size.Y, -10, 10);
+        => Matrix4.CreateOrthographicOffCenter(0, Size.X/PixelsPerUnit, 0, Size.Y/PixelsPerUnit, -10, 10);
 
     public Vector2 Size;
     public float PixelsPerUnit = 1;
@@ -41,14 +38,14 @@ public sealed class Ui
     
     public void UpdateEntire()
     {
-        var rect = new Rect((0, 0), Size);
+        var rect = new Rect((0, 0), Size/PixelsPerUnit);
         _roots.ForEach(child => UpdateAndGenerateMeshes(rect, child));
         return;
         
         void UpdateAndGenerateMeshes(Rect parent, UiElement element)
         {
             if (element.LocalHidden) return;
-            element.UpdateAndRegenerateMeshes(parent, PixelsPerUnit);
+            element.UpdateAndRegenerateMeshes(parent);
             element.Children?.ForEach(ch => UpdateAndGenerateMeshes(element.GlobalRect, ch));
         }
     }

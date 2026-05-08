@@ -1,4 +1,4 @@
-namespace Enjune.Graphic.Input.UI;
+namespace Enjune.Graphic.UI;
 
 public record struct Margin(float Right, float Top, float Left, float Bottom)
 {

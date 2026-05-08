@@ -1,10 +1,8 @@
 using Enjune.File;
-using Enjune.Graphic.Asset;
 using Enjune.Misc;
 using OpenTK.Mathematics;
-using SharpGLTF.Schema2;
 
-namespace Enjune.Graphic.GraphicApi;
+namespace Enjune.Graphic.Api;
 
 public interface IGraphicApi : IDisposable
 {

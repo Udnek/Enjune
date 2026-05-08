@@ -1,8 +1,7 @@
 using Enjune.Misc;
 using OpenTK.Mathematics;
-using static System.MathF;
 
-namespace Enjune.Graphic.GraphicApi;
+namespace Enjune.Graphic.Api;
 
 public sealed class SpotLight
 {

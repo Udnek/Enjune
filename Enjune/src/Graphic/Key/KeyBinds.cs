@@ -1,7 +1,6 @@
 using Enjune.Misc;
-using static Enjune.Graphic.Input.KeyCode;
 
-namespace Enjune.Graphic.Input;
+namespace Enjune.Graphic.Key;
 
 public sealed class KeyBinds
 {
@@ -10,20 +9,7 @@ public sealed class KeyBinds
     private KeyBinds(){}
 
     public static KeyBinds CreateEmpty() => new();
-
-    public static KeyBinds AddWasd(KeyBinds keyBinds, out Wasd wasd)
-    {
-        wasd = new Wasd(
-            keyBinds.AddBind(new Bind("forward", W, true)),
-            keyBinds.AddBind(new Bind("leftward", A, true)),
-            keyBinds.AddBind(new Bind("backward", S, true)),
-            keyBinds.AddBind(new Bind("rightward", D, true)),
-            keyBinds.AddBind(new Bind("upward", Space, true)),
-            keyBinds.AddBind(new Bind("downward", LeftShift, true))
-        );
-        return keyBinds;
-    }
-
+    
     public bool TryGet(KeyCode keyCode, out Bind? bind) => _binds.TryGetValue(keyCode, out bind);
     
     public Bind AddBind(Bind bind)

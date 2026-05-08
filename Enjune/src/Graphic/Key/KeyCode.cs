@@ -1,4 +1,4 @@
-namespace Enjune.Graphic.Input;
+namespace Enjune.Graphic.Key;
 
 public enum KeyCode
 {

@@ -1,6 +1,6 @@
 using Enjune.Graphic;
+using Enjune.Graphic.Api;
 using Enjune.Graphic.Asset;
-using Enjune.Graphic.GraphicApi;
 using Enjune.Misc;
 using OpenTK.Mathematics;
 

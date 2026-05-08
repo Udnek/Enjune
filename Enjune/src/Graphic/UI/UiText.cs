@@ -1,6 +1,6 @@
 using Enjune.Graphic.Font;
 
-namespace Enjune.Graphic.Input.UI;
+namespace Enjune.Graphic.UI;
 
 public class UiText(Rect anchor, Margin margin, float z, CompiledFont font, String text, params UiElement[] children) : UiElement(anchor, margin, z, children)
 {

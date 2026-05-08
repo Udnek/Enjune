@@ -1,5 +1,6 @@
 namespace Enjune.Misc;
 
+// https://gist.github.com/AlexeyRaga/9180b7d9f18c3ecd01fc401f1f648d88
 public abstract record Either<TLeft, TRight>
 {
     private Either() {}

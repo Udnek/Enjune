@@ -1,4 +1,4 @@
-namespace Enjune.Graphic.Input.UI;
+namespace Enjune.Graphic.UI;
 
 public class UiButton(Rect anchor, Margin margin, float z, params UiElement[] children)
     : UiElement(anchor, margin, z, children)

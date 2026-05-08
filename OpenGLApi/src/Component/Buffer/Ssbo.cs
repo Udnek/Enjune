@@ -147,7 +147,7 @@ public static class SsboUtils
         if (isArray && structSize % alignment != 0)
             return $"cause it is array, total struct size must be divisible by {alignment}, but got {structSize} % {alignment}";
         
-        Logger.Log(typeof(SsboUtils), "check complete, everything seems correct");
+        Logger.Log(typeof(SsboUtils), "check complete, everything seem correct");
         Logger.Log(typeof(SsboUtils), "-----------------------------------------");
         return null;
     }

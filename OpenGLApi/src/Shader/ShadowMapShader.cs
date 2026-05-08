@@ -1,4 +1,4 @@
-using Enjune.Graphic.GraphicApi;
+using Enjune.Graphic.Api;
 using Enjune.Misc;
 using OpenGLApi.Component.Buffer;
 using OpenGLApi.Component.Uniform;

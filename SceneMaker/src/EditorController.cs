@@ -1,7 +1,8 @@
 using System.Runtime.CompilerServices;
 using Enjune.Graphic;
-using Enjune.Graphic.GraphicApi;
-using Enjune.Graphic.Input;
+using Enjune.Graphic.Api;
+using Enjune.Graphic.Key;
+using Enjune.KitStart;
 using Enjune.Misc;
 using Enjune.World;
 using OpenTK.Mathematics;
