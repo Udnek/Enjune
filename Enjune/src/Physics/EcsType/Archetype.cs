@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using Enjune.Physics.EcsType;
 using FreeTypeSharp;
 using IComponent = Enjune.Physics.Component.IComponent;
@@ -8,12 +9,9 @@ namespace Enjune.Physics.EcsType;
 
 public class Archetype
 {
-    private Array[] _columns;
-    private readonly Dictionary<Type, int> _component2Column = new();
+    private readonly Dictionary<Type, IColumn> _columns = new();
     private EntityId[] _row2Id;
     private readonly Dictionary<EntityId, int> _id2Row;
-    
-    private readonly Signature _signature;
     
     private int _capacity = EcsConstants.InitialCapacity;
     private int _entityCount = 0;
@@ -21,19 +19,23 @@ public class Archetype
 
     public Archetype(Signature signature)
     {
-        _signature = signature;
         _row2Id = new EntityId[_capacity];
         _id2Row = new Dictionary<EntityId, int>(_capacity);
         
         int nComponents = signature.GetSetBitsCount();
-        _columns = new Array[nComponents];
         
-        List<Type> types = World.ComponentManager.DeconstructSignature(_signature);
+        List<Type> types = World.ComponentManager.DeconstructSignature(signature);
         for (int i = nComponents - 1; i >= 0; i--)
         {
-            _columns[i] = Array.CreateInstance(types[i], _capacity);
-            _component2Column.Add(types[i], i);
+            RegisterColumn(types[i]);
         }
+    }
+
+    private void RegisterColumn(Type type)
+    {
+        Type columnType = typeof(Column<>).MakeGenericType(type);
+        var columnInstance = Activator.CreateInstance(columnType, _capacity) as IColumn;
+        _columns[type] = columnInstance ?? throw new InvalidOperationException($"Failed to instantiate Column<{type.Name}>");
     }
 
     private void EnsureCapacity()
@@ -43,28 +45,26 @@ public class Archetype
         
         Array.Resize(ref _row2Id, newCapacity);
 
-        for (int i = 0; i < _columns.Length; i++)
+        foreach (IColumn column in _columns.Values )
         {
-            var oldColumn = _columns[i];
-            var newColumn = Array.CreateInstance(_columns[i].GetType().GetElementType()!, newCapacity);
-            Array.Copy(oldColumn, newColumn, _entityCount);
-            _columns[i] = newColumn;
+            column.SetCapacity(newCapacity);
         }
         
         _capacity = newCapacity;
     }
     
-    public void AddEntity(EntityId id, IComponent[] components)
+    // TODO: Avoid using Collection<IComponent> because of boxing
+    public void AddEntity(EntityAssembly entityAssembly)
     {
         EnsureCapacity();
         int row = _entityCount;
-        _id2Row[id] = row;
-        _row2Id[row] = id;
-        foreach (var component in components)
+        _id2Row[entityAssembly.Id] = row;
+        _row2Id[row] = entityAssembly.Id;
+        List<IComponent> components = entityAssembly.GetComponents();
+        foreach (IComponent component in components)
         {
-            var componentType = component.GetType();
-            int columnId = _component2Column[componentType];
-            _columns[columnId].SetValue(component, row);
+            // Dynamically assume that _columns[type] is Column<T>
+            ((dynamic)_columns[component.GetType()]).Data[row] = component;
         }
         
         _entityCount++;
@@ -78,9 +78,9 @@ public class Archetype
         {
             EntityId lastId = _row2Id[lastRow];
 
-            foreach (var column in _columns)
+            foreach (IColumn column in _columns.Values)
             {
-                column.SetValue(column.GetValue(lastRow), row);
+                column.SwapElements(lastRow, row);
             }
 
             _id2Row[lastId] = row;
@@ -91,47 +91,14 @@ public class Archetype
         _entityCount--;
     }
 
-    public bool AssertSignature(Signature otherSignature) => _signature == otherSignature;
-}
-
-file class EntityToIdMap
-{
-    private readonly Dictionary<EntityId, int> _id2Row = new();
-    private readonly Dictionary<int, EntityId> _row2Id = new();
-
-    public void Set(EntityId id,  int row)
+    public Span<T> GetComponents<T>() where T : struct, IComponent
     {
-        _id2Row[id] = row;
-        _row2Id[row] = id;
-    }
-
-    public void RemoveByEntity(EntityId id)
-    {
-        _row2Id.Remove(_row2Id[id]);
-        _row2Id.Remove(id);
-    }
-
-    public int GetRow(EntityId id)
-    {
-        return _id2Row[id];
-    }
-
-    public EntityId GetId(EntityId id)
-    {
-        return _row2Id[id];
-    }
-
-    public bool ContainsEntity(EntityId id)
-    {
-        return _id2Row.ContainsKey(id);
-    }
-
-    public bool ContainsRow(int row)
-    {
-        return _row2Id.ContainsKey(row);
+        Column<T> column = (Column<T>)_columns[typeof(T)];
+        return column.GetSpan();
     }
 }
 
+[Obsolete("Unfinished, may be unusable")]
 public class BDDictionary<T1, T2> where T2 : notnull where T1 : notnull
 {
     private readonly Dictionary<T1, T2> _forward = new();

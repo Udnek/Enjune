@@ -1,9 +1,8 @@
-using System.ComponentModel;
 using System.Diagnostics;
+using Enjune.Physics.Component;
 using Enjune.Physics.EcsType;
 
 namespace Enjune.Physics.Manager;
-using System;
 
 public class ComponentManager
 {
@@ -20,11 +19,12 @@ public class ComponentManager
         }
     }
     
-    public void RegisterComponentType(Type componentType)
+    public ComponentManager RegisterComponentType<TComponent>()
     {
         ComponentTypeId id = _availableComponentIds.Dequeue();
-        _componentTypeIds[componentType] = id;
-        _componentTypes[id] = componentType;
+        _componentTypeIds[typeof(TComponent)] = id;
+        _componentTypes[id] = typeof(TComponent);
+        return this;
     }
 
     public List<Type> DeconstructSignature(Signature signature)
@@ -38,12 +38,12 @@ public class ComponentManager
         return result;
     }
 
-    public Signature ConstructSignature(List<ComponentTypeId> componentTypeIds)
+    public Signature ConstructSignature(Span<Type> components)
     {
         var signature = new Signature(0);
-        foreach (ComponentTypeId componentId in componentTypeIds)
+        foreach (IComponent component in components)
         {
-            signature.Set((int) componentId);
+            signature.Set((int) _componentTypeIds[component.GetType()]);
         }
 
         return signature;

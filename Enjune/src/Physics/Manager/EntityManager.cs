@@ -5,6 +5,7 @@ namespace Enjune.Physics.Manager;
 public class EntityManager
 {
     private readonly Stack<EntityId> _availableEntities = new();
+    private readonly List<EntityId> _activeEntities = new();
     //private Signature[] _signatures =  new Signature[EcsConstants.MaxEntities];
     
     public EntityManager()
@@ -13,7 +14,7 @@ public class EntityManager
         {
             _availableEntities.Push(id);
         }
-        _availableEntities = (Stack<EntityId>) _availableEntities.Reverse();
+        _availableEntities = new Stack<EntityId>(_availableEntities.Reverse());
     }
 
     private bool HasAvailableEntity() { return _availableEntities.Count > 0; }
@@ -29,7 +30,7 @@ public class EntityManager
         return false;
     }
     
-    public EntityId? CreateEntity(Signature signature)
+    public EntityId? CreateEntity()
     {
         if (!HasAvailableEntity())
         {
@@ -37,7 +38,6 @@ public class EntityManager
             return null;
         }
         EntityId id = _availableEntities.Pop();
-        //SetSignature(id, signature);
         return id;
     }
 

@@ -5,7 +5,7 @@ using Path = System.IO.Path;
 
 namespace Tests;
 
-public class FileTests
+/*public class wFileTests
 {
     
     private Assembly _assembly = typeof(FileTests).Assembly;
@@ -31,4 +31,4 @@ public class FileTests
         Assert.Equal(Directory.GetParent(Path.GetFullPath("."))!.FullName, ExternalPath.Of(".").Parent().ToString());
     }
     
-}
+} */

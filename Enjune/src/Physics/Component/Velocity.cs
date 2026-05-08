@@ -1,12 +1,12 @@
 namespace Enjune.Physics.Component;
 
-public struct Position : IComponent
+public struct Velocity : IComponent
 {
     public double X;
     public double Y;
     public double Z;
 
-    public Position(double x, double y, double z)
+    public Velocity(double x, double y, double z)
     {
         X = x;
         Y = y;
