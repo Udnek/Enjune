@@ -37,13 +37,12 @@ public static class Extensions
         foreach (var t in array) action(t);
     }
 
-    // public static Tv GetValueOrDefault<Tk, Tv>(this Dictionary<Tk, Tv> dict, Tk key, Func<Tv> computeDefault) where Tk : notnull
-    // {
-    //     if (dict.TryGetValue(key, out var value))
-    //     {
-    //         return value;
-    //     }
-    // }
+    public static void Lock(this Mutex mutex, Action action)
+    {
+        mutex.WaitOne();
+        action();
+        mutex.ReleaseMutex();
+    }
 }
 
 

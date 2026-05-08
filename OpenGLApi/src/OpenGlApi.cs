@@ -257,7 +257,7 @@ public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicAp
         
         return null;
     }
-    
+
     public void SetLights(IEnumerable<SpotLight> lights)
     {
         int count = lights.Count();
@@ -285,6 +285,7 @@ public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicAp
         _screenShader.BeforeUnbind();
         ShaderProgram.Unbind();
     }
+    
     
     public void UseShader<T>(Consumer<T> consumer) where T : IShader
     {

@@ -104,7 +104,7 @@ public class App : AbstractDisposable, IApp
         var grapi = new OpenGlApi().Init(assets, InitialWindowSize, "SceneMaker", _inputHandler, out error);
         if (grapi == null) return error;
         _grapi = grapi;
-        _grapi.SetVsync(true);
+        _grapi.SetVsync(false);
         _grapi.SetClearColor(new Color(0.2f, 0.2f, 0.2f, 0f));
         _grapi.SetCursorMode(IGraphicApi.CursorMode.Centered);
         
@@ -139,19 +139,6 @@ public class App : AbstractDisposable, IApp
                     PointLight = SpotLight.Perspective(-Vector3.UnitY, new Color(1, 1, 0, 1), 45f)
                 });  
             }
-
-            // {
-            //     var m = new Model<(TextureCoord texCoord, Normal normal), CompiledMaterial>.Builder()
-            //         .Add(Mesh.Cube(Position.Zero, 0.5f, TextureQuad.Full), assetManager.WhiteMaterial)
-            //         .Build();
-            //     _scene.Objects.Add(new SObject()
-            //     {
-            //         MatModel = m,
-            //         RMatModel = _grapi.CompileModel(m),
-            //         Position = (-6, 8, 0),
-            //         PointLight = SpotLight.Ortho(Position.Zero, -Vector3.UnitY, Color.UnitZ)
-            //     });
-            // }
         }
         
         _scene.Objects.Add(new SObject()
@@ -173,13 +160,30 @@ public class App : AbstractDisposable, IApp
         return null;
     }
 
+
     public void MainCycle()
+    {
+        var eventThread = new Thread(() =>
+        {
+            //_grapi.SetCurrentThreadToRender();
+            //GraphicCycle();
+            Utils.RunTargetFpsLoopWhile(200,
+                () => !_grapi.ShouldStop(),
+                _ => _grapi.UpdateEvents());
+        });
+        eventThread.Start();
+        GraphicCycle();
+
+        eventThread.Join();
+    }
+
+    public void GraphicCycle()
     {
         var projection = Matrix4.CreatePerspectiveFieldOfView(
             MathF.PI / 2, (float) _inputHandler.WindowSize.X / _inputHandler.WindowSize.Y, 0.1f, 100f);
-        int tick = 0;
         var fpsStopWatch = Stopwatch.StartNew();
-        Utils.RunTargetFpsLoopWhile(100,
+
+        Utils.RunTargetFpsLoopWhile(500,
             () => !_grapi.ShouldStop(),
             deltaTime =>
             {
@@ -230,6 +234,7 @@ public class App : AbstractDisposable, IApp
                 
                 _editorController.Update(view, projection);
                 
+                _inputHandler.ClearForNextFrame();
                 // render
                 
                 var lights = _scene.Objects
@@ -311,10 +316,7 @@ public class App : AbstractDisposable, IApp
                 });
                 
                 // end
-                _inputHandler.ClearForNextFrame();
                 _grapi.UpdateScreen();
-                _grapi.UpdateEvents();
-                tick += 1;
             });
     }
 

@@ -10,6 +10,9 @@ public interface IGraphicApi : IDisposable
     public IRenderableModel.IDynamic CreateDynamicRenderable(Model model, Primitive primitive = Primitive.Triangle);
     
     void SetLights(IEnumerable<SpotLight> lights);
+
+    // // TODO: Simplify this shit?
+    // public void SetCurrentThreadToRender();
     
     // general pipeliner
     bool ShouldStop(); // should stop application
