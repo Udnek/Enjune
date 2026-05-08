@@ -92,17 +92,23 @@ public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicAp
         GLFW.WindowHint(WindowHintInt.ContextVersionMinor, 6);
         GLFW.WindowHint(WindowHintOpenGlProfile.OpenGlProfile, OpenGlProfile.Compat);
         GLFW.WindowHint(WindowHintBool.OpenGLForwardCompat, true);
-
+        
+        GLFW.WindowHint(WindowHintBool.TransparentFramebuffer, true);
+        
+        
         // window creation
         unsafe
         {
             _window = GLFW.CreateWindow(initialWindowSize.X, initialWindowSize.Y, title, null, null);
+            
             Fbo.SizeOfDefault = initialWindowSize;
             if (_window == null)
             {
                 error = "failed to create GLFW window";
                 return null;
             }
+            
+            GLFW.SetWindowOpacity(_window, 0.5f);
             
             // callbacks
             
@@ -131,11 +137,8 @@ public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicAp
             };
             GLFW.SetMouseButtonCallback(_window, _mouseButtonCallback);
             
-            _windowSizeChangeCallback = (_, newWidth, newHeight) =>
-            {
-                var newSize = new Vector2i(newWidth, newHeight);
-                inputHandler.HandleWindowSizeChange(newSize);
-            };
+            _windowSizeChangeCallback = (_, newWidth, newHeight) 
+                => inputHandler.HandleWindowSizeChange((newWidth, newHeight));
             GLFW.SetFramebufferSizeCallback(_window, _windowSizeChangeCallback);
 
             _cursorCallback = (window, x, y) => inputHandler.HandleCursor((int)x, (int)y);
