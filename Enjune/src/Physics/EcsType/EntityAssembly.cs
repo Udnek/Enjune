@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using Enjune.Physics.Component;
 
 namespace Enjune.Physics.EcsType;
@@ -14,7 +15,7 @@ public class EntityAssembly
     {
         Id = id;
     }
-
+    
     public List<IComponent> GetComponents() => _components.Values.ToList();
     public List<Type> GetComponentTypes() => _components.Keys.ToList(); 
 
@@ -37,5 +38,15 @@ public class EntityAssembly
     {
         _components.TryGetValue(componentType, out IComponent? component);
         return component;
+    }
+
+    public Signature GetSignature()
+    {
+        var signatureBuilder = new SignatureBuilder();
+        foreach (Type componentType in GetComponentTypes())
+        {
+            signatureBuilder.RegisterComponent(componentType);
+        }
+        return signatureBuilder.Build();
     }
 }
