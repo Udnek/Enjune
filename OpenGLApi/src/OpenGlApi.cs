@@ -1,6 +1,5 @@
 using System.Runtime.InteropServices;
 using Enjune.File;
-using Enjune.Graphic;
 using Enjune.Graphic.Api;
 using Enjune.Graphic.Asset;
 using Enjune.Misc;
@@ -8,7 +7,6 @@ using OpenGLApi.Component;
 using OpenGLApi.Component.Buffer;
 using OpenGLApi.Component.Texture;
 using OpenGLApi.Data;
-using OpenGLApi.Model;
 using OpenGLApi.Pack;
 using OpenGLApi.Shader;
 using OpenTK.Mathematics;
@@ -143,7 +141,7 @@ public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicAp
             GLFW.SetFramebufferSizeCallback(_window, _windowSizeChangeCallback);
 
             _cursorCallback = (window, x, y) => inputHandler.HandleCursor((int)x, (int)y);
-            //GLFW.SetCursorPosCallback(_window, _cursorCallback);
+            GLFW.SetCursorPosCallback(_window, _cursorCallback);
 
             _scrollCallback = (window, x, y) => inputHandler.HandleScroll((float) x, (float) y);
             GLFW.SetScrollCallback(_window, _scrollCallback);

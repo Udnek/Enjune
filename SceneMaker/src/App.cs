@@ -22,7 +22,7 @@ public class App : AbstractDisposable, IApp
 {
     private static readonly Vector2i InitialWindowSize = (480*2, 360*2);
     
-    private IGraphicApi _grapi;
+    private IGraphicApi _grapi = null!;
     private readonly KeyBinds _binds;
     private readonly Wasd _wasd;
     private readonly KeyBinds.Bind _dumbTexturesBind;
@@ -45,8 +45,8 @@ public class App : AbstractDisposable, IApp
         _freeCursorBind = _binds.AddBind(new KeyBinds.Bind("free_cursor", KeyCode.Escape));
         _lockCursorBind = _binds.AddBind(new KeyBinds.Bind("lock_cursor", KeyCode.RightMouseButton));
         
-        _dumbTexturesBind = _binds.AddBind(new KeyBinds.Bind("dumb_textures", KeyCode.F2));
         _inputHandler = new BasicInputHandler(_binds, InitialWindowSize, 0.5f);
+        _dumbTexturesBind = _binds.AddBind(new KeyBinds.Bind("dumb_textures", KeyCode.F2));
         _scene = new Scene();
     }
 
@@ -109,7 +109,6 @@ public class App : AbstractDisposable, IApp
         _grapi.SetCursorMode(IGraphicApi.CursorMode.Centered);
         
         _wasdController = new FlyingPlayerController(_grapi, _inputHandler, _wasd, 0.2f);
-        
         _editorController = new EditorController(_grapi, _inputHandler, _scene);
         
         {

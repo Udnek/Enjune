@@ -90,6 +90,15 @@ public sealed partial class OpenGlApi
         }
     }
     
+    public Vector2i GetCursorPosition()
+    {
+        unsafe
+        {
+            GLFW.GetCursorPos(_window, out var x, out var y);
+            return new Vector2i((int)x, (int)y);
+        }
+    }
+    
     public void SetClearColor(Color color) => GL.ClearColor(color.X, color.Y, color.Z, color.W);
 
     public void SetDrawMode(IGraphicApi.DrawMode mode)

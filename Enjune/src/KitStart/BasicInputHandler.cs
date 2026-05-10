@@ -8,8 +8,6 @@ namespace Enjune.KitStart;
 
 public class BasicInputHandler : IUserInputHandler
 {
-    //private readonly Mutex _mutex = new();
-    
     public readonly KeyBinds Binds;
 
     private readonly HashSet<KeyBinds.Bind> _pressed = [];
@@ -21,8 +19,8 @@ public class BasicInputHandler : IUserInputHandler
     public Vector2i CursorPosition = (0, 0);
     public Vector2i DeltaCursorPosition { get; private set; } = (0, 0);
     public Vector2 DeltaWheelScroll { get; private set; } = (0, 0);
-    public int MouseUpdates = 0;
-    
+    public int MouseUpdates { get; private set; } // debug only
+
     // window 
     private readonly Stopwatch _lastWindowChange;
     private Vector2i _pendingWindowSize;
@@ -84,10 +82,6 @@ public class BasicInputHandler : IUserInputHandler
 
     public void HandleScroll(float x, float y)
     {
-        // _mutex.Lock(() =>
-        // {
-        //     
-        // });
         DeltaWheelScroll += (x, y);
     }
 
@@ -96,9 +90,6 @@ public class BasicInputHandler : IUserInputHandler
 
     public void PrepareAtFrameStart()
     {
-        // mutex lock
-        //_mutex.WaitOne();
-        //Logger.Highlight(this, _mouseUpdates);
         MouseUpdates = 0;
         
         if (_pendingWindowSize == default) return;
@@ -117,8 +108,5 @@ public class BasicInputHandler : IUserInputHandler
         DeltaCursorPosition = (0, 0);
         DeltaWheelScroll = (0, 0);
         WindowSizeChanged = false;
-        
-        // mutex unlock
-        //_mutex.ReleaseMutex();
     }
 }

@@ -23,6 +23,7 @@ public interface IGraphicApi : IDisposable
     // general pipeline end
 
     // misc
+    Vector2i GetCursorPosition();
     void SetRenderSize(Vector2i size);
     void SetClearColor(Color color);
     void DumpTextures(ExternalPath path);
