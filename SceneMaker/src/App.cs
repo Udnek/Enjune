@@ -188,8 +188,6 @@ public class App : AbstractDisposable, IApp
             () => !_grapi.ShouldStop(),
             deltaTime =>
             {
-                _grapi.UpdateEvents();
-                
                 var mouseInputs = _inputHandler.MouseUpdates;
                 _inputHandler.PrepareAtFrameStart();
                 
@@ -322,6 +320,8 @@ public class App : AbstractDisposable, IApp
                 
                 // end
                 _grapi.UpdateScreen();
+
+                _grapi.UpdateEvents();
             });
     }
 

@@ -107,6 +107,7 @@ public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicAp
                 error = "failed to create GLFW window";
                 return null;
             }
+            GLFW.MakeContextCurrent(_window);
             
             // GLFW.SetWindowOpacity(_window, 0.5f);
             
@@ -142,7 +143,7 @@ public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicAp
             GLFW.SetFramebufferSizeCallback(_window, _windowSizeChangeCallback);
 
             _cursorCallback = (window, x, y) => inputHandler.HandleCursor((int)x, (int)y);
-            GLFW.SetCursorPosCallback(_window, _cursorCallback);
+            //GLFW.SetCursorPosCallback(_window, _cursorCallback);
 
             _scrollCallback = (window, x, y) => inputHandler.HandleScroll((float) x, (float) y);
             GLFW.SetScrollCallback(_window, _scrollCallback);
@@ -157,7 +158,6 @@ public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicAp
             else
                 Logger.Warn(this,"raw mouse input isn't supported; mouse motion might be janky");
             
-            GLFW.MakeContextCurrent(_window);
             GLFW.ShowWindow(_window);
         }
         
