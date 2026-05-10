@@ -52,7 +52,7 @@ vec3 calcLightColor(){
 
 bool isLightedBy(int lightId, vec3 lightDir, vec3 fragNorm){
     vec3 lightNdc = fragPosInLightSpace[lightId].xyz / fragPosInLightSpace[lightId].w; // [-1; 1]
-    lightNdc = (lightNdc + 1f) / 2f; // [-1; 1] -> [0; 1]
+    lightNdc = (lightNdc + 1) / 2; // [-1; 1] -> [0; 1]
     bool outOfBounds = any(lessThan(lightNdc, vec3(0))) || any(greaterThan(lightNdc, vec3(1)));
     if (outOfBounds) return false;
 
