@@ -8,7 +8,7 @@ namespace Enjune.KitStart;
 
 public class BasicInputHandler : IUserInputHandler
 {
-    private readonly Mutex _mutex = new();
+    //private readonly Mutex _mutex = new();
     
     public readonly KeyBinds Binds;
 
@@ -39,65 +39,54 @@ public class BasicInputHandler : IUserInputHandler
 
     public void HandleWindowSizeChange(Vector2i newSize)
     {
-        _mutex.Lock(() => 
-        {
-            _pendingWindowSize = newSize;
-            _lastWindowChange.Restart();
-        });
+        _pendingWindowSize = newSize;
+        _lastWindowChange.Restart();
     }
 
     public void HandleKey(KeyCode keyCode, IGraphicApi.KeyAction action)
     {
-        _mutex.Lock(() =>
-        {
-            
-            if (!Binds.TryGet(keyCode, out var bind))
-                return;
+        if (!Binds.TryGet(keyCode, out var bind))
+            return;
         
-            if (bind!.ContinuousPress)
+        if (bind!.ContinuousPress)
+        {
+            if (action == IGraphicApi.KeyAction.Press) 
+                _pressed.Add(bind);
+            else if (action == IGraphicApi.KeyAction.Release)
             {
-                if (action == IGraphicApi.KeyAction.Press) 
-                    _pressed.Add(bind);
-                else if (action == IGraphicApi.KeyAction.Release)
-                {
-                    _justReleased.Add(bind);
-                    _pressed.Remove(bind);
-                }
-            } 
-            else 
-            {
-                if (action is IGraphicApi.KeyAction.Press or IGraphicApi.KeyAction.Repeat)
-                    _shortPressed.Add(bind);
-                else
-                    _justReleased.Add(bind);
+                _justReleased.Add(bind);
+                _pressed.Remove(bind);
             }
-            
-            
-        });
+        } 
+        else 
+        {
+            if (action is IGraphicApi.KeyAction.Press or IGraphicApi.KeyAction.Repeat)
+                _shortPressed.Add(bind);
+            else
+                _justReleased.Add(bind);
+        }
     }
 
     public void HandleCursor(int x, int y)
     {
-        _mutex.Lock(() =>
+        if (_firstCursorMove)
         {
-            if (_firstCursorMove)
-            {
-                CursorPosition = (x, y);
-                _firstCursorMove = false;
-                return;
-            }
-            // we += cause this function will be called several times between frames
-            DeltaCursorPosition += (x, y) - CursorPosition;
             CursorPosition = (x, y);
-        });
+            _firstCursorMove = false;
+            return;
+        }
+        // we += cause this function will be called several times between frames
+        DeltaCursorPosition += (x, y) - CursorPosition;
+        CursorPosition = (x, y);
     }
 
     public void HandleScroll(float x, float y)
     {
-        _mutex.Lock(() =>
-        {
-            DeltaWheelScroll += (x, y);
-        });
+        // _mutex.Lock(() =>
+        // {
+        //     
+        // });
+        DeltaWheelScroll += (x, y);
     }
 
     public bool IsPressed(KeyBinds.Bind bind) => _pressed.Contains(bind) || _shortPressed.Contains(bind);
@@ -106,7 +95,7 @@ public class BasicInputHandler : IUserInputHandler
     public void PrepareAtFrameStart()
     {
         // mutex lock
-        _mutex.WaitOne();
+        //_mutex.WaitOne();
         
         if (_pendingWindowSize == default) return;
         // debouncing check
@@ -126,6 +115,6 @@ public class BasicInputHandler : IUserInputHandler
         WindowSizeChanged = false;
         
         // mutex unlock
-        _mutex.ReleaseMutex();
+        //_mutex.ReleaseMutex();
     }
 }

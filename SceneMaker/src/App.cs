@@ -163,18 +163,19 @@ public class App : AbstractDisposable, IApp
 
     public void MainCycle()
     {
-        var eventThread = new Thread(() =>
-        {
-            //_grapi.SetCurrentThreadToRender();
-            //GraphicCycle();
-            Utils.RunTargetFpsLoopWhile(200,
-                () => !_grapi.ShouldStop(),
-                _ => _grapi.UpdateEvents());
-        });
-        eventThread.Start();
+        // var eventThread = new Thread(() =>
+        // {
+        //     //_grapi.SetCurrentThreadToRender();
+        //     //GraphicCycle();
+        //     Utils.RunTargetFpsLoopWhile(200,
+        //         () => !_grapi.ShouldStop(),
+        //         _ => _grapi.UpdateEvents());
+        // });
+        // eventThread.Start();
+        // GraphicCycle();
+        //
+        // eventThread.Join();
         GraphicCycle();
-
-        eventThread.Join();
     }
 
     public void GraphicCycle()
@@ -316,6 +317,7 @@ public class App : AbstractDisposable, IApp
                 });
                 
                 // end
+                _grapi.UpdateEvents();
                 _grapi.UpdateScreen();
             });
     }
