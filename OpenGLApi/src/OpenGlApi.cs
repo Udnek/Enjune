@@ -93,7 +93,7 @@ public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicAp
         GLFW.WindowHint(WindowHintOpenGlProfile.OpenGlProfile, OpenGlProfile.Compat);
         GLFW.WindowHint(WindowHintBool.OpenGLForwardCompat, true);
         
-        GLFW.WindowHint(WindowHintBool.TransparentFramebuffer, true);
+        GLFW.WindowHint(WindowHintBool.TransparentFramebuffer, false);
         
         
         // window creation
@@ -108,7 +108,7 @@ public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicAp
                 return null;
             }
             
-            GLFW.SetWindowOpacity(_window, 0.5f);
+            // GLFW.SetWindowOpacity(_window, 0.5f);
             
             // callbacks
             

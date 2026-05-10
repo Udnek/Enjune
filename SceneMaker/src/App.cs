@@ -188,14 +188,17 @@ public class App : AbstractDisposable, IApp
             () => !_grapi.ShouldStop(),
             deltaTime =>
             {
+                _grapi.UpdateEvents();
+                
+                var mouseInputs = _inputHandler.MouseUpdates;
                 _inputHandler.PrepareAtFrameStart();
                 
                 _wasdController.Update(deltaTime);
 
-                bool updateUi = false;
+                bool uiChanged = false;
                 if (_inputHandler.DeltaWheelScroll.Y != 0)
                 {
-                    updateUi = true;
+                    uiChanged = true;
                     _ui.PixelsPerUnit += _inputHandler.DeltaWheelScroll.Y * 0.1f;
                     _ui.UpdateEntire();
                 }
@@ -205,7 +208,7 @@ public class App : AbstractDisposable, IApp
                     
                     _ui.Size = _inputHandler.WindowSize;
                     _ui.UpdateEntire();
-                    updateUi = true;
+                    uiChanged = true;
                     
                     projection = Matrix4.CreatePerspectiveFieldOfView(
                         MathF.PI / 2, (float) _inputHandler.WindowSize.X / _inputHandler.WindowSize.Y, 0.1f, 100f);
@@ -214,12 +217,13 @@ public class App : AbstractDisposable, IApp
                 if (fpsStopWatch.ElapsedMilliseconds > 1000)
                 {
                     fpsStopWatch.Restart();
-                    _fpsUiElement.Text = (1f / deltaTime).ToString("0.00");
+                    //_fpsUiElement.Text = "fps: " + (1f / deltaTime).ToString("0.00");
+                    _fpsUiElement.Text = $"mi: {mouseInputs}; fps: {1f / deltaTime:0.00}";
                     _fpsUiElement.UpdateMeshes();
-                    updateUi = true;
+                    uiChanged = true;
                 }
 
-                if (updateUi){
+                if (uiChanged){
                     _uiModel.Refit(_ui.CreateModel());
                 }
                 
@@ -317,7 +321,6 @@ public class App : AbstractDisposable, IApp
                 });
                 
                 // end
-                _grapi.UpdateEvents();
                 _grapi.UpdateScreen();
             });
     }

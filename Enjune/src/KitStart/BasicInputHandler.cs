@@ -21,6 +21,7 @@ public class BasicInputHandler : IUserInputHandler
     public Vector2i CursorPosition = (0, 0);
     public Vector2i DeltaCursorPosition { get; private set; } = (0, 0);
     public Vector2 DeltaWheelScroll { get; private set; } = (0, 0);
+    public int MouseUpdates = 0;
     
     // window 
     private readonly Stopwatch _lastWindowChange;
@@ -69,6 +70,7 @@ public class BasicInputHandler : IUserInputHandler
 
     public void HandleCursor(int x, int y)
     {
+        MouseUpdates++;
         if (_firstCursorMove)
         {
             CursorPosition = (x, y);
@@ -96,6 +98,8 @@ public class BasicInputHandler : IUserInputHandler
     {
         // mutex lock
         //_mutex.WaitOne();
+        //Logger.Highlight(this, _mouseUpdates);
+        MouseUpdates = 0;
         
         if (_pendingWindowSize == default) return;
         // debouncing check
