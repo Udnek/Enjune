@@ -1,4 +1,5 @@
 using System.Collections;
+using Enjune.Misc;
 
 namespace Enjune.Physics.EcsType;
 
@@ -32,5 +33,33 @@ public record struct Signature
             bitSetCopy >>= 1;
         }
         return cnt;
+    }
+
+    public override string ToString()
+    {
+        return Convert.ToString(_bitSet, 2);
+    }
+}
+
+public class SignatureBuilder
+{
+    private Signature _signature = new Signature(0);
+    public SignatureBuilder RegisterComponent<T>()
+    {
+        var bit = (int)World.ComponentManager.GetTypeIdByType(typeof(T));
+        _signature.Set(bit);
+        return this;
+    }
+
+    public SignatureBuilder RegisterComponent(Type type)
+    {
+        var bit = (int)World.ComponentManager.GetTypeIdByType(type);
+        _signature.Set(bit);
+        return this;
+    }
+
+    public Signature Build()
+    {
+        return _signature;
     }
 }

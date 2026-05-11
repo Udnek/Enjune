@@ -1,3 +1,4 @@
+using Enjune.Misc;
 using Enjune.Physics.Component;
 using Enjune.Physics.EcsType;
 using Enjune.Physics.Manager;
@@ -8,10 +9,11 @@ namespace Enjune.Physics.System;
 
 public class IntegrationSystem : ISystem
 {
-    private Signature _signature;
+    public Signature Signature { get; }
+
     public IntegrationSystem()
     {
-        _signature = new SignatureBuilder()
+        Signature = new SignatureBuilder()
             .RegisterComponent<Component.Position>()
             .RegisterComponent<Velocity>()
             .RegisterComponent<Acceleration>()
@@ -19,16 +21,20 @@ public class IntegrationSystem : ISystem
     }
     
     // TODO: Check if archetype is empty
+
     public void Update()
     {
-        Archetype integrationArchetype = World.ArchetypeManager.GetArchetype(_signature);
-
+        Archetype integrationArchetype = World.ArchetypeManager.GetArchetype(Signature);
         Span<Component.Position> positions = integrationArchetype.GetComponents<Component.Position>();
         Span<Velocity> velocities = integrationArchetype.GetComponents<Velocity>();
         Span<Acceleration> accelerations = integrationArchetype.GetComponents<Acceleration>();
-
+        
         for (int i = 0; i < integrationArchetype.EntityCount; i++)
         {
+            Logger.Log(GetType(), $"Processing entity {integrationArchetype.GetIdByRow(i)} with params:\n" +
+                                  $"- - - - Position:     {positions[i].ToString()}\n" +
+                                  $"- - - - Velocity:     {velocities[i].ToString()}\n" +
+                                  $"- - - - Acceleration: {accelerations[i].ToString()}");
             // First we integrate positions
             positions[i].X += EcsConstants.DeltaTime * velocities[i].X;
             positions[i].Y += EcsConstants.DeltaTime * velocities[i].Y;

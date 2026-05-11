@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using Enjune;
+using Enjune.Misc;
 using Enjune.Physics;
 using Enjune.Physics.Component;
 using Enjune.Physics.EcsType;
@@ -29,15 +30,20 @@ public class EcsApp : IApp
         testEntity.AddComponent(new Enjune.Physics.Component.Position(0, 0, 0));
         testEntity.AddComponent(new Velocity(0,0,0));
         testEntity.AddComponent(new Acceleration(0,0,0));
+        
+        World.ArchetypeManager.AddEntity(testEntity);
+        
         return null;
     }
 
     public void Run()
     {
-        for (var i = 0; i < 5000; i ++)
+        Logger.Log(GetType(), "Starting the main loop");
+        for (var i = 0; i < 10; i ++)
         {
             World.SystemManager.Update<GravitySystem>();
             World.SystemManager.Update<IntegrationSystem>();
+            Logger.Log(GetType(), $"Finished step {i + 1} of the loop");
         }
     }
 }

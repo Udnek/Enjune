@@ -1,14 +1,16 @@
 using System.Runtime.CompilerServices;
+using Enjune.Physics.Component;
 
 namespace Enjune.Physics.EcsType;
 
 public interface IColumn
 {
+    void SetValue(int row, IComponent value);
     void SetCapacity(int capacity);
     void SwapElements(int rowFrom, int rowTo);
 }
 
-public class Column<T> : IColumn where T : struct
+public class Column<T> : IColumn where T : struct, IComponent
 {
     public T[] Data;
 
@@ -17,9 +19,9 @@ public class Column<T> : IColumn where T : struct
         Data = new T[capacity];
     }
 
-    public void SetValue(ref T value, int row)
+    public void SetValue(int row, IComponent value)
     {
-        Data[row] = value;
+        Data[row] = (T)value;
     }
     
     public void SetRawData(byte[] rawData, int row)

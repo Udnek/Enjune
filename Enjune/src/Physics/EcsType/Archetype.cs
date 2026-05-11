@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Globalization;
 using System.Runtime.CompilerServices;
+using Enjune.Misc;
 using Enjune.Physics.EcsType;
 using FreeTypeSharp;
 using IComponent = Enjune.Physics.Component.IComponent;
@@ -16,9 +17,12 @@ public class Archetype
     private int _capacity = EcsConstants.InitialCapacity;
     private int _entityCount = 0;
     public int EntityCount => _entityCount;
-
+    private readonly Signature _signature;
+    public Signature Signature => _signature;
+    
     public Archetype(Signature signature)
     {
+        _signature = signature;
         _row2Id = new EntityId[_capacity];
         _id2Row = new Dictionary<EntityId, int>(_capacity);
         
@@ -31,6 +35,8 @@ public class Archetype
         }
     }
 
+    public EntityId GetIdByRow(int row) => _row2Id[row];
+    
     private void RegisterColumn(Type type)
     {
         Type columnType = typeof(Column<>).MakeGenericType(type);
@@ -56,6 +62,7 @@ public class Archetype
     // TODO: Avoid using Collection<IComponent> because of boxing
     public void AddEntity(EntityAssembly entityAssembly)
     {
+        Logger.Log(GetType(), $"Archetype with signature {_signature} acquired an entity {entityAssembly.Id}");
         EnsureCapacity();
         int row = _entityCount;
         _id2Row[entityAssembly.Id] = row;
@@ -63,8 +70,7 @@ public class Archetype
         List<IComponent> components = entityAssembly.GetComponents();
         foreach (IComponent component in components)
         {
-            // Dynamically assume that _columns[type] is Column<T>
-            ((dynamic)_columns[component.GetType()]).Data[row] = component;
+            _columns[component.GetType()].SetValue(row, component);
         }
         
         _entityCount++;

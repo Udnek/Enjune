@@ -1,3 +1,4 @@
+using Enjune.Misc;
 using Enjune.Physics.System;
 
 namespace Enjune.Physics.Manager;
@@ -17,6 +18,7 @@ public class SystemManager
     public SystemManager RegisterSystem(ISystem system)
     {
         _systems.Add(system.GetType(), system);
+        World.ArchetypeManager.EnsureArchetypeExistence(system.Signature);
         return this;
     }
 
@@ -28,6 +30,6 @@ public class SystemManager
             system.Update();
             return;
         }
-        Console.WriteLine($"System {typeof(TSystem).Name} was not registered before updating");
+        Logger.Warn(GetType(), $"System {typeof(TSystem).Name} was not registered before updating");
     }
 }
