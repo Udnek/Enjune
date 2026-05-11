@@ -15,14 +15,13 @@ public class Archetype
     private readonly Dictionary<EntityId, int> _id2Row;
     
     private int _capacity = EcsConstants.InitialCapacity;
-    private int _entityCount = 0;
-    public int EntityCount => _entityCount;
-    private readonly Signature _signature;
-    public Signature Signature => _signature;
     
+    public int EntityCount { get; private set; } = 0;
+    public Signature Signature { get; }
+
     public Archetype(Signature signature)
     {
-        _signature = signature;
+        Signature = signature;
         _row2Id = new EntityId[_capacity];
         _id2Row = new Dictionary<EntityId, int>(_capacity);
         
@@ -46,7 +45,7 @@ public class Archetype
 
     private void EnsureCapacity()
     {
-        if (_entityCount + 1 <= _capacity) return;
+        if (EntityCount + 1 <= _capacity) return;
         int newCapacity = _capacity * 2;
         
         Array.Resize(ref _row2Id, newCapacity);
@@ -62,24 +61,27 @@ public class Archetype
     // TODO: Avoid using Collection<IComponent> because of boxing
     public void AddEntity(EntityAssembly entityAssembly)
     {
-        Logger.Log(GetType(), $"Archetype with signature {_signature} acquired an entity {entityAssembly.Id}");
+        Logger.Log(GetType(), $"Archetype with signature {Signature} acquired an entity {entityAssembly.Id}");
         EnsureCapacity();
-        int row = _entityCount;
+        int row = EntityCount;
         _id2Row[entityAssembly.Id] = row;
         _row2Id[row] = entityAssembly.Id;
-        List<IComponent> components = entityAssembly.GetComponents();
-        foreach (IComponent component in components)
+        List<IComponent> entityComponents = entityAssembly.GetComponents();
+        foreach (IComponent entityComponent in entityComponents)
         {
-            _columns[component.GetType()].SetValue(row, component);
+            if (_columns.ContainsKey(entityComponent.GetType()))
+            {
+                _columns[entityComponent.GetType()].SetValue(row, entityComponent);
+            }
         }
          
-        _entityCount++;
+        EntityCount++;
     }
 
     public void RemoveEntity(EntityId id)
     {
         if (!_id2Row.TryGetValue(id, out int row)) return;
-        int lastRow = _entityCount - 1;
+        int lastRow = EntityCount - 1;
         if (row != lastRow)
         {
             EntityId lastId = _row2Id[lastRow];
@@ -94,7 +96,7 @@ public class Archetype
         }
         
         _id2Row.Remove(id);
-        _entityCount--;
+        EntityCount--;
     }
 
     public Span<T> GetComponents<T>() where T : struct, IComponent

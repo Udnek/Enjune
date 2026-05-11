@@ -17,15 +17,18 @@ public class GravitySystem : ISystem
 
     public void Update()
     {
-        Archetype archetype = World.ArchetypeManager.GetArchetype(Signature);
-        Span<Acceleration> accelerations = archetype.GetComponents<Acceleration>();
-        
-        for (int i = 0; i < archetype.EntityCount; i++)
+        //Archetype archetype = World.ArchetypeManager.GetArchetype(Signature);
+        foreach (var archetype in World.ArchetypeManager.GetArchetypes())
         {
-            // Simply add -9,80665 to Y acceleration
-            // TODO: Consider changing this behaviour to something more.. accurate? Flexible?
-            accelerations[i].Y += EcsConstants.GravitationalAcceleration;
-            Logger.Log(GetType(), $"Added gravitational acceleration to entity {archetype.GetIdByRow(i)}");
+            if (!archetype.Signature.Contains(Signature)) continue;
+            Span<Acceleration> accelerations = archetype.GetComponents<Acceleration>();
+            for (int i = 0; i < archetype.EntityCount; i++)
+            {
+                // Simply add -9,80665 to Y acceleration
+                // TODO: Consider changing this behavior to something more... accurate? Flexible?
+                accelerations[i].Y += EcsConstants.GravitationalAcceleration;
+                Logger.Log(GetType(), $"Added gravitational acceleration to entity {archetype.GetIdByRow(i)}");
+            }
         }
     }
 }

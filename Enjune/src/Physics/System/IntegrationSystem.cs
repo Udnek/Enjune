@@ -24,31 +24,34 @@ public class IntegrationSystem : ISystem
 
     public void Update()
     {
-        Archetype integrationArchetype = World.ArchetypeManager.GetArchetype(Signature);
-        Span<Component.Position> positions = integrationArchetype.GetComponents<Component.Position>();
-        Span<Velocity> velocities = integrationArchetype.GetComponents<Velocity>();
-        Span<Acceleration> accelerations = integrationArchetype.GetComponents<Acceleration>();
-        
-        for (int i = 0; i < integrationArchetype.EntityCount; i++)
+        foreach (var archetype in World.ArchetypeManager.GetArchetypes())
         {
-            Logger.Log(GetType(), $"Processing entity {integrationArchetype.GetIdByRow(i)} with params:\n" +
-                                  $"- - - - Position:     {positions[i].ToString()}\n" +
-                                  $"- - - - Velocity:     {velocities[i].ToString()}\n" +
-                                  $"- - - - Acceleration: {accelerations[i].ToString()}");
-            // First we integrate positions
-            positions[i].X += EcsConstants.DeltaTime * velocities[i].X;
-            positions[i].Y += EcsConstants.DeltaTime * velocities[i].Y;
-            positions[i].Z += EcsConstants.DeltaTime * velocities[i].Z;
-            
-            // Then we integrate velocities
-            velocities[i].X += EcsConstants.DeltaTime * accelerations[i].X;
-            velocities[i].Y += EcsConstants.DeltaTime * accelerations[i].Y;
-            velocities[i].Z += EcsConstants.DeltaTime * accelerations[i].Z;
-            
-            // Lastly, we reset all accelerations
-            accelerations[i].X = 0;
-            accelerations[i].Y = 0;
-            accelerations[i].Z = 0;
+            if (!archetype.Signature.Contains(Signature)) continue;
+            Span<Component.Position> positions = archetype.GetComponents<Component.Position>();
+            Span<Velocity> velocities = archetype.GetComponents<Velocity>();
+            Span<Acceleration> accelerations = archetype.GetComponents<Acceleration>();
+
+            for (int i = 0; i < archetype.EntityCount; i++)
+            {
+                Logger.Log(GetType(), $"Processing entity {archetype.GetIdByRow(i)} with params:\n" +
+                                      $"- - - - Position:     {positions[i].ToString()}\n" +
+                                      $"- - - - Velocity:     {velocities[i].ToString()}\n" +
+                                      $"- - - - Acceleration: {accelerations[i].ToString()}");
+                // First we integrate positions
+                positions[i].X += EcsConstants.DeltaTime * velocities[i].X;
+                positions[i].Y += EcsConstants.DeltaTime * velocities[i].Y;
+                positions[i].Z += EcsConstants.DeltaTime * velocities[i].Z;
+
+                // Then we integrate velocities
+                velocities[i].X += EcsConstants.DeltaTime * accelerations[i].X;
+                velocities[i].Y += EcsConstants.DeltaTime * accelerations[i].Y;
+                velocities[i].Z += EcsConstants.DeltaTime * accelerations[i].Z;
+
+                // Lastly, we reset all accelerations
+                accelerations[i].X = 0;
+                accelerations[i].Y = 0;
+                accelerations[i].Z = 0;
+            }
         }
     }
 }

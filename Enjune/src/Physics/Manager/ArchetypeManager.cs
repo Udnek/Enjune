@@ -22,13 +22,8 @@ public class ArchetypeManager
     {
         Signature signature = assembly.GetSignature();
         Logger.Log(GetType(), $"Got a request to add an entity {assembly.Id} with signature {signature}");
-        foreach (var archetypeSignature in _archetypes.Keys)
-        {
-            if (signature.Contains(archetypeSignature))
-            {
-                _archetypes[archetypeSignature].AddEntity(assembly);
-            }
-        }
+        EnsureArchetypeExistence(signature);
+        _archetypes[signature].AddEntity(assembly);
     }
 
     public Archetype GetArchetype(Signature signature)
@@ -39,5 +34,10 @@ public class ArchetypeManager
             _archetypes.Add(signature, archetype);
         }
         return archetype;
+    }
+
+    public List<Archetype> GetArchetypes()
+    {
+        return _archetypes.Values.ToList();
     }
 }

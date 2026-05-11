@@ -39,7 +39,7 @@ public class EcsApp : IApp
     public void Run()
     {
         Logger.Log(GetType(), "Starting the main loop");
-        for (var i = 0; i < 10; i ++)
+        for (var i = 0; i < 1000; i ++)
         {
             World.SystemManager.Update<GravitySystem>();
             World.SystemManager.Update<IntegrationSystem>();
