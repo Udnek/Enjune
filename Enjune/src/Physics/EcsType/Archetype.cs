@@ -72,7 +72,7 @@ public class Archetype
         {
             _columns[component.GetType()].SetValue(row, component);
         }
-        
+         
         _entityCount++;
     }
 
