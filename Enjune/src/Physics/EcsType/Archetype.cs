@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Globalization;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using Enjune.Misc;
 using Enjune.Physics.EcsType;
@@ -28,7 +29,7 @@ public class Archetype
         int nComponents = signature.GetSetBitsCount();
         
         List<Type> types = World.ComponentManager.DeconstructSignature(signature);
-        for (int i = nComponents - 1; i >= 0; i--)
+        for (var i = 0; i < nComponents; i++)
         {
             RegisterColumn(types[i]);
         }
@@ -61,7 +62,7 @@ public class Archetype
     // TODO: Avoid using Collection<IComponent> because of boxing
     public void AddEntity(EntityAssembly entityAssembly)
     {
-        Logger.Log(GetType(), $"Archetype with signature {Signature} acquired an entity {entityAssembly.Id}");
+        Logger.Log(GetType(), $"archetype with signature {Signature} acquired an entity {entityAssembly.Id}");
         EnsureCapacity();
         int row = EntityCount;
         _id2Row[entityAssembly.Id] = row;
@@ -103,6 +104,24 @@ public class Archetype
     {
         Column<T> column = (Column<T>)_columns[typeof(T)];
         return column.GetSpan();
+    }
+
+    public bool ContainsEntity(EntityId id)
+    {
+        return _id2Row.ContainsKey(id);
+    }
+
+    public EntityAssembly? GetAssembly(EntityId id)
+    {
+        if (!ContainsEntity(id)) return null;
+        int row = _id2Row[id];
+        EntityAssembly assembly = new EntityAssembly(id);
+        foreach (IColumn column in _columns.Values)
+        {
+            assembly.AddComponent(column.GetValue(row));
+        }
+
+        return assembly;
     }
 }
 

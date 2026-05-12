@@ -23,7 +23,7 @@ public class ComponentManager
     public ComponentManager RegisterComponentType<TComponent>()
     {
         ComponentTypeId id = _availableComponentIds.Dequeue();
-        Logger.Log(GetType(), $"Registering component type {typeof(TComponent).Name}, identifying as {id}");
+        Logger.Log(GetType(), $"registering component type {typeof(TComponent).Name}, identifying as {id}");
         _componentTypeIds[typeof(TComponent)] = id;
         _componentTypes[id] = typeof(TComponent);
         return this;

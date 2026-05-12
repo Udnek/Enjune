@@ -39,11 +39,14 @@ public class EcsApp : IApp
     public void Run()
     {
         Logger.Log(GetType(), "Starting the main loop");
+        DateTime startTime = DateTime.Now;
         for (var i = 0; i < 1000; i ++)
         {
             World.SystemManager.Update<GravitySystem>();
             World.SystemManager.Update<IntegrationSystem>();
             Logger.Log(GetType(), $"Finished step {i + 1} of the loop");
         }
+        DateTime endTime = DateTime.Now;
+        Logger.Log(GetType(), $"Simulation took {endTime - startTime}");
     }
 }

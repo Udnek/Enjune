@@ -14,14 +14,14 @@ public class ArchetypeManager
         if (!_archetypes.ContainsKey(signature))
         {
             _archetypes[signature] = new Archetype(signature);
-            Logger.Log(GetType(), $"Archetype with signature {signature} created");
+            Logger.Log(GetType(), $"archetype with signature {signature} created");
         }
     }
 
     public void AddEntity(EntityAssembly assembly)
     {
         Signature signature = assembly.GetSignature();
-        Logger.Log(GetType(), $"Got a request to add an entity {assembly.Id} with signature {signature}");
+        Logger.Log(GetType(), $"got a request to add an entity {assembly.Id} with signature {signature}");
         EnsureArchetypeExistence(signature);
         _archetypes[signature].AddEntity(assembly);
     }

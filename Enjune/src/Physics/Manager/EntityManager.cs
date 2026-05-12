@@ -11,7 +11,7 @@ public class EntityManager
     
     public EntityManager()
     {
-        Logger.Log(GetType(), "Registering entity IDs");
+        Logger.Log(GetType(), "registering entity IDs");
         Stack<EntityId> rawEntities = new();
         for (EntityId id = 0; id < EcsConstants.MaxEntities; id++)
         {
@@ -22,7 +22,7 @@ public class EntityManager
         {
             _availableEntities.Push(rawEntities.Pop());
         }
-        Logger.Log(GetType(), $"Registered entity IDs. Range: [{_availableEntities.Peek()}; {_availableEntities.Last()}]");
+        Logger.Log(GetType(), $"registered entity IDs. Range: [{_availableEntities.Peek()}; {_availableEntities.Last()}]");
     }
 
     private bool HasAvailableEntity() { return _availableEntities.Count > 0; }
@@ -42,7 +42,7 @@ public class EntityManager
     {
         if (!HasAvailableEntity())
         {
-            Logger.Warn(GetType(), "New entity requested, but no more entities available! Ignoring request");
+            Logger.Warn(GetType(), "new entity requested, but no more entities available! Ignoring request");
             return null;
         }
         EntityId id = _availableEntities.Pop();

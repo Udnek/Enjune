@@ -33,7 +33,7 @@ public class IntegrationSystem : ISystem
 
             for (int i = 0; i < archetype.EntityCount; i++)
             {
-                Logger.Log(GetType(), $"Processing entity {archetype.GetIdByRow(i)} with params:\n" +
+                Logger.Log(GetType(), $"processing entity {archetype.GetIdByRow(i)} with params:\n" +
                                       $"- - - - Position:     {positions[i].ToString()}\n" +
                                       $"- - - - Velocity:     {velocities[i].ToString()}\n" +
                                       $"- - - - Acceleration: {accelerations[i].ToString()}");

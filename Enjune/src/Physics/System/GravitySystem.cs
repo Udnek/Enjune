@@ -27,7 +27,7 @@ public class GravitySystem : ISystem
                 // Simply add -9,80665 to Y acceleration
                 // TODO: Consider changing this behavior to something more... accurate? Flexible?
                 accelerations[i].Y += EcsConstants.GravitationalAcceleration;
-                Logger.Log(GetType(), $"Added gravitational acceleration to entity {archetype.GetIdByRow(i)}");
+                Logger.Log(GetType(), $"added gravitational acceleration to entity {archetype.GetIdByRow(i)}");
             }
         }
     }

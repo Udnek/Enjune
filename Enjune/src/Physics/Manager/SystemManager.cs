@@ -29,6 +29,6 @@ public class SystemManager
             system.Update();
             return;
         }
-        Logger.Warn(GetType(), $"System {typeof(TSystem).Name} was not registered before updating");
+        Logger.Warn(GetType(), $"system {typeof(TSystem).Name} was not registered before updating");
     }
 }
