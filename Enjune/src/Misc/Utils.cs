@@ -55,10 +55,11 @@ public static class Utils
             if (value is not IDisposable disposable) continue;
             disposable.Dispose();
             disposedAtLestOne = true;
-            Logger.Log(typeof(Utils),$"{tab}{objType.Name}.{field.Name} disposed");
+            Logger.Log(typeof(Utils),$"  {tab}{objType.Name}.{field.Name} disposed");
         }
         if (!disposedAtLestOne)
-            Logger.Warn(typeof(Utils), $"{tab}Nothing disposed in {objType.Name}. Something might be wrong");
+            Logger.Warn(typeof(Utils), $"  {tab}Nothing disposed in {objType.Name}. Something might be wrong");
+        
         Logger.Log(typeof(Utils), $"{tab}- finished disposing {objType.Name}");
         
         _disposeDepth--;

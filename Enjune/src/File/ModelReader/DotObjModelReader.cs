@@ -5,7 +5,7 @@ using Buffer = System.Buffer;
 
 namespace Enjune.File.ModelReader;
 
-public class DotObjModelReader : AbstractReader
+public class DotObjModelReader(AssetManager assetManager, ResourcePath path) : AbstractReader(assetManager, path)
 {
     private readonly List<Position> _loadedVertices = [];
     private readonly List<TexturePos> _loadedTextureCoords = [];
@@ -14,8 +14,6 @@ public class DotObjModelReader : AbstractReader
     private RawMaterial? _lastCreatedMaterial = null;  
     
     private readonly Model.Builder _builder = new();
-
-    public DotObjModelReader(AssetManager assetManager, ResourcePath path) : base(assetManager, path){}
 
     public override Model? Read(out Error? error)
     {

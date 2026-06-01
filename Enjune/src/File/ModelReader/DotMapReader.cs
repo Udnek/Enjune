@@ -7,10 +7,8 @@ using Mesh = Enjune.Graphic.Mesh;
 
 namespace Enjune.File.ModelReader;
 
-public class DotMapReader : AbstractReader
+public class DotMapReader(AssetManager assetManager, ResourcePath path) : AbstractReader(assetManager, path)
 {
-    public DotMapReader(AssetManager assetManager, ResourcePath path) : base(assetManager, path){}
-    
     public override Model? Read(out Error? error)
     {
         var mapFormat = new QuakeMapFormat();

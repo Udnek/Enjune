@@ -1,4 +1,5 @@
 using System.Diagnostics.Contracts;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 
 namespace Enjune.Misc;
@@ -11,6 +12,26 @@ public static class Extensions
         public Vector3 TransformDirection(Vector3 vector) => Vector3.TransformVector(vector, matrix);
         [Pure]
         public Vector3 TransformPosition(Vector3 vector) => Vector3.TransformPosition(vector, matrix);
+    }
+
+    public static decimal? ParseDecimalOrNull(this string str)
+    {
+        if (decimal.TryParse(str, NumberStyles.Any, CultureInfo.InvariantCulture, out var result))
+            return result;
+        return null;
+    }
+    
+    public static string SafeSubstringLen(this string str, int from, int len)
+        => str.SafeSubstringFromTo(from, from + len);
+    public static string SafeSubstringFromTo(this string str, int from, int to)
+    {
+        if (str.Length == 0) return string.Empty;
+        from = Math.Clamp(from, 0, str.Length - 1);
+        to = Math.Clamp(to, 0, str.Length);
+        if (from == to) return "";
+        if (from > to) 
+            (from, to) = (to, from);
+        return str[from..to];
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

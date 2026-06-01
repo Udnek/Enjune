@@ -1,12 +1,18 @@
 using System.Reflection;
+using Enjune.Data;
 using Enjune.Misc;
 
 namespace Enjune.File;
 
 public sealed class AssemblyPath : ResourcePath
 {
-    private readonly string[] _path;
-    private readonly Assembly _assembly;
+    public static readonly Codec<ExternalPath> Codec = Codecs.ForConstructor(
+        "absolute", i => i.A, v => AssemblyPath, Codecs.String);
+
+    // return readonly
+    private string[] _path;
+    // return readonly
+    private Assembly _assembly;
     
     public static AssemblyPath Of(Assembly assembly, params string[] path) => new(assembly, path);
     

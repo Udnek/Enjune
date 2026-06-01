@@ -1,7 +1,13 @@
+using Enjune.Data;
+
 namespace Enjune.File;
 
 public sealed class ExternalPath : ResourcePath
 {
+    public static readonly Codec<ExternalPath> Codec = Codecs.ForConstructor(
+        "absolute", i => i._absolutePath, v => new ExternalPath(v ?? "./"), Codecs.String);
+    
+    
     private readonly string _absolutePath;
     
     public static ExternalPath Of(params string[] path) 
@@ -9,6 +15,19 @@ public sealed class ExternalPath : ResourcePath
     
     private ExternalPath(string absolutePath) => _absolutePath = absolutePath;
 
+    public void Write(string data, out Error? error)
+    {
+        error = null;
+        try
+        {
+            System.IO.File.WriteAllText(_absolutePath, data);
+        }
+        catch (Exception e)
+        {
+            error = e.Message;
+        }
+    }
+    
     public override ExternalPath Parent() => new(Path.GetFullPath(Path.Combine(_absolutePath, "..")));
 
     public override ExternalPath ThisDirectory() => new(Path.GetFullPath(Path.Combine(_absolutePath, ".")));

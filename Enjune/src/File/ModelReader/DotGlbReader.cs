@@ -9,10 +9,8 @@ using Mesh = Enjune.Graphic.Mesh;
 
 namespace Enjune.File.ModelReader;
 
-public class DotGlbReader : AbstractReader
+public class DotGlbReader(AssetManager assetManager, ResourcePath path) : AbstractReader(assetManager, path)
 {
-    public DotGlbReader(AssetManager assetManager, ResourcePath path) : base(assetManager, path) { }
-
     public override Model? Read(out Error? error)
     {
         ModelRoot? gltfModel = null;

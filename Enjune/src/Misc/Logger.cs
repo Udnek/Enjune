@@ -37,7 +37,7 @@ public static class Logger
         }
     }
 
-    private static string GetAuthorName(object author)
+    public static string GetAuthorName(object author)
     {
         if (author is string authorName) return authorName;
         Type authorType;
@@ -45,10 +45,23 @@ public static class Logger
             authorType = at;
         else
             authorType = author.GetType();
-
-
-        if (!authorType.IsGenericType) return authorType.Name;
-        var generics = authorType.GetGenericArguments();
-        return $"{authorType.Name}{generics.Select(g => g.Name).ContentToString("<", ", ", ">")}";
+        
+        return GetTypeName(authorType);
     }
+    
+    public static string GetTypeName(Type author)
+    {
+        string prefix;
+        if (author.DeclaringType != null)
+            prefix = GetTypeName(author.DeclaringType) + ".";
+        else prefix = "";
+        
+        if (!author.IsGenericType) return prefix + author.Name;
+        var generics = author.GetGenericArguments();
+        var name = author.Name;
+        name = name[..name.IndexOf('`')];
+        return $"{prefix}{name}{generics.Select(GetTypeName).ContentToString("<", ", ", ">")}";
+    }
+
+
 }

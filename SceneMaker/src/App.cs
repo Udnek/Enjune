@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Globalization;
 using Enjune;
+using Enjune.Data.Json;
 using Enjune.File;
 using Enjune.File.ModelReader;
 using Enjune.Graphic;
@@ -121,7 +122,7 @@ public class App : AbstractDisposable, IApp
                     Model = m,
                     RenderableModel = _grapi.CreateStaticRenderable(m),
                     Position = (0, 20, -25/2f),
-                    PointLight = SpotLight.Ortho(new Vector3(0.3f, -1, 0.3f), new Color(244/255f, 233/255f, 155/255f, 1f)*1.5f, (30, 30))
+                    PointLight = SpotLight.Ortho(new Vector3(0f, -1, -0.5f), new Color(244/255f, 233/255f, 200/255f, 1f)*1.5f, (30, 30))
                 };
                 _scene.Objects.Add(light);
             }
@@ -175,6 +176,8 @@ public class App : AbstractDisposable, IApp
         //
         // eventThread.Join();
         GraphicCycle();
+
+        Console.WriteLine(JsonSerde.Indent4.Serialize(Scene.Codec.Encode(_scene)));
     }
 
     public void GraphicCycle()
