@@ -10,7 +10,6 @@ public static class World
     public static readonly ComponentManager ComponentManager = new ComponentManager();
     public static readonly SystemManager SystemManager = new SystemManager();
     public static readonly EntityManager EntityManager = new EntityManager();
-    public static readonly QueryManager QueryManager = new QueryManager();
 
     public static void AddEntity(EntityAssembly assembly)
     {
