@@ -21,7 +21,7 @@ public class GravitySystem : ISystem
         for (int i = 0; i < archetype.EntityCount; i++)
         {
             // Simply add -9,80665 to Y acceleration
-            // TODO: Consider changing this behaviour to something more.. accurate? Flexible?
+            // TODO: The thing below is a placeholder
             accelerations[i].Y += EcsConstants.GravitationalAcceleration;
         }
     }

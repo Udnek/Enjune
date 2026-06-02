@@ -26,15 +26,17 @@ public class EcsApp : IApp
         ushort id = World.EntityManager.CreateEntity()!.Value;
         
         var testEntity = new EntityAssembly(id);
-        testEntity.AddComponent(new Enjune.Physics.Component.Position(0, 0, 0));
+        testEntity.AddComponent(new Enjune.Physics.Component.Position(0, 1, 0));
         testEntity.AddComponent(new Velocity(0,0,0));
         testEntity.AddComponent(new Acceleration(0,0,0));
+        World.AddEntity(testEntity);
+        
         return null;
     }
 
     public void Run()
     {
-        for (var i = 0; i < 5000; i ++)
+        for (var i = 0; i < 10; i ++)
         {
             World.SystemManager.Update<GravitySystem>();
             World.SystemManager.Update<IntegrationSystem>();

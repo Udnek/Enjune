@@ -1,16 +1,20 @@
 using System;
+using Enjune.Physics.EcsType;
 using Enjune.Physics.Manager;
 
 namespace Enjune.Physics;
 
-public class World
+public static class World
 {
     public static readonly ArchetypeManager ArchetypeManager = new ArchetypeManager();
     public static readonly ComponentManager ComponentManager = new ComponentManager();
     public static readonly SystemManager SystemManager = new SystemManager();
     public static readonly EntityManager EntityManager = new EntityManager();
-    public void Test()
+    public static readonly QueryManager QueryManager = new QueryManager();
+
+    public static void AddEntity(EntityAssembly assembly)
     {
-        Console.WriteLine(EcsConstants.MaxEntities);
+        Archetype archetype = ArchetypeManager.GetArchetype(assembly.GetSignature());
+        archetype.AddEntity(assembly);
     }
 }

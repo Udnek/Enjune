@@ -18,7 +18,6 @@ public class IntegrationSystem : ISystem
             .Build();
     }
     
-    // TODO: Check if archetype is empty
     public void Update()
     {
         Archetype integrationArchetype = World.ArchetypeManager.GetArchetype(_signature);
