@@ -4,7 +4,6 @@ namespace Enjune.Data;
 
 public static partial class Codecs
 {
-
     private static void ValidateFieldNames(IEnumerable<string> names)
     {
         // ReSharper disable once PossibleMultipleEnumeration
@@ -15,60 +14,66 @@ public static partial class Codecs
                 Logger.Error(typeof(Codecs), $"field name used multiple times: \"{group.Key}\" in {names.ContentToString()}");
         }
     }
-
-
+    
     public class EitherBuilder<TInstance>
     {
-        private readonly List<(string Name, Codec<TInstance>)> _codecs = [];
+        private readonly List<(
+            string Name, 
+            Func<TInstance, DataObject?> EncodeIfSelected,
+            Func<DataObject, TInstance> Decoder)> _options = [];
 
-        public EitherBuilder<TInstance> OrIfNotNull<T>(string optionName, Func<TInstance, T?> selector, Codec<T> codec, T? defaultValue = default)
+
+        public EitherBuilder<TInstance> OrIfInstance<T>(string optionName, Codec<T> codec) where T : class, TInstance 
+            => OrIfNotNull(optionName, i => i as T, codec);
+        
+        public EitherBuilder<TInstance> OrIfNotNull<T>(string optionName, Func<TInstance, T?> selector, Codec<T> codec) where T: TInstance
         {
-            _codecs.Add((
+            _options.Add((
                 optionName,
                 instance =>
                 {
                     var value = selector(instance);
-                    if (value is null) return null;
-                    return Equals(value, defaultValue) ? null : codec.Encode(value);
+                    return value is null ? null : codec.Encode(value);
                 }, 
-                data =>
-                {
-                    if (data is null)  // TODO REMOVE OR MAKE DEBUG ONLY
-                        Logger.Warn(this, $"can not find entry for field \"{optionName}\" in {data}, using default: {defaultValue}");
-                    var value = data is null ? defaultValue : codec.Decode(data);
-                    return value;
-                }));
+                data => codec.Decode(data)));
             return this;
         }
         
         public Codec<TInstance> Build()
         {
-            ValidateFieldNames(_codecs.Select(e => e.Name));
-            _codecs.TrimExcess(); // optimizing memory
+            ValidateFieldNames(_options.Select(e => e.Name));
+            _options.TrimExcess(); // optimizing memory
             
             return new Codec<TInstance>(
                 instance =>
                 {
-                    var dict = new Dictionary<string, DataObject>(_codecs.Count);
-                    foreach (var e in _codecs)
+                    var dict = new Dictionary<string, DataObject>(1);
+                    var successful = false;
+                    foreach (var e in _options)
                     {
-                        var encoded = e.Encoder(instance);
-                        if (encoded is not null) dict[e.Name] = encoded;
+                        var encoded = e.EncodeIfSelected(instance);
+                        if (encoded is null) continue;
+                        successful = true;
+                        dict[e.Name] = encoded;
+                        break;
                     }
+
+                    if (!successful) 
+                        Logger.Error(this, $"no option is chosen to encode: {_options.Select(e => e.Name).ContentToString()}");
                     return dict;
                 }, 
                 data =>
                 {
                     var map = data.AsOr(DataObject.Map.Empty);
-                    var args = new object?[_codecs.Count];
-                    for (var i = 0; i < _codecs.Count; i++)
+                    foreach (var e in _options)
                     {
-                        var e = _codecs[i];
                         var fieldData = map.GetOrNull<DataObject>(e.Name);
-                        args[i] = e.Decoder(fieldData);
+                        if (fieldData is null) continue;
+                        return e.Decoder(fieldData);
                     }
 
-                    return constructor(args);
+                    Logger.Error(this, $"no option is chosen to decode in {map} for options {_options.Select(e => e.Name).ContentToString()}");
+                    return default!;
                 });
         }
     }

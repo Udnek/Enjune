@@ -72,7 +72,7 @@ public class JsonLexer
     }
     
     [Pure]
-    public TokenType GetType(char ch)
+    private static TokenType GetType(char ch)
     {
         TokenType? type = ch switch
         {

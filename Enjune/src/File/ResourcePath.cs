@@ -8,7 +8,10 @@ namespace Enjune.File;
 
 public abstract class ResourcePath
 {
-    public static readonly Codec<ResourcePath> Codec = Codecs.B
+    public static readonly Codec<ResourcePath> Codec = Codecs.ForEither<ResourcePath>()
+        .OrIfInstance("assembly", AssemblyPath.Codec)
+        .OrIfInstance("external", ExternalPath.Codec)
+        .Build();
     
     // interface
 

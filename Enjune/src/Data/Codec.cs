@@ -44,7 +44,7 @@ public delegate void DecodeAndSet<TInstance>(ref TInstance instance, DataObject?
 public static partial class Codecs
 {
     public static readonly Codec<float> Float = new(
-        v => new DataObject.Number((decimal) v),
+        instance => new DataObject.Number((decimal) instance),
         data => (float) data.AsOr(DataObject.Number.Zero).Decimal
     );
     
@@ -54,12 +54,12 @@ public static partial class Codecs
     );
     
     public static readonly Codec<string> String = new(
-        v => new DataObject.String(v),
+        instance => new DataObject.String(instance),
         data => data.AsOr(DataObject.String.Empty).Val
     );
 
     public static readonly Codec<Assembly> Assembly = new(
-        v => new DataObject.String(v.FullName ?? throw new InvalidOperationException()),
+        instance => new DataObject.String(instance.FullName ?? throw new InvalidOperationException()),
         data => System.Reflection.Assembly.Load(data.AsOr(DataObject.String.Empty).Val)
     );
     
@@ -82,4 +82,6 @@ public static partial class Codecs
 
     public static EmptyConstructorBuilder<TInstance> ForEmptyConstructor<TInstance>(Func<TInstance> newInstanceCreator) 
         => new(newInstanceCreator);
+    
+    public static EitherBuilder<TInstance> ForEither<TInstance>() => new();
 }
