@@ -10,6 +10,7 @@ public class GravitySystem : ISystem
 
     public GravitySystem()
     {
+        // TODO move to GetSingature???
         Signature = new SignatureBuilder()
             .RegisterComponent<Acceleration>()
             .Build();
@@ -18,6 +19,7 @@ public class GravitySystem : ISystem
     public void Update()
     {
         //Archetype archetype = World.ArchetypeManager.GetArchetype(Signature);
+                                    // TODO why does system have access to World?
         foreach (var archetype in World.ArchetypeManager.GetArchetypes())
         {
             if (!archetype.Signature.Contains(Signature)) continue;

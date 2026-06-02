@@ -38,6 +38,7 @@ public class ArchetypeManager
 
     public List<Archetype> GetArchetypes()
     {
+        // TODO use consumer and probably cache .Values???
         return _archetypes.Values.ToList();
     }
 }

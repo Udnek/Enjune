@@ -21,6 +21,7 @@ public class SystemManager
         return this;
     }
 
+    // TODO update them all in order of registering
     public void Update<TSystem>() where TSystem : ISystem
     {
         _systems.TryGetValue(typeof(TSystem), out var system);
