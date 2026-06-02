@@ -85,22 +85,22 @@ public static partial class Codecs
             Func<TInstance, DataObject?> Encoder, 
             Func<DataObject?, object?> Decoder)> _codecs = [];
 
-        public BigConstructorBuilder<TInstance> ForField<T>(string name, Getter<TInstance, T> getter, Codec<T> codec, T? defaultValue = default)
+        public BigConstructorBuilder<TInstance> ForField<T>(string name, Getter<TInstance, T> getter, Codec<T> codec) where T : unmanaged
+        {
+            // default values is not null cause it is primitive
+            return ForField(name, getter, codec, default);
+        }
+        
+        public BigConstructorBuilder<TInstance> ForField<T>(string name, Getter<TInstance, T> getter, Codec<T> codec, T defaultValue)
         {
             _codecs.Add((
                 name,
                 instance =>
                 {
-                    var val = getter(instance);
-                    return Equals(val, defaultValue) ? null : codec.Encode(val);
+                    var value = getter(instance);
+                    return Equals(value, defaultValue) ? null : codec.Encode(value);
                 }, 
-                data =>
-                {
-                    if (data is null)  // TODO REMOVE OR MAKE DEBUG ONLY
-                        Logger.Warn(this, $"can not find entry for field \"{name}\" in {data}, using default: {defaultValue}");
-                    var value = data is null ? defaultValue : codec.Decode(data);
-                    return value;
-                }));
+                data => data is null ? defaultValue : codec.Decode(data)));
             return this;
         }
         
@@ -143,7 +143,16 @@ public static partial class Codecs
             Func<TInstance, DataObject?> Encoder, 
             DecodeAndSet<TInstance> DecodeAndSet)> _codecs = [];
 
-        public EmptyConstructorBuilder<TInstance> ForField<T>(string name, Getter<TInstance, T> getter, Setter<TInstance, T> setter, Codec<T> codec, T? defaultValue = default)
+
+        public EmptyConstructorBuilder<TInstance> ForField<T>(string name, Getter<TInstance, T> getter,
+            Setter<TInstance, T> setter, Codec<T> codec) where T : unmanaged
+        {
+            // default values is not null cause it is primitive
+            return ForField(name, getter, setter, codec, default);
+        }
+
+        public EmptyConstructorBuilder<TInstance> ForField<T>(
+            string name, Getter<TInstance, T> getter, Setter<TInstance, T> setter, Codec<T> codec, T defaultValue)
         {
             _codecs.Add((
                 name,
@@ -154,10 +163,8 @@ public static partial class Codecs
                 },
                 (ref instance, data) =>
                 {
-                    if (data is null)  // TODO REMOVE OR MAKE DEBUG ONLY
-                        Logger.Warn(this, $"can not find entry for field \"{name}\" in {data}, using default: {defaultValue}");
                     var value = data is null ? defaultValue : codec.Decode(data);
-                    setter(ref instance, value!);
+                    setter(ref instance, value);
                 }));
             return this;
         }

@@ -8,7 +8,6 @@ public record Codec<TInstance>(
     Func<TInstance, DataObject> Encode,
     Func<DataObject, TInstance> Decode)
 {
-    
     public Codec<TInstance?> Nullable
     {
         get
