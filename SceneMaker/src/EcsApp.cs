@@ -17,12 +17,11 @@ public class EcsApp : IApp
 
     public Error? Init()
     {
-        World.ComponentManager.RegisterComponentType<Enjune.Physics.Component.Position>()
+        World.ComponentManager
+            .RegisterComponentType<Enjune.Physics.Component.Position>()
             .RegisterComponentType<Velocity>()
             .RegisterComponentType<Acceleration>();
         
-        World.SystemManager.RegisterSystem(new IntegrationSystem());
-        World.SystemManager.RegisterSystem(new GravitySystem());
         
         ushort id = World.EntityManager.CreateEntity()!.Value;
         
@@ -38,6 +37,8 @@ public class EcsApp : IApp
 
     public void Run()
     {
+        
+        
         Logger.Log(GetType(), "Starting the main loop");
         DateTime startTime = DateTime.Now;
         for (var i = 0; i < 1000; i ++)

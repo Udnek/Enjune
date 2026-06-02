@@ -1,3 +1,4 @@
+using Enjune.Misc;
 using Enjune.Physics.Component;
 using Enjune.Physics.EcsType;
 
@@ -5,11 +6,16 @@ namespace Enjune.Physics.Manager;
 
 public class ArchetypeManager
 {
-    private Dictionary<Signature, Archetype> _archetypes = new();
+    private List<(Signature Signature, Archetype Archetype)> _archetypes = new();
     private IComponent[] _components;
 
     public void EnsureArchetypeExistence(Signature signature)
     {
+        foreach (var (sign, archetype) in _archetypes)
+        {
+        }
+
+
         if (!_archetypes.ContainsKey(signature))
         {
             _archetypes[signature] = new Archetype(signature);
