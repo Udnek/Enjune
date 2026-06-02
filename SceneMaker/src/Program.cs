@@ -51,6 +51,12 @@ class Program
         // var s = JsonSerde.Instance.Serialize(Codec.Vector3.Encode(new Vector3(1, 5, 2.3f)));
         // Console.WriteLine(s);
 
+        var serialize = JsonSerde.Indent4.Serialize(AssemblyPath.Codec.Encode(AssemblyPath.Of(Enjune.Enjune.Assembly, "Fonts", "papyrus.ttf")));
+        Logger.Highlight(typeof(Program),  '\n'+serialize);
+
+        var obj = JsonSerde.Tight.Deserialize(serialize, out var error)!;
+        Logger.Highlight(typeof(Program), AssemblyPath.Codec.Decode(obj));
+        
         //Logger.Highlight(typeof(Program),  Deep EEquals(new int[0], new int[0]));
         //Logger.Highlight(typeof(Program), '\n'+JsonSerde.Indent4.Serialize(Scene.Codec.Encode(new Scene())));
         

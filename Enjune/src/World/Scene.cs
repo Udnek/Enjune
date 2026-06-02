@@ -4,7 +4,8 @@ namespace Enjune.World;
 
 public class Scene
 {
-    public static readonly Codec<Scene> Codec = Codecs.NewBuilder(() => new Scene())
+    public static readonly Codec<Scene> Codec = Codecs
+        .ForEmptyConstructor(() => new Scene())
         .ForField("objects", i => i.Objects.ToArray(), (ref i, objs) => i.Objects = objs.ToList(), SObject.Codec.Array)
         .Build();
     

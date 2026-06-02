@@ -7,7 +7,7 @@ namespace Enjune.Data;
 
 public abstract class DataObject
 {
-    public static readonly NullVal Null = new();
+    public static readonly NullVal Null = NullVal.Instance;
     
     [Pure]
     public T AsOr<T>(T fallback, Error? errorToLog) where T : DataObject
@@ -95,6 +95,7 @@ public abstract class DataObject
     
     public sealed class NullVal : DataObject
     {
-        internal NullVal(){}
+        public static readonly NullVal Instance = new ();
+        private NullVal(){}
     }
 }

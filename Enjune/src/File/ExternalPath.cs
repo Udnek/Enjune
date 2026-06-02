@@ -4,8 +4,10 @@ namespace Enjune.File;
 
 public sealed class ExternalPath : ResourcePath
 {
-    public static readonly Codec<ExternalPath> Codec = Codecs.ForConstructor(
-        "absolute", i => i._absolutePath, v => new ExternalPath(v ?? "./"), Codecs.String);
+    public static readonly Codec<ExternalPath> Codec = Codecs
+        .ForConstructor(args => new ExternalPath((string)args[0]!))
+        .ForField("absolute", i => i._absolutePath, Codecs.String)
+        .Build();
     
     
     private readonly string _absolutePath;

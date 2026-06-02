@@ -6,13 +6,14 @@ namespace Enjune.File;
 
 public sealed class AssemblyPath : ResourcePath
 {
-    public static readonly Codec<ExternalPath> Codec = Codecs.ForConstructor(
-        "absolute", i => i.A, v => AssemblyPath, Codecs.String);
-
-    // return readonly
-    private string[] _path;
-    // return readonly
-    private Assembly _assembly;
+    public static readonly Codec<AssemblyPath> Codec = Codecs
+        .ForConstructor(args => Of((Assembly)args[0]!, (string[])args[1]!))
+        .ForField("assembly", i => i.Assembly, Codecs.Assembly)
+        .ForField("path", i => i._path, Codecs.String.Array)
+        .Build();
+    
+    private readonly string[] _path;
+    public readonly Assembly Assembly;
     
     public static AssemblyPath Of(Assembly assembly, params string[] path) => new(assembly, path);
     
@@ -21,14 +22,14 @@ public sealed class AssemblyPath : ResourcePath
         if (path.Length == 0 || path.Any(v => v.Length == 0)) 
             Logger.Error(this,$"trying to create path with incorrect parameter: {path.ContentToString()}");
         
-        _assembly = assembly;
+        Assembly = assembly;
         _path = path;
     }
 
     public override ResourcePath Parent()
     {
         if (_path.Length == 0) return this;
-        return Of(_assembly, _path.Take(_path.Length - 1).ToArray());
+        return Of(Assembly, _path.Take(_path.Length - 1).ToArray());
     }
 
     public override ResourcePath ThisDirectory()
@@ -44,7 +45,7 @@ public sealed class AssemblyPath : ResourcePath
         var newDirs = new string[workingDir._path.Length + 1];
         workingDir._path.CopyTo(newDirs, 0);
         newDirs[workingDir._path.Length] = subdir;
-        return Of(_assembly, newDirs);
+        return Of(Assembly, newDirs);
     }
 
     public bool IsFile() => _path.Length != 0 && _path[^1].Contains('.');
@@ -52,14 +53,14 @@ public sealed class AssemblyPath : ResourcePath
     private string GetSplitBy(char splitter)
     {
         if (_path.Length == 0) 
-            return $"{_assembly.GetName().Name}{splitter}Resources";
-        return $"{_assembly.GetName().Name}{splitter}Resources{splitter}{string.Join(splitter, _path)}";
+            return $"{Assembly.GetName().Name}{splitter}Resources";
+        return $"{Assembly.GetName().Name}{splitter}Resources{splitter}{string.Join(splitter, _path)}";
     }
 
     protected override Stream? Read(out Error? error)
     {
         var formedPath = GetSplitBy('.');
-        var stream = _assembly.GetManifestResourceStream(formedPath);
+        var stream = Assembly.GetManifestResourceStream(formedPath);
         if (stream == null)
         {
             error = $"embedded \"{formedPath}\" not found";

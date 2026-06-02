@@ -1,3 +1,4 @@
+using Enjune.Data;
 using Enjune.Graphic;
 using Enjune.Graphic.Asset;
 using Enjune.Misc;
@@ -7,6 +8,8 @@ namespace Enjune.File;
 
 public abstract class ResourcePath
 {
+    public static readonly Codec<ResourcePath> Codec = Codecs.B
+    
     // interface
 
     protected abstract Stream? Read(out Error? error);
