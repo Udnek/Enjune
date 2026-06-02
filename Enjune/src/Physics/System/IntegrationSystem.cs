@@ -20,8 +20,6 @@ public class IntegrationSystem : ISystem
             .Build();
     }
     
-    // TODO: Check if archetype is empty
-
     public void Update()
     {
         foreach (var archetype in World.ArchetypeManager.GetArchetypes())

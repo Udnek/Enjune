@@ -79,6 +79,7 @@ public class Archetype
         EntityCount++;
     }
 
+    [Obsolete("Not implemented with the new system")]
     public void RemoveEntity(EntityId id)
     {
         if (!_id2Row.TryGetValue(id, out int row)) return;
@@ -122,69 +123,5 @@ public class Archetype
         }
 
         return assembly;
-    }
-}
-
-[Obsolete("Unfinished, may be unusable")]
-public class BDDictionary<T1, T2> where T2 : notnull where T1 : notnull
-{
-    private readonly Dictionary<T1, T2> _forward = new();
-    private readonly Dictionary<T2, T1> _backward = new();
-
-    public void Add(T1 key, T2 value)
-    {
-        _forward.Add(key, value);
-        _backward.Add(value, key);
-    }
-
-    public T2 this[T1 key]
-    {
-        get => _forward[key];
-        set
-        {
-            if (ContainsKey(key)){ DeleteByKey(key);}
-            if (ContainsValue(value)){ DeleteByValue(value);}
-            _forward[key] = value;
-            _backward[value] = key;
-        }
-    }
-    public T1 this[T2 key]
-    {
-        get => _backward[key];
-        set
-        {
-            if (ContainsKey(value)){ DeleteByKey(value);}
-            if (ContainsValue(key)){ DeleteByValue(key);}
-            _backward[key] = value;
-            _forward[value] = key;
-        }
-    }
-    
-    public void DeleteByKey(T1 key)
-    {
-        _backward.Remove(_forward[key]);
-        _forward.Remove(key);
-    }
-
-    public void DeleteByValue(T2 value)
-    {
-        _forward.Remove(_backward[value]);
-        _backward.Remove(value);
-    }
-
-    public bool ContainsKey(T1 key)
-    {
-        return _forward.ContainsKey(key);
-    }
-
-    public bool ContainsValue(T2 value)
-    {
-        return _backward.ContainsKey(value);
-    }
-
-    public void Clear()
-    {
-        _forward.Clear();
-        _backward.Clear();
     }
 }
