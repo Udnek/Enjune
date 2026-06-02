@@ -5,9 +5,10 @@ namespace Enjune.Physics.EcsType;
 
 public interface IColumn
 {
+    void SetValue(int row, IComponent value);
     void SetCapacity(int capacity);
     void SwapElements(int rowFrom, int rowTo);
-    void SetValue(int row, IComponent component);
+    IComponent GetValue(int row);
 }
 
 public class Column<T> : IColumn where T : struct, IComponent
@@ -19,9 +20,9 @@ public class Column<T> : IColumn where T : struct, IComponent
         Data = new T[capacity];
     }
 
-    public void SetValue(int row, IComponent component)
+    public void SetValue(int row, IComponent value)
     {
-        Data[row] = (T)component;
+        Data[row] = (T)value;
     }
     
     public void SetRawData(byte[] rawData, int row)
@@ -34,7 +35,7 @@ public class Column<T> : IColumn where T : struct, IComponent
         Data[rowFrom] = Data[rowTo];
     }
 
-    public T GetValue(int row)
+    public IComponent GetValue(int row)
     {
         return Data[row];
     }

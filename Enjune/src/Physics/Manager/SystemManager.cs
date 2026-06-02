@@ -1,3 +1,4 @@
+using Enjune.Misc;
 using Enjune.Physics.System;
 
 namespace Enjune.Physics.Manager;
@@ -28,6 +29,6 @@ public class SystemManager
             system.Update();
             return;
         }
-        Console.WriteLine($"System {typeof(TSystem).Name} was not registered before updating");
+        Logger.Warn(GetType(), $"system {typeof(TSystem).Name} was not registered before updating");
     }
 }

@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using Enjune.Misc;
 using Enjune.Physics.Component;
 
 namespace Enjune.Physics.EcsType;
@@ -23,8 +24,7 @@ public class EntityAssembly
     {
         if (_components.ContainsKey(component.GetType()))
         {
-            // TODO: Send to logger
-            Console.WriteLine("WARNING: Replaced a component that already existed");
+            Logger.Warn(this, $"replaced component {component.GetType()} for assembly {Id}");
         }
         _components.Add(component.GetType(), component);
     }

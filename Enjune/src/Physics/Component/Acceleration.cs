@@ -12,4 +12,9 @@ public struct Acceleration : IComponent
         Y = y;
         Z = z;
     }
+
+    public override string ToString()
+    {
+        return "(" + X + ", " + Y + ", " + Z + ")";
+    }
 }

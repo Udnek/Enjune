@@ -1,6 +1,8 @@
 using System.ComponentModel;
 using System.Globalization;
+using System.Reflection;
 using System.Runtime.CompilerServices;
+using Enjune.Misc;
 using Enjune.Physics.EcsType;
 using FreeTypeSharp;
 using IComponent = Enjune.Physics.Component.IComponent;
@@ -14,23 +16,27 @@ public class Archetype
     private readonly Dictionary<EntityId, int> _id2Row;
     
     private int _capacity = EcsConstants.InitialCapacity;
-    private int _entityCount = 0;
-    public int EntityCount => _entityCount;
+    
+    public int EntityCount { get; private set; } = 0;
+    public Signature Signature { get; }
 
     public Archetype(Signature signature)
     {
+        Signature = signature;
         _row2Id = new EntityId[_capacity];
         _id2Row = new Dictionary<EntityId, int>(_capacity);
         
         int nComponents = signature.GetSetBitsCount();
         
         List<Type> types = World.ComponentManager.DeconstructSignature(signature);
-        for (int i = nComponents - 1; i >= 0; i--)
+        for (var i = 0; i < nComponents; i++)
         {
             RegisterColumn(types[i]);
         }
     }
 
+    public EntityId GetIdByRow(int row) => _row2Id[row];
+    
     private void RegisterColumn(Type type)
     {
         Type columnType = typeof(Column<>).MakeGenericType(type);
@@ -40,7 +46,7 @@ public class Archetype
 
     private void EnsureCapacity()
     {
-        if (_entityCount + 1 <= _capacity) return;
+        if (EntityCount + 1 <= _capacity) return;
         int newCapacity = _capacity * 2;
         
         Array.Resize(ref _row2Id, newCapacity);
@@ -56,24 +62,28 @@ public class Archetype
     // TODO: Avoid using Collection<IComponent> because of boxing
     public void AddEntity(EntityAssembly entityAssembly)
     {
+        Logger.Log(GetType(), $"archetype with signature {Signature} acquired an entity {entityAssembly.Id}");
         EnsureCapacity();
-        int row = _entityCount;
+        int row = EntityCount;
         _id2Row[entityAssembly.Id] = row;
         _row2Id[row] = entityAssembly.Id;
-        List<IComponent> components = entityAssembly.GetComponents();
-        foreach (IComponent component in components)
+        List<IComponent> entityComponents = entityAssembly.GetComponents();
+        foreach (IComponent entityComponent in entityComponents)
         {
-            _columns[component.GetType()].SetValue(row, component);
+            if (_columns.ContainsKey(entityComponent.GetType()))
+            {
+                _columns[entityComponent.GetType()].SetValue(row, entityComponent);
+            }
         }
-        
-        _entityCount++;
+         
+        EntityCount++;
     }
 
     [Obsolete("Not implemented with the new system")]
     public void RemoveEntity(EntityId id)
     {
         if (!_id2Row.TryGetValue(id, out int row)) return;
-        int lastRow = _entityCount - 1;
+        int lastRow = EntityCount - 1;
         if (row != lastRow)
         {
             EntityId lastId = _row2Id[lastRow];
@@ -88,12 +98,30 @@ public class Archetype
         }
         
         _id2Row.Remove(id);
-        _entityCount--;
+        EntityCount--;
     }
 
     public Span<T> GetComponents<T>() where T : struct, IComponent
     {
         Column<T> column = (Column<T>)_columns[typeof(T)];
         return column.GetSpan();
+    }
+
+    public bool ContainsEntity(EntityId id)
+    {
+        return _id2Row.ContainsKey(id);
+    }
+
+    public EntityAssembly? GetAssembly(EntityId id)
+    {
+        if (!ContainsEntity(id)) return null;
+        int row = _id2Row[id];
+        EntityAssembly assembly = new EntityAssembly(id);
+        foreach (IColumn column in _columns.Values)
+        {
+            assembly.AddComponent(column.GetValue(row));
+        }
+
+        return assembly;
     }
 }

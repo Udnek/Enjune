@@ -1,3 +1,4 @@
+using Enjune.Misc;
 using Enjune.Physics.EcsType;
 
 namespace Enjune.Physics.Manager;
@@ -10,11 +11,18 @@ public class EntityManager
     
     public EntityManager()
     {
+        Logger.Log(GetType(), "registering entity IDs");
+        Stack<EntityId> rawEntities = new();
         for (EntityId id = 0; id < EcsConstants.MaxEntities; id++)
         {
-            _availableEntities.Push(id);
+            rawEntities.Push(id);
         }
-        _availableEntities = new Stack<EntityId>(_availableEntities.Reverse());
+        // TODO: This reversal strategy sucks ass imo
+        while (rawEntities.Count > 0)
+        {
+            _availableEntities.Push(rawEntities.Pop());
+        }
+        Logger.Log(GetType(), $"registered entity IDs. Range: [{_availableEntities.Peek()}; {_availableEntities.Last()}]");
     }
 
     private bool HasAvailableEntity() { return _availableEntities.Count > 0; }
@@ -34,7 +42,7 @@ public class EntityManager
     {
         if (!HasAvailableEntity())
         {
-            Console.WriteLine("New entity requested, but no more entities available! Ignoring request");
+            Logger.Warn(GetType(), "new entity requested, but no more entities available! Ignoring request");
             return null;
         }
         EntityId id = _availableEntities.Pop();
@@ -45,7 +53,7 @@ public class EntityManager
     {
         if (!EntityIsLiving(id))
         {
-            Console.WriteLine("Invalid entity destruction requested! Ignoring request");
+            Logger.Warn(GetType(), "Invalid entity destruction requested! Ignoring request");
             return;
         }
         _availableEntities.Push(id);

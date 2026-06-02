@@ -5,24 +5,29 @@ namespace Enjune.Physics.System;
 
 public class GravitySystem : ISystem
 {
-    private Signature _signature;
+    public Signature Signature { get; }
+
     public GravitySystem()
     {
-        _signature = new SignatureBuilder()
+        Signature = new SignatureBuilder()
             .RegisterComponent<Acceleration>()
             .Build();
     }
 
     public void Update()
     {
-        Archetype archetype = World.ArchetypeManager.GetArchetype(_signature);
-        Span<Acceleration> accelerations = archetype.GetComponents<Acceleration>();
-        
-        for (int i = 0; i < archetype.EntityCount; i++)
+        //Archetype archetype = World.ArchetypeManager.GetArchetype(Signature);
+        foreach (var archetype in World.ArchetypeManager.GetArchetypes())
         {
-            // Simply add -9,80665 to Y acceleration
-            // TODO: The thing below is a placeholder
-            accelerations[i].Y += EcsConstants.GravitationalAcceleration;
+            if (!archetype.Signature.Contains(Signature)) continue;
+            Span<Acceleration> accelerations = archetype.GetComponents<Acceleration>();
+            for (int i = 0; i < archetype.EntityCount; i++)
+            {
+                // Simply add -9,80665 to Y acceleration
+                // TODO: Consider changing this behavior to something more... accurate? Flexible?
+                accelerations[i].Y += EcsConstants.GravitationalAcceleration;
+                Logger.Log(GetType(), $"added gravitational acceleration to entity {archetype.GetIdByRow(i)}");
+            }
         }
     }
 }
