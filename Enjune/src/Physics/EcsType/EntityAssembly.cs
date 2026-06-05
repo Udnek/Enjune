@@ -40,9 +40,9 @@ public class EntityAssembly
         return component;
     }
 
-    public Signature GetSignature()
+    public Signature GetSignature(World world)
     {
-        var signatureBuilder = new SignatureBuilder();
+        var signatureBuilder = new SignatureBuilder(world);
         foreach (Type componentType in GetComponentTypes())
         {
             signatureBuilder.RegisterComponent(componentType);

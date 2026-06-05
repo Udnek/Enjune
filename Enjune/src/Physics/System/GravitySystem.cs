@@ -4,33 +4,27 @@ using Enjune.Physics.Component;
 
 namespace Enjune.Physics.System;
 
-public class GravitySystem : ISystem
+public class GravitySystem : BaseSystem
 {
-    public Signature Signature { get; }
-
-    public GravitySystem()
+    public override void Initialize(SignatureBuilder assignedBuilder)
     {
-        // TODO move to GetSingature???
-        Signature = new SignatureBuilder()
+        Signature = assignedBuilder
             .RegisterComponent<Acceleration>()
             .Build();
     }
 
-    public void Update()
+    public override void Update(World world)
     {
-        //Archetype archetype = World.ArchetypeManager.GetArchetype(Signature);
-                                    // TODO why does system have access to World?
-        foreach (var archetype in World.ArchetypeManager.GetArchetypes())
+        world.QueryToUpdate(Signature, archetype =>
         {
-            if (!archetype.Signature.Contains(Signature)) continue;
             Span<Acceleration> accelerations = archetype.GetComponents<Acceleration>();
             for (int i = 0; i < archetype.EntityCount; i++)
             {
                 // Simply add -9,80665 to Y acceleration
-                // TODO: Consider changing this behavior to something more... accurate? Flexible?
+                // TODO: Consider changing this behavior to something more accurate
                 accelerations[i].Y += EcsConstants.GravitationalAcceleration;
                 Logger.Log(GetType(), $"added gravitational acceleration to entity {archetype.GetIdByRow(i)}");
             }
-        }
+        });
     }
 }

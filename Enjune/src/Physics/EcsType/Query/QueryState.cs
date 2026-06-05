@@ -8,4 +8,5 @@ public struct QueryState
 
     public int ArchetypeGeneration;
     
+    
 }

@@ -40,17 +40,6 @@ public class ComponentManager
         return result;
     }
 
-    public Signature ConstructSignature(Span<Type> components)
-    {
-        var signature = new Signature(0);
-        foreach (IComponent component in components)
-        {
-            signature.Set((int) _componentTypeIds[component.GetType()]);
-        }
-
-        return signature;
-    }
-
     public ComponentTypeId GetTypeIdByType(Type componentType)
     {
         return _componentTypeIds[componentType];

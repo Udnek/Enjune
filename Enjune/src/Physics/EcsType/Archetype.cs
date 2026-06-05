@@ -20,7 +20,7 @@ public class Archetype
     public int EntityCount { get; private set; } = 0;
     public Signature Signature { get; }
 
-    public Archetype(Signature signature)
+    public Archetype(Signature signature, World world)
     {
         Signature = signature;
         _row2Id = new EntityId[_capacity];
@@ -28,7 +28,7 @@ public class Archetype
         
         int nComponents = signature.GetSetBitsCount();
         
-        List<Type> types = World.ComponentManager.DeconstructSignature(signature);
+        List<Type> types = world.ComponentManager.DeconstructSignature(signature);
         for (var i = 0; i < nComponents; i++)
         {
             RegisterColumn(types[i]);

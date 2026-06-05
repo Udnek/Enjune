@@ -7,24 +7,21 @@ using Enjune.World;
 
 namespace Enjune.Physics.System;
 
-public class IntegrationSystem : ISystem
+public class IntegrationSystem : BaseSystem
 {
-    public Signature Signature { get; }
-
-    public IntegrationSystem()
+    public override void Initialize(SignatureBuilder assignedBuilder)
     {
-        Signature = new SignatureBuilder()
+        Signature = assignedBuilder
             .RegisterComponent<Component.Position>()
             .RegisterComponent<Velocity>()
             .RegisterComponent<Acceleration>()
             .Build();
     }
-    
-    public void Update()
+
+    public override void Update(World world)
     {
-        foreach (var archetype in World.ArchetypeManager.GetArchetypes())
+        world.QueryToUpdate(Signature, archetype =>
         {
-            if (!archetype.Signature.Contains(Signature)) continue;
             Span<Component.Position> positions = archetype.GetComponents<Component.Position>();
             Span<Velocity> velocities = archetype.GetComponents<Velocity>();
             Span<Acceleration> accelerations = archetype.GetComponents<Acceleration>();
@@ -50,6 +47,6 @@ public class IntegrationSystem : ISystem
                 accelerations[i].Y = 0;
                 accelerations[i].Z = 0;
             }
-        }
+        });
     }
 }
