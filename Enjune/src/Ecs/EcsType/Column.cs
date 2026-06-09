@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
-using Enjune.Physics.Component;
+using Enjune.Ecs.Component;
 
-namespace Enjune.Physics.EcsType;
+namespace Enjune.Ecs.EcsType;
 
 public interface IColumn
 {
@@ -11,7 +11,7 @@ public interface IColumn
     IComponent GetValue(int row);
 }
 
-public class Column<T> : IColumn where T : struct, IComponent
+public sealed class Column<T> : IColumn where T : struct, IComponent
 {
     public T[] Data;
 

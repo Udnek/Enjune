@@ -1,6 +1,6 @@
-using Enjune.Physics.EcsType;
+using Enjune.Ecs.EcsType;
 
-namespace Enjune.Physics.System;
+namespace Enjune.Ecs.System;
 
 public interface ISystem
 {

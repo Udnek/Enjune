@@ -1,9 +1,8 @@
 using Enjune.Graphic.GraphicApi;
-using Enjune.Misc;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 
-namespace Enjune.Graphic.InputHandler;
+namespace Enjune.Graphic.Input;
 
 public class BasicInputHandler : IUserInputHandler
 {

@@ -1,22 +1,23 @@
-using System.Collections;
-using Enjune.Misc;
-using Enjune.Physics.Manager;
+using Enjune.Ecs.Manager;
+using JetBrains.Annotations;
 
-namespace Enjune.Physics.EcsType;
+namespace Enjune.Ecs.EcsType;
 
-public record struct Signature
+public readonly record struct Signature
 {
+    public static readonly Signature Empty = new(0);
     //uint -> 32-bit set
     //ulong -> 64-bit set
-    private SignatureInteger _bitSet;
+    private readonly SignatureInteger _bitSet;
     
     public Signature(SignatureInteger bitSet) => _bitSet = bitSet;
     
-    public void Flip(int bitPosition) => _bitSet &= ~( (SignatureInteger) 1 << bitPosition);
-
-    public void Set(int bitPosition) => _bitSet |= (SignatureInteger) 1 << bitPosition;
-
-    public void Unset(int bitPosition) => _bitSet &= ~( (SignatureInteger) 1 << bitPosition);
+    [Pure]
+    public Signature Flip(int bitPosition) => new(_bitSet & ~( (SignatureInteger) 1 << bitPosition));
+    [Pure]
+    public Signature Set(int bitPosition) => new(_bitSet | (SignatureInteger) 1 << bitPosition);
+    [Pure]
+    public Signature Unset(int bitPosition) => new(_bitSet & ~( (SignatureInteger) 1 << bitPosition));
 
     public bool IsSet(int bitPosition) => (_bitSet & ( (SignatureInteger) 1 << bitPosition)) != 0;
 
@@ -36,16 +37,13 @@ public record struct Signature
         return cnt;
     }
 
-    public override string ToString()
-    {
-        return Convert.ToString(_bitSet, 2);
-    }
+    public override string ToString() => Convert.ToString(_bitSet, 2);
 }
 
 public class SignatureBuilder
 {
-    private ComponentManager _componentManager;
-    private Signature _signature = new Signature(0);
+    private readonly ComponentManager _componentManager;
+    private Signature _signature = Signature.Empty;
 
     public SignatureBuilder(World world)
     {
@@ -55,19 +53,17 @@ public class SignatureBuilder
     public SignatureBuilder RegisterComponent<T>()
     {
         var bit = (int)_componentManager.GetTypeIdByType(typeof(T));
-        _signature.Set(bit);
+        var sig = _signature;
+        _signature = _signature.Set(bit);
         return this;
     }
 
     public SignatureBuilder RegisterComponent(Type type)
     {
         var bit = (int)_componentManager.GetTypeIdByType(type);
-        _signature.Set(bit);
+        _signature = _signature.Set(bit);
         return this;
     }
 
-    public Signature Build()
-    {
-        return _signature;
-    }
+    public Signature Build() => _signature;
 }

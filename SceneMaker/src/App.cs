@@ -6,7 +6,7 @@ using Enjune.Graphic.Asset;
 using Enjune.Graphic.Font;
 using Enjune.Graphic.GraphicApi;
 using Enjune.Graphic.GraphicApi.OpenGL;
-using Enjune.Graphic.InputHandler;
+using Enjune.Graphic.Input;
 using Enjune.Misc;
 using Enjune.World;
 using OpenTK.Mathematics;

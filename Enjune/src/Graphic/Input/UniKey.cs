@@ -1,6 +1,6 @@
 using OpenTK.Windowing.GraphicsLibraryFramework;
 
-namespace Enjune.Graphic.InputHandler;
+namespace Enjune.Graphic.Input;
 
 public record struct UniKey
 {

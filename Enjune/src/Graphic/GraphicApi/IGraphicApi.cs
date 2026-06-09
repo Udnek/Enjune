@@ -1,6 +1,5 @@
 using Enjune.File;
 using Enjune.Graphic.Asset;
-using Enjune.Graphic.InputHandler;
 using Enjune.Misc;
 using OpenTK.Mathematics;
 

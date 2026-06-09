@@ -1,4 +1,4 @@
-namespace Enjune.Physics.Component;
+namespace Enjune.Ecs.Component;
 
 public struct Velocity : IComponent
 {

@@ -1,11 +1,9 @@
-using System.Diagnostics;
+using Enjune.Ecs.EcsType;
 using Enjune.Misc;
-using Enjune.Physics.Component;
-using Enjune.Physics.EcsType;
 
-namespace Enjune.Physics.Manager;
+namespace Enjune.Ecs.Manager;
 
-public class ComponentManager
+public sealed class ComponentManager
 {
     private readonly Dictionary<Type, ComponentTypeId> _componentTypeIds = new();
     private readonly Dictionary<ComponentTypeId, Type> _componentTypes = new();
@@ -23,7 +21,7 @@ public class ComponentManager
     public ComponentManager RegisterComponentType<TComponent>()
     {
         ComponentTypeId id = _availableComponentIds.Dequeue();
-        Logger.Log(GetType(), $"registering component type {typeof(TComponent).Name}, identifying as {id}");
+        Logger.Log(this, $"registering component type {typeof(TComponent).Name}, identifying as {id}");
         _componentTypeIds[typeof(TComponent)] = id;
         _componentTypes[id] = typeof(TComponent);
         return this;

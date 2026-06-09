@@ -1,15 +1,9 @@
-using System.ComponentModel;
-using System.Globalization;
-using System.Reflection;
-using System.Runtime.CompilerServices;
 using Enjune.Misc;
-using Enjune.Physics.EcsType;
-using FreeTypeSharp;
-using IComponent = Enjune.Physics.Component.IComponent;
+using IComponent = Enjune.Ecs.Component.IComponent;
 
-namespace Enjune.Physics.EcsType;
+namespace Enjune.Ecs.EcsType;
 
-public class Archetype
+public sealed class Archetype
 {
     private readonly Dictionary<Type, IColumn> _columns = new();
     private EntityId[] _row2Id;
@@ -62,7 +56,7 @@ public class Archetype
     // TODO: Avoid using Collection<IComponent> because of boxing
     public void AddEntity(EntityAssembly entityAssembly)
     {
-        Logger.Log(GetType(), $"archetype with signature {Signature} acquired an entity {entityAssembly.Id}");
+        Logger.Log(this, $"archetype with signature {Signature} acquired an entity {entityAssembly.Id}");
         EnsureCapacity();
         int row = EntityCount;
         _id2Row[entityAssembly.Id] = row;

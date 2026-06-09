@@ -1,9 +1,8 @@
 using Enjune.Misc;
-using Enjune.Physics.EcsType;
 
-namespace Enjune.Physics.Manager;
+namespace Enjune.Ecs.Manager;
 
-public class EntityManager
+public sealed class EntityManager
 {
     private readonly Stack<EntityId> _availableEntities = new();
     private readonly List<EntityId> _activeEntities = new();
@@ -11,7 +10,7 @@ public class EntityManager
     
     public EntityManager()
     {
-        Logger.Log(GetType(), "registering entity IDs");
+        Logger.Log(this, "registering entity IDs");
         Stack<EntityId> rawEntities = new();
         for (EntityId id = 0; id < EcsConstants.MaxEntities; id++)
         {
@@ -22,7 +21,7 @@ public class EntityManager
         {
             _availableEntities.Push(rawEntities.Pop());
         }
-        Logger.Log(GetType(), $"registered entity IDs. Range: [{_availableEntities.Peek()}; {_availableEntities.Last()}]");
+        Logger.Log(this, $"registered entity IDs. Range: [{_availableEntities.Peek()}; {_availableEntities.Last()}]");
     }
 
     private bool HasAvailableEntity() => _availableEntities.Count > 0;
@@ -42,7 +41,7 @@ public class EntityManager
     {
         if (!HasAvailableEntity())
         {
-            Logger.Warn(GetType(), "new entity requested, but no more entities available! Ignoring request");
+            Logger.Warn(this, "new entity requested, but no more entities available! Ignoring request");
             return null;
         }
         EntityId id = _availableEntities.Pop();
@@ -53,7 +52,7 @@ public class EntityManager
     {
         if (!EntityIsLiving(id))
         {
-            Logger.Warn(GetType(), "Invalid entity destruction requested! Ignoring request");
+            Logger.Warn(this, "Invalid entity destruction requested! Ignoring request");
             return;
         }
         _availableEntities.Push(id);

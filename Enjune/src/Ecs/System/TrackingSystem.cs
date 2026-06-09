@@ -1,8 +1,7 @@
-using System.Runtime.InteropServices;
-using Enjune.Physics.Component;
-using Enjune.Physics.EcsType;
+using Enjune.Ecs.Component;
+using Enjune.Ecs.EcsType;
 
-namespace Enjune.Physics.System;
+namespace Enjune.Ecs.System;
 
 public class TrackingSystem : BaseSystem
 {
@@ -13,12 +12,11 @@ public class TrackingSystem : BaseSystem
     {
         _trackedEntity = entityId;
     }
-    
 
     protected override Signature GenerateSignature(SignatureBuilder builder)
     {
         return builder
-            .RegisterComponent<Physics.Component.Position>()
+            .RegisterComponent<Component.Position>()
             .RegisterComponent<Velocity>()
             .RegisterComponent<Acceleration>()
             .Build();

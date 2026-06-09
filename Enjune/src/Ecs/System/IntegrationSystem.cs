@@ -1,11 +1,8 @@
+using Enjune.Ecs.Component;
+using Enjune.Ecs.EcsType;
 using Enjune.Misc;
-using Enjune.Physics.Component;
-using Enjune.Physics.EcsType;
-using Enjune.Physics.Manager;
-using Enjune.Physics.System;
-using Enjune.World;
 
-namespace Enjune.Physics.System;
+namespace Enjune.Ecs.System;
 
 public class IntegrationSystem : BaseSystem
 {
@@ -28,7 +25,7 @@ public class IntegrationSystem : BaseSystem
 
             for (int i = 0; i < archetype.EntityCount; i++)
             {
-                Logger.Log(GetType(), $"processing entity {archetype.GetIdByRow(i)} with params:\n" +
+                Logger.Log(this, $"processing entity {archetype.GetIdByRow(i)} with params:\n" +
                                       $"- - - - Position:     {positions[i].ToString()}\n" +
                                       $"- - - - Velocity:     {velocities[i].ToString()}\n" +
                                       $"- - - - Acceleration: {accelerations[i].ToString()}");

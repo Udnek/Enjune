@@ -1,9 +1,8 @@
-using System;
-using Enjune.Physics.EcsType;
-using Enjune.Physics.Manager;
-using Enjune.Physics.System;
+using Enjune.Ecs.EcsType;
+using Enjune.Ecs.Manager;
+using Enjune.Ecs.System;
 
-namespace Enjune.Physics;
+namespace Enjune.Ecs;
 
 public class World
 {
@@ -18,22 +17,11 @@ public class World
         ArchetypeManager = new ArchetypeManager(this);
         SystemManager = new SystemManager(this);
     }
+    
+    // PUBLIC API
+    public void AddEntity(EntityAssembly assembly) => ArchetypeManager.AddEntity(assembly);
 
-    public void Initialize()
-    {
-        SystemManager.InitializeSystems();
-    }
-
-    public void AddEntity(EntityAssembly assembly)
-    {
-        Archetype archetype = ArchetypeManager.GetArchetype(assembly.GetSignature(this));
-        archetype.AddEntity(assembly);
-    }
-
-    public void Update<TSystem>() where TSystem : ISystem
-    {
-        SystemManager.Update<TSystem>(this);
-    }
+    public void Update() => SystemManager.UpdateAll();
 
     public Signature ConstructSignature(Action<SignatureBuilder> configure)
     {
@@ -42,8 +30,6 @@ public class World
         return builder.Build();
     }
 
-    public void QueryToUpdate(Signature signature, Action<Archetype> update)
-    {
-        ArchetypeManager.Query(signature, update);
-    }
+    public void QueryToUpdate(Signature signature, Action<Archetype> update) 
+        => ArchetypeManager.Query(signature, update);
 }

@@ -5,7 +5,6 @@ using Enjune.Graphic.GraphicApi.OpenGL.Component;
 using Enjune.Graphic.GraphicApi.OpenGL.Component.Array;
 using Enjune.Graphic.GraphicApi.OpenGL.Component.Texture;
 using Enjune.Graphic.GraphicApi.OpenGL.Component.Uniform;
-using Enjune.Graphic.InputHandler;
 using Enjune.Misc;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;

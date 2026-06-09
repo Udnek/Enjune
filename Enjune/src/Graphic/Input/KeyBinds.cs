@@ -1,7 +1,7 @@
 using Enjune.Misc;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 
-namespace Enjune.Graphic.InputHandler;
+namespace Enjune.Graphic.Input;
 
 public sealed class KeyBinds
 {

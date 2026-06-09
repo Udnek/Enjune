@@ -1,11 +1,11 @@
-using Enjune.Physics.EcsType;
+using Enjune.Ecs.EcsType;
 
-namespace Enjune.Physics.System;
+namespace Enjune.Ecs.System;
 
 public abstract class BaseSystem : ISystem
 {
-    protected Signature Signature;
-    
+    protected Signature Signature { get; private set; }
+
     public void Initialize(SignatureBuilder assignedBuilder) 
         => Signature = GenerateSignature(assignedBuilder);
 

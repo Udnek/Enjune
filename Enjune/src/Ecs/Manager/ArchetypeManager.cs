@@ -1,26 +1,24 @@
+using Enjune.Ecs.EcsType;
 using Enjune.Misc;
-using Enjune.Physics.Component;
-using Enjune.Physics.EcsType;
 
-namespace Enjune.Physics.Manager;
+namespace Enjune.Ecs.Manager;
 
-public class ArchetypeManager
+public sealed class ArchetypeManager
 {
-    private Dictionary<Signature, Archetype> _archetypes = new();
-    private World _world;
+    private readonly Dictionary<Signature, Archetype> _archetypes = new();
+    private readonly World _world;
     
     public ArchetypeManager(World world)
     {
         _world = world;
     }
 
-    public void EnsureArchetypeExistence(Signature signature)
+    private void EnsureArchetypeExistence(Signature signature)
     {
-        if (!_archetypes.ContainsKey(signature))
-        {
-            _archetypes[signature] = new Archetype(signature, _world);
-            Logger.Log(this, $"archetype with signature {signature} created");
-        }
+        if (_archetypes.ContainsKey(signature)) return;
+        
+        _archetypes[signature] = new Archetype(signature, _world);
+        Logger.Log(this, $"archetype with signature {signature} created");
     }
 
     public void AddEntity(EntityAssembly assembly)
@@ -41,20 +39,12 @@ public class ArchetypeManager
         return archetype;
     }
 
-    public List<Archetype> GetArchetypes( )
-    {
-        // TODO use consumer and probably cache .Values???
-        return _archetypes.Values.ToList();
-    }
-
     public void Query(Signature signature, Action<Archetype> action)
     {
-        foreach (Archetype archetype in _archetypes.Values)
+        foreach (var archetype in _archetypes.Values)
         {
-            if (archetype.Signature.Contains(signature))
-            {
+            if (archetype.Signature.Contains(signature)) 
                 action(archetype);
-            }
         }
     }
 }
