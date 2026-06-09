@@ -16,6 +16,6 @@ class Program
 {
     private static void Main(string[] args)
     {
-        Enjune.Enjune.Run(new App(), args);
+        Enjune.Enjune.Run(new EcsApp(), args);
     }
 }

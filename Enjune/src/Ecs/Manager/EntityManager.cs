@@ -1,24 +1,32 @@
-using Enjune.Physics.EcsType;
+using Enjune.Misc;
 
-namespace Enjune.Physics.Manager;
+namespace Enjune.Ecs.Manager;
 
-public class EntityManager
+public sealed class EntityManager
 {
     private readonly Stack<EntityId> _availableEntities = new();
+    private readonly List<EntityId> _activeEntities = new();
     //private Signature[] _signatures =  new Signature[EcsConstants.MaxEntities];
     
     public EntityManager()
     {
+        Logger.Log(this, "registering entity IDs");
+        Stack<EntityId> rawEntities = new();
         for (EntityId id = 0; id < EcsConstants.MaxEntities; id++)
         {
-            _availableEntities.Push(id);
+            rawEntities.Push(id);
         }
-        _availableEntities = (Stack<EntityId>) _availableEntities.Reverse();
+        // TODO: This reversal strategy sucks ass imo
+        while (rawEntities.Count > 0)
+        {
+            _availableEntities.Push(rawEntities.Pop());
+        }
+        Logger.Log(this, $"registered entity IDs. Range: [{_availableEntities.Peek()}; {_availableEntities.Last()}]");
     }
 
-    private bool HasAvailableEntity() { return _availableEntities.Count > 0; }
+    private bool HasAvailableEntity() => _availableEntities.Count > 0;
 
-    private static bool EntityIsValid(EntityId id) { return id < EcsConstants.MaxEntities; }
+    private static bool EntityIsValid(EntityId id) => id < EcsConstants.MaxEntities;
 
     private bool EntityIsLiving(EntityId id)
     {
@@ -29,15 +37,14 @@ public class EntityManager
         return false;
     }
     
-    public EntityId? CreateEntity(Signature signature)
+    public EntityId? CreateEntity()
     {
         if (!HasAvailableEntity())
         {
-            Console.WriteLine("New entity requested, but no more entities available! Ignoring request");
+            Logger.Warn(this, "new entity requested, but no more entities available! Ignoring request");
             return null;
         }
         EntityId id = _availableEntities.Pop();
-        //SetSignature(id, signature);
         return id;
     }
 
@@ -45,7 +52,7 @@ public class EntityManager
     {
         if (!EntityIsLiving(id))
         {
-            Console.WriteLine("Invalid entity destruction requested! Ignoring request");
+            Logger.Warn(this, "Invalid entity destruction requested! Ignoring request");
             return;
         }
         _availableEntities.Push(id);

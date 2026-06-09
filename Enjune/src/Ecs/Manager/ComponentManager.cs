@@ -1,10 +1,9 @@
-using System.ComponentModel;
-using Enjune.Physics.EcsType;
+using Enjune.Ecs.EcsType;
+using Enjune.Misc;
 
-namespace Enjune.Physics.Manager;
-using System;
+namespace Enjune.Ecs.Manager;
 
-public class ComponentManager
+public sealed class ComponentManager
 {
     private readonly Dictionary<Type, ComponentTypeId> _componentTypeIds = new();
     private readonly Dictionary<ComponentTypeId, Type> _componentTypes = new();
@@ -19,11 +18,13 @@ public class ComponentManager
         }
     }
     
-    public void RegisterComponentType(Type componentType)
+    public ComponentManager RegisterComponentType<TComponent>()
     {
         ComponentTypeId id = _availableComponentIds.Dequeue();
-        _componentTypeIds[componentType] = id;
-        _componentTypes[id] = componentType;
+        Logger.Log(this, $"registering component type {typeof(TComponent).Name}, identifying as {id}");
+        _componentTypeIds[typeof(TComponent)] = id;
+        _componentTypes[id] = typeof(TComponent);
+        return this;
     }
 
     public List<Type> DeconstructSignature(Signature signature)
@@ -35,17 +36,6 @@ public class ComponentManager
                 result.Add(componentType); 
         }
         return result;
-    }
-
-    public Signature ConstructSignature(List<ComponentTypeId> componentTypeIds)
-    {
-        var signature = new Signature(0);
-        foreach (ComponentTypeId componentId in componentTypeIds)
-        {
-            signature.Set((int) componentId);
-        }
-
-        return signature;
     }
 
     public ComponentTypeId GetTypeIdByType(Type componentType)
