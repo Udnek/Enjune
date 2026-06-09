@@ -8,11 +8,11 @@ namespace Enjune.KitStart;
 
 public class BasicInputHandler : IUserInputHandler
 {
-    public readonly KeyBinds Binds;
+    private readonly HashSet<KeyCode> _justPressed = [];
+    private readonly HashSet<KeyCode> _pressed = [];
+    private readonly HashSet<KeyCode> _justReleased = [];
 
-    private readonly HashSet<KeyBinds.Bind> _pressed = [];
-    private readonly HashSet<KeyBinds.Bind> _shortPressed = [];
-    private readonly HashSet<KeyBinds.Bind> _justReleased = [];
+    public readonly List<char> InputChars = [];
     
     // keys and mouse
     private bool _firstCursorMove = true;
@@ -28,43 +28,68 @@ public class BasicInputHandler : IUserInputHandler
     public Vector2i WindowSize { get; private set; }
     public bool WindowSizeChanged { get; private set; } = false;
 
-    public BasicInputHandler(KeyBinds binds, Vector2i initialWindowSize, Seconds debouncingDelay)
+    public BasicInputHandler(Vector2i initialWindowSize, Seconds debouncingDelay)
     {
-        Binds = binds;
         _debouncingDelay = debouncingDelay;
         WindowSize = initialWindowSize;
         _lastWindowChange = Stopwatch.StartNew();
     }
 
+    public void PrepareAtFrameStart()
+    {
+        MouseUpdates = 0;
+        
+        if (_pendingWindowSize == default) return;
+        // debouncing check
+        if (_lastWindowChange.ElapsedMilliseconds < _debouncingDelay * 1000)
+            return;
+        WindowSizeChanged = true;
+        WindowSize = _pendingWindowSize;
+        _pendingWindowSize = default;
+    }
+    
+    public bool IsJustPressed(KeyCode key) => _justPressed.Contains(key);
+    public bool IsPressed(KeyBinds.Bind bind)
+    {
+        return bind.ContinuousPress ? _pressed.Contains(bind.KeyCode) : _justPressed.Contains(bind.KeyCode);
+    }
+    public bool IsJustReleased(KeyBinds.Bind bind) => _justReleased.Contains(bind.KeyCode);
+    
+    public void ClearForNextFrame()
+    {
+        _justPressed.Clear();
+        _justReleased.Clear();
+        InputChars.Clear();
+        DeltaCursorPosition = (0, 0);
+        DeltaWheelScroll = (0, 0);
+        WindowSizeChanged = false;
+    }
+    
+    //
+    
     public void HandleWindowSizeChange(Vector2i newSize)
     {
         _pendingWindowSize = newSize;
         _lastWindowChange.Restart();
     }
 
-    public void HandleKey(KeyCode keyCode, IGraphicApi.KeyAction action)
+    public void HandleKey(KeyCode key, IGraphicApi.KeyAction action)
     {
-        if (!Binds.TryGet(keyCode, out var bind))
-            return;
-        
-        if (bind!.ContinuousPress)
+        switch (action)
         {
-            if (action == IGraphicApi.KeyAction.Press) 
-                _pressed.Add(bind);
-            else if (action == IGraphicApi.KeyAction.Release)
-            {
-                _justReleased.Add(bind);
-                _pressed.Remove(bind);
-            }
-        } 
-        else 
-        {
-            if (action is IGraphicApi.KeyAction.Press or IGraphicApi.KeyAction.Repeat)
-                _shortPressed.Add(bind);
-            else
-                _justReleased.Add(bind);
+            case IGraphicApi.KeyAction.Press:
+            case IGraphicApi.KeyAction.Repeat:
+                _pressed.Add(key);
+                _justPressed.Add(key);
+                break;
+            case IGraphicApi.KeyAction.Release:
+                _pressed.Remove(key);
+                _justReleased.Add(key);
+                break;
         }
     }
+    
+    public void HandleCharacter(char character) => InputChars.Add(character);
 
     public void HandleCursor(int x, int y)
     {
@@ -83,30 +108,5 @@ public class BasicInputHandler : IUserInputHandler
     public void HandleScroll(float x, float y)
     {
         DeltaWheelScroll += (x, y);
-    }
-
-    public bool IsPressed(KeyBinds.Bind bind) => _pressed.Contains(bind) || _shortPressed.Contains(bind);
-    public bool IsJustReleased(KeyBinds.Bind bind) => _justReleased.Contains(bind);
-
-    public void PrepareAtFrameStart()
-    {
-        MouseUpdates = 0;
-        
-        if (_pendingWindowSize == default) return;
-        // debouncing check
-        if (_lastWindowChange.ElapsedMilliseconds < _debouncingDelay * 1000)
-            return;
-        WindowSizeChanged = true;
-        WindowSize = _pendingWindowSize;
-        _pendingWindowSize = default;
-    }
-    
-    public void ClearForNextFrame()
-    {
-        _shortPressed.Clear();
-        _justReleased.Clear();
-        DeltaCursorPosition = (0, 0);
-        DeltaWheelScroll = (0, 0);
-        WindowSizeChanged = false;
     }
 }

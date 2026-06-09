@@ -10,8 +10,9 @@ public sealed class KeyBinds
 
     public static KeyBinds CreateEmpty() => new();
     
-    public bool TryGet(KeyCode keyCode, out Bind? bind) => _binds.TryGetValue(keyCode, out bind);
+    public bool TryGet(KeyCode keyCode, out Bind bind) => _binds.TryGetValue(keyCode, out bind);
     
+    // TODO does this system even needed???
     public Bind AddBind(Bind bind)
     {
         if (_binds.TryGetValue(bind.KeyCode, out var existed)) 
@@ -21,7 +22,7 @@ public sealed class KeyBinds
         return bind;
     }
 
-    public sealed record Bind(
+    public readonly record struct Bind(
         string Name,
         KeyCode KeyCode,
         bool ContinuousPress = false

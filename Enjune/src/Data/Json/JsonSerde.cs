@@ -8,8 +8,8 @@ namespace Enjune.Data.Json;
 public class JsonSerde : ISerde
 {
     public static readonly JsonSerde Tight = new(0);
-    public static JsonSerde Indent(int indent) => new(indent);
     public static readonly JsonSerde Indent4 = new(4);
+    public static JsonSerde Indent(int indent) => new(indent);
 
     private readonly int _indent;
     

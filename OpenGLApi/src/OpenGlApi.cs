@@ -50,8 +50,9 @@ public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicAp
 
     private readonly Dictionary<Type, AbstractShader> _typeToShader = [];
     
-    // storing it here fucking gc won't erase it
+    // storing it here so fucking GC won't erase it
     private GLFWCallbacks.KeyCallback _keyCallback = null!;
+    private GLFWCallbacks.CharCallback _charCallback = null!;
     private GLFWCallbacks.CursorPosCallback _cursorCallback = null!;
     private GLFWCallbacks.MouseButtonCallback _mouseButtonCallback = null!;
     private GLFWCallbacks.FramebufferSizeCallback _windowSizeChangeCallback = null!;
@@ -67,7 +68,7 @@ public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicAp
         return null;
     }
 
-    private IGraphicApi? InitInternal(CompiledAssets assets, Vector2i initialWindowSize, string title, IUserInputHandler inputHandler,
+    private OpenGlApi? InitInternal(CompiledAssets assets, Vector2i initialWindowSize, string title, IUserInputHandler inputHandler,
         out Error? error)
     {
         _assets = assets;
@@ -128,6 +129,9 @@ public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicAp
                     inputHandler.HandleKey(keyCode, FromGlwf(action));
             };
             GLFW.SetKeyCallback(_window, _keyCallback);
+
+            _charCallback = (window, codepoint) => inputHandler.HandleCharacter((char) codepoint);
+            GLFW.SetCharCallback(_window, _charCallback);
             
             _mouseButtonCallback = (window, button, action, mods) =>
             {

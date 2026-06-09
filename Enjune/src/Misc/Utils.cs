@@ -45,24 +45,49 @@ public static class Utils
         _disposeDepth++;
         
         var objType = obj.GetType();
-        var fields = objType.GetFields(BindingFlags.Public | BindingFlags.NonPublic| BindingFlags.Instance);
-        bool disposedAtLestOne = false;
+        var fields = objType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+        var disposedAtLestOne = false;
         Logger.Log(typeof(Utils), $"{tab}- stared disposing {objType.Name}:");
-
+        List<(FieldInfo Field, IDisposable Value, string Reason)> disposeAtLast = [];
         foreach (var field in fields)
         {
             var value = field.GetValue(obj);
             if (value is not IDisposable disposable) continue;
-            disposable.Dispose();
-            disposedAtLestOne = true;
-            Logger.Log(typeof(Utils),$"  {tab}{objType.Name}.{field.Name} disposed");
+            var doNotSerialize = (DoNotAutoDisposeAttribute?) field.GetCustomAttribute(typeof(DoNotAutoDisposeAttribute));
+            if (doNotSerialize is not null)
+            {
+                Logger.Highlight(typeof(Utils), $"  {tab}do not disposing {objType.Name}.{field.Name}: {doNotSerialize.Reason}");
+                continue;
+            }
+            var isDisposeAtLast = (DisposeAtLastAttribute?) field.GetCustomAttribute(typeof(DisposeAtLastAttribute));
+            if (isDisposeAtLast is not null)
+            {
+                disposeAtLast.Add((field, disposable, isDisposeAtLast.Reason));
+                continue;
+            }
+            Dispose(field, disposable);
         }
+
+        foreach (var (field, value, reason) in disposeAtLast)
+        {
+            Logger.Highlight(typeof(Utils), $"  {tab}disposing {objType.Name}.{field.Name} at last: {reason}");
+            Dispose(field, value);
+        }
+        
         if (!disposedAtLestOne)
             Logger.Warn(typeof(Utils), $"  {tab}Nothing disposed in {objType.Name}. Something might be wrong");
         
         Logger.Log(typeof(Utils), $"{tab}- finished disposing {objType.Name}");
         
         _disposeDepth--;
+        return;
+
+        void Dispose(FieldInfo field, IDisposable value)
+        {
+            value.Dispose();
+            disposedAtLestOne = true;
+            Logger.Log(typeof(Utils),$"  {tab}{objType.Name}.{field.Name} disposed");
+        }
     }
     
 }

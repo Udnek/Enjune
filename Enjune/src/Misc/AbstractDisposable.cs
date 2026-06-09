@@ -8,7 +8,11 @@ public abstract class AbstractDisposable : IDisposable
     
     public void Dispose()
     {
-        if (_disposed) return;
+        if (_disposed)
+        {
+            Logger.Warn(this, "trying to dispose several times");
+            return;
+        }
         DisposeData();
         GC.SuppressFinalize(this);
         _disposed = true;

@@ -46,22 +46,8 @@ public sealed class ByteImage
         return new ByteImage(Width, Height, ImType.Rgba32, newData);
     }
     
-    // private ByteImage AddLayerToBeginning(byte fillWith)
-    // {
-    //     var newData = new byte[Width * Height * Type.Depth];
-    //     Data.CopyTo(newData);
-    //     var newImage = new ByteImage(Width, Height, ImType.OfDepth(Type.Depth+1), newData);
-    //     for (int i = 0; i < Width*Height; i++)
-    //     {
-    //         newImage.Data[i] = fillWith;
-    //         newImage.Data[i+1] = Data[i];
-    //     }
-    //     return newImage;
-    // }
-    
-    
     public override bool Equals(object? obj) 
-        => (obj as  ByteImage)?.GetHashCode() == GetHashCode();
+        => (obj as ByteImage)?.GetHashCode() == GetHashCode();
 
     public override int GetHashCode() 
         => HashCode.Combine(Width, Height, Type, SHA1.HashData(Data));

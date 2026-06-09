@@ -1,17 +1,19 @@
+using Enjune.Data;
 using Enjune.Graphic;
 using Enjune.Graphic.Asset;
+using Enjune.Graphic.Modeling;
 using Enjune.Misc;
 using SharpGLTF.Schema2;
 using SixLabors.ImageSharp;
 using Image = SixLabors.ImageSharp.Image;
-using Mesh = Enjune.Graphic.Mesh;
+using Mesh = Enjune.Graphic.Modeling.Mesh;
 
 
 namespace Enjune.File.ModelReader;
 
-public class DotGlbReader(AssetManager assetManager, ResourcePath path) : AbstractReader(assetManager, path)
+public class DotGlbReader : AbstractModelReader
 {
-    public override Model? Read(out Error? error)
+    protected override Model? Read(out Error? error)
     {
         ModelRoot? gltfModel = null;
         Path.LoadStream(out error, stream =>

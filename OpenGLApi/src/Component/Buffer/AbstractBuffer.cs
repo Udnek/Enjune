@@ -18,6 +18,8 @@ public abstract class AbstractBuffer<T> : GlDisposable where T : unmanaged
             Logger.Error(this, "capacity must be positive");
             capacity = 1;
         }
+
+        Final = final;
         Capacity = capacity;
         _target = target;
         Handle = GL.GenBuffer();

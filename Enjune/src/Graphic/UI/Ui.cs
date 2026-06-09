@@ -1,4 +1,6 @@
+using Enjune.Graphic.Modeling;
 using Enjune.Misc;
+using OpenTK.Mathematics;
 
 namespace Enjune.Graphic.UI;
 
@@ -19,7 +21,21 @@ public sealed class Ui
     {
         _roots = roots.ToList();
         Size = initialSize;
-        UpdateEntire();
+        UpdateAllRectsAndVisibleMeshes();
+    }
+
+    public void RecheckHoveredElements(Vector2i cursor)
+    {
+        var correctedCursor = new Vector2(cursor.X / PixelsPerUnit, cursor.Y / PixelsPerUnit);
+        _roots.ForEach(Check);
+        return;
+        
+        void Check(UiElement element)
+        {
+            if (element.LocalHidden) return;
+            element.IsHovered = element.GlobalRect.IsPointIn(correctedCursor);
+            element.Children?.ForEach(Check);
+        }
     }
 
     public Model CreateModel()
@@ -36,27 +52,14 @@ public sealed class Ui
         }
     }
     
-    public void UpdateEntire()
+    public void UpdateAllRectsAndVisibleMeshes()
     {
         var rect = new Rect((0, 0), Size/PixelsPerUnit);
-        _roots.ForEach(child => UpdateAndGenerateMeshes(rect, child));
-        return;
-        
-        void UpdateAndGenerateMeshes(Rect parent, UiElement element)
+        _roots.ForEach(child => child.UpdateSelfAndChildrenRect(rect));
+        _roots.ForEach(child =>
         {
-            if (element.LocalHidden) return;
-            element.UpdateAndRegenerateMeshes(parent);
-            element.Children?.ForEach(ch => UpdateAndGenerateMeshes(element.GlobalRect, ch));
-        }
+            if (child.LocalHidden) return;
+            child.RegenerateSelfAndVisibleChildrenMeshes();
+        });
     }
-    
-
-    public void LogHierarchy()
-    {
-        LogWithDepth(0, $"{nameof(Ui)}: size={Size}; pixelsPerUnit={PixelsPerUnit};");
-        _roots.ForEach(ch => ch.LogHierarchyRecursively(1));
-    }
-    
-    public static void LogWithDepth(int depth, object? message) 
-        => Logger.Log(typeof(Ui), new string(' ', depth*2) + message);
 }

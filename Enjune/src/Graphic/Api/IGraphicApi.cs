@@ -1,4 +1,5 @@
 using Enjune.File;
+using Enjune.Graphic.Modeling;
 using Enjune.Misc;
 using OpenTK.Mathematics;
 
@@ -26,7 +27,7 @@ public interface IGraphicApi : IDisposable
     Vector2i GetCursorPosition();
     void SetRenderSize(Vector2i size);
     void SetClearColor(Color color);
-    void DumpTextures(ExternalPath path);
+    void DumpTextures(ExternalPath path); // TODO fix
     void SetDrawMode(DrawMode mode);
     void SetCursorMode(CursorMode mode);
     void SetVsync(bool vsync);

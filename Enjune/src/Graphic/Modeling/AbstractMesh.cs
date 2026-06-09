@@ -1,6 +1,6 @@
 using Enjune.Misc;
 
-namespace Enjune.Graphic;
+namespace Enjune.Graphic.Modeling;
 
 public abstract class AbstractMesh<TPerVertex>
 {

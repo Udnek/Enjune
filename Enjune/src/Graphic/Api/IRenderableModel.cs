@@ -1,3 +1,5 @@
+using Enjune.Graphic.Modeling;
+
 namespace Enjune.Graphic.Api;
 
 public interface IRenderableModel : IDisposable

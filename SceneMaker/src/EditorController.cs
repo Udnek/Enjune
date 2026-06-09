@@ -2,8 +2,10 @@ using System.Runtime.CompilerServices;
 using Enjune.Graphic;
 using Enjune.Graphic.Api;
 using Enjune.Graphic.Key;
+using Enjune.Graphic.Modeling;
 using Enjune.KitStart;
 using Enjune.Misc;
+using Enjune.Registering;
 using Enjune.World;
 using OpenTK.Mathematics;
 namespace SceneMaker;
@@ -26,26 +28,27 @@ public class EditorController
         _inputHandler = inputHandler;
         _scene = scene;
         _selectBind = new KeyBinds.Bind("select", KeyCode.LeftMouseButton);
-        _inputHandler.Binds.AddBind(_selectBind);
 
-        var x = new Mesh([Vector3.Zero, Vector3.UnitX], 
-            [default, default], 
-            [0, 1]);
+        var x = new Mesh([Vector3.Zero, Vector3.UnitX], [default, default], [0, 1]);
         var y = new Mesh([Vector3.Zero, Vector3.UnitY], [default, default], [0, 1]);
         var z = new Mesh([Vector3.Zero, Vector3.UnitZ], [default, default], [0, 1]);
-        var model = new Model.Builder()
-            .Add(x, new Model.PerMesh(new Color(1f, 0f, 0f, 1f)))
-            .Add(y, new Model.PerMesh(new Color(0f, 1f, 0f, 1f)))
-            .Add(z, new Model.PerMesh(new Color(0f, 0f, 1f, 1f)))
-            .Build(false);
+        var model = RegistrableModel.CreateAndRegister(
+            new Identifier(this.GetAssembly(), "axis"),
+            new Model.Builder()
+                .Add(x, new Model.PerMesh(new Color(1f, 0f, 0f, 1f)))
+                .Add(y, new Model.PerMesh(new Color(0f, 1f, 0f, 1f)))
+                .Add(z, new Model.PerMesh(new Color(0f, 0f, 1f, 1f)))
+                .Build(false)
+            );
         AxisObject = new SObject
         {
             IsRealistic = false,
             Model = model,
-            RenderableModel = _graphicApi.CreateStaticRenderable(model, IGraphicApi.Primitive.Line),
-            Hidden = true
+            RenderableModel = _graphicApi.CreateStaticRenderable(model.Model, IGraphicApi.Primitive.Line),
+            Hidden = true,
+            Scale = new Vector3(2.5f),
+            ToBeSerialized = false,
         };
-        AxisObject.Scale = new Vector3(2.5f);
         _meshToAx[x] = Ax.X;
         _meshToAx[y] = Ax.Y;
         _meshToAx[z] = Ax.Z;
@@ -158,7 +161,7 @@ public class EditorController
     
     private Mesh? TraceLineObject(SObject obj, Matrix4 viewMat, Matrix4 projMat, float minimumAngleDegrees)
     {
-        if (obj.Model == null) return null;
+        if (obj.Model is null) return null;
         GetCursorVectors(viewMat, projMat, out var direction, out var cameraPos);
         
         var modelMatInv = obj.ModelTransform.Inverted();
@@ -168,7 +171,7 @@ public class EditorController
 
         Mesh? nearestMesh = null;
         var minDist = float.MaxValue;
-        foreach (var pair in obj.Model.Meshes)
+        foreach (var pair in obj.Model.Model.Meshes)
         {
             var mesh = pair.Mesh;
             for (var indexIndex = 0; indexIndex < mesh.Indexes.Length; indexIndex+=2)
@@ -204,11 +207,10 @@ public class EditorController
         }
         return closest;
     }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    
     private static bool TraceObject(Vector3 cameraPos, Vector3 direction, SObject obj, out float distance)
     {
-        if (obj.Model == null || obj.RenderableModel?.CurrentPrimitive != IGraphicApi.Primitive.Triangle)
+        if (obj.Model is null || obj.RenderableModel?.CurrentPrimitive != IGraphicApi.Primitive.Triangle)
         {
             distance = 0;
             return false;
@@ -218,7 +220,7 @@ public class EditorController
         var localDirection = modelMatInv.TransformDirection(direction).Normalized();
         var localCameraPos = modelMatInv.TransformPosition(cameraPos);
         
-        foreach (var (mesh, _) in obj.Model.Meshes)
+        foreach (var (mesh, _) in obj.Model.Model.Meshes)
         {
             for (var indexIndex = 0; indexIndex < mesh.Indexes.Length; indexIndex+=3)
             {

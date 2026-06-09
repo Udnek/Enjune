@@ -1,6 +1,6 @@
 namespace Enjune.Graphic.UI;
 
-public record struct Margin(float Right, float Top, float Left, float Bottom)
+public readonly record struct Margin(float Right, float Top, float Left, float Bottom)
 {
     public static readonly Margin No = new(0, 0, 0, 0);
     public static Margin Inside(float m) => new(m, m, m, m);
@@ -9,11 +9,14 @@ public record struct Margin(float Right, float Top, float Left, float Bottom)
     public static Margin Outside(float x, float y) => Inside(-x, -y);
 }
 
-public record struct Rect(Vector2 Min, Vector2 Max)
+public readonly record struct Rect(Vector2 Min, Vector2 Max)
 {
     public Vector2 Size => Max - Min;
     public float Height => Max.Y - Min.Y;
     public float Width => Max.X - Min.X;
+
+    public bool IsPointIn(Vector2 point) =>
+        (Min.X <= point.X && Min.Y <= point.Y) && (point.X <= Max.X && point.Y <= Max.X);
 }
 
 public static class Anchor

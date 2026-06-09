@@ -1,5 +1,5 @@
 using Enjune.File;
-using Enjune.Graphic.Font;
+using Enjune.Graphic.Asset.Font;
 using Enjune.Misc;
 using RectpackSharp;
 using SixLabors.ImageSharp;
@@ -20,7 +20,6 @@ public class AssetManager
     public readonly CompiledMaterial MissingMaterial;
     public readonly CompiledMaterial WhiteMaterial;
     
-    
     public AssetManager()
     {
         MissingMaterial = AddMaterialAndGetCompiled(RawMaterial.FromTexture(AssemblyPath.Of(Enjune.Assembly,"MissingTexture.png")));
@@ -29,6 +28,7 @@ public class AssetManager
 
     public CompiledFont? AddFont(ResourcePath path, uint height, out Error? error)
     {
+        // loading
         FontLoader.Load(out error, height, path, out var rawGlyphs);
         if (rawGlyphs == null) return null;
         
@@ -40,7 +40,7 @@ public class AssetManager
             {
                 if (glyph.Width == 0 || glyph.Height == 0)
                 {
-                    Logger.Log(typeof(FontLoader), $"char '{ch}' ({(byte)ch}) has zero size: {glyph}");
+                    Logger.Log(this, $"char '{ch}' ({(byte)ch}) has zero size: {glyph}");
                     continue;
                 }
                 var rectangle = new PackingRectangle(0, 0, glyph.Width, glyph.Height, id:ch);
@@ -48,13 +48,13 @@ public class AssetManager
             }
             rectangles = rectangleList.ToArray();
         }
-
         
         RectanglePacker.Pack(rectangles, out var bounds);
-        Logger.Log(typeof(FontLoader), $"bounds: {bounds.Width}x{bounds.Height}");
+        Logger.Log(this, $"bounds: {bounds.Width}x{bounds.Height}");
         var atlasSize = (int) Math.Pow(2, Math.Ceiling(Math.Log2(Math.Max(bounds.Width, bounds.Height))));
-        Logger.Log(typeof(FontLoader), $"atlas size: {atlasSize}");
-
+        Logger.Log(this, $"atlas size: {atlasSize}");
+        
+        // unpacking
         var atlasBuffer = new Buffer2D<byte>(atlasSize, atlasSize);
         foreach (var rectangle in rectangles)
         {
@@ -64,25 +64,29 @@ public class AssetManager
                 (int)rectangle.X, (int)rectangle.Y);
         }
         
+        // adding material
         var atlas = new ByteImage(atlasSize, atlasSize, ByteImage.ImType.Alpha8, atlasBuffer.Data);
         atlas = atlas.Alpha8ToRgba32();
         var material = AddMaterialAndGetCompiled(RawMaterial.FromTexture(atlas, path.ToString()));
 
-
-        Dictionary<char, PackingRectangle> charBounds = rectangles.ToDictionary(rec => (char)rec.Id);
+        // creating compiled font
+        var charBounds = rectangles.ToDictionary(rec => (char)rec.Id);
         Dictionary<char, CompiledFont.Glyph> glyphs = new();
         foreach (var (ch, rawGlyph) in rawGlyphs)
         {
-            var rectangle = charBounds.GetValueOrDefault(ch, new PackingRectangle(0, 0, 0, 0));
-            var texture = new TextureQuad(
-                (
-                    (float) rectangle.X /atlasSize,  
-                    (float)(rectangle.Y + rectangle.Height) / atlasSize
+            TextureQuad? texture = null;
+            if (charBounds.TryGetValue(ch, out var rectangle))
+            {
+                texture = new TextureQuad(
+                    (
+                        (float) rectangle.X /atlasSize,  
+                        (float)(rectangle.Y + rectangle.Height) / atlasSize
                     ),
-                (
-                    (float)(rectangle.X + rectangle.Width) / atlasSize, 
-                    (float)rectangle.Y / atlasSize
+                    (
+                        (float)(rectangle.X + rectangle.Width) / atlasSize, 
+                        (float)rectangle.Y / atlasSize
                     ));
+            }
           
             glyphs[ch] = new CompiledFont.Glyph
             {

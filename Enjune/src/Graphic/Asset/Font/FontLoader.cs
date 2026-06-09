@@ -1,12 +1,9 @@
 using System.Runtime.InteropServices;
 using Enjune.File;
-using Enjune.Graphic.Asset;
-using Enjune.Misc;
 using FreeTypeSharp;
-using RectpackSharp;
 using static FreeTypeSharp.FT;
 
-namespace Enjune.Graphic.Font;
+namespace Enjune.Graphic.Asset.Font;
 
 public static class FontLoader
 {
@@ -61,6 +58,8 @@ public static class FontLoader
             }
             
             var bitmap = face->glyph->bitmap;
+            
+            // copying to local buffer
             byte[] buffer = new byte[bitmap.width * bitmap.rows];
             for (int i = 0; i < bitmap.width * bitmap.rows; i++)
                 buffer[i] = bitmap.buffer[i];

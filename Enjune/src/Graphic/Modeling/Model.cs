@@ -2,9 +2,7 @@ using System.Diagnostics.Contracts;
 using Enjune.Graphic.Asset;
 using Enjune.Misc;
 
-namespace Enjune.Graphic;
-
-
+namespace Enjune.Graphic.Modeling;
 
 public sealed class Model
 {
@@ -39,7 +37,6 @@ public sealed class Model
     public class Builder
     {
         private readonly List<Entry> _meshes = [];
-        
         public bool IsEmpty => _meshes.Count == 0;
         
         public Builder Add(Mesh mesh, PerMesh perMeshData)

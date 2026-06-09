@@ -1,10 +1,24 @@
 using Enjune.Misc;
 
-namespace Enjune.Graphic;
+namespace Enjune.Graphic.Modeling;
 
 public class Mesh : AbstractMesh<Mesh.PerVertex>
 {
-    public record struct PerVertex(Vector2 TexPos, Vector3 Normal);
+    // public static readonly Codec<Mesh> Codec = Codecs
+    //     .ForConstructor(args => new Mesh((Position[])args[0]!, (PerVertex[])args[1]!, (int[])args[2]!))
+    //     .ForField("vertices", i => i.Vertices, Codecs.Vector3.Array, [])
+    //     .ForField("per_vertex", i => i.PerVertexData, PerVertex.Codec.Array, [])
+    //     .ForField("indexes", i => i.Indexes, Codecs.Int.Array, [])
+    //     .Build();
+
+    public record struct PerVertex(Vector2 TexPos, Vector3 Normal)
+    {
+        // public static readonly Codec<PerVertex> Codec = Codecs
+        //     .ForEmptyConstructor(() => new PerVertex())
+        //     .ForField("texture_position", i => i.TexPos, (ref i, v) => i.TexPos = v, Codecs.Vector2)
+        //     .ForField("normal", i => i.Normal, (ref i, v) => i.Normal = v, Codecs.Vector3)
+        //     .Build();
+    }
 
     public Mesh(Position[] vertices, PerVertex[] perVertexData, int[] indexes) : base(vertices, perVertexData, indexes){}
     

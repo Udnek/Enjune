@@ -1,11 +1,12 @@
 using Enjune.Graphic;
 using Enjune.Graphic.Asset;
+using Enjune.Graphic.Modeling;
 using Enjune.Misc;
 using Buffer = System.Buffer;
 
 namespace Enjune.File.ModelReader;
 
-public class DotObjModelReader(AssetManager assetManager, ResourcePath path) : AbstractReader(assetManager, path)
+public class DotObjReader : AbstractModelReader
 {
     private readonly List<Position> _loadedVertices = [];
     private readonly List<TexturePos> _loadedTextureCoords = [];
@@ -15,7 +16,7 @@ public class DotObjModelReader(AssetManager assetManager, ResourcePath path) : A
     
     private readonly Model.Builder _builder = new();
 
-    public override Model? Read(out Error? error)
+    protected override Model? Read(out Error? error)
     {
         var text = Path.LoadText(out error);
         if (text == null) return null;

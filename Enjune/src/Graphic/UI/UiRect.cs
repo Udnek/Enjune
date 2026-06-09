@@ -1,12 +1,28 @@
+using Enjune.Graphic.Modeling;
+using Enjune.Misc;
+
 namespace Enjune.Graphic.UI;
 
-public class UiButton(Rect anchor, Margin margin, float z, params UiElement[] children)
-    : UiElement(anchor, margin, z, children)
+public class UiRect(Rect anchor, Margin margin, float z, Color? color = null, params UiElement[] children)
+    : UiBaseElement(anchor, margin, z, children)
 {
-    private readonly Color _color = new(RandomFloat(), RandomFloat(), RandomFloat(), 1);
+    private Color _color = color ?? new Color(RandomFloat(), RandomFloat(), RandomFloat(), 1);
 
+    // TODO remove
     private static float RandomFloat() => (float)new Random().NextDouble();
 
+    protected override void OnCursorEnter()
+    {
+        Logger.Highlight(this, "enter");
+        _color *= 1.5f;
+    }
+
+    protected override void OnCursorExit()
+    {
+        Logger.Highlight(this, "exit");
+        _color /= 1.5f;
+    }
+    
     protected override void GenerateMeshes()
     {
         base.GenerateMeshes();

@@ -1,6 +1,8 @@
+using System.Runtime.InteropServices;
 using Enjune.Graphic;
 using Enjune.Graphic.Api;
 using Enjune.Misc;
+using Microsoft.VisualBasic;
 using OpenGLApi.Component;
 using OpenGLApi.Component.Buffer;
 using OpenGLApi.Data;
@@ -10,6 +12,7 @@ namespace OpenGLApi.Model;
 
 public class GlModel : GlDisposable, IRenderableModel.IDynamic
 {
+    [DoNotAutoDispose($"should be disposed in {nameof(OpenGlApi)}")]
     private readonly MaterialShader _shader;
     private readonly int _ssboBinding;
     private readonly bool _final;
@@ -68,9 +71,10 @@ public class GlModel : GlDisposable, IRenderableModel.IDynamic
         }
         else
         {
-            if (_vbo.Capacity < vboBuf.Length) _vbo.Reallocate(vboBuf.Length);
-            if (_ebo.Capacity < eboBuf.Length) _ebo.Reallocate(eboBuf.Length);
-            if (_ssbo.Capacity < ssboBuf.Length) _ssbo.Reallocate(ssboBuf.Length);
+            const float capacityIncreasement = 1.5f;
+            if (_vbo.Capacity < vboBuf.Length) _vbo.Reallocate((int)(vboBuf.Length * capacityIncreasement));
+            if (_ebo.Capacity < eboBuf.Length) _ebo.Reallocate((int)(eboBuf.Length * capacityIncreasement));
+            if (_ssbo.Capacity < ssboBuf.Length) _ssbo.Reallocate((int)(ssboBuf.Length * capacityIncreasement));
         }
         _vbo.BindAndPush(vboBuf.ToArray());
         _ebo.BindAndPush(eboBuf.ToArray());
@@ -78,13 +82,13 @@ public class GlModel : GlDisposable, IRenderableModel.IDynamic
         _ssbo.BindAndPush(ssboBuf.ToArray());
     }
     
-    public void Refit(Enjune.Graphic.Model model, IGraphicApi.Primitive primitive = IGraphicApi.Primitive.Triangle)
+    public void Refit(Enjune.Graphic.Modeling.Model model, IGraphicApi.Primitive primitive = IGraphicApi.Primitive.Triangle)
     {
         CurrentPrimitive = primitive;
         
-        List<VertexData> vboBuf = [];
-        List<int> eboBuf = [];
-        List<PerPrimitiveData> ssboBuf = [];
+        List<VertexData> vboBuf = new(20);
+        List<int> eboBuf = new(20);
+        List<PerPrimitiveData> ssboBuf = new(20);
 
         foreach (var (mesh, perMesh) in model.Meshes)
         {
@@ -102,6 +106,7 @@ public class GlModel : GlDisposable, IRenderableModel.IDynamic
                 ssboBuf.Add(new PerPrimitiveData(mat, perMesh.MeshColor));
         }
         
+        // TODO optimize by reducing copying
         Refit(vboBuf.ToArray(), eboBuf.ToArray(), ssboBuf.ToArray());
     }
 }

@@ -70,7 +70,31 @@ public sealed partial class OpenGlApi
                 KeyCode.Escape => GlfwKey.Escape,
                 KeyCode.RightMouseButton => MouseButton.Right,
                 KeyCode.LeftMouseButton => MouseButton.Left,
-                _ => null
+                KeyCode.Q => GlfwKey.Q,
+                KeyCode.E => GlfwKey.E,
+                KeyCode.R => GlfwKey.R,
+                KeyCode.T => GlfwKey.T,
+                KeyCode.Y => GlfwKey.Y,
+                KeyCode.U => GlfwKey.U,
+                KeyCode.I => GlfwKey.I,
+                KeyCode.O => GlfwKey.O,
+                KeyCode.P => GlfwKey.P,
+                KeyCode.F => GlfwKey.F,
+                KeyCode.G => GlfwKey.G,
+                KeyCode.H => GlfwKey.H,
+                KeyCode.J => GlfwKey.J,
+                KeyCode.K => GlfwKey.K,
+                KeyCode.L => GlfwKey.L,
+                KeyCode.Z => GlfwKey.Z,
+                KeyCode.X => GlfwKey.X,
+                KeyCode.C => GlfwKey.C,
+                KeyCode.V => GlfwKey.V,
+                KeyCode.B => GlfwKey.B,
+                KeyCode.N => GlfwKey.N,
+                KeyCode.M => GlfwKey.M,
+                KeyCode.Backspace => GlfwKey.Backspace,
+                KeyCode.Enter => GlfwKey.Enter,
+                _ => throw new ArgumentOutOfRangeException(nameof(code), code, null)
             };
         }
     }
@@ -184,14 +208,14 @@ public sealed partial class OpenGlApi
     }
 
 
-    public IRenderableModel CreateStaticRenderable(Enjune.Graphic.Model model, IGraphicApi.Primitive primitive = IGraphicApi.Primitive.Triangle)
+    public IRenderableModel CreateStaticRenderable(Enjune.Graphic.Modeling.Model model, IGraphicApi.Primitive primitive = IGraphicApi.Primitive.Triangle)
     {
         var materialModel = new GlModel(_materialShader, PerPrimitiveSsboBinding, true, _assets.WhiteMaterial.Id);
         materialModel.Refit(model, primitive);
         return materialModel;
     }
 
-    public IRenderableModel.IDynamic CreateDynamicRenderable(Enjune.Graphic.Model model, IGraphicApi.Primitive primitive = IGraphicApi.Primitive.Triangle)
+    public IRenderableModel.IDynamic CreateDynamicRenderable(Enjune.Graphic.Modeling.Model model, IGraphicApi.Primitive primitive = IGraphicApi.Primitive.Triangle)
     {
         var materialModel = new GlModel(_materialShader, PerPrimitiveSsboBinding, false, _assets.WhiteMaterial.Id);
         materialModel.Refit(model, primitive);

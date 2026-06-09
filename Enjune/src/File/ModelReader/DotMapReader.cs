@@ -1,15 +1,16 @@
 using Enjune.Graphic;
 using Enjune.Graphic.Asset;
+using Enjune.Graphic.Modeling;
 using Enjune.Misc;
 using Sledge.Formats.Map.Formats;
 using Sledge.Formats.Map.Objects;
-using Mesh = Enjune.Graphic.Mesh;
+using Mesh = Enjune.Graphic.Modeling.Mesh;
 
 namespace Enjune.File.ModelReader;
 
-public class DotMapReader(AssetManager assetManager, ResourcePath path) : AbstractReader(assetManager, path)
+public class DotMapReader : AbstractModelReader
 {
-    public override Model? Read(out Error? error)
+    protected override Model? Read(out Error? error)
     {
         var mapFormat = new QuakeMapFormat();
         MapFile? mapFile = null;
@@ -25,7 +26,6 @@ public class DotMapReader(AssetManager assetManager, ResourcePath path) : Abstra
     private Model ProceedMap(MapFile map)
     {
         var builder = new Model.Builder();
-        List<AbstractMesh<Color>> meshes = [];
         var solids = map.Worldspawn.Find(mo => mo is Solid).Cast<Solid>();
         
         foreach (var solid in solids)
@@ -39,8 +39,8 @@ public class DotMapReader(AssetManager assetManager, ResourcePath path) : Abstra
                     var faceVertex = face.Vertices[i];
                     var pos = faceVertex.ToTk();
                     positions[i] = pos;
-                    float u = (Vector3.Dot(pos, face.UAxis.ToTk()) + face.XShift) / face.XScale;
-                    float v = (Vector3.Dot(pos, face.VAxis.ToTk()) + face.YShift) / face.YScale;
+                    var u = (Vector3.Dot(pos, face.UAxis.ToTk()) + face.XShift) / face.XScale;
+                    var v = (Vector3.Dot(pos, face.VAxis.ToTk()) + face.YShift) / face.YScale;
                     Logger.Log(this, $"u: {u}; v: {v}");
                     texCoords[i] = (u, v);
                 }
