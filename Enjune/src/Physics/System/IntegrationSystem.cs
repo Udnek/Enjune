@@ -7,42 +7,46 @@ using Enjune.World;
 
 namespace Enjune.Physics.System;
 
-public class IntegrationSystem : ISystem {
-
-    public Signature Initialize(SignatureBuilder builder)
+public class IntegrationSystem : BaseSystem
+{
+    public override void Initialize(SignatureBuilder assignedBuilder)
     {
-        return builder.RegisterComponent<Component.Position>()
+        Signature = assignedBuilder
+            .RegisterComponent<Component.Position>()
             .RegisterComponent<Velocity>()
             .RegisterComponent<Acceleration>()
             .Build();
     }
-    
-    public void Update(Archetype archetype)
+
+    public override void Update(World world)
     {
-        Span<Component.Position> positions = archetype.GetComponents<Component.Position>();
-        Span<Velocity> velocities = archetype.GetComponents<Velocity>();
-        Span<Acceleration> accelerations = archetype.GetComponents<Acceleration>();
-
-        for (int i = 0; i < archetype.EntityCount; i++)
+        world.QueryToUpdate(Signature, archetype =>
         {
-            Logger.Log(this, $"processing entity {archetype.GetIdByRow(i)} with params:\n" +
-                                  $"- - - - Position:     {positions[i].ToString()}\n" +
-                                  $"- - - - Velocity:     {velocities[i].ToString()}\n" +
-                                  $"- - - - Acceleration: {accelerations[i].ToString()}");
-            // First we integrate positions
-            positions[i].X += EcsConstants.DeltaTime * velocities[i].X;
-            positions[i].Y += EcsConstants.DeltaTime * velocities[i].Y;
-            positions[i].Z += EcsConstants.DeltaTime * velocities[i].Z;
+            Span<Component.Position> positions = archetype.GetComponents<Component.Position>();
+            Span<Velocity> velocities = archetype.GetComponents<Velocity>();
+            Span<Acceleration> accelerations = archetype.GetComponents<Acceleration>();
 
-            // Then we integrate velocities
-            velocities[i].X += EcsConstants.DeltaTime * accelerations[i].X;
-            velocities[i].Y += EcsConstants.DeltaTime * accelerations[i].Y;
-            velocities[i].Z += EcsConstants.DeltaTime * accelerations[i].Z;
+            for (int i = 0; i < archetype.EntityCount; i++)
+            {
+                Logger.Log(GetType(), $"processing entity {archetype.GetIdByRow(i)} with params:\n" +
+                                      $"- - - - Position:     {positions[i].ToString()}\n" +
+                                      $"- - - - Velocity:     {velocities[i].ToString()}\n" +
+                                      $"- - - - Acceleration: {accelerations[i].ToString()}");
+                // First we integrate positions
+                positions[i].X += EcsConstants.DeltaTime * velocities[i].X;
+                positions[i].Y += EcsConstants.DeltaTime * velocities[i].Y;
+                positions[i].Z += EcsConstants.DeltaTime * velocities[i].Z;
 
-            // Lastly, we reset all accelerations
-            accelerations[i].X = 0;
-            accelerations[i].Y = 0;
-            accelerations[i].Z = 0;
-        }
+                // Then we integrate velocities
+                velocities[i].X += EcsConstants.DeltaTime * accelerations[i].X;
+                velocities[i].Y += EcsConstants.DeltaTime * accelerations[i].Y;
+                velocities[i].Z += EcsConstants.DeltaTime * accelerations[i].Z;
+
+                // Lastly, we reset all accelerations
+                accelerations[i].X = 0;
+                accelerations[i].Y = 0;
+                accelerations[i].Z = 0;
+            }
+        });
     }
 }

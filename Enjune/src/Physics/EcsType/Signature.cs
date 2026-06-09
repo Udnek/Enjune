@@ -1,5 +1,6 @@
 using System.Collections;
 using Enjune.Misc;
+using Enjune.Physics.Manager;
 
 namespace Enjune.Physics.EcsType;
 
@@ -43,17 +44,24 @@ public record struct Signature
 
 public class SignatureBuilder
 {
+    private ComponentManager _componentManager;
     private Signature _signature = new Signature(0);
+
+    public SignatureBuilder(World world)
+    {
+        _componentManager = world.ComponentManager;
+    }
+    
     public SignatureBuilder RegisterComponent<T>()
     {
-        var bit = (int)World.ComponentManager.GetTypeIdByType(typeof(T));
+        var bit = (int)_componentManager.GetTypeIdByType(typeof(T));
         _signature.Set(bit);
         return this;
     }
 
     public SignatureBuilder RegisterComponent(Type type)
     {
-        var bit = (int)World.ComponentManager.GetTypeIdByType(type);
+        var bit = (int)_componentManager.GetTypeIdByType(type);
         _signature.Set(bit);
         return this;
     }
