@@ -6,9 +6,9 @@ namespace Enjune.Physics.System;
 
 public class GravitySystem : BaseSystem
 {
-    public override void Initialize(SignatureBuilder assignedBuilder)
+    protected override Signature GenerateSignature(SignatureBuilder builder)
     {
-        Signature = assignedBuilder
+        return builder
             .RegisterComponent<Acceleration>()
             .Build();
     }

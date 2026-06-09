@@ -9,9 +9,9 @@ namespace Enjune.Physics.System;
 
 public class IntegrationSystem : BaseSystem
 {
-    public override void Initialize(SignatureBuilder assignedBuilder)
+    protected override Signature GenerateSignature(SignatureBuilder builder)
     {
-        Signature = assignedBuilder
+        return builder
             .RegisterComponent<Component.Position>()
             .RegisterComponent<Velocity>()
             .RegisterComponent<Acceleration>()

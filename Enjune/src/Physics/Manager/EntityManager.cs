@@ -25,9 +25,9 @@ public class EntityManager
         Logger.Log(GetType(), $"registered entity IDs. Range: [{_availableEntities.Peek()}; {_availableEntities.Last()}]");
     }
 
-    private bool HasAvailableEntity() { return _availableEntities.Count > 0; }
+    private bool HasAvailableEntity() => _availableEntities.Count > 0;
 
-    private static bool EntityIsValid(EntityId id) { return id < EcsConstants.MaxEntities; }
+    private static bool EntityIsValid(EntityId id) => id < EcsConstants.MaxEntities;
 
     private bool EntityIsLiving(EntityId id)
     {

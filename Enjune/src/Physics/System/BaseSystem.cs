@@ -4,7 +4,11 @@ namespace Enjune.Physics.System;
 
 public abstract class BaseSystem : ISystem
 {
-    public Signature Signature { get; protected set; }
-    public abstract void Initialize(SignatureBuilder assignedBuilder);
+    protected Signature Signature;
+    
+    public void Initialize(SignatureBuilder assignedBuilder) 
+        => Signature = GenerateSignature(assignedBuilder);
+
+    protected abstract Signature GenerateSignature(SignatureBuilder builder);
     public abstract void Update(World world);
 }

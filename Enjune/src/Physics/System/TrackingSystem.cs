@@ -13,10 +13,11 @@ public class TrackingSystem : BaseSystem
     {
         _trackedEntity = entityId;
     }
+    
 
-    public override void Initialize(SignatureBuilder assignedBuilder)
+    protected override Signature GenerateSignature(SignatureBuilder builder)
     {
-        Signature = assignedBuilder
+        return builder
             .RegisterComponent<Physics.Component.Position>()
             .RegisterComponent<Velocity>()
             .RegisterComponent<Acceleration>()
@@ -25,6 +26,6 @@ public class TrackingSystem : BaseSystem
 
     public override void Update(World world)
     {
-        throw new NotImplementedException();
+        
     }
 }
