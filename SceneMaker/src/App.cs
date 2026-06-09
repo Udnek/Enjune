@@ -15,7 +15,7 @@ public class App : AbstractDisposable, IApp
 {
     private static readonly Vector2i InitialWindowSize = (480*2, 360*2);
     
-    [DisposeAtLast("other objects may cause segfault when disposing")]
+    [DisposeAtLast("other objects may cause segfault when disposing")] // TODO probably dispose all GlModels in GlApi itself?
     public IGraphicApi Grapi = null!;
     
     private readonly KeyBinds _binds;

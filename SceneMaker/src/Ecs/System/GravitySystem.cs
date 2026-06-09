@@ -1,8 +1,10 @@
-using Enjune.Ecs.Component;
+using Enjune.Ecs;
 using Enjune.Ecs.EcsType;
+using Enjune.Ecs.System;
 using Enjune.Misc;
+using SceneMaker.Ecs.Component;
 
-namespace Enjune.Ecs.System;
+namespace SceneMaker.Ecs.System;
 
 public class GravitySystem : BaseSystem
 {
@@ -22,7 +24,7 @@ public class GravitySystem : BaseSystem
             {
                 // Simply add -9,80665 to Y acceleration
                 // TODO: Consider changing this behavior to something more accurate
-                accelerations[i].Y += EcsConstants.GravitationalAcceleration;
+                accelerations[i].Y -= 10; // EGE moment
                 Logger.Log(this, $"added gravitational acceleration to entity {archetype.GetIdByRow(i)}");
             }
         });

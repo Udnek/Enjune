@@ -1,7 +1,9 @@
-using Enjune.Ecs.Component;
+using Enjune.Ecs;
 using Enjune.Ecs.EcsType;
+using Enjune.Ecs.System;
+using SceneMaker.Ecs.Component;
 
-namespace Enjune.Ecs.System;
+namespace SceneMaker.Ecs.System;
 
 public class TrackingSystem : BaseSystem
 {

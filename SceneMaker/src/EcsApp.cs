@@ -5,6 +5,8 @@ using Enjune.Ecs.Component;
 using Enjune.Ecs.EcsType;
 using Enjune.Ecs.System;
 using Enjune.Misc;
+using SceneMaker.Ecs.Component;
+using SceneMaker.Ecs.System;
 
 namespace SceneMaker;
 
@@ -22,7 +24,7 @@ public class EcsApp : IApp
         _world = new World();
         
         _world.ComponentManager
-            .RegisterComponentType<Enjune.Ecs.Component.Position>()
+            .RegisterComponentType<Ecs.Component.Position>()
             .RegisterComponentType<Velocity>()
             .RegisterComponentType<Acceleration>();
         
@@ -32,7 +34,7 @@ public class EcsApp : IApp
         ushort id = _world.EntityManager.CreateEntity()!.Value;
         
         var testEntity = new EntityAssembly(id);
-        testEntity.AddComponent(new Enjune.Ecs.Component.Position(0, 0, 0));
+        testEntity.AddComponent(new Ecs.Component.Position(0, 0, 0));
         testEntity.AddComponent(new Velocity(0,0,0));
         testEntity.AddComponent(new Acceleration(0,0,0));
         
@@ -41,7 +43,7 @@ public class EcsApp : IApp
         return null;
     }
 
-    public void Run()
+    public void MainCycle()
     {
         Logger.Log(this, "Starting the main loop");
         DateTime startTime = DateTime.Now;

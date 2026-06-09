@@ -1,8 +1,10 @@
-using Enjune.Ecs.Component;
+using Enjune.Ecs;
 using Enjune.Ecs.EcsType;
+using Enjune.Ecs.System;
 using Enjune.Misc;
+using SceneMaker.Ecs.Component;
 
-namespace Enjune.Ecs.System;
+namespace SceneMaker.Ecs.System;
 
 public class IntegrationSystem : BaseSystem
 {
@@ -25,19 +27,20 @@ public class IntegrationSystem : BaseSystem
 
             for (int i = 0; i < archetype.EntityCount; i++)
             {
+                const float dt = 0.01f;
                 Logger.Log(this, $"processing entity {archetype.GetIdByRow(i)} with params:\n" +
                                       $"- - - - Position:     {positions[i].ToString()}\n" +
                                       $"- - - - Velocity:     {velocities[i].ToString()}\n" +
                                       $"- - - - Acceleration: {accelerations[i].ToString()}");
                 // First we integrate positions
-                positions[i].X += EcsConstants.DeltaTime * velocities[i].X;
-                positions[i].Y += EcsConstants.DeltaTime * velocities[i].Y;
-                positions[i].Z += EcsConstants.DeltaTime * velocities[i].Z;
+                positions[i].X += dt * velocities[i].X;
+                positions[i].Y += dt * velocities[i].Y;
+                positions[i].Z += dt * velocities[i].Z;
 
                 // Then we integrate velocities
-                velocities[i].X += EcsConstants.DeltaTime * accelerations[i].X;
-                velocities[i].Y += EcsConstants.DeltaTime * accelerations[i].Y;
-                velocities[i].Z += EcsConstants.DeltaTime * accelerations[i].Z;
+                velocities[i].X += dt * accelerations[i].X;
+                velocities[i].Y += dt * accelerations[i].Y;
+                velocities[i].Z += dt * accelerations[i].Z;
 
                 // Lastly, we reset all accelerations
                 accelerations[i].X = 0;

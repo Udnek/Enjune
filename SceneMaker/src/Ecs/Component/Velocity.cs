@@ -1,12 +1,14 @@
-namespace Enjune.Ecs.Component;
+using Enjune.Ecs.Component;
 
-public struct Position : IComponent
+namespace SceneMaker.Ecs.Component;
+
+public struct Velocity : IComponent
 {
     public double X;
     public double Y;
     public double Z;
 
-    public Position(double x, double y, double z)
+    public Velocity(double x, double y, double z)
     {
         X = x;
         Y = y;

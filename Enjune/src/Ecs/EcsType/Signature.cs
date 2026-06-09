@@ -1,5 +1,5 @@
+using System.Diagnostics.Contracts;
 using Enjune.Ecs.Manager;
-using JetBrains.Annotations;
 
 namespace Enjune.Ecs.EcsType;
 
