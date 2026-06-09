@@ -1,3 +1,4 @@
+using Enjune.Ecs.Component;
 using Enjune.Ecs.EcsType;
 using Enjune.Misc;
 
@@ -18,13 +19,30 @@ public sealed class ComponentManager
         }
     }
     
-    public ComponentManager RegisterComponentType<TComponent>()
+    public void RegisterComponentType<TComponent>()
     {
+        RegisterComponentType(typeof(TComponent));
+    }
+    
+    public void RegisterComponentType(Type componentType)
+    {
+        if (!typeof(IComponent).IsAssignableFrom(componentType))
+        {
+            Logger.Error(this, 
+                $"Type {componentType.Name} must implement {nameof(IComponent)} to be registered as a component");
+            return;
+        }
+
+        if (_componentTypeIds.ContainsKey(componentType))
+        {
+            Logger.Error(this, $"Type {componentType.Name} is already registered");
+            return;
+        }
+        
         ComponentTypeId id = _availableComponentIds.Dequeue();
-        Logger.Log(this, $"registering component type {typeof(TComponent).Name}, identifying as {id}");
-        _componentTypeIds[typeof(TComponent)] = id;
-        _componentTypes[id] = typeof(TComponent);
-        return this;
+        Logger.Log(this, $"registering component type {componentType.Name}, identifying as {id}");
+        _componentTypeIds[componentType] = id;
+        _componentTypes[id] = componentType;
     }
 
     public List<Type> DeconstructSignature(Signature signature)

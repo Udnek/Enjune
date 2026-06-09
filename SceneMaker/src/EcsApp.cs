@@ -21,24 +21,29 @@ public class EcsApp : IApp
 
     public Error? Init()
     {
-        _world = new World();
-        
-        _world.ComponentManager
-            .RegisterComponentType<Ecs.Component.Position>()
-            .RegisterComponentType<Velocity>()
-            .RegisterComponentType<Acceleration>();
-        
-        _world.SystemManager.RegisterSystem(new IntegrationSystem());
-        _world.SystemManager.RegisterSystem(new GravitySystem());
-        
-        ushort id = _world.EntityManager.CreateEntity()!.Value;
+        List<ISystem> systems =
+        [
+            new IntegrationSystem(),
+            new GravitySystem()
+        ];
+
+        List<Type> componentTypes =
+        [
+            typeof(Ecs.Component.Position),
+            typeof(Velocity),
+            typeof(Acceleration)
+        ];
+
+        _world = new World(systems, componentTypes);
+
+        EntityId id = _world.GetNewEntityId();
         
         var testEntity = new EntityAssembly(id);
         testEntity.AddComponent(new Ecs.Component.Position(0, 0, 0));
         testEntity.AddComponent(new Velocity(0,0,0));
         testEntity.AddComponent(new Acceleration(0,0,0));
         
-        _world.ArchetypeManager.AddEntity(testEntity);
+        _world.AddEntity(testEntity);
         
         return null;
     }
