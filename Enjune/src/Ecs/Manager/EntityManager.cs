@@ -8,6 +8,7 @@ public sealed class EntityManager
     private readonly List<EntityId> _activeEntities = new();
     //private Signature[] _signatures =  new Signature[EcsConstants.MaxEntities];
     
+    // TODO: Completely overhaul entity management
     public EntityManager()
     {
         Logger.Log(this, "registering entity IDs");

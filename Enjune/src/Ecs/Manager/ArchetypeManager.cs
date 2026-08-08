@@ -6,6 +6,7 @@ namespace Enjune.Ecs.Manager;
 public sealed class ArchetypeManager
 {
     private readonly Dictionary<Signature, Archetype> _archetypes = new();
+    private readonly Dictionary<EntityId, Archetype> _entityIdToArchetype = new();
     private readonly World _world;
     
     public ArchetypeManager(World world)
@@ -26,7 +27,9 @@ public sealed class ArchetypeManager
         Signature signature = assembly.GetSignature(_world);
         Logger.Log(this, $"got a request to add an entity {assembly.Id} with signature {signature}");
         EnsureArchetypeExistence(signature);
-        _archetypes[signature].AddEntity(assembly);
+        Archetype matchedArchetype = _archetypes[signature];
+        matchedArchetype.AddEntity(assembly);
+        _entityIdToArchetype[assembly.Id] = matchedArchetype;
     }
 
     public Archetype GetArchetype(Signature signature)
@@ -46,5 +49,10 @@ public sealed class ArchetypeManager
             if (archetype.Signature.Contains(signature)) 
                 action(archetype);
         }
+    }
+
+    public void RemoveEntity(EntityId id)
+    {
+        
     }
 }
