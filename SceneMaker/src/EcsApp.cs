@@ -59,5 +59,9 @@ public class EcsApp : IApp
         }
         DateTime endTime = DateTime.Now;
         Logger.Log(this, $"Simulation took {endTime - startTime}");
+        Logger.Log(this, $"Removing entity as a test");
+        _world.RemoveEntity(0);
+        Logger.Log(this, $"Updating world once again");
+        _world.Update();
     }
 }

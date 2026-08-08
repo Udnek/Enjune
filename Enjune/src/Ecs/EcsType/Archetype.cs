@@ -57,10 +57,13 @@ public sealed class Archetype
     public void AddEntity(EntityAssembly entityAssembly)
     {
         Logger.Log(this, $"archetype with signature {Signature} acquired an entity {entityAssembly.Id}");
+
         EnsureCapacity();
+
         int row = EntityCount;
         _id2Row[entityAssembly.Id] = row;
         _row2Id[row] = entityAssembly.Id;
+
         List<IComponent> entityComponents = entityAssembly.GetComponents();
         foreach (IComponent entityComponent in entityComponents)
         {
@@ -73,26 +76,30 @@ public sealed class Archetype
         EntityCount++;
     }
 
-    [Obsolete("Not implemented with the new system")]
+    
     public void RemoveEntity(EntityId id)
     {
-        if (!_id2Row.TryGetValue(id, out int row)) return;
-        int lastRow = EntityCount - 1;
-        if (row != lastRow)
+        if (!_id2Row.TryGetValue(id, out var entityRow))
         {
-            EntityId lastId = _row2Id[lastRow];
+            Logger.Log(this, $"RemoveEntity: Entity {id} is not in {Signature} archetype.");
+        }
+        var lastRow = EntityCount - 1;
+
+        if (entityRow != lastRow)
+        {
+            var lastId = _row2Id[lastRow];
 
             foreach (IColumn column in _columns.Values)
             {
-                column.SwapElements(lastRow, row);
+                column.SwapElements(lastRow, entityRow);
             }
 
-            _id2Row[lastId] = row;
-            _row2Id[row] = lastId;
+            _id2Row[lastId] = entityRow;
+            _row2Id[entityRow] = lastId;
         }
-        
         _id2Row.Remove(id);
         EntityCount--;
+        Logger.Log(this, $"Removed entity {id} successfully");
     }
 
     public Span<T> GetComponents<T>() where T : struct, IComponent

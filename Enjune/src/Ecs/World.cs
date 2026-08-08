@@ -16,22 +16,24 @@ public class World
 
     public World(List<ISystem> systems, List<Type> componentTypes)
     {
+        Logger.Log(this, "Registering managers using given systems and component types");
+
         ArchetypeManager = new ArchetypeManager(this);
         SystemManager = new SystemManager(this);
-        foreach (ISystem system in systems)
-        {
-            SystemManager.RegisterSystem(system);
-        }
-
         foreach (Type componentType in componentTypes)
         {
             ComponentManager.RegisterComponentType(componentType);
         }
-        
+        foreach (ISystem system in systems)
+        {
+            SystemManager.RegisterSystem(system);
+        }
     }
     
     // PUBLIC API
     public void AddEntity(EntityAssembly assembly) => ArchetypeManager.AddEntity(assembly);
+
+    public void RemoveEntity(EntityId id) => ArchetypeManager.RemoveEntity(id);
 
     public EntityId GetNewEntityId()
     {

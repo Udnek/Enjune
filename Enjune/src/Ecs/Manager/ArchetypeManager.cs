@@ -1,5 +1,6 @@
 using Enjune.Ecs.EcsType;
 using Enjune.Misc;
+using System.Reflection.Metadata.Ecma335;
 
 namespace Enjune.Ecs.Manager;
 
@@ -26,7 +27,9 @@ public sealed class ArchetypeManager
     {
         Signature signature = assembly.GetSignature(_world);
         Logger.Log(this, $"got a request to add an entity {assembly.Id} with signature {signature}");
+
         EnsureArchetypeExistence(signature);
+
         Archetype matchedArchetype = _archetypes[signature];
         matchedArchetype.AddEntity(assembly);
         _entityIdToArchetype[assembly.Id] = matchedArchetype;
@@ -53,6 +56,10 @@ public sealed class ArchetypeManager
 
     public void RemoveEntity(EntityId id)
     {
-        
+        Logger.Log(this, $"Got a request to remove entity {id}");
+        if (_entityIdToArchetype.TryGetValue(id, out Archetype? archetype))
+        {
+            archetype.RemoveEntity(id);
+        }
     }
 }
