@@ -19,13 +19,14 @@ public class UiEditableText : UiText
         IsHovered.OnChange += (_, hovered)
             => Color.Val += new Vector4(0.4f, 0.4f, 0.4f, 0) * (hovered ? 1 : -1);
     }
-
+    
     public override BeingFocusedAction UpdateBeingFocused(BasicInputHandler inputHandler)
     {
         if (inputHandler.IsJustPressed(KeyCode.Escape)) return BeingFocusedAction.StopBeing;
         var enterPressed = inputHandler.IsJustPressed(KeyCode.Enter);
         var backspacePressed = inputHandler.IsJustPressed(KeyCode.Backspace);
-        if (!enterPressed && !backspacePressed && inputHandler.InputChars.Count == 0) return BeingFocusedAction.StopBeing;
+        if (!enterPressed && !backspacePressed && inputHandler.InputChars.Count == 0) 
+            return BeingFocusedAction.ContinueBeing;
         
         if (enterPressed) 
             inputHandler.InputChars.Add('\n');

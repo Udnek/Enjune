@@ -1,4 +1,5 @@
 using Enjune.Graphic;
+using Enjune.Graphic.Key;
 using Enjune.Graphic.Modeling;
 using Enjune.KitStart;
 using Enjune.Misc;
@@ -7,28 +8,52 @@ namespace UiAddon.Element;
 
 public abstract class UiElement
 {
-    // base settings
+    #region Public
+    public Rect GlobalRect => _globalRect;
+    
     public readonly NotifyChange<float> GlobalZ;
     public readonly NotifyChange<Rect> LocalAnchor;
     public readonly NotifyChange<Margin> Margin;
-
-    private readonly NotifyChange<Rect> _globalRect = new Rect((0, 0), (500, 500));
-    public IReadonlyNotifyChange<Rect> GlobalRect => _globalRect;
-
     public readonly NotifyChange<bool> LocalVisible = true; // self and children visibility
     public readonly NotifyChange<bool> IsHovered = false;
-
+    
+    public IList<UiElement> Children => _children;
+    public IList<Model.Entry> Meshes => _meshes;
+    #endregion
+    
+    private readonly NotifyChange<Rect> _globalRect = new Rect((0, 0), (500, 500));
     private UiElement? _parent;
-    private List<UiElement>? _children;
-    public readonly List<Model.Entry> Meshes = [];
+    private readonly NotifyChangeList<UiElement> _children;
+    private readonly NotifyChangeList<Model.Entry> _meshes = [];
 
     protected UiElement(UiElement[] children, Rect localAnchor, Margin margin, float globalZ)
     {
         LocalAnchor = localAnchor;
         Margin = margin;
         GlobalZ = globalZ;
-        children.ForEach(AddChild);
 
+        #region Children
+        _children = new NotifyChangeList<UiElement>(children.Length);
+        _children.AfterElementAdded += child =>
+        {
+            child._parent = this;
+            if (child.Meshes.Count > 0)
+                NotifyParentAboutMeshChanges();
+        };
+        _children.AfterElementRemoved += child =>
+        {
+            child._parent = null;
+            if (child.Meshes.Count > 0)
+                NotifyParentAboutMeshChanges();
+        };
+        children.ForEach(ch => _children.Add(ch));
+        #endregion
+        
+        #region Meshes
+        _meshes.AfterElementAdded += _ => NotifyParentAboutMeshChanges();
+        _meshes.AfterElementRemoved += _ => NotifyParentAboutMeshChanges();
+        #endregion
+        
         GlobalZ.OnChange += (oldValue, newValue) =>
         {
             var diff = newValue - oldValue;
@@ -51,60 +76,14 @@ public abstract class UiElement
         };
         LocalVisible.OnChange += (_, _) => NotifyParentAboutMeshChanges();
 
-        _globalRect.OnChange += (_, newRect) => ForeachChild(ch => ch.UpdateGlobalRect(newRect));
+
+        _globalRect.OnChange += (_, newRect) => _children.ForEach(ch => ch.UpdateGlobalRect(newRect));
         _globalRect.OnChange += UpdateShape;
     }
 
     protected abstract void UpdateShape(Rect oldValue, Rect newValue);
 
-    // children
-    public void ForeachChild(Action<UiElement> action) => _children?.ForEach(action);
-    public void ClearChildren()
-    {
-        if (_children is null) return;
-        _children.ForEach(ch => ch._parent = null);
-        _children.Clear();
-    }
-    public void AddChild(UiElement child)
-    {
-        if (_children?.Contains(child) ?? false)
-        {
-            Logger.Warn(this, $"adding child {child} that is already presented in ${_children}");
-            return;
-        }
-
-        _children ??= new List<UiElement>(1);
-        child._parent = this;
-        _children.Add(child);
-        
-        if (child.Meshes.Count > 0)
-            NotifyParentAboutMeshChanges();
-    }
-    public void RemoveChild(UiElement child)
-    {
-        var removed = _children?.Remove(child) ?? false;
-        if (removed)
-        {
-            child._parent = null;
-            if (child.Meshes.Count > 0)
-                NotifyParentAboutMeshChanges();
-        }
-        else
-            Logger.Warn(this, $"removing child {child} that is already not in ${_children}");
-    }
-    // children end
-    
-    // hover
-    public virtual BeingHoveredAction UpdateBeingHovered(BasicInputHandler inputHandler)
-    {
-        return BeingHoveredAction.BecomeFocused;
-    }
-
-    public virtual BeingFocusedAction UpdateBeingFocused(BasicInputHandler inputHandler)
-    {
-        return IsHovered ? BeingFocusedAction.ContinueBeing : BeingFocusedAction.StopBeing;
-    } 
-    
+    // debug purpose
     protected void AddDebugArrowsToMeshes()
     {
         var anchorSize = MathF.Max(10, MathF.Sqrt(_globalRect.Val.Size.X + _globalRect.Val.Size.Y));
@@ -126,7 +105,7 @@ public abstract class UiElement
         }
     }
     
-    protected void NotifyParentAboutMeshChanges()
+    private void NotifyParentAboutMeshChanges()
     {
         if (_parent is null)
         {
@@ -148,7 +127,17 @@ public abstract class UiElement
             (globalAnchor.Min.X + Margin.Val.Left, globalAnchor.Min.Y + Margin.Val.Bottom), 
             (globalAnchor.Max.X - Margin.Val.Right, globalAnchor.Max.Y - Margin.Val.Top));
     }
-    
+
+    #region Hovering and Focusing
+
+    public virtual BeingHoveredAction UpdateBeingHovered(BasicInputHandler inputHandler)
+        => inputHandler.IsJustPressed(KeyCode.LeftMouseButton)
+            ? BeingHoveredAction.BecomeFocused
+            : BeingHoveredAction.DoNotBecomeFocused;
+
+    public virtual BeingFocusedAction UpdateBeingFocused(BasicInputHandler inputHandler)
+        => IsHovered ? BeingFocusedAction.ContinueBeing : BeingFocusedAction.StopBeing;
+
     public enum BeingHoveredAction
     {
         BecomeFocused,
@@ -159,4 +148,6 @@ public abstract class UiElement
         ContinueBeing,
         StopBeing
     }
+    
+    #endregion
 }

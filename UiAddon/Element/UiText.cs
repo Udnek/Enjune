@@ -23,11 +23,8 @@ public class UiText : UiElement
 
     private void OnColorChanged(Color old, Color newColor)
     {
-        for (var i = 0; i < Meshes.Count; i++)
-        {
+        for (var i = 0; i < Meshes.Count; i++) 
             Meshes[i] = Meshes[i].WithColor(newColor);
-        }
-        NotifyParentAboutMeshChanges();
     }
 
     protected void RegenerateMeshesEntirely()
@@ -38,13 +35,13 @@ public class UiText : UiElement
         for (var i = 0; i < split.Length; i++)
         {
             var line = split[i];
-            Font.Val.GenerateMeshes(line, GlobalRect.Val.Height, mesh =>
+            Font.Val.GenerateMeshes(line, GlobalRect.Height, mesh =>
             {
-                mesh.Offset(new Position(GlobalRect.Val.Min.X, GlobalRect.Val.Min.Y - i*GlobalRect.Val.Height, GlobalZ + 0.1f));
+                mesh.Offset(new Position(GlobalRect.Min.X, GlobalRect.Min.Y - i*GlobalRect.Height, GlobalZ + 0.1f));
                 Meshes.Add(new Model.Entry(mesh, perMeshData));
             });
         }
-        NotifyParentAboutMeshChanges();
+        AddDebugArrowsToMeshes();
     }
 
     protected override void UpdateShape(Rect oldValue, Rect newValue) => RegenerateMeshesEntirely();

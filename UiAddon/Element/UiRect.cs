@@ -18,20 +18,18 @@ public class UiRect : UiElement
     {
         for (var i = 0; i < Meshes.Count; i++) 
             Meshes[i] = Meshes[i].WithColor(Color);
-        NotifyParentAboutMeshChanges();
     }
     
     protected override void UpdateShape(Rect oldValue, Rect newValue)
     {
         Meshes.Clear();
-        var min = new Vector3(GlobalRect.Val.Min.X, GlobalRect.Val.Min.Y, GlobalZ);
-        var max = new Vector3(GlobalRect.Val.Max.X, GlobalRect.Val.Max.Y, GlobalZ);
+        var min = new Vector3(GlobalRect.Min.X, GlobalRect.Min.Y, GlobalZ);
+        var max = new Vector3(GlobalRect.Max.X, GlobalRect.Max.Y, GlobalZ);
         Meshes.Add(new Model.Entry(
             Mesh.Quad(
                 min, (max.X, min.Y, GlobalZ), max, (min.X, max.Y, GlobalZ),
                 TextureQuad.Full),
             new Model.PerMesh(Color))
         );
-        NotifyParentAboutMeshChanges();
     }
 }

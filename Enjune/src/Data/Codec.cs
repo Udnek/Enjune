@@ -5,8 +5,6 @@ using Enjune.Registering;
 
 namespace Enjune.Data;
 
-//public delegate TInstance Decoder<TInstance>(DataObject data, TInstance fallback);
-
 public record Codec<TInstance>(
     Func<TInstance, DataObject> Encode,
     Func<DataObject, TInstance> Decode)
@@ -39,7 +37,7 @@ public record Codec<TInstance>(
     }
 }
 
-public delegate T Getter<in TInstance, out T>(TInstance instance);
+public delegate TVal Getter<in TInstance, out TVal>(TInstance instance);
 public delegate void Setter<TInstance, in T>(ref TInstance instance, T val);
 public delegate void DecodeAndSet<TInstance>(ref TInstance instance, DataObject? data); 
 
@@ -98,7 +96,7 @@ public static partial class Codecs
     public static Codec<TInstance> ForRegistryEntry<TInstance>(
         Registry<TInstance> registry, Getter<TInstance, Identifier> idGetter, TInstance fallback)
     {
-        return ForSingleConstructor(
+        return ForOneArgConstructor(
             id => registry.GetOrDefault(id) ?? fallback, 
             idGetter,
             Identifier.Codec);
@@ -107,13 +105,13 @@ public static partial class Codecs
     public static Codec<TInstance?> ForRegistryEntry<TInstance>(
         Registry<TInstance> registry, Getter<TInstance, Identifier> idGetter) where TInstance : class
     {
-        return ForSingleConstructor(
+        return ForOneArgConstructor(
             registry.GetOrDefault, 
             i => i is null ? Identifier.NullFallback : idGetter(i),
             Identifier.Codec);
     }
 
-    public static Codec<TInstance> ForSingleConstructor<TInstance, TField>(Func<TField, TInstance> constructor, Getter<TInstance, TField> getter, Codec<TField> codec)
+    public static Codec<TInstance> ForOneArgConstructor<TInstance, TField>(Func<TField, TInstance> constructor, Getter<TInstance, TField> getter, Codec<TField> codec)
     {
         return new Codec<TInstance>(
             instance => codec.Encode(getter(instance)),

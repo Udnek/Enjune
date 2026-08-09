@@ -18,6 +18,7 @@ public sealed class Ui : UiElement, IDisposable
     // public api
     public readonly NotifyChange<float> PixelsPerUnit = 1;
     public bool IsFocused => FocusedElement is not null;
+    public UiElement? FocusedElement { get; private set; }
     
     // matrices
     private readonly Matrix4 _modelTransform = Matrix4.Identity;
@@ -27,7 +28,6 @@ public sealed class Ui : UiElement, IDisposable
     private readonly BasicInputHandler _inputHandler;
     private readonly IRenderableModel.IDynamic _model;
     private readonly List<Model.Entry> _meshes = [];
-    private UiElement? FocusedElement { get; set; }
     private bool _someMeshesChanged = false;
 
     public Ui(IGraphicApi graphicApi, BasicInputHandler inputHandler, UiElement[] roots) : base(roots, Anchor.FullStretch, UiAddon.Margin.No, 0)
@@ -85,13 +85,13 @@ public sealed class Ui : UiElement, IDisposable
 
     protected override void UpdateShape(Rect oldValue, Rect newValue)
     {
-        ForeachChild(ch => Upd(ch, newValue));
+        Children.ForEach(ch => Upd(ch, newValue));
         return;
         
         void Upd(UiElement elem, Rect parentRect)
         {
             elem.UpdateGlobalRect(parentRect);
-            elem.ForeachChild(ch => Upd(ch, elem.GlobalRect.Val));
+            elem.Children.ForEach(ch => Upd(ch, elem.GlobalRect));
         }
     }
     
@@ -100,12 +100,14 @@ public sealed class Ui : UiElement, IDisposable
         var cursor = _inputHandler.CursorPosition;
         var correctedCursor = new Vector2(cursor.X / PixelsPerUnit, cursor.Y / PixelsPerUnit);
         UiElement? newFocus = null;
+        var anythingHovered = false;
         RecursiveChildrenExplore(elem =>
         {
             if (!elem.LocalVisible) return false;
-            var isHovered = elem.GlobalRect.Val.ContainsPoint(correctedCursor);
+            var isHovered = elem.GlobalRect.ContainsPoint(correctedCursor);
             elem.IsHovered.Val = isHovered;
             if (!isHovered) return true;
+            anythingHovered = true;
             
             var action = elem.UpdateBeingHovered(_inputHandler);
             if (action == BeingHoveredAction.BecomeFocused) 
@@ -113,14 +115,11 @@ public sealed class Ui : UiElement, IDisposable
             return true;
         });
 
-        // if (newFocus is null) // we don't press any button in ui
-        // {
-        //     if (_inputHandler.IsJustPressed(KeyCode.LeftMouseButton)) // but we clicked somewhere else not in ui
-        //     {
-        //         FocusedElement = null; // we're unfocusing ui
-        //         return;
-        //     }
-        // }
+        if (!anythingHovered && _inputHandler.IsJustPressed(KeyCode.LeftMouseButton))
+        {
+            FocusedElement = null;
+            return;
+        }
         
         if (newFocus is not null) 
             FocusedElement = newFocus;
@@ -139,14 +138,14 @@ public sealed class Ui : UiElement, IDisposable
     
     private void RecursiveChildrenExplore(Func<UiElement, bool> takeAndContinue)
     {
-        ForeachChild(Explore);
+        Children.ForEach(Explore);
         return;
         
         void Explore(UiElement element)
         {
             var @continue = takeAndContinue(element);
             if (!@continue) return;
-            element.ForeachChild(Explore);
+            element.Children.ForEach(Explore);
         }
     }
     

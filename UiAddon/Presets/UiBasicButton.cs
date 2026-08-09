@@ -18,10 +18,13 @@ public class UiBasicButton : UiRect
 
     protected readonly Action OnClick;
 
+    public override BeingHoveredAction UpdateBeingHovered(BasicInputHandler inputHandler) 
+        => BeingHoveredAction.BecomeFocused;
+
     public override BeingFocusedAction UpdateBeingFocused(BasicInputHandler inputHandler)
     {
         if (inputHandler.IsJustPressed(KeyCode.LeftMouseButton)) 
             OnClick();
-        return BeingFocusedAction.ContinueBeing;
+        return base.UpdateBeingFocused(inputHandler);
     }
 }

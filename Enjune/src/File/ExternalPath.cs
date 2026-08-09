@@ -8,7 +8,7 @@ public sealed class ExternalPath : ResourcePath
     
     public new static readonly Codec<ExternalPath> Codec = Codecs
         .ForConstructor(args => new ExternalPath((string)args[0]!))
-        .ForField("absolute", i => i._absolutePath, Codecs.String, "")
+        .ForField("absolute", i => i._absolutePath, Codecs.String, ".")
         .Build();
     
     private readonly string _absolutePath;

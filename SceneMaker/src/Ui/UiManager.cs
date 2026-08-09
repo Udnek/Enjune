@@ -25,7 +25,6 @@ public class UiManager : AbstractDisposable
 
     public UiManager(App app, CompiledFont font)
     {
-        Logger.IgnoreInfoLogs = true;
         _app = app;
         _font = font;
 
@@ -33,13 +32,11 @@ public class UiManager : AbstractDisposable
             [],
             Anchor.FixedAt(0, 1),
             new Margin(0, 10, 10, -40),
-            0,
+            99,
             font, 
             "fps",
             Colors.UiText
         );
-
-        var isMenuOpened = false;
         
         _toggleVisibilityButton = new UiBasicButton(
             [],
@@ -47,20 +44,7 @@ public class UiManager : AbstractDisposable
             new Margin(0, -40, -40, -40),
             1,
             Colors.Red,
-            () =>
-            {
-                //Logger.Highlight(this, $"{nameof(isMenuOpened)} {isMenuOpened}");
-                if (isMenuOpened) // closing
-                {
-                    isMenuOpened = false;
-                    _inspectorBackground!.LocalAnchor.Val = Anchor.OfXy((1f, 1), Anchor.Stretch);
-                }
-                else // opening
-                {
-                    isMenuOpened = true;
-                    _inspectorBackground!.LocalAnchor.Val = Anchor.OfXy((0.3f, 1), Anchor.Stretch);
-                }
-            }
+            () => ToggleMenu(!_isMenuOpened)
         );
         _inspectorComps = new UiDirectory([]);
         _inspectorBackground = new UiRect(
@@ -77,6 +61,22 @@ public class UiManager : AbstractDisposable
         );
         
         _inspectorBackground.LocalVisible.Val = false;
+        _fps.LocalVisible.Val = false;
+    }
+
+    private bool _isMenuOpened = false;
+    private void ToggleMenu(bool open)
+    {
+        if (!open) // closing
+        {
+            _isMenuOpened = false;
+            _inspectorBackground.LocalAnchor.Val = Anchor.OfXy((1f, 1), Anchor.Stretch);
+        }
+        else // opening
+        {
+            _isMenuOpened = true;
+            _inspectorBackground.LocalAnchor.Val = Anchor.OfXy((0.3f, 1), Anchor.Stretch);
+        }
     }
 
     private readonly Stopwatch _fpsStopWatch = Stopwatch.StartNew();
@@ -102,51 +102,62 @@ public class UiManager : AbstractDisposable
         // pop up inspector
         if (_rememberSelectedObject.Changed)
         {
-            _inspectorBackground.LocalVisible.Val = _rememberSelectedObject.Val is not null;
-
-            // adding inputs
-            _inspectorComps.ClearChildren();
-            List<(string Name, float Val)> components = [("aboba", 42f), ("bebra", 52), ("kek", 123)]; //  
-            const float elemYSize = 40f;
-            const float betweenComp = 10f;
-            
-            float yOffset = betweenComp + elemYSize/2;
-            foreach (var component in components)
+            if (_rememberSelectedObject.Val is null)
             {
-                var nameElem = new UiText([],
-                    Anchor.OfXy((0, 0), Anchor.Stretch),
-                    Margin.No,
-                    3,
-                    _font,
-                    component.Name,
-                    Colors.UiText);
+                _inspectorBackground.LocalVisible.Val = false;
+                ToggleMenu(false);
+            }
+            else
+            {
+                _inspectorBackground.LocalVisible.Val = true;
+                
+                // adding inputs
+                _inspectorComps.Children.Clear();
+                List<(string Name, float Val)> components = [("aboba", 42f), ("bebra", 52), ("kek", 123)]; //  
+                const float elemYSize = 40f;
+                const float betweenComp = 10f;
+            
+                float yOffset = betweenComp + elemYSize;
+                foreach (var component in components)
+                {
+                    var nameElem = new UiText([],
+                        Anchor.OfXy((0, 0), Anchor.Stretch),
+                        Margin.No,
+                        3,
+                        _font,
+                        component.Name,
+                        Colors.UiText);
 
-                var valueElem = new UiEditableText([],
-                    Anchor.OfXy((0.3f, 0.3f), Anchor.Stretch),
-                    Margin.No,
-                    3,
-                    _font,
-                    component.Val.ToString(),
-                    Colors.UiText
-                );
+                    var valueElem = new UiEditableText([],
+                        Anchor.OfXy((0.3f, 1f), Anchor.Stretch),
+                        Margin.No,
+                        3,
+                        _font,
+                        component.Val.ToString(),
+                        Colors.UiText
+                    );
 
-                var elem = new UiRect([nameElem, valueElem],
-                    Anchor.OfXy(Anchor.Stretch, (1, 1)),
-                    new Margin(betweenComp, -elemYSize / 2, betweenComp, -elemYSize / 2).Move(0, -yOffset),
-                    2,
-                    Colors.Blue
-                );    
+                    var elem = new UiRect([nameElem, valueElem],
+                        Anchor.OfXy(Anchor.Stretch, (1, 1)),
+                        new Margin(betweenComp, -elemYSize / 2, betweenComp, -elemYSize / 2).Move(0, -yOffset),
+                        2,
+                        Colors.Blue
+                    );    
    
-                yOffset += elemYSize+betweenComp;
-                _inspectorComps.AddChild(elem);
+                    yOffset += elemYSize+betweenComp;
+                    _inspectorComps.Children.Add(elem);
+                }
             }
         }
+
+        if (inputHandler.IsJustPressed(KeyCode.F3))
+            _fps.LocalVisible.Val = !_fps.LocalVisible;
         
         // fps counter
-        if (_fpsStopWatch.ElapsedMilliseconds > 1000 || _rememberUiFocused.Changed)
+        if (_fps.LocalVisible && _fpsStopWatch.ElapsedMilliseconds > 1000 || _rememberUiFocused.Changed)
         {
             _fpsStopWatch.Restart();
-            _fps.Text.Val = $"fps: {1f / deltaTime:0.00}; uiFocused: {_rememberUiFocused.Val}; mouseUpdates: {inputHandler.MouseUpdates};";
+            _fps.Text.Val = $"fps: {1f / deltaTime:0.00}; mouseUpdates: {inputHandler.MouseUpdates}; uiFocused: {Ui.FocusedElement};";
         }
         
     }

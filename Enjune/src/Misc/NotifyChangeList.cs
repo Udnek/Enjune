@@ -5,32 +5,43 @@ namespace Enjune.Misc;
 
 public interface INotifyChangeReadonlyList<T> : IReadOnlyList<T>
 {
-    event Action<T> OnElementAdded;
-    event Action<T> OnElementRemoved;
+    event Action<T> AfterElementAdded;
+    event Action<T> AfterElementRemoved;
+
+    public void ForEach(Action<T> action);
 }
 
-public class NotifyChangeList<T>(int capacity = 4) : IList<T>, INotifyChangeReadonlyList<T>
+public class NotifyChangeList<T> : IList<T>, INotifyChangeReadonlyList<T>
 {
-    private readonly List<T> _list = new(capacity);
-    public event Action<T>? OnElementAdded;
-    public event Action<T>? OnElementRemoved;
+    private readonly List<T> _list;
+
+    public NotifyChangeList(int capacity = 0) => _list = new List<T>(capacity);
+
+    public NotifyChangeList(IEnumerable<T> collection) => _list = new List<T>(collection);
+
+    public event Action<T>? AfterElementAdded;
+    public event Action<T>? AfterElementRemoved;
 
     //
     public IEnumerator<T> GetEnumerator() => _list.GetEnumerator();
     IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)_list).GetEnumerator();
 
+    public void ForEach(Action<T> action) => _list.ForEach(action);
+
     public void Add(T item)
     {
         _list.Add(item);
-        OnElementAdded?.Invoke(item);
+        AfterElementAdded?.Invoke(item);
     }
 
     public void Clear()
     {
         if (_list.Count == 0)
             return;
-        _list.ForEach(i => OnElementRemoved?.Invoke(i));
+        var oldValues = new T[_list.Count];
+        _list.CopyTo(oldValues);
         _list.Clear();
+        oldValues.ForEach(i => AfterElementRemoved?.Invoke(i));
     }
 
     public bool Contains(T item) => _list.Contains(item);
@@ -41,7 +52,7 @@ public class NotifyChangeList<T>(int capacity = 4) : IList<T>, INotifyChangeRead
     {
         var removed = _list.Remove(item);
         if (removed) 
-            OnElementRemoved?.Invoke(item);
+            AfterElementRemoved?.Invoke(item);
         return removed;
     }
 
@@ -53,14 +64,14 @@ public class NotifyChangeList<T>(int capacity = 4) : IList<T>, INotifyChangeRead
     public void Insert(int index, T item)
     {
         _list.Insert(index, item);
-        OnElementAdded?.Invoke(item);
+        AfterElementAdded?.Invoke(item);
     }
 
     public void RemoveAt(int index)
     {
         var item = _list.ElementAt(index);
         _list.RemoveAt(index);
-        OnElementRemoved?.Invoke(item);
+        AfterElementRemoved?.Invoke(item);
     }
 
     public T this[int index]
@@ -68,9 +79,10 @@ public class NotifyChangeList<T>(int capacity = 4) : IList<T>, INotifyChangeRead
         get => _list[index];
         set
         {
-            OnElementRemoved?.Invoke(this[index]);
+            var oldValue = this[index];
             _list[index] = value;
-            OnElementAdded?.Invoke(this[index]);
+            AfterElementRemoved?.Invoke(oldValue);
+            AfterElementAdded?.Invoke(value);
         }
     }
 }

@@ -95,7 +95,7 @@ public abstract class DataObject
     
     public sealed class NullVal : DataObject
     {
-        public static readonly NullVal Instance = new ();
+        public static readonly NullVal Instance = new();
         private NullVal(){}
     }
 }

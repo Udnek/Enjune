@@ -7,7 +7,7 @@ namespace Enjune.Registering;
 public readonly struct Identifier : IEquatable<Identifier>
 {
     public static readonly Codec<Identifier> Codec = Codecs
-        .ForSingleConstructor(Parse, i => i._fullName, Codecs.String);
+        .ForOneArgConstructor(Parse, i => i._fullName, Codecs.String);
 
     public static readonly Identifier NullFallback = new("null", "null");
     
