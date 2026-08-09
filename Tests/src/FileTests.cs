@@ -11,7 +11,7 @@ namespace Tests;
 public class FileTests
 {
     
-    private Assembly _assembly = typeof(FileTests).Assembly;
+    private readonly Assembly _assembly = typeof(FileTests).Assembly;
     
     [Fact]
     public void AssemblyPathTest()

@@ -129,17 +129,13 @@ public class EditorController
     private Vector2 GetNdcCursorPosition()
     {
         var screenSize = _graphicApi.GetWindowSize();
-        Vector2i rawCursorPosition;
+        Vector2 cursorPos;
         if (_graphicApi.GetCursorMode() == IGraphicApi.CursorMode.Centered) 
-            rawCursorPosition = screenSize / 2;
+            cursorPos = screenSize / 2;
         else
-            rawCursorPosition = _inputHandler.CursorPosition;
-        
-        Vector2 cursorPos = (rawCursorPosition.X, screenSize.Y - rawCursorPosition.Y);
-        var ndc = new Vector2(
-            (cursorPos.X / screenSize.X) * 2f - 1f,
-            (cursorPos.Y / screenSize.Y) * 2f - 1f
-        );
+            cursorPos = _inputHandler.CursorPosition;
+
+        var ndc = cursorPos / screenSize * 2f - (1, 1);
         return ndc;
     }
 

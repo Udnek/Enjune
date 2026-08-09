@@ -8,6 +8,7 @@ using Enjune.Misc;
 using Enjune.World;
 using OpenGLApi;
 using OpenTK.Mathematics;
+using SceneMaker.Ui;
 
 namespace SceneMaker;
 
@@ -15,7 +16,7 @@ public class App : AbstractDisposable, IApp
 {
     private static readonly Vector2i InitialWindowSize = (480*2, 360*2);
     
-    [DisposeAtLast("other objects may cause segfault when disposing")] // TODO probably dispose all GlModels in GlApi itself?
+    [DisposeAtLast("other objects may cause segfault when disposing //TODO fix")] // TODO probably dispose all GlModels in GlApi itself?
     public IGraphicApi Grapi = null!;
     
     private readonly KeyBinds _binds;
@@ -30,7 +31,7 @@ public class App : AbstractDisposable, IApp
     
     private Scene _scene = null!;
     private UiManager _uiManager = null!;
-    public Focus Focused = Focus.Scene;
+    //public Focus Focused = Focus.Scene;
 
     public App()
     {
@@ -85,7 +86,7 @@ public class App : AbstractDisposable, IApp
             _scene.Objects.Add(EditorController.AxisObject);
         }
 
-        _uiManager = new UiManager(this, InitialWindowSize, font);
+        _uiManager = new UiManager(this, font);
         
         return null;
     }
@@ -108,6 +109,9 @@ public class App : AbstractDisposable, IApp
             MathF.PI / 2, (float) InputHandler.WindowSize.X / InputHandler.WindowSize.Y, 0.1f, 100f);
         var view = WasdController.View;
         
+        // cache to not create new list every frame
+        List<SpotLight> spotLights = [];
+        
         Utils.RunTargetFpsLoopWhile(500,
             () => !Grapi.ShouldStop(),
             deltaTime =>
@@ -122,19 +126,17 @@ public class App : AbstractDisposable, IApp
                         MathF.PI / 2, (float) InputHandler.WindowSize.X / InputHandler.WindowSize.Y, 0.1f, 100f);
                 }
                 
+                // UI
+                _uiManager.Update(deltaTime); 
+                
                 // wasd && editor controller
-                if (Focused == Focus.Scene)
+                if (!_uiManager.Ui.IsFocused)
                 {
                     WasdController.Update(deltaTime);
                     view = WasdController.View;
                     
                     EditorController.Update(view, projection);
-                    if (EditorController.SelectedObject is not null)
-                        Focused = Focus.ObjectInspector;
                 }
-                
-                // UI
-                _uiManager.Update(deltaTime, Focused == Focus.ObjectInspector); 
                 
                 // genera; keyboard input
                 if (InputHandler.IsPressed(_freeCursorBind))
@@ -149,15 +151,16 @@ public class App : AbstractDisposable, IApp
 
                 // lights
                 {
-                    var lights = _scene.Objects
-                        .Where(o => o.SpotLight is not null)
-                        .Select(o =>
-                        {
-                            o.SpotLight!.Position = o.Position;
-                            o.SpotLight!.UpdateView();
-                            return o.SpotLight!;
-                        });
-                    Grapi.SetLights(lights);
+                    spotLights.Clear();
+                    foreach (var sObject in _scene.Objects)
+                    {
+                        var light = sObject.SpotLight;
+                        if (light is null) continue;
+                        light.Position = sObject.Position;
+                        light.UpdateView();
+                        spotLights.Add(light);
+                    }
+                    Grapi.SetLights(spotLights.AsSpan());
                 }
                 
                 // shadows
@@ -226,10 +229,7 @@ public class App : AbstractDisposable, IApp
                     
                     // render UI
                     Grapi.ClearRenderBuffer(false, true);
-                    s.ModelTransform(_uiManager.Ui.ModelTransform);
-                    s.ViewTransform(_uiManager.Ui.ViewTransform);
-                    s.ProjectionTransform(_uiManager.Ui.ProjectionTransform);
-                    _uiManager.UiModel.Render(s);
+                    _uiManager.Ui.Render(s);
                 });
                 
                 Grapi.SetDrawMode(IGraphicApi.DrawMode.Fill); // DEBUG

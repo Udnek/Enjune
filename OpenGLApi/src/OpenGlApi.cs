@@ -140,11 +140,13 @@ public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicAp
             };
             GLFW.SetMouseButtonCallback(_window, _mouseButtonCallback);
             
-            _windowSizeChangeCallback = (_, newWidth, newHeight) 
-                => inputHandler.HandleWindowSizeChange((newWidth, newHeight));
+            _windowSizeChangeCallback = (_, w, h) => inputHandler.HandleWindowSizeChange((w, h));
             GLFW.SetFramebufferSizeCallback(_window, _windowSizeChangeCallback);
 
-            _cursorCallback = (window, x, y) => inputHandler.HandleCursor((int)x, (int)y);
+            _cursorCallback = (window, x, y) =>
+            {
+                inputHandler.HandleCursorFromLeftBottom((int)x, GetWindowSize().Y - (int)y);
+            };
             GLFW.SetCursorPosCallback(_window, _cursorCallback);
 
             _scrollCallback = (window, x, y) => inputHandler.HandleScroll((float) x, (float) y);
@@ -207,7 +209,7 @@ public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicAp
             // loading materials
             _materialSsbo = new SsboArray<MaterialData>(MaterialsSsboBinding, _assets.Materials.Length, true);
             MaterialData ToData(CompiledMaterial mat) => new(mat.Raw.Color, mat.TextureId);
-            _materialSsbo.BindAndPush(_assets.Materials.Select(ToData).ToArray());
+            _materialSsbo.BindAndPush(_assets.Materials.Map(ToData).ToArray());
         }
         _screenVao = new Vao();
         _screenVbo = new Vbo<(Vector2 position, Vector2 texCoord)>(6, true);
@@ -263,15 +265,15 @@ public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicAp
         return null;
     }
 
-    public void SetLights(IEnumerable<SpotLight> lights)
+    public void SetLights(Span<SpotLight> lights)
     {
-        int count = lights.Count();
+        var count = lights.Length;
         if (count > MaxLights)
         {
             Logger.Warn(this,$"lights size to big: {count}, but max capacity is {MaxLights}");
             count = MaxLights;
         }
-        _lightSsbo.BindAndPush(new LightsLengthData(count), lights.Select(l => new SpotLightData(l.View, l.Projection, l.Color, l.Position)).ToArray());
+        _lightSsbo.BindAndPush(new LightsLengthData(count), lights.Map(l => new SpotLightData(l.View, l.Projection, l.Color, l.Position)));
     }
 
     public void SetRenderSize(Vector2i size)

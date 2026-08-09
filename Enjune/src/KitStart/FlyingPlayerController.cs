@@ -44,7 +44,7 @@ public class FlyingPlayerController
         if (_graphicApi.GetCursorMode() == IGraphicApi.CursorMode.Centered)
         {
             _yaw += _sensitivity * _inputHandler.DeltaCursorPosition.X;
-            _pitch -= _sensitivity * _inputHandler.DeltaCursorPosition.Y;
+            _pitch += _sensitivity * _inputHandler.DeltaCursorPosition.Y;
             _yaw %= 360;
             _pitch = Math.Clamp(_pitch, -89f, 89f);
         }

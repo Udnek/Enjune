@@ -5,7 +5,7 @@ public interface IShader
     
     public interface IShadowMap : IShader
     {
-        void ForEachLight(Action action);
+        void ForEachLight(Action action); // you need to render all objects for each light source
         void ModelTransform(Matrix4 model);
     }
     

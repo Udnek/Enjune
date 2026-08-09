@@ -34,6 +34,17 @@ public static class Extensions
         public Span<T> AsSpan() => CollectionsMarshal.AsSpan(list);
     }
     
+    extension<T>(Span<T> span)
+    {
+        public TOut[] Map<TOut>(Func<T, TOut> map)
+        {
+            var result = new TOut[span.Length];
+            for (var i = 0; i < span.Length; i++) 
+                result[i] = map(span[i]);
+            return result;
+        }
+    }
+    
     extension(string str)
     {
         public decimal? ParseDecimalOrNull()

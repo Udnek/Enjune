@@ -27,11 +27,11 @@ public record Codec<TInstance>(
         get
         {
             field ??= new Codec<TInstance[]>(
-                instances => new DataObject.Array(instances.Select(i => Encode(i)).ToArray()), 
+                instances => new DataObject.Array(instances.Map(i => Encode(i)).ToArray()), 
                 data =>
                 {
                     var array = data.AsOr(DataObject.Array.Empty);
-                    return array.Val.Select(v => Decode(v)).ToArray();
+                    return array.Val.Map(v => Decode(v)).ToArray();
                 });
 
             return field;

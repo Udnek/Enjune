@@ -12,7 +12,7 @@ namespace OpenGLApi.Model;
 
 public class GlModel : GlDisposable, IRenderableModel.IDynamic
 {
-    [DoNotAutoDispose($"should be disposed in {nameof(OpenGlApi)}")]
+    [DoNotDisposeViaUtils($"should be disposed in {nameof(OpenGlApi)}")]
     private readonly MaterialShader _shader;
     private readonly int _ssboBinding;
     private readonly bool _final;
@@ -72,9 +72,11 @@ public class GlModel : GlDisposable, IRenderableModel.IDynamic
         else
         {
             const float capacityIncreasement = 1.5f;
-            if (_vbo.Capacity < vboBuf.Length) _vbo.Reallocate((int)(vboBuf.Length * capacityIncreasement));
-            if (_ebo.Capacity < eboBuf.Length) _ebo.Reallocate((int)(eboBuf.Length * capacityIncreasement));
-            if (_ssbo.Capacity < ssboBuf.Length) _ssbo.Reallocate((int)(ssboBuf.Length * capacityIncreasement));
+            if (_vbo.Capacity < vboBuf.Length) _vbo.Reallocate(CalcCap(_vbo.Capacity, vboBuf.Length));
+            if (_ebo.Capacity < eboBuf.Length) _ebo.Reallocate(CalcCap(_ebo.Capacity, eboBuf.Length));
+            if (_ssbo.Capacity < ssboBuf.Length) _ssbo.Reallocate(CalcCap(_ssbo.Capacity, ssboBuf.Length));
+
+            static int CalcCap(int current, int model) => (int)Math.Max(current * capacityIncreasement, model);
         }
         _vbo.BindAndPush(vboBuf.ToArray());
         _ebo.BindAndPush(eboBuf.ToArray());

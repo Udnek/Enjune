@@ -53,7 +53,7 @@ public static class Utils
         {
             var value = field.GetValue(obj);
             if (value is not IDisposable disposable) continue;
-            var doNotSerialize = (DoNotAutoDisposeAttribute?) field.GetCustomAttribute(typeof(DoNotAutoDisposeAttribute));
+            var doNotSerialize = (DoNotDisposeViaUtilsAttribute?) field.GetCustomAttribute(typeof(DoNotDisposeViaUtilsAttribute));
             if (doNotSerialize is not null)
             {
                 Logger.Highlight(typeof(Utils), $"  {tab}do not disposing {objType.Name}.{field.Name}: {doNotSerialize.Reason}");
