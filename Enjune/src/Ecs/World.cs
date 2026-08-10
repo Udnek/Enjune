@@ -29,9 +29,13 @@ public class World
             SystemManager.RegisterSystem(system);
         }
     }
-    
+
     // PUBLIC API
-    public void AddEntity(EntityAssembly assembly) => ArchetypeManager.AddEntity(assembly);
+    public void AddEntity(EntityAssembly assembly)
+    {
+        EntityId Id = EntityManager.CreateEntity();
+        ArchetypeManager.AddEntity(assembly, Id);
+    }
 
     public void RemoveEntity(EntityId id) => ArchetypeManager.RemoveEntity(id);
 

@@ -35,10 +35,8 @@ public class EcsApp : IApp
         ];
 
         _world = new World(systems, componentTypes);
-
-        EntityId id = _world.GetNewEntityId();
         
-        var testEntity = new EntityAssembly(id);
+        var testEntity = new EntityAssembly();
         testEntity.AddComponent(new Ecs.Component.Position(0, 0, 0));
         testEntity.AddComponent(new Velocity(0,0,0));
         testEntity.AddComponent(new Acceleration(0,0,0));

@@ -8,13 +8,7 @@ namespace Enjune.Ecs.EcsType;
 // This class should NOT be used in big loops to store and manage entities
 public sealed class EntityAssembly
 {
-    public readonly EntityId Id;
     private readonly Dictionary<Type, IComponent> _components = new();
-    
-    public EntityAssembly(EntityId id)
-    {
-        Id = id;
-    }
     
     public List<IComponent> GetComponents() => _components.Values.ToList();
     public List<Type> GetComponentTypes() => _components.Keys.ToList(); 
@@ -22,7 +16,7 @@ public sealed class EntityAssembly
     public void AddComponent(IComponent component)
     {
         if (_components.ContainsKey(component.GetType())) 
-            Logger.Warn(this, $"replaced component {component.GetType()} for assembly {Id}");
+            Logger.Warn(this, $"Replaced component {component.GetType()} for an assembly");
         _components.Add(component.GetType(), component);
     }
 

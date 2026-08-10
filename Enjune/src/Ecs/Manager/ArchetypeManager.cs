@@ -23,16 +23,16 @@ public sealed class ArchetypeManager
         Logger.Log(this, $"archetype with signature {signature} created");
     }
 
-    public void AddEntity(EntityAssembly assembly)
+    public void AddEntity(EntityAssembly assembly, EntityId Id)
     {
         Signature signature = assembly.GetSignature(_world);
-        Logger.Log(this, $"got a request to add an entity {assembly.Id} with signature {signature}");
+        Logger.Log(this, $"got a request to add an entity {Id} with signature {signature}");
 
         EnsureArchetypeExistence(signature);
 
         Archetype matchedArchetype = _archetypes[signature];
-        matchedArchetype.AddEntity(assembly);
-        _entityIdToArchetype[assembly.Id] = matchedArchetype;
+        matchedArchetype.AddEntity(assembly, Id);
+        _entityIdToArchetype[Id] = matchedArchetype;
     }
 
     public Archetype GetArchetype(Signature signature)

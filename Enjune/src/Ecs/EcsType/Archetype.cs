@@ -54,15 +54,15 @@ public sealed class Archetype
     }
     
     // TODO: Avoid using Collection<IComponent> because of boxing
-    public void AddEntity(EntityAssembly entityAssembly)
+    public void AddEntity(EntityAssembly entityAssembly, EntityId Id)
     {
-        Logger.Log(this, $"archetype with signature {Signature} acquired an entity {entityAssembly.Id}");
+        Logger.Log(this, $"archetype with signature {Signature} acquired an entity {Id}");
 
         EnsureCapacity();
 
         int row = EntityCount;
-        _id2Row[entityAssembly.Id] = row;
-        _row2Id[row] = entityAssembly.Id;
+        _id2Row[Id] = row;
+        _row2Id[row] = Id;
 
         List<IComponent> entityComponents = entityAssembly.GetComponents();
         foreach (IComponent entityComponent in entityComponents)
@@ -113,16 +113,18 @@ public sealed class Archetype
         return _id2Row.ContainsKey(id);
     }
 
+    // TODO: Entity Assembly is no longer suitable for runtime acquisation 
     public EntityAssembly? GetAssembly(EntityId id)
     {
-        if (!ContainsEntity(id)) return null;
-        int row = _id2Row[id];
-        EntityAssembly assembly = new EntityAssembly(id);
-        foreach (IColumn column in _columns.Values)
-        {
-            assembly.AddComponent(column.GetValue(row));
-        }
+        //if (!ContainsEntity(id)) return null;
+        //int row = _id2Row[id];
+        //EntityAssembly assembly = new EntityAssembly();
+        //foreach (IColumn column in _columns.Values)
+        //{
+        //    assembly.AddComponent(column.GetValue(row));
+        //}
 
-        return assembly;
+        //return assembly;
+        return null;
     }
 }

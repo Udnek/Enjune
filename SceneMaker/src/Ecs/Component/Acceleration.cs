@@ -2,21 +2,7 @@ using Enjune.Ecs.Component;
 
 namespace SceneMaker.Ecs.Component;
 
-public struct Acceleration : IComponent
+public record struct Acceleration(double X, double Y, double Z) : IComponent
 {
-    public double X;
-    public double Y;
-    public double Z;
-    
-    public Acceleration(double x, double y, double z)
-    {
-        X = x;
-        Y = y;
-        Z = z;
-    }
-
-    public override string ToString()
-    {
-        return "(" + X + ", " + Y + ", " + Z + ")";
-    }
+    public override string ToString() => "(" + X + ", " + Y + ", " + Z + ")";
 }

@@ -40,7 +40,7 @@ public sealed class ComponentManager
         }
         
         ComponentTypeId id = _availableComponentIds.Dequeue();
-        Logger.Log(this, $"registering component type {componentType.Name}, identifying as {id}");
+        Logger.Log(this, $"Registering component type {componentType.Name}, identifying as {id}");
         _componentTypeIds[componentType] = id;
         _componentTypes[id] = componentType;
     }
@@ -56,13 +56,7 @@ public sealed class ComponentManager
         return result;
     }
 
-    public ComponentTypeId GetTypeIdByType(Type componentType)
-    {
-        return _componentTypeIds[componentType];
-    }
+    public ComponentTypeId GetTypeIdByType(Type componentType) => _componentTypeIds[componentType];
 
-    public Type GetTypeByTypeId(ComponentTypeId componentTypeId)
-    {
-        return _componentTypes[componentTypeId];
-    }
+    public Type GetTypeByTypeId(ComponentTypeId componentTypeId) => _componentTypes[componentTypeId];
 }
