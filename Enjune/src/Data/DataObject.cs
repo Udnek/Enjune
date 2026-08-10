@@ -10,7 +10,8 @@ public abstract class DataObject
     public static readonly NullVal Null = NullVal.Instance;
     
     [Pure]
-    public T AsOr<T>(T fallback, Error? errorToLog) where T : DataObject
+    [Obsolete]
+    private T AsOr<T>(T fallback, Error? errorToLog) where T : DataObject
     {
         if (this is T thisT) return thisT;
         if (errorToLog != null) Logger.Warn(this, errorToLog);
@@ -18,6 +19,19 @@ public abstract class DataObject
     }
 
     [Pure]
+    public T? Cast<T>(out Error? error) where T : DataObject
+    {
+        if (this is T thisT)
+        {
+            error = null;
+            return thisT;
+        }
+        error = $"can not cast {this} to ${Logger.GetTypeName(typeof(T))}";
+        return null;
+    }
+    
+    [Pure]
+    [Obsolete]
     public T AsOr<T>(T fallback) where T : DataObject 
         => AsOr(fallback, $"{this} is not a {Logger.GetTypeName(typeof(T))}, defaulting to {fallback}");
 
@@ -31,7 +45,7 @@ public abstract class DataObject
     {
         public static readonly Array Empty = new([]);
         
-        public DataObject[] Val { get; } = val;
+        public Span<DataObject> Val => val;
         
         public static implicit operator Array(DataObject[] val) => new(val);
     }
@@ -42,23 +56,23 @@ public abstract class DataObject
         
         public IReadOnlyDictionary<string, DataObject> Val { get; } = val;
         
-        [Pure]
-        public T GetOr<T>(string key, T fallback) where T : DataObject
-        {
-            if (Val.TryGetValue(key, out var value))
-                return value as T ?? fallback;
+        // [Pure]
+        // public T GetOr<T>(string key, T fallback) where T : DataObject
+        // {
+        //     if (Val.TryGetValue(key, out var value))
+        //         return value as T ?? fallback;
+        //
+        //     return fallback;
+        // }
 
-            return fallback;
-        }
-
-        [Pure]
-        public T? GetOrNull<T>(string key) where T : DataObject
-        {
-            if (Val.TryGetValue(key, out var value))
-                return value as T;
-
-            return null;
-        }
+        // [Pure]
+        // public T? GetOrNull<T>(string key) where T : DataObject
+        // {
+        //     if (Val.TryGetValue(key, out var value))
+        //         return value as T;
+        //
+        //     return null;
+        // }
         
         public static implicit operator Map(Dictionary<string, DataObject> val) => new(val);
     }

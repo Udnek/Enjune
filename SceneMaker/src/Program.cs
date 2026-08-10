@@ -1,15 +1,19 @@
-﻿using Enjune.Ecs.EcsType;
+﻿using System.Reflection;
+using Enjune.Data.Codec;
+using Enjune.Data.Json;
 using Enjune.Misc;
-using OpenGLApi.Component.Buffer;
+using Enjune.Registering;
 
 namespace SceneMaker;
 
-class Program
+internal class Program
 {
+    
+    public static Assembly Assembly => typeof(Program).Assembly;
+    
     private static void Main(string[] args)
     {
-        // Console.WriteLine(typeof(Archetype).Namespace);
-        Logger.RegisterNamespaceToDomain(typeof(Program).Assembly, "", new Logger.Domain("SceneMaker", ConsoleColor.DarkRed));
-        Enjune.Enjune.Run(new App(), args);
+         Logger.RegisterNamespaceToDomain(typeof(Program).Assembly, "", new Logger.Domain("SceneMaker", ConsoleColor.DarkRed));
+         Enjune.Enjune.Run(new App(), args);
     }
 }

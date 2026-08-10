@@ -1,4 +1,5 @@
 using Enjune.Data;
+using Enjune.Data.Codec;
 using Enjune.Graphic;
 using Enjune.Graphic.Asset;
 using Enjune.Graphic.Modeling;
@@ -7,11 +8,11 @@ namespace Enjune.File.ModelReader;
 
 public abstract class AbstractModelReader
 {
-    public static readonly Codec<AbstractModelReader> Codec = Codecs
-        .ForEither<AbstractModelReader>()
-        .OrIfInstance(".obj", Codecs.ForEmptyConstructor(() => new DotObjReader()).Build())
-        .OrIfInstance(".map", Codecs.ForEmptyConstructor(() => new DotMapReader()).Build())
-        .OrIfInstance(".glb", Codecs.ForEmptyConstructor(() => new DotGlbReader()).Build())
+    public static readonly InstanceMatchCodec<AbstractModelReader> Codec = Codecs
+        .ForMatchInstance<AbstractModelReader>()
+        .IfInstance(".obj", Codecs.ForEmptyConstructor(() => new DotObjReader()).Build())
+        .IfInstance(".map", Codecs.ForEmptyConstructor(() => new DotMapReader()).Build())
+        .IfInstance(".glb", Codecs.ForEmptyConstructor(() => new DotGlbReader()).Build())
         .Build();
     
     protected AssetManager AssetManager = null!;

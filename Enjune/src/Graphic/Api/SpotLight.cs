@@ -1,4 +1,5 @@
 using Enjune.Data;
+using Enjune.Data.Codec;
 using Enjune.Misc;
 using OpenTK.Mathematics;
 
@@ -6,7 +7,7 @@ namespace Enjune.Graphic.Api;
 
 public sealed class SpotLight
 {
-    public static readonly Codec<SpotLight> Codec = Codecs.ForEmptyConstructor(() => new SpotLight())
+    public static readonly MapCodec<SpotLight> Codec = Codecs.ForEmptyConstructor(() => new SpotLight())
         .ForField("view", i => i.View, (ref i, v) => i.View = v, Codecs.Matrix4)
         .ForField("projection", i => i.Projection, (ref i, v) => i.Projection = v, Codecs.Matrix4)
         .ForField("color", i => i.Color, (ref i, v) => i.Color = v, Codecs.Vector4)

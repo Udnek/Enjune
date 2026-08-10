@@ -1,4 +1,5 @@
 using Enjune.Data;
+using Enjune.Data.Codec;
 using Enjune.Graphic;
 using Enjune.Graphic.Asset;
 using Enjune.Misc;
@@ -8,11 +9,10 @@ namespace Enjune.File;
 
 public abstract class ResourcePath
 {
-    public static readonly Codec<ResourcePath> Codec = Codecs
-        .ForEither<ResourcePath>()
-        .OrIfInstance("assembly", AssemblyPath.Codec)
-        .OrIfInstance("external", ExternalPath.Codec)
-        .Build();
+    public static readonly InstanceMatchCodec<ResourcePath> Codec = Codecs
+        .ForMatchInstance<ResourcePath>()
+        .IfInstance("assembly", AssemblyPath.Codec)
+        .IfInstance("external", ExternalPath.Codec).Build();
     
     // interface
 

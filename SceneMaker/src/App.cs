@@ -74,7 +74,7 @@ public class App : AbstractDisposable, IApp
         // adding models
         foreach (var obj in _scene.Objects)
         {
-            var model = obj.Model?.Model;
+            var model = obj.Model?.GetOrNull();
             if (model is null) continue;
             obj.RenderableModel = Grapi.CreateStaticRenderable(model);
         }

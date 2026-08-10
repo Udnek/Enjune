@@ -32,19 +32,17 @@ public class EditorController
         var x = new Mesh([Vector3.Zero, Vector3.UnitX], [default, default], [0, 1]);
         var y = new Mesh([Vector3.Zero, Vector3.UnitY], [default, default], [0, 1]);
         var z = new Mesh([Vector3.Zero, Vector3.UnitZ], [default, default], [0, 1]);
-        var model = RegistrableModel.CreateAndRegister(
-            new Identifier(this.GetAssembly(), "axis"),
+        var model = Models.Registry.Register(Identifier.Of(Program.Assembly, "axis"), 
             new Model.Builder()
                 .Add(x, new Model.PerMesh(new Color(1f, 0f, 0f, 1f)))
                 .Add(y, new Model.PerMesh(new Color(0f, 1f, 0f, 1f)))
                 .Add(z, new Model.PerMesh(new Color(0f, 0f, 1f, 1f)))
-                .Build(false)
-            );
+                .Build(false));
         AxisObject = new SObject
         {
             IsRealistic = false,
             Model = model,
-            RenderableModel = _graphicApi.CreateStaticRenderable(model.Model, IGraphicApi.Primitive.Line),
+            RenderableModel = _graphicApi.CreateStaticRenderable(model.GetOrThrow(), IGraphicApi.Primitive.Line),
             Hidden = true,
             Scale = new Vector3(2.5f),
             ToBeSerialized = false,
@@ -157,7 +155,8 @@ public class EditorController
     
     private Mesh? TraceLineObject(SObject obj, Matrix4 viewMat, Matrix4 projMat, float minimumAngleDegrees)
     {
-        if (obj.Model is null) return null;
+        var model = obj.Model?.GetOrNull();
+        if (model is null) return null;
         GetCursorVectors(viewMat, projMat, out var direction, out var cameraPos);
         
         var modelMatInv = obj.ModelTransform.Inverted();
@@ -167,7 +166,7 @@ public class EditorController
 
         Mesh? nearestMesh = null;
         var minDist = float.MaxValue;
-        foreach (var pair in obj.Model.Model.Meshes)
+        foreach (var pair in model.Meshes)
         {
             var mesh = pair.Mesh;
             for (var indexIndex = 0; indexIndex < mesh.Indexes.Length; indexIndex+=2)
@@ -206,7 +205,8 @@ public class EditorController
     
     private static bool TraceObject(Vector3 cameraPos, Vector3 direction, SObject obj, out float distance)
     {
-        if (obj.Model is null || obj.RenderableModel?.CurrentPrimitive != IGraphicApi.Primitive.Triangle)
+        var model = obj.Model?.GetOrNull();
+        if (model is null || obj.RenderableModel?.CurrentPrimitive != IGraphicApi.Primitive.Triangle)
         {
             distance = 0;
             return false;
@@ -216,7 +216,7 @@ public class EditorController
         var localDirection = modelMatInv.TransformDirection(direction).Normalized();
         var localCameraPos = modelMatInv.TransformPosition(cameraPos);
         
-        foreach (var (mesh, _) in obj.Model.Model.Meshes)
+        foreach (var (mesh, _) in model.Meshes)
         {
             for (var indexIndex = 0; indexIndex < mesh.Indexes.Length; indexIndex+=3)
             {

@@ -101,7 +101,9 @@ public static class Logger
         
         return GetTypeName(authorType);
     }
-    
+
+    public static string GetTypeName<T>() => GetTypeName(typeof(T));
+
     public static string GetTypeName(Type author)
     {
         string prefix;

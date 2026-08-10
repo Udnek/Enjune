@@ -16,20 +16,19 @@ public static class SceneManager
 {
     private static readonly ExternalPath Path = ExternalPath.Of("scene.json");
 
-    private static Assembly Assembly => typeof(SceneManager).Assembly;
+    private static Assembly Assembly => Program.Assembly;
     
     private static Error? LoadModels(AssetManager assetManager)
     {
-        Models.ErrorCube = RegistrableModel.CreateAndRegister(new Identifier(Assembly, "error_cube"),
-            new Model(Mesh.Cube(Position.Zero, 1f, TextureQuad.Full), new Model.PerMesh(assetManager.MissingMaterial)),
-            true);
+        Models.Registry.Register(Identifier.Of(Assembly, "error_cube"),
+            new Model(Mesh.Cube(Position.Zero, 1f, TextureQuad.Full), new Model.PerMesh(assetManager.MissingMaterial)));
         
         var calaveraRawModel = new DotGlbReader()
             .Read(assetManager, AssemblyPath.Of(Enjune.Enjune.Assembly, "Models", "Calavera", "Calavera.glb"), out var error);
         if (calaveraRawModel == null) return error;
-        Models.Calavera = RegistrableModel.CreateAndRegister(new Identifier(Assembly, "calavera"), calaveraRawModel);
+        Models.Registry.Register(Identifier.Of(Assembly, "calavera"), calaveraRawModel);
         
-        Models.WhiteCube = RegistrableModel.CreateAndRegister(new Identifier(Assembly, "white_cube"),
+        Models.Registry.Register(Identifier.Of(Assembly, "white_cube"),
             new Model.Builder()
                 .Add(Mesh.Cube(Position.Zero, 0.5f, TextureQuad.Full), new Model.PerMesh(assetManager.WhiteMaterial))
                 .Build());
@@ -56,9 +55,15 @@ public static class SceneManager
             return CreateNewScene();
         }
 
-        var scene = Scene.Codec.Decode(data);
+        var result = Scene.Codec.Decode(data);
+        if (result.Error != null)
+        {
+            Logger.Error(typeof(SceneManager), "can not load scene: " + result.Error);
+            return CreateNewScene();
+        }
+
         Logger.Log(typeof(SceneManager), $"successfully load scene from {Path}");
-        return (scene, null);
+        return (result.GetOrThrow(), null);
     }
     
     private static (Scene? Scene, Error? Error) CreateNewScene()
