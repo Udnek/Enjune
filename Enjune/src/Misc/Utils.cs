@@ -47,7 +47,7 @@ public static class Utils
         var objType = obj.GetType();
         var fields = objType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
         var disposedAtLestOne = false;
-        Logger.Log(typeof(Utils), $"{tab}- stared disposing {objType.Name}:");
+        Logger.Info(typeof(Utils), $"{tab}- stared disposing {objType.Name}:");
         List<(FieldInfo Field, IDisposable Value, string Reason)> disposeAtLast = [];
         foreach (var field in fields)
         {
@@ -77,7 +77,7 @@ public static class Utils
         if (!disposedAtLestOne)
             Logger.Warn(typeof(Utils), $"  {tab}Nothing disposed in {objType.Name}. Something might be wrong");
         
-        Logger.Log(typeof(Utils), $"{tab}- finished disposing {objType.Name}");
+        Logger.Info(typeof(Utils), $"{tab}- finished disposing {objType.Name}");
         
         _disposeDepth--;
         return;
@@ -86,7 +86,7 @@ public static class Utils
         {
             value.Dispose();
             disposedAtLestOne = true;
-            Logger.Log(typeof(Utils),$"  {tab}{objType.Name}.{field.Name} disposed");
+            Logger.Info(typeof(Utils),$"  {tab}{objType.Name}.{field.Name} disposed");
         }
     }
     

@@ -35,5 +35,7 @@ Global
 		{750B02ED-2264-49D2-8EE8-3F647FCF74FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{750B02ED-2264-49D2-8EE8-3F647FCF74FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{750B02ED-2264-49D2-8EE8-3F647FCF74FB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{43CF66EA-FB5E-4389-B74B-EDBB91C0DC54}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{43CF66EA-FB5E-4389-B74B-EDBB91C0DC54}.Debug|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 EndGlobal

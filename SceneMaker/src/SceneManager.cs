@@ -44,14 +44,14 @@ public static class SceneManager
         var json = Path.LoadText(out error);
         if (json == null)
         {
-            Logger.Log(typeof(SceneManager), $"creating default scene because can not load from {Path}: {error}");
+            Logger.Info(typeof(SceneManager), $"creating default scene because can not load from {Path}: {error}");
             return CreateNewScene();
         }
 
         var data = JsonSerde.Tight.Deserialize(json, out error);
         if (data == null)
         {
-            Logger.Log(typeof(SceneManager), $"creating default scene because can not load from {Path}: {error}");
+            Logger.Info(typeof(SceneManager), $"creating default scene because can not load from {Path}: {error}");
             return CreateNewScene();
         }
 
@@ -62,7 +62,7 @@ public static class SceneManager
             return CreateNewScene();
         }
 
-        Logger.Log(typeof(SceneManager), $"successfully load scene from {Path}");
+        Logger.Info(typeof(SceneManager), $"successfully load scene from {Path}");
         return (result.GetOrThrow(), null);
     }
     

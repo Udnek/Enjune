@@ -9,7 +9,7 @@ public sealed class EntityManager
     
     public EntityManager()
     {
-        Logger.Log(this, $"EntityManager initialized at counter = {_counter}");
+        Logger.Info(this, $"EntityManager initialized at counter = {_counter}");
     }
 
     public EntityId CreateEntity()

@@ -61,7 +61,7 @@ public class UiManager : AbstractDisposable
         );
         
         _inspectorBackground.LocalVisible.Val = false;
-        _fps.LocalVisible.Val = false;
+        _fps.LocalVisible.Val = true;
     }
 
     private bool _isMenuOpened = false;

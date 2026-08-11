@@ -157,7 +157,7 @@ public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicAp
             if (GLFW.RawMouseMotionSupported())
             {
                 GLFW.SetInputMode(_window, RawMouseMotionAttribute.RawMouseMotion, true);
-                Logger.Log(this,"raw mouse input enabled");
+                Logger.Info(this,"raw mouse input enabled");
             }
             else
                 Logger.Warn(this,"raw mouse input isn't supported; mouse motion might be janky");
@@ -168,7 +168,7 @@ public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicAp
         // without that shit it won't work
         GL.LoadBindings(new GLFWBindingsContext());
         
-        Logger.Log(this, $"OpenGL version: {GL.GetString(StringName.Version)}");
+        Logger.Info(this, $"OpenGL version: {GL.GetString(StringName.Version)}");
         
         // enable features
         GL.Enable(EnableCap.DepthTest);
@@ -184,15 +184,15 @@ public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicAp
             if (type == DebugType.DebugTypeError)
                 Logger.Error(this, message);
             else
-                Logger.Log(this, message);
+                Logger.Info(this, message);
         };
         GL.DebugMessageCallback(_debugProc, IntPtr.Zero);
         
         // just in case
         GL.GetInteger(GetPName.MaxTextureSize, out var maxTextureSize);
         GL.GetInteger(GetPName.MaxArrayTextureLayers, out var maxArrayLayers);
-        Logger.Log(this, $"max possible texture size: {maxTextureSize}");
-        Logger.Log(this, $"max possible texture array layers: {maxArrayLayers}");
+        Logger.Info(this, $"max possible texture size: {maxTextureSize}");
+        Logger.Info(this, $"max possible texture array layers: {maxArrayLayers}");
         
         // other components init
         error = InitComponents();

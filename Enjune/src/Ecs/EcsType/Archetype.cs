@@ -56,7 +56,7 @@ public sealed class Archetype
     // TODO: Avoid using Collection<IComponent> because of boxing
     public void AddEntity(EntityAssembly entityAssembly, EntityId Id)
     {
-        Logger.Log(this, $"archetype with signature {Signature} acquired an entity {Id}");
+        Logger.Info(this, $"archetype with signature {Signature} acquired an entity {Id}");
 
         EnsureCapacity();
 
@@ -81,7 +81,7 @@ public sealed class Archetype
     {
         if (!_id2Row.TryGetValue(id, out var entityRow))
         {
-            Logger.Log(this, $"RemoveEntity: Entity {id} is not in {Signature} archetype.");
+            Logger.Info(this, $"RemoveEntity: Entity {id} is not in {Signature} archetype.");
         }
         var lastRow = EntityCount - 1;
 
@@ -99,7 +99,7 @@ public sealed class Archetype
         }
         _id2Row.Remove(id);
         EntityCount--;
-        Logger.Log(this, $"Removed entity {id} successfully");
+        Logger.Info(this, $"Removed entity {id} successfully");
     }
 
     public Span<T> GetComponents<T>() where T : struct, IComponent

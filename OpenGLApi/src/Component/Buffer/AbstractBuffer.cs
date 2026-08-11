@@ -48,7 +48,7 @@ public abstract class AbstractBuffer<T> : GlDisposable where T : unmanaged
         }
         Bind();
         GL.BufferData(_target, newCapacity*_elementSize, IntPtr.Zero, BufferUsageHint.DynamicDraw);
-        Logger.Log(this, $"capacity increased: {Capacity} -> {newCapacity}");
+        Logger.Info(this, $"capacity increased: {Capacity} -> {newCapacity}");
         Capacity = newCapacity;
     }
     

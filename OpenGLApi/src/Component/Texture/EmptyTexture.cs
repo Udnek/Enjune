@@ -48,7 +48,7 @@ public sealed class EmptyTexture : AbstractTexture
     public override Error? Dump(ExternalPath dir, string namePrefix)
     {
         dir = dir.ThisDirectory();
-        Logger.Log(this, $"dumping '{namePrefix}' texture into {dir}");
+        Logger.Info(this, $"dumping '{namePrefix}' texture into {dir}");
         byte[] data = new byte[_size.X * _size.Y * 4];
         
         GL.GetTextureImage(Handle, 0, PixelFormat.Rgba, PixelType.UnsignedByte, data.Length, data);
@@ -64,7 +64,7 @@ public sealed class EmptyTexture : AbstractTexture
             return $"can not dump screen texture: {e.Message}";
         }
         
-        Logger.Log(this, "done dumping");
+        Logger.Info(this, "done dumping");
         return null;
     }
 }

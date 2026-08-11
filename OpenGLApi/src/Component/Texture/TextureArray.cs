@@ -84,7 +84,7 @@ public sealed class TextureArray : AbstractTexture
     public override Error? Dump(ExternalPath dir, string namePrefix)
     {
         dir = dir.ThisDirectory();
-        Logger.Log(this, $"dumping '{namePrefix}' textures into {dir}");
+        Logger.Info(this, $"dumping '{namePrefix}' textures into {dir}");
         int layerSize = _size.X * _size.Y * 4;
         byte[] data = new byte[layerSize * _layers];
 
@@ -106,7 +106,7 @@ public sealed class TextureArray : AbstractTexture
                 return $"can not dump texture {layer}: {e.Message}";
             }
         }
-        Logger.Log(this, "done dumping");
+        Logger.Info(this, "done dumping");
         return null;
     }
 }

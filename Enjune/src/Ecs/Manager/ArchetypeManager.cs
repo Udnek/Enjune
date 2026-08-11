@@ -20,13 +20,13 @@ public sealed class ArchetypeManager
         if (_archetypes.ContainsKey(signature)) return;
         
         _archetypes[signature] = new Archetype(signature, _world);
-        Logger.Log(this, $"archetype with signature {signature} created");
+        Logger.Info(this, $"archetype with signature {signature} created");
     }
 
     public void AddEntity(EntityAssembly assembly, EntityId Id)
     {
         Signature signature = assembly.GetSignature(_world);
-        Logger.Log(this, $"got a request to add an entity {Id} with signature {signature}");
+        Logger.Info(this, $"got a request to add an entity {Id} with signature {signature}");
 
         EnsureArchetypeExistence(signature);
 
@@ -56,7 +56,7 @@ public sealed class ArchetypeManager
 
     public void RemoveEntity(EntityId id)
     {
-        Logger.Log(this, $"Got a request to remove entity {id}");
+        Logger.Info(this, $"Got a request to remove entity {id}");
         if (_entityIdToArchetype.TryGetValue(id, out Archetype? archetype))
         {
             archetype.RemoveEntity(id);

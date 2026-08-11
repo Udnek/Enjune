@@ -43,18 +43,18 @@ public class EcsApp : AbstractDisposable, IApp
 
     public void MainCycle()
     {
-        Logger.Log(this, "Starting the main loop");
+        Logger.Info(this, "Starting the main loop");
         DateTime startTime = DateTime.Now;
         for (var i = 0; i < 1000; i ++)
         {
             _world.Update();
-            Logger.Log(this, $"Finished step {i + 1} of the loop");
+            Logger.Info(this, $"Finished step {i + 1} of the loop");
         }
         DateTime endTime = DateTime.Now;
-        Logger.Log(this, $"Simulation took {endTime - startTime}");
-        Logger.Log(this, $"Removing entity as a test");
+        Logger.Info(this, $"Simulation took {endTime - startTime}");
+        Logger.Info(this, $"Removing entity as a test");
         _world.RemoveEntity(0);
-        Logger.Log(this, $"Updating world once again");
+        Logger.Info(this, $"Updating world once again");
         _world.Update();
     }
 

@@ -16,7 +16,7 @@ public sealed class World
 
     public World(List<ISystem> systems, List<Type> componentTypes)
     {
-        Logger.Log(this, "Registering managers using given systems and component types");
+        Logger.Info(this, "Registering managers using given systems and component types");
 
         ArchetypeManager = new ArchetypeManager(this);
         SystemManager = new SystemManager(this);

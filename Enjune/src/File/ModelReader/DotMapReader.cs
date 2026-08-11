@@ -41,7 +41,7 @@ public class DotMapReader : AbstractModelReader
                     positions[i] = pos;
                     var u = (Vector3.Dot(pos, face.UAxis.ToTk()) + face.XShift) / face.XScale;
                     var v = (Vector3.Dot(pos, face.VAxis.ToTk()) + face.YShift) / face.YScale;
-                    Logger.Log(this, $"u: {u}; v: {v}");
+                    Logger.Info(this, $"u: {u}; v: {v}");
                     texCoords[i] = (u, v);
                 }
                 var material = AssetManager.AddMaterialAndGetCompiled(RawMaterial.FromTexture(Path.ResolveRaw(face.TextureName)));

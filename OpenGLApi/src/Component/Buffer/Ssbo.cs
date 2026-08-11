@@ -55,7 +55,7 @@ public sealed class SsboDataAndArray<TData, TArray> : GlDisposable where TArray 
         }
         Bind();
         GL.BufferData(BufferTarget.ShaderStorageBuffer, _dataSize + newArrayCapacity*_arrayElementSize, IntPtr.Zero, BufferUsageHint.DynamicDraw);
-        Logger.Log(this, $"array capacity increased: {ArrayCapacity} -> {newArrayCapacity}");
+        Logger.Info(this, $"array capacity increased: {ArrayCapacity} -> {newArrayCapacity}");
         ArrayCapacity = newArrayCapacity;
     }
     
@@ -110,8 +110,8 @@ public static class SsboUtils
     {
         // TODO ADD CACHING FOR CHECKED TYPES
         var type = typeof(T);
-        Logger.Log(typeof(SsboUtils),"-----------------------------------------");
-        Logger.Log(typeof(SsboUtils),$"checking for correct struct '{type.Name}' alignment:");
+        Logger.Info(typeof(SsboUtils),"-----------------------------------------");
+        Logger.Info(typeof(SsboUtils),$"checking for correct struct '{type.Name}' alignment:");
 
         if (!type.IsPrimitive)
         {
@@ -132,7 +132,7 @@ public static class SsboUtils
             
             var offset = (int) Marshal.OffsetOf<T>(field.Name) + previousStructSize;
             var size = Marshal.SizeOf(field.FieldType);
-            Logger.Log(typeof(SsboUtils), 
+            Logger.Info(typeof(SsboUtils), 
                 $"field {(field.Name + ';').PadRight(maxFieldName)}\t offset: {offset};\t size: {size}");
 
             if (offset % Alignment(size) != 0 && !field.Name.ToLower().Contains("padding"))
@@ -142,13 +142,13 @@ public static class SsboUtils
         }
         
         int structSize = Marshal.SizeOf<T>();
-        Logger.Log(typeof(SsboUtils), $"total size: {structSize}");
+        Logger.Info(typeof(SsboUtils), $"total size: {structSize}");
         
         if (isArray && structSize % alignment != 0)
             return $"cause it is array, total struct size must be divisible by {alignment}, but got {structSize} % {alignment}";
         
-        Logger.Log(typeof(SsboUtils), "check complete, everything seem correct");
-        Logger.Log(typeof(SsboUtils), "-----------------------------------------");
+        Logger.Info(typeof(SsboUtils), "check complete, everything seem correct");
+        Logger.Info(typeof(SsboUtils), "-----------------------------------------");
         return null;
     }
 

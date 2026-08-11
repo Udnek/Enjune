@@ -40,7 +40,7 @@ public class AssetManager
             {
                 if (glyph.Width == 0 || glyph.Height == 0)
                 {
-                    Logger.Log(this, $"char '{ch}' ({(byte)ch}) has zero size: {glyph}");
+                    Logger.Info(this, $"char '{ch}' ({(byte)ch}) has zero size: {glyph}");
                     continue;
                 }
                 var rectangle = new PackingRectangle(0, 0, glyph.Width, glyph.Height, id:ch);
@@ -50,9 +50,9 @@ public class AssetManager
         }
         
         RectanglePacker.Pack(rectangles, out var bounds);
-        Logger.Log(this, $"bounds: {bounds.Width}x{bounds.Height}");
+        Logger.Info(this, $"bounds: {bounds.Width}x{bounds.Height}");
         var atlasSize = (int) Math.Pow(2, Math.Ceiling(Math.Log2(Math.Max(bounds.Width, bounds.Height))));
-        Logger.Log(this, $"atlas size: {atlasSize}");
+        Logger.Info(this, $"atlas size: {atlasSize}");
         
         // unpacking
         var atlasBuffer = new Buffer2D<byte>(atlasSize, atlasSize);
@@ -159,17 +159,17 @@ public class AssetManager
         MatId matId = _materials.Count;
         var compiledMaterial = new CompiledMaterial(rawMaterial, matId, texId);
         _materials.Add(rawMaterial, compiledMaterial);
-        Logger.Log(this, $"added material {compiledMaterial};");
+        Logger.Info(this, $"added material {compiledMaterial};");
         return compiledMaterial;
     }
     
     public CompiledAssets Compile() // todo add error???
     {
-        Logger.Log(this, $"compiling {_textures.Count} textures and {_materials.Count} materials");
+        Logger.Info(this, $"compiling {_textures.Count} textures and {_materials.Count} materials");
 
         // choosing max size
         var targetSize = _textures.Max(img => img.image.Width);
-        Logger.Log(this, $"target texture size: {targetSize}");
+        Logger.Info(this, $"target texture size: {targetSize}");
 
         // resizing
         List<ByteImage> resizedImages = new();
@@ -219,7 +219,7 @@ public class AssetManager
             resizedImages.Add(byteImage);
         }
 
-        Logger.Log(this, "done compiling");
+        Logger.Info(this, "done compiling");
         return new CompiledAssets(
             WhiteMaterial,
             MissingMaterial,

@@ -4,12 +4,12 @@ namespace Enjune.Misc;
 
 public static class Logger
 {
-    public static void Log(object author, object? msg) => Log(null, author, msg);
+    public static void Info(object author, object? msg) => Info(null, author, msg);
     public static void Warn(object author, object? msg) => Warn(null, author, msg);
     public static void Error(object author, object? msg) => Error(null, author, msg);
     public static void Highlight(object author, object? msg) => Highlight(null, author, msg);
 
-    public static void Log(Domain? domain, object author, object? msg)
+    public static void Info(Domain? domain, object author, object? msg)
     {
         if (IgnoreInfoLogs) return;
         Print(domain, author, msg, "INF");
@@ -25,13 +25,22 @@ public static class Logger
     public static void RegisterTypeToDomain(Type type, Domain domain)
     {
         TypeToDomain[type] = domain;
-        Log(Domain.Logger,typeof(Logger), $"registered domain [{domain.Name}] for type {type.Name}");
+        Info(Domain.Logger,typeof(Logger), $"registered domain [{domain.Name}] for type {type.Name}");
     }
     private static readonly List<(Assembly Assembly, string Namespace, Domain domain)> NamespaceToDomain = [];
     public static void RegisterNamespaceToDomain(Assembly assembly, string namespaceName, Domain domain)
     {
         NamespaceToDomain.Add((assembly, namespaceName, domain));
-        Log(Domain.Logger, typeof(Logger), $"registered domain [{domain.Name}] for assembly {assembly.GetName().Name} and namespace '{namespaceName}'");
+        NamespaceToDomain.Sort((left, right) =>
+        {
+            if (left.Assembly != right.Assembly) return 0;
+            // e.g. Ecs.Dir is parent dir of Ecs => left is more prior
+            if (left.Namespace.Contains(right.Namespace)) return -1;
+            // opposite
+            if (right.Namespace.Contains(left.Namespace)) return 1;
+            return 0;
+        });
+        Info(Domain.Logger, typeof(Logger), $"registered domain [{domain.Name}] for assembly {assembly.GetName().Name} and namespace '{namespaceName}'");
     }
     // end registering domain
 
@@ -55,6 +64,7 @@ public static class Logger
     public struct Domain(string name, ConsoleColor? color)
     {
         public static readonly Domain Default = new("Unknown", null);
+        public static readonly Domain Enjune = new("Enjune", ConsoleColor.DarkGreen);
         public static readonly Domain Graphics = new("Graphics", ConsoleColor.Green);
         public static readonly Domain Logger = new("Logger", null);
         public static readonly Domain Assets = new("Assets", ConsoleColor.DarkMagenta);
