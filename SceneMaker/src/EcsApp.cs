@@ -10,15 +10,10 @@ using SceneMaker.Ecs.System;
 
 namespace SceneMaker;
 
-public class EcsApp : IApp
+public class EcsApp : AbstractDisposable, IApp
 {
-    private World _world;
+    private World _world = null!;
     
-    public void Dispose()
-    {
-        return;
-    }
-
     public Error? Init()
     {
         List<ISystem> systems =
@@ -62,4 +57,6 @@ public class EcsApp : IApp
         Logger.Log(this, $"Updating world once again");
         _world.Update();
     }
+
+    protected override void DisposeData() { }
 }

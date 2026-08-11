@@ -7,7 +7,7 @@ using Enjune.Misc;
 
 namespace Enjune.Ecs;
 
-public class World
+public sealed class World
 {
     internal readonly ArchetypeManager ArchetypeManager;
     internal readonly SystemManager SystemManager;
@@ -20,21 +20,19 @@ public class World
 
         ArchetypeManager = new ArchetypeManager(this);
         SystemManager = new SystemManager(this);
-        foreach (Type componentType in componentTypes)
-        {
+        
+        foreach (Type componentType in componentTypes) 
             ComponentManager.RegisterComponentType(componentType);
-        }
-        foreach (ISystem system in systems)
-        {
+        
+        foreach (ISystem system in systems) 
             SystemManager.RegisterSystem(system);
-        }
     }
 
     // PUBLIC API
     public void AddEntity(EntityAssembly assembly)
     {
-        EntityId Id = EntityManager.CreateEntity();
-        ArchetypeManager.AddEntity(assembly, Id);
+        EntityId id = EntityManager.CreateEntity();
+        ArchetypeManager.AddEntity(assembly, id);
     }
 
     public void RemoveEntity(EntityId id) => ArchetypeManager.RemoveEntity(id);
