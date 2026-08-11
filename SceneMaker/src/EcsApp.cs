@@ -36,10 +36,10 @@ public class EcsApp : IApp
 
         _world = new World(systems, componentTypes);
         
-        var testEntity = new EntityAssembly();
-        testEntity.AddComponent(new Ecs.Component.Position(0, 0, 0));
-        testEntity.AddComponent(new Velocity(0,0,0));
-        testEntity.AddComponent(new Acceleration(0,0,0));
+        var testEntity = new EntityAssembly()
+            .AddComponent(new Ecs.Component.Position(0, 0, 0))
+            .AddComponent(new Velocity(0,0,0))
+            .AddComponent(new Acceleration(0,0,0));
         
         _world.AddEntity(testEntity);
         

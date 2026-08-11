@@ -13,11 +13,13 @@ public sealed class EntityAssembly
     public List<IComponent> GetComponents() => _components.Values.ToList();
     public List<Type> GetComponentTypes() => _components.Keys.ToList(); 
 
-    public void AddComponent(IComponent component)
+    public EntityAssembly AddComponent(IComponent component)
     {
         if (_components.ContainsKey(component.GetType())) 
             Logger.Warn(this, $"Replaced component {component.GetType()} for an assembly");
         _components.Add(component.GetType(), component);
+
+        return this;
     }
 
     public void RemoveComponent(IComponent component) 

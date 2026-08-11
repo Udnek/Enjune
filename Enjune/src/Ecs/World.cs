@@ -39,13 +39,6 @@ public class World
 
     public void RemoveEntity(EntityId id) => ArchetypeManager.RemoveEntity(id);
 
-    public EntityId GetNewEntityId()
-    {
-        // TODO: Placeholder. To be updated after EntityManager overhaul
-        EntityId? id = EntityManager.CreateEntity();
-        return id ?? throw new ConstraintException($"Couldn't get {nameof(EntityId)} from {nameof(EntityManager)}");
-    }
-
     public void Update() => SystemManager.UpdateAll();
 
     public Signature ConstructSignature(Action<SignatureBuilder> configure)

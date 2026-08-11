@@ -108,10 +108,7 @@ public sealed class Archetype
         return column.GetSpan();
     }
 
-    public bool ContainsEntity(EntityId id)
-    {
-        return _id2Row.ContainsKey(id);
-    }
+    public bool ContainsEntity(EntityId id) => _id2Row.ContainsKey(id);
 
     // TODO: Entity Assembly is no longer suitable for runtime acquisation 
     public EntityAssembly? GetAssembly(EntityId id)

@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace SceneMaker.src.Ecs.Component;
+namespace SceneMaker.Ecs.Component;
 
 /* 
  * Bounding box size is determined by half-sizes,
