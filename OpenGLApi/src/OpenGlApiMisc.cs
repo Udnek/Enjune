@@ -13,10 +13,14 @@ namespace OpenGLApi;
 
 public sealed partial class OpenGlApi
 {
-    
     private readonly Dictionary<GlfwKey, KeyCode> _glfwKeyToKeyCode = new();
     private readonly Dictionary<MouseButton, KeyCode> _glfwMouseToKeyCode = new();
 
+    static OpenGlApi()
+    {
+        Logger.RegisterNamespaceToDomain(typeof(OpenGlApi).Assembly, "", Logger.Domain.Graphics);
+    }
+    
     public static Error? GetGlError()
     {
         var errorCode = GL.GetError();
@@ -94,7 +98,9 @@ public sealed partial class OpenGlApi
                 KeyCode.M => GlfwKey.M,
                 KeyCode.Backspace => GlfwKey.Backspace,
                 KeyCode.Enter => GlfwKey.Enter,
-                _ => throw new ArgumentOutOfRangeException(nameof(code), code, null)
+                KeyCode.LeftCtrl => GlfwKey.LeftControl,
+                KeyCode.RightCtrl => GlfwKey.RightControl,
+                _ => null
             };
         }
     }
@@ -182,7 +188,7 @@ public sealed partial class OpenGlApi
             IGraphicApi.CursorMode.Invisible => CursorModeValue.CursorHidden,
             IGraphicApi.CursorMode.Centered => CursorModeValue.CursorDisabled,
             IGraphicApi.CursorMode.CanNotLeaveWindow => CursorModeValue.CursorCaptured,
-            _ => throw new ArgumentOutOfRangeException()
+            _ => throw new ArgumentOutOfRangeException(nameof(mode), mode, null)
         };
         unsafe
         {
@@ -202,11 +208,10 @@ public sealed partial class OpenGlApi
     {
         unsafe
         {
-            GLFW.GetWindowSize(_window, out int width, out int height);
+            GLFW.GetWindowSize(_window, out var width, out var height);
             return (width, height);
         }
     }
-
 
     public IRenderableModel CreateStaticRenderable(Enjune.Graphic.Modeling.Model model, IGraphicApi.Primitive primitive = IGraphicApi.Primitive.Triangle)
     {

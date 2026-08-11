@@ -1,4 +1,8 @@
-namespace Enjune.Graphic.UI;
+using System.Diagnostics.Contracts;
+using System.Runtime.CompilerServices;
+using Enjune.Misc;
+
+namespace UiAddon;
 
 public readonly record struct Margin(float Right, float Top, float Left, float Bottom)
 {
@@ -7,6 +11,10 @@ public readonly record struct Margin(float Right, float Top, float Left, float B
     public static Margin Outside(float m) => Inside(-m);
     public static Margin Inside(float x, float y) => new(x, y, x, y);
     public static Margin Outside(float x, float y) => Inside(-x, -y);
+    public static Margin OfXy(float x, float y) => new(x, y, x, y);
+
+    [Pure]
+    public Margin Move(float x, float y) => new(Right - x, Top - y, Left + x, Bottom + y);
 }
 
 public readonly record struct Rect(Vector2 Min, Vector2 Max)
@@ -14,9 +22,12 @@ public readonly record struct Rect(Vector2 Min, Vector2 Max)
     public Vector2 Size => Max - Min;
     public float Height => Max.Y - Min.Y;
     public float Width => Max.X - Min.X;
-
-    public bool IsPointIn(Vector2 point) =>
-        (Min.X <= point.X && Min.Y <= point.Y) && (point.X <= Max.X && point.Y <= Max.X);
+    
+    public bool ContainsPoint(Vector2 point) 
+        => (Min.X <= point.X && Min.Y <= point.Y) && (point.X <= Max.X && point.Y <= Max.Y);
+    
+    [Pure]
+    public Rect Move(float x, float y) => new(Min+(x, y), Max+(x, y));
 }
 
 public static class Anchor

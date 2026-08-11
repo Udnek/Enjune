@@ -6,6 +6,13 @@ namespace Enjune;
 public static class Enjune
 {
     public static Assembly Assembly => typeof(Enjune).Assembly;
+
+    static Enjune()
+    {
+        Logger.RegisterNamespaceToDomain(Assembly, nameof(Graphic.Asset), Logger.Domain.Assets);
+        Logger.RegisterNamespaceToDomain(Assembly, nameof(Ecs), Logger.Domain.Ecs);
+        Logger.RegisterNamespaceToDomain(Assembly, nameof(Misc), Logger.Domain.Misc);
+    }
     
     public static void Run(IApp app, string[] args)
     {
@@ -15,6 +22,8 @@ public static class Enjune
             Logger.Error(typeof(Enjune), error);
         }
         app.Dispose();
+        
+        // to catch forgotten disposables
         GC.Collect();
         GC.WaitForPendingFinalizers();
     }
@@ -28,7 +37,7 @@ public static class Enjune
         }
         catch (Exception e)
         {
-             return $"can not init app: {e}";
+            error = e.ToString();
         }
         
         if (error != null) return $"can not init app: {error}";

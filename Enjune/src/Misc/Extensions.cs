@@ -15,8 +15,8 @@ public static class Extensions
         [Pure]
         public Vector3 TransformPosition(Vector3 vector) => Vector3.TransformPosition(vector, matrix);
     }
-    
-    extension<T>(List<T> list)
+
+    extension<T>(IList<T> list)
     {
         public void RemoveLastIfNotEmpty()
         {
@@ -30,8 +30,28 @@ public static class Extensions
                 action(i, list[i]);
         }
 
+        public void ForEach(Action<T> action)
+        {
+            foreach (var t in list) action(t); 
+        }
+    }
+    
+    extension<T>(List<T> list)
+    {
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Span<T> AsSpan() => CollectionsMarshal.AsSpan(list);
+    }
+    
+    extension<T>(Span<T> span)
+    {
+        public TOut[] Map<TOut>(Func<T, TOut> map)
+        {
+            var result = new TOut[span.Length];
+            for (var i = 0; i < span.Length; i++) 
+                result[i] = map(span[i]);
+            return result;
+        }
     }
     
     extension(string str)

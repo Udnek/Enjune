@@ -165,7 +165,7 @@ public class AssetManager
     
     public CompiledAssets Compile() // todo add error???
     {
-        Logger.Log(this, $"compiling {_textures.Count} textures; {_materials.Count} materials");
+        Logger.Log(this, $"compiling {_textures.Count} textures and {_materials.Count} materials");
 
         // choosing max size
         var targetSize = _textures.Max(img => img.image.Width);

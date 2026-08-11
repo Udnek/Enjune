@@ -26,7 +26,7 @@ void main() {
 }
 
 vec3 calcLightColor(){
-    vec3 color = vec3(0.1);
+    vec3 color = vec3(0.3); // ambient minimum
     
     vec3 norm = normalize(nonNormNormal);
     vec3 viewDir = normalize(fragPos- uViewPos);

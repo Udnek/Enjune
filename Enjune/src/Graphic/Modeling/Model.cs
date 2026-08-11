@@ -6,6 +6,7 @@ namespace Enjune.Graphic.Modeling;
 
 public sealed class Model
 {
+    // TODO probably use List<Entry>?
     public readonly Entry[] Meshes;
 
     public Model(Entry[] meshes)
@@ -21,11 +22,20 @@ public sealed class Model
     public string Info()
     {
         return $"meshes: {Meshes.Length}; " +
-               $"vertices: {Meshes.Select(mc => mc.Mesh.Vertices.Length).Sum()}; " +
-               $"triangles: {Meshes.Select(mc => mc.Mesh.Indexes.Length).Sum()/3};";
+               $"vertices: {Meshes.Map(mc => mc.Mesh.Vertices.Length).Sum()}; " +
+               $"triangles: {Meshes.Map(mc => mc.Mesh.Indexes.Length).Sum()/3};";
     }
 
-    public record struct Entry(Mesh Mesh, PerMesh PerMesh);
+    public record struct Entry(Mesh Mesh, PerMesh PerMesh)
+    {
+        [Pure]
+        public Entry WithColor(Color newColor)
+        {
+            var perMesh = PerMesh;
+            perMesh.MeshColor = newColor;
+            return this with { PerMesh = perMesh };
+        }
+    }
 
     public record struct PerMesh(CompiledMaterial? Material, Color MeshColor)
     {

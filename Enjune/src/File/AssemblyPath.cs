@@ -1,15 +1,16 @@
 using System.Reflection;
 using Enjune.Data;
+using Enjune.Data.Codec;
 using Enjune.Misc;
 
 namespace Enjune.File;
 
 public sealed class AssemblyPath : ResourcePath
 {
-    public new static readonly Codec<AssemblyPath> Codec = Codecs
+    public new static readonly ConstructorCodec<AssemblyPath> Codec = Codecs
         .ForConstructor(args => Of((Assembly)args[0]!, (string[])args[1]!))
-        .ForField("assembly", i => i.Assembly, Codecs.Assembly, Enjune.Assembly)
-        .ForField("path", i => i._path, Codecs.String.Array, [])
+        .ForField("assembly", i => i.Assembly, Codecs.Assembly)
+        .ForField("path", i => i._path, Codecs.ArrayOf(Codecs.String))
         .Build();
     
     private readonly string[] _path;

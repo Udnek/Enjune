@@ -91,7 +91,7 @@ public class BasicInputHandler : IUserInputHandler
     
     public void HandleCharacter(char character) => InputChars.Add(character);
 
-    public void HandleCursor(int x, int y)
+    public void HandleCursorFromLeftBottom(int x, int y)
     {
         MouseUpdates++;
         if (_firstCursorMove)

@@ -11,10 +11,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenGLApi", "OpenGLApi\OpenGLApi.csproj", "{750B02ED-2264-49D2-8EE8-3F647FCF74FB}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{70F89D1A-3A9A-40FA-92C3-77EC0674E056}"
-	ProjectSection(SolutionItems) = preProject
-		.editorconfig = .editorconfig
-	EndProjectSection
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UiAddon", "UiAddon\UiAddon.csproj", "{43CF66EA-FB5E-4389-B74B-EDBB91C0DC54}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -38,8 +35,5 @@ Global
 		{750B02ED-2264-49D2-8EE8-3F647FCF74FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{750B02ED-2264-49D2-8EE8-3F647FCF74FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{750B02ED-2264-49D2-8EE8-3F647FCF74FB}.Release|Any CPU.Build.0 = Release|Any CPU
-	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
 	EndGlobalSection
 EndGlobal

@@ -10,7 +10,7 @@ public interface IGraphicApi : IDisposable
     public IRenderableModel CreateStaticRenderable(Model model, Primitive primitive = Primitive.Triangle);
     public IRenderableModel.IDynamic CreateDynamicRenderable(Model model, Primitive primitive = Primitive.Triangle);
     
-    void SetLights(IEnumerable<SpotLight> lights);
+    void SetLights(Span<SpotLight> lights);
 
     // // TODO: Simplify this shit?
     // public void SetCurrentThreadToRender();
