@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
-VisualStudioVersion = 18.8.12023.21 stable
+VisualStudioVersion = 18.8.12023.21
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Enjune", "Enjune\Enjune.csproj", "{50D95296-E30C-48EA-A8A1-8B83FD82A1E4}"
 EndProject
@@ -12,6 +12,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenGLApi", "OpenGLApi\OpenGLApi.csproj", "{750B02ED-2264-49D2-8EE8-3F647FCF74FB}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UiAddon", "UiAddon\UiAddon.csproj", "{43CF66EA-FB5E-4389-B74B-EDBB91C0DC54}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EcsPhysicEngine", "EcsPhysicEngine\EcsPhysicEngine.csproj", "{51FD890C-55AB-4712-B2C4-79E9A60B2535}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -37,5 +39,17 @@ Global
 		{750B02ED-2264-49D2-8EE8-3F647FCF74FB}.Release|Any CPU.Build.0 = Release|Any CPU
 		{43CF66EA-FB5E-4389-B74B-EDBB91C0DC54}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{43CF66EA-FB5E-4389-B74B-EDBB91C0DC54}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{43CF66EA-FB5E-4389-B74B-EDBB91C0DC54}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{43CF66EA-FB5E-4389-B74B-EDBB91C0DC54}.Release|Any CPU.Build.0 = Release|Any CPU
+		{51FD890C-55AB-4712-B2C4-79E9A60B2535}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{51FD890C-55AB-4712-B2C4-79E9A60B2535}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{51FD890C-55AB-4712-B2C4-79E9A60B2535}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{51FD890C-55AB-4712-B2C4-79E9A60B2535}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {14849679-2E03-479C-BEB4-D06496E73702}
 	EndGlobalSection
 EndGlobal
