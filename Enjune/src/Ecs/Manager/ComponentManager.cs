@@ -6,8 +6,8 @@ namespace Enjune.Ecs.Manager;
 
 public sealed class ComponentManager
 {
-    private readonly Dictionary<Type, ComponentTypeId> _componentTypeIds = new();
-    private readonly Dictionary<ComponentTypeId, Type> _componentTypes = new();
+    private readonly Dictionary<Type, ComponentTypeId> _typeToId = new();
+    private readonly Dictionary<ComponentTypeId, Type> _idToType = new();
     
     private readonly Queue<ComponentTypeId> _availableComponentIds = new();
 
@@ -19,11 +19,8 @@ public sealed class ComponentManager
         }
     }
     
-    public void RegisterComponentType<TComponent>()
-    {
-        RegisterComponentType(typeof(TComponent));
-    }
-    
+    public void RegisterComponentType<TComponent>() => RegisterComponentType(typeof(TComponent));
+
     public void RegisterComponentType(Type componentType)
     {
         if (!typeof(IComponent).IsAssignableFrom(componentType))
@@ -33,7 +30,7 @@ public sealed class ComponentManager
             return;
         }
 
-        if (_componentTypeIds.ContainsKey(componentType))
+        if (_typeToId.ContainsKey(componentType))
         {
             Logger.Error(this, $"Type {componentType.Name} is already registered");
             return;
@@ -41,22 +38,22 @@ public sealed class ComponentManager
         
         ComponentTypeId id = _availableComponentIds.Dequeue();
         Logger.Info(this, $"Registering component type {componentType.Name}, identifying as {id}");
-        _componentTypeIds[componentType] = id;
-        _componentTypes[id] = componentType;
+        _typeToId[componentType] = id;
+        _idToType[id] = componentType;
     }
 
     public List<Type> DeconstructSignature(Signature signature)
     {
         List<Type> result = new();
-        foreach (var componentType in _componentTypes.Values)
+        foreach (var componentType in _idToType.Values)
         {
-            if (signature.IsSet((int) _componentTypeIds[componentType])) 
+            if (signature.IsSet((int) _typeToId[componentType])) 
                 result.Add(componentType); 
         }
         return result;
     }
 
-    public ComponentTypeId GetTypeIdByType(Type componentType) => _componentTypeIds[componentType];
+    public ComponentTypeId GetTypeIdByType(Type componentType) => _typeToId[componentType];
 
-    public Type GetTypeByTypeId(ComponentTypeId componentTypeId) => _componentTypes[componentTypeId];
+    public Type GetTypeByTypeId(ComponentTypeId componentTypeId) => _idToType[componentTypeId];
 }

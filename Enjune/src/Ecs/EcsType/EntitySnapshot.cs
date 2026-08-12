@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using Enjune.Ecs.Component;
+﻿using Enjune.Ecs.Component;
 
-namespace Enjune.src.Ecs.EcsType;
+namespace Enjune.Ecs.EcsType;
 
 public class EntitySnapshot
 {

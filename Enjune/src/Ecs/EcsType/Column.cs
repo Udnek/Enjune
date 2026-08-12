@@ -13,40 +13,17 @@ public interface IColumn
 
 public sealed class Column<T> : IColumn where T : struct, IComponent
 {
-    public T[] Data;
+    private T[] _data;
 
-    public Column(int capacity = EcsConstants.InitialCapacity)
-    {
-        Data = new T[capacity];
-    }
+    public Column(int capacity = EcsConstants.InitialCapacity) => _data = new T[capacity];
 
-    public void SetValue(int row, IComponent value)
-    {
-        Data[row] = (T)value;
-    }
-    
-    public void SetRawData(byte[] rawData, int row)
-    {
-        Data[row] = Unsafe.ReadUnaligned<T>(ref rawData[0]);
-    }
+    public void SetValue(int row, IComponent value) => _data[row] = (T)value;
 
-    public void SwapElements(int rowFrom, int rowTo)
-    {
-        Data[rowFrom] = Data[rowTo];
-    }
+    public void SwapElements(int rowFrom, int rowTo) => _data[rowFrom] = _data[rowTo];
 
-    public IComponent GetValue(int row)
-    {
-        return Data[row];
-    }
+    public IComponent GetValue(int row) => _data[row];
 
-    public Span<T> GetSpan()
-    {
-        return Data.AsSpan();
-    }
+    public Span<T> GetSpan() => _data.AsSpan();
 
-    void IColumn.SetCapacity(int capacity)
-    {
-        Array.Resize(ref Data, capacity);
-    }
+    void IColumn.SetCapacity(int capacity) => Array.Resize(ref _data, capacity);
 }

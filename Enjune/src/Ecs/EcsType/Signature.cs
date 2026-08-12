@@ -38,32 +38,21 @@ public readonly record struct Signature
     }
 
     public override string ToString() => Convert.ToString(_bitSet, 2);
-}
-
-public class SignatureBuilder
-{
-    private readonly ComponentManager _componentManager;
-    private Signature _signature = Signature.Empty;
-
-    public SignatureBuilder(World world)
-    {
-        _componentManager = world.ComponentManager;
-    }
     
-    public SignatureBuilder RegisterComponent<T>()
+    public class Builder(World world)
     {
-        var bit = (int)_componentManager.GetTypeIdByType(typeof(T));
-        var sig = _signature;
-        _signature = _signature.Set(bit);
-        return this;
-    }
+        private readonly ComponentManager _componentManager = world.ComponentManager;
+        private Signature _signature = Empty;
 
-    public SignatureBuilder RegisterComponent(Type type)
-    {
-        var bit = (int)_componentManager.GetTypeIdByType(type);
-        _signature = _signature.Set(bit);
-        return this;
-    }
+        public Builder RegisterComponent<T>() => RegisterComponent(typeof(T));
 
-    public Signature Build() => _signature;
+        public Builder RegisterComponent(Type type)
+        {
+            var bit = (int)_componentManager.GetTypeIdByType(type);
+            _signature = _signature.Set(bit);
+            return this;
+        }
+
+        public Signature Build() => _signature;
+    }
 }

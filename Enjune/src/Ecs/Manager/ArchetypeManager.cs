@@ -7,7 +7,7 @@ namespace Enjune.Ecs.Manager;
 public sealed class ArchetypeManager
 {
     private readonly Dictionary<Signature, Archetype> _archetypes = new();
-    private readonly Dictionary<EntityId, Archetype> _entityIdToArchetype = new();
+    private readonly Dictionary<EntityId, Archetype> _entityToArchetype = new();
     private readonly World _world;
     
     public ArchetypeManager(World world)
@@ -23,25 +23,24 @@ public sealed class ArchetypeManager
         Logger.Info(this, $"archetype with signature {signature} created");
     }
 
-    public void AddEntity(EntityAssembly assembly, EntityId Id)
+    public void AddEntity(EntityAssembly assembly, EntityId id)
     {
         Signature signature = assembly.GetSignature(_world);
-        Logger.Info(this, $"got a request to add an entity {Id} with signature {signature}");
+        Logger.Info(this, $"got a request to add an entity {id} with signature {signature}");
 
         EnsureArchetypeExistence(signature);
 
         Archetype matchedArchetype = _archetypes[signature];
-        matchedArchetype.AddEntity(assembly, Id);
-        _entityIdToArchetype[Id] = matchedArchetype;
+        matchedArchetype.AddEntity(assembly, id);
+        _entityToArchetype[id] = matchedArchetype;
     }
 
     public Archetype GetArchetype(Signature signature)
     {
-        if (!_archetypes.TryGetValue(signature, out Archetype? archetype))
-        {
-            archetype = new Archetype(signature, _world);
-            _archetypes.Add(signature, archetype);
-        }
+        if (_archetypes.TryGetValue(signature, out var archetype)) 
+            return archetype;
+        archetype = new Archetype(signature, _world);
+        _archetypes.Add(signature, archetype);
         return archetype;
     }
 
@@ -57,9 +56,7 @@ public sealed class ArchetypeManager
     public void RemoveEntity(EntityId id)
     {
         Logger.Info(this, $"Got a request to remove entity {id}");
-        if (_entityIdToArchetype.TryGetValue(id, out Archetype? archetype))
-        {
+        if (_entityToArchetype.TryGetValue(id, out Archetype? archetype)) 
             archetype.RemoveEntity(id);
-        }
     }
 }
