@@ -44,7 +44,7 @@ public sealed class World
         ArchetypeManager.AddEntity(assembly, id);
     }
 
-    public void RemoveEntity(EntityId id) => ArchetypeManager.RemoveEntity(id);
+    public void RemoveEntity(Entity id) => ArchetypeManager.RemoveEntity(id);
 
     public void Update() => SystemManager.UpdateAll();
 

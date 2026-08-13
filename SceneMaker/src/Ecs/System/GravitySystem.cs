@@ -25,7 +25,7 @@ public class GravitySystem : BaseSystem
                 // Simply add -9,80665 to Y acceleration
                 // TODO: Consider changing this behavior to something more accurate
                 accelerations[i].Y -= 10; // EGE moment
-                Logger.Info(this, $"added gravitational acceleration to entity {archetype.GetIdByRow(i)}");
+                Logger.Info(this, $"added gravitational acceleration to entity {archetype.GetEntityByRow(i)}");
             }
         });
     }

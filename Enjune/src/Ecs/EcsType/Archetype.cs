@@ -5,20 +5,19 @@ namespace Enjune.Ecs.EcsType;
 
 public sealed class Archetype
 {
-    private readonly Dictionary<Type, IColumn> _columns = new();
-    private EntityId[] _rowToId;
-    private readonly Dictionary<EntityId, int> _idToRow;
-    
-    private int _capacity = EcsConstants.InitialCapacity;
-    
     public int EntityCount { get; private set; } = 0;
     public Signature Signature { get; }
+    
+    private readonly Dictionary<Type, IColumn> _columns = new();
+    private Entity[] _rowToEntity;
+    private readonly Dictionary<Entity, int> _entityToRow;
+    private int _capacity = EcsConstants.InitialColumnCapacity;
 
     public Archetype(Signature signature, World world)
     {
         Signature = signature;
-        _rowToId = new EntityId[_capacity];
-        _idToRow = new Dictionary<EntityId, int>(_capacity);
+        _rowToEntity = new Entity[_capacity];
+        _entityToRow = new Dictionary<Entity, int>(_capacity);
         
         int nComponents = signature.GetSetBitsCount();
         
@@ -27,7 +26,7 @@ public sealed class Archetype
             RegisterColumn(types[i]);
     }
 
-    public EntityId GetIdByRow(int row) => _rowToId[row];
+    public Entity GetEntityByRow(int row) => _rowToEntity[row];
     
     private void RegisterColumn(Type compType)
     {
@@ -42,7 +41,7 @@ public sealed class Archetype
         if (targetCapacity <= _capacity) return;
         int newCapacity = _capacity * 2;
         
-        Array.Resize(ref _rowToId, newCapacity);
+        Array.Resize(ref _rowToEntity, newCapacity);
 
         foreach (IColumn column in _columns.Values ) 
             column.SetCapacity(newCapacity);
@@ -51,15 +50,15 @@ public sealed class Archetype
     }
     
     // TODO: Avoid using Collection<IComponent> because of boxing
-    public void AddEntity(EntityAssembly entityAssembly, EntityId id)
+    public void AddEntity(EntityAssembly entityAssembly, Entity entity)
     {
-        Logger.Info(this, $"archetype with signature {Signature} acquired an entity {id}");
+        Logger.Info(this, $"archetype with signature {Signature} acquired an entity {entity}");
         
         EnsureCapacity(EntityCount + 1);
 
         int row = EntityCount;
-        _idToRow[id] = row;
-        _rowToId[row] = id;
+        _entityToRow[entity] = row;
+        _rowToEntity[row] = entity;
 
         List<IComponent> entityComponents = entityAssembly.GetComponents();
         foreach (IComponent entityComponent in entityComponents)
@@ -72,24 +71,24 @@ public sealed class Archetype
     }
 
     
-    public void RemoveEntity(EntityId id)
+    public void RemoveEntity(Entity id)
     {
-        if (!_idToRow.TryGetValue(id, out var entityRow)) 
+        if (!_entityToRow.TryGetValue(id, out var entityRow)) 
             Logger.Info(this, $"RemoveEntity: Entity {id} is not in {Signature} archetype.");
         
         var lastRow = EntityCount - 1;
 
         if (entityRow != lastRow)
         {
-            var lastId = _rowToId[lastRow];
+            var lastId = _rowToEntity[lastRow];
 
             foreach (IColumn column in _columns.Values) 
                 column.SwapElements(lastRow, entityRow);
 
-            _idToRow[lastId] = entityRow;
-            _rowToId[entityRow] = lastId;
+            _entityToRow[lastId] = entityRow;
+            _rowToEntity[entityRow] = lastId;
         }
-        _idToRow.Remove(id);
+        _entityToRow.Remove(id);
         EntityCount--;
         Logger.Info(this, $"Removed entity {id} successfully");
     }
@@ -100,25 +99,25 @@ public sealed class Archetype
         return column.GetSpan();
     }
 
-    public bool ContainsEntity(EntityId id) => _idToRow.ContainsKey(id);
-    public Entity.Snapshot? GetSnapshot(EntityId id)
+    public bool ContainsEntity(Entity entity) => _entityToRow.ContainsKey(entity);
+    public Entity.Snapshot? GetSnapshot(Entity entity)
     {
-        if (!_rowToId.Contains(id))
+        if (!_rowToEntity.Contains(entity))
         {
-            Logger.Warn(this, $"Snapshot: Requested entity {id} doesn't exist in this archetype");
+            Logger.Warn(this, $"Snapshot: Requested entity {entity} doesn't exist in this archetype");
             return null;
         }
 
-        Entity.Snapshot snapshot = new(id);
+        Entity.Snapshot snapshot = new Entity.Snapshot(entity);
         foreach (IColumn column in _columns.Values)
         {
-            snapshot.AddComponent(column.GetValue(_idToRow[id]));
+            snapshot.AddComponent(column.GetValue(_entityToRow[entity]));
         }
         return snapshot;
     }
     public IEnumerable<Entity.Snapshot> GetAllEntities()
     {
-        foreach (var id in _rowToId)
+        foreach (var id in _rowToEntity)
         {
             yield return GetSnapshot(id)!;
         }

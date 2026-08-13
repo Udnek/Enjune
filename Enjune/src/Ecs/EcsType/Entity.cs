@@ -5,17 +5,21 @@ using System.Text;
 
 namespace Enjune.Ecs.EcsType;
 
-public struct Entity
+public readonly struct Entity
 {
-    public int Id;
+    public readonly uint Id;
 
-    public class Snapshot(EntityId Id)
+    public Entity(uint id) => Id = id;
+
+    public override int GetHashCode() => Id.GetHashCode();
+    public override string ToString() => $"Entity[id = {Id}]";
+
+    public class Snapshot(Entity entity)
     {
-        public EntityId Id { get; private set; } = Id;
+        public readonly Entity Entity = entity;
         private readonly Dictionary<Type, IComponent> _components = new();
-
-
-        public Entity.Snapshot AddComponent(IComponent component)
+        
+        public Snapshot AddComponent(IComponent component)
         {
             if (_components.ContainsKey(component.GetType()))
                 Logger.Warn(this, $"Replaced component {component.GetType()} for a snapshot. Component collision should not happen");

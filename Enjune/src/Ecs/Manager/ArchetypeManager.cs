@@ -7,13 +7,10 @@ namespace Enjune.Ecs.Manager;
 public sealed class ArchetypeManager
 {
     private readonly Dictionary<Signature, Archetype> _archetypes = new();
-    private readonly Dictionary<EntityId, Archetype> _entityToArchetype = new();
+    private readonly Dictionary<Entity, Archetype> _entityToArchetype = new();
     private readonly World _world;
     
-    public ArchetypeManager(World world)
-    {
-        _world = world;
-    }
+    public ArchetypeManager(World world) => _world = world;
 
     private void EnsureArchetypeExistence(Signature signature)
     {
@@ -54,10 +51,12 @@ public sealed class ArchetypeManager
         }
     }
 
-    public void RemoveEntity(EntityId id)
+    public void RemoveEntity(Entity entity)
     {
-        Logger.Info(this, $"Got a request to remove entity {id}");
-        if (_entityToArchetype.TryGetValue(id, out Archetype? archetype)) 
-            archetype.RemoveEntity(id);
+        Logger.Info(this, $"Got a request to remove entity {entity}");
+        if (_entityToArchetype.TryGetValue(entity, out Archetype? archetype)) 
+            archetype.RemoveEntity(entity);
+        else
+            Logger.Warn(this, $"Can not remove entity; not found: {entity}");
     }
 }
