@@ -4,20 +4,15 @@ using Enjune.Misc;
 
 namespace Enjune.Ecs.Manager;
 
-public sealed class SystemManager
+public sealed class SystemManager(World world)
 {
     private readonly List<ISystem> _systems = [];
-    private readonly World _world;
-    
-    public SystemManager(World world)
-    {
-        _world = world;
-    }
-    
+    private readonly World _world = world;
+
     public SystemManager RegisterSystem(ISystem system)
     {
         _systems.Add(system);
-        system.Initialize(new SignatureBuilder(_world));
+        system.Initialize(new Signature.Builder(_world));
         return this;
     }
 

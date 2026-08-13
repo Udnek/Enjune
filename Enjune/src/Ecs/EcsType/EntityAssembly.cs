@@ -34,11 +34,9 @@ public sealed class EntityAssembly
 
     public Signature GetSignature(World world)
     {
-        var signatureBuilder = new SignatureBuilder(world);
-        foreach (Type componentType in GetComponentTypes())
-        {
-            signatureBuilder.RegisterComponent(componentType);
-        }
-        return signatureBuilder.Build();
+        var builder = new Signature.Builder(world);
+        foreach (Type componentType in GetComponentTypes()) 
+            builder.RegisterComponent(componentType);
+        return builder.Build();
     }
 }
