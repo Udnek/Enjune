@@ -101,30 +101,26 @@ public sealed class Archetype
     }
 
     public bool ContainsEntity(EntityId id) => _idToRow.ContainsKey(id);
-
-<<<<<<< Updated upstream
-    // TODO: Entity Assembly is no longer suitable for runtime acquisation 
-    [Obsolete]
-    public EntityAssembly? GetAssembly(EntityId id)
-=======
-    public Entity.Snapshot GetSnapshot(EntityId id)
->>>>>>> Stashed changes
+    public Entity.Snapshot? GetSnapshot(EntityId id)
     {
-        //if (!ContainsEntity(id)) return null;
-        //int row = _id2Row[id];
-        //EntityAssembly assembly = new EntityAssembly();
-        //foreach (IColumn column in _columns.Values)
-        //{
-        //    assembly.AddComponent(column.GetValue(row));
-        //}
+        if (!_rowToId.Contains(id))
+        {
+            Logger.Warn(this, $"Snapshot: Requested entity {id} doesn't exist in this archetype");
+            return null;
+        }
 
-        //return assembly;
-        return null;
+        Entity.Snapshot snapshot = new(id);
+        foreach (IColumn column in _columns.Values)
+        {
+            snapshot.AddComponent(column.GetValue(_idToRow[id]));
+        }
+        return snapshot;
     }
-
-    //TODO
-    //public IEnumerable<Entity.Snapshot> GetAllEntities()
-    //{
-        
-    //}
+    public IEnumerable<Entity.Snapshot> GetAllEntities()
+    {
+        foreach (var id in _rowToId)
+        {
+            yield return GetSnapshot(id)!;
+        }
+    }
 }

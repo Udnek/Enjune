@@ -56,17 +56,19 @@ public sealed class World
     }
 
     public void QueryToUpdate(Signature signature, Action<Archetype> update) 
-        => ArchetypeManager.Query(signature, update);
+        => ArchetypeManager.ForEachMatched(signature, update);
 
-    //TODO
-    public List<Entity.Snapshot>? GetAllEntities()
+    public List<Entity.Snapshot> GetAllEntities()
     {
-        List<Entity.Snapshot> Snapshots = [];
+        List<Entity.Snapshot> snapshots = [];
 
-        ArchetypeManager.Query(Signature.Empty, archetype =>
+        ArchetypeManager.ForEachMatched(Signature.Empty, archetype =>
         {
-            
+            foreach (var snapshot in archetype.GetAllEntities())
+            {
+                snapshots.Add(snapshot);
+            }
         });
-        return null;
+        return snapshots;
     }
 }

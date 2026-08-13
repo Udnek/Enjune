@@ -45,7 +45,7 @@ public sealed class ArchetypeManager
         return archetype;
     }
 
-    public void Query(Signature signature, Action<Archetype> action)
+    public void ForEachMatched(Signature signature, Action<Archetype> action)
     {
         foreach (var archetype in _archetypes.Values)
         {
