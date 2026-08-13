@@ -1,3 +1,4 @@
+using Enjune.Ecs.EcsType;
 using Enjune.Misc;
 
 namespace Enjune.Ecs.Manager;
@@ -5,15 +6,14 @@ namespace Enjune.Ecs.Manager;
 public sealed class EntityManager
 {
     private int _counter = 0;
-    private readonly List<EntityId> _activeEntities = new();
     
     public EntityManager()
     {
         Logger.Info(this, $"EntityManager initialized at counter = {_counter}");
     }
 
-    public EntityId CreateEntity()
+    public Entity CreateEntity()
     {
-        return _counter++;
+        return new Entity(_counter++);
     }
 }

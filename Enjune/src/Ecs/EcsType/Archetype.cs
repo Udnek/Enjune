@@ -122,4 +122,9 @@ public sealed class Archetype
             yield return GetSnapshot(id)!;
         }
     }
+
+    public Column<T> GetColumn<T>() where T : struct, IComponent
+    {
+        return (Column<T>)_columns[typeof(T)];
+    }
 }

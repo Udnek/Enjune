@@ -8,18 +8,18 @@ namespace SceneMaker.Ecs.System;
 
 public class IntegrationSystem : BaseSystem
 {
-    protected override Signature GenerateSignature(Signature.Builder builder)
+    protected override Query.State BuildQuery(Query query)
     {
-        return builder
-            .RegisterComponent<Component.Position>()
-            .RegisterComponent<Velocity>()
-            .RegisterComponent<Acceleration>()
+        return query
+            .With<Component.Position>()
+            .With<Velocity>()
+            .With<Acceleration>()
             .Build();
     }
 
     public override void Update(World world)
     {
-        world.QueryToUpdate(Signature, archetype =>
+        Query.ForEachArchetype(archetype =>
         {
             Span<Component.Position> positions = archetype.GetComponents<Component.Position>();
             Span<Velocity> velocities = archetype.GetComponents<Velocity>();

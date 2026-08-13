@@ -12,7 +12,7 @@ public sealed class SystemManager(World world)
     public SystemManager RegisterSystem(ISystem system)
     {
         _systems.Add(system);
-        system.Initialize(new Signature.Builder(_world));
+        system.Initialize(new Query(_world));
         return this;
     }
 

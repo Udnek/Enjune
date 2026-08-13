@@ -1,24 +1,40 @@
-﻿using System;
+﻿using Enjune.Ecs.Component;
+using System;
 using System.Collections.Generic;
-using System.ComponentModel;
+using System.Net.Mail;
+using System.Reflection.Metadata.Ecma335;
 using System.Text;
 
 namespace Enjune.Ecs.EcsType;
 
 public class Query(World World)
 {
-    protected readonly World _world = World;
+    private readonly World _world = World;
 
     public class State(Signature IncludeSignature, Signature ExcludeSignature, World World)
     {
         private readonly Signature _includeSignature = IncludeSignature;
         private readonly Signature _excludeSignature = ExcludeSignature;
+        private readonly List<Type> _componentTypes = World.DeconstructSignature(IncludeSignature);
         private readonly World _world = World;
-        private int _cacheVersion = 0;
 
-        private void RebuildCache()
+        private List<Archetype> _cachedArchetypes = [];
+        private int _cacheVersion = 0;
+        
+        // TODO: Ensure cache invalidation is in place in World logic
+        private void ValidateCache()
         {
-            return;
+            if (_world.ArchetypeCacheVersion == _cacheVersion) return;
+            _cachedArchetypes = _world.GetMatchedArchetypes(_includeSignature, _excludeSignature);
+
+            _cacheVersion = _world.ArchetypeCacheVersion;
+        }
+
+        public void ForEachArchetype(Action<Archetype> action)
+        {
+            ValidateCache();
+            foreach (var archetype in _cachedArchetypes)
+                action(archetype);
         }
     }
 

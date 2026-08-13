@@ -8,24 +8,24 @@ namespace SceneMaker.Ecs.System;
 
 public class GravitySystem : BaseSystem
 {
-    protected override Signature GenerateSignature(Signature.Builder builder)
+    protected override Query.State BuildQuery(Query query)
     {
-        return builder
-            .RegisterComponent<Acceleration>()
+        return query
+            .With<Acceleration>()
             .Build();
     }
 
     public override void Update(World world)
     {
-        world.QueryToUpdate(Signature, archetype =>
+        Query.ForEachArchetype(archetype =>
         {
             Span<Acceleration> accelerations = archetype.GetComponents<Acceleration>();
             for (int i = 0; i < archetype.EntityCount; i++)
             {
                 // Simply add -9,80665 to Y acceleration
                 // TODO: Consider changing this behavior to something more accurate
-                accelerations[i].Y -= 10; // EGE moment
-                Logger.Info(this, $"added gravitational acceleration to entity {archetype.GetEntityByRow(i)}");
+                accelerations[i].Y += -10;
+                Logger.Info(this, $"Added gravitational acceleration to entity {archetype.GetEntityByRow(i)}");
             }
         });
     }

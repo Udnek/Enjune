@@ -15,22 +15,21 @@ public sealed class ArchetypeManager
     private void EnsureArchetypeExistence(Signature signature)
     {
         if (_archetypes.ContainsKey(signature)) return;
-        
+        _world.InvalidateArchetypeCache();
         _archetypes[signature] = new Archetype(signature, _world);
         Logger.Info(this, $"Created an archetype with signature {signature}");
-        _world.InvalidateCache();
     }
 
-    public void AddEntity(EntityAssembly assembly, EntityId id)
+    public void AddEntity(EntityAssembly assembly, Entity entity)
     {
         Signature signature = assembly.GetSignature(_world);
-        Logger.Info(this, $"got a request to add an entity {id} with signature {signature}");
+        Logger.Info(this, $"got a request to add an entity {entity} with signature {signature}");
 
         EnsureArchetypeExistence(signature);
 
         Archetype matchedArchetype = _archetypes[signature];
-        matchedArchetype.AddEntity(assembly, id);
-        _entityToArchetype[id] = matchedArchetype;
+        matchedArchetype.AddEntity(assembly, entity);
+        _entityToArchetype[entity] = matchedArchetype;
     }
 
     public Archetype GetArchetype(Signature signature)
@@ -42,15 +41,6 @@ public sealed class ArchetypeManager
         return archetype;
     }
 
-    public void ForEachMatched(Signature signature, Action<Archetype> action)
-    {
-        foreach (var archetype in _archetypes.Values)
-        {
-            if (archetype.Signature.Contains(signature)) 
-                action(archetype);
-        }
-    }
-
     public void RemoveEntity(Entity entity)
     {
         Logger.Info(this, $"Got a request to remove entity {entity}");
@@ -58,5 +48,21 @@ public sealed class ArchetypeManager
             archetype.RemoveEntity(entity);
         else
             Logger.Warn(this, $"Can not remove entity; not found: {entity}");
+    }
+
+    public IEnumerable<Archetype> Query(Signature includeSignature, Signature excludeSignature)
+    {
+        foreach (var (signature, archetype) in _archetypes)
+        {
+            if (signature.Includes(includeSignature) && signature.Excludes(excludeSignature))
+            {
+                yield return archetype;
+            }
+        }
+    }
+
+    public IEnumerable<Archetype> QuerySimple(Signature signature)
+    {
+        return Query(signature, Signature.Empty);
     }
 }

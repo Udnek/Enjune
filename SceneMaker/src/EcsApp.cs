@@ -53,7 +53,7 @@ public class EcsApp : AbstractDisposable, IApp
         DateTime endTime = DateTime.Now;
         Logger.Info(this, $"Simulation took {endTime - startTime}");
         Logger.Info(this, $"Removing entity as a test");
-        _world.RemoveEntity(0);
+        _world.RemoveEntity(new Entity(0));
         Logger.Info(this, $"Updating world once again");
         _world.Update();
     }

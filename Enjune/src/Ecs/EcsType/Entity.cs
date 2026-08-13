@@ -10,6 +10,7 @@ public readonly struct Entity
     public readonly uint Id;
 
     public Entity(uint id) => Id = id;
+    public Entity(int id) => Id = (uint)id;
 
     public override int GetHashCode() => Id.GetHashCode();
     public override string ToString() => $"Entity[id = {Id}]";
