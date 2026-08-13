@@ -19,13 +19,6 @@ public static class Codecs
 {
     #region Primitives
     
-    public struct Unit;
-
-    public static readonly SimpleCodec<Unit> Empty = new(
-        _ => new DataObject.String("empty"),
-        _ => DecodeResult.Success(new Unit())
-        );
-    
     public static readonly SimpleCodec<float> Float = new(
         instance => new DataObject.Number((decimal) instance),
         data => 
@@ -135,16 +128,30 @@ public static class Codecs
     {
         return new SimpleCodec<T?>(
             instance => instance is null ? DataObject.Null : codec.Encode(instance),
-            data => data == DataObject.Null ? DecodeResult.Success<T?>(null) : DecodeResult.ToNullable(codec.Decode(data)));
+            data =>
+            {
+                if (data == DataObject.Null)
+                    return DecodeResult.Success<T?>(null);
+                else
+                    return DecodeResult.Convert<T, T?>(codec.Decode(data));
+            });
     }
     public static SimpleCodec<T?> NullableOfStruct<T>(ICodec<T> codec) where T : struct
     {
         return new SimpleCodec<T?>(
             instance => instance is null ? DataObject.Null : codec.Encode((T)instance),
-            data => data == DataObject.Null ? DecodeResult.Success<T?>(null) : DecodeResult.ToNullableStruct(codec.Decode(data)));
+            data =>
+            {
+                if (data == DataObject.Null)
+                    return DecodeResult.Success<T?>(null);
+                else
+                    return codec.Decode(data).Map(
+                        val => DecodeResult.Success<T?>(val),
+                        err => err);
+            });
     }
     
-    public static SimpleCodec<T[]> ArrayOf<T>(ICodec<T> codec)
+    public static SimpleCodec<T[]> ArrayOf<T>(ICodec<T> codec, bool skipInvalidItems = false)
     {
         return new SimpleCodec<T[]>(
             instances => new DataObject.Array(instances.Map(codec.Encode).ToArray()), 
@@ -152,19 +159,28 @@ public static class Codecs
             {
                 var array = data.Cast<DataObject.Array>(out var error);
                 if (array is null)
-                    return new Error($"can not decode {Logger.GetTypeName<T[]>()}: " + error);
+                    return new Error($"can not decode {array}: " + error);
 
-                var decoded = new T[array.Val.Length];
-                for (var i = 0; i < array.Val.Length; i++)
+                var decoded = new List<T>(array.Val.Length);
+                foreach (var item in array.Val)
                 {
-                    var item = array.Val[i];
-                    var result = codec.Decode(item);
-                    if (result.Error != null)
-                        return (Error) result.Error;
-                    decoded[i] = result.GetOrThrow();
+                    var err = codec.Decode(item).Map<Error?>(
+                        value =>
+                        {
+                            decoded.Add(value);
+                            return null;
+                        },
+                        err => err);
+
+                    if (err == null) continue;
+                    if (skipInvalidItems)
+                        Logger.Warn(typeof(Codecs), $"Could not decode item {item} in array {array}");
+                    else
+                        return new Error(err);
+
                 }
 
-                return DecodeResult.Success(decoded);
+                return DecodeResult.Success(decoded.ToArray());
             });
     }
 

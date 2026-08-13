@@ -8,6 +8,7 @@ using Enjune.Misc;
 using Enjune.World;
 using OpenGLApi;
 using OpenTK.Mathematics;
+using SceneMaker.Misc;
 using SceneMaker.Ui;
 
 namespace SceneMaker;
@@ -29,7 +30,7 @@ public class App : AbstractDisposable, IApp
     public FlyingPlayerController WasdController { get; private set; } = null!;
     public EditorController EditorController { get; private set; } = null!;
     
-    private Scene _scene = null!;
+    //private Scene _scene = null!;
     private UiManager _uiManager = null!;
     //public Focus Focused = Focus.Scene;
 
@@ -149,7 +150,7 @@ public class App : AbstractDisposable, IApp
                 
                 // render
 
-                // lights
+                #region Lights
                 {
                     spotLights.Clear();
                     foreach (var sObject in _scene.Objects)
@@ -162,8 +163,9 @@ public class App : AbstractDisposable, IApp
                     }
                     Grapi.SetLights(spotLights.AsSpan());
                 }
-                
-                // shadows
+                #endregion
+
+                #region Shadows
                 Grapi.UseShader<IShader.IShadowMap>(s =>
                 {
                     s.ForEachLight(() =>
@@ -181,10 +183,9 @@ public class App : AbstractDisposable, IApp
                         }
                     });
                 });
+                #endregion
                 
-                //_grapi.SetDrawMode(IGraphicApi.DrawMode.Wireframe); // DEBUG
-                
-                // realistic objects
+                #region Material
                 Grapi.UseShader<IShader.ICamera.IMaterial>(s =>
                 {
                     Grapi.ClearRenderBuffer();
@@ -207,8 +208,9 @@ public class App : AbstractDisposable, IApp
                         obj.RenderableModel.Render(s);
                     }
                 });
+                #endregion
                 
-                // flat color objects
+                #region Flat Color
                 Grapi.UseShader<IShader.ICamera.IColor>(s =>
                 {
                     // drawing everything else over
@@ -231,8 +233,7 @@ public class App : AbstractDisposable, IApp
                     Grapi.ClearRenderBuffer(false, true);
                     _uiManager.Ui.Render(s);
                 });
-                
-                Grapi.SetDrawMode(IGraphicApi.DrawMode.Fill); // DEBUG
+                #endregion
                 
                 // end
                 Grapi.UpdateScreen();

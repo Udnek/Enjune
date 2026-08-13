@@ -10,8 +10,13 @@ public readonly record struct DecodeResult<T>
         _value = value;
         Error = error;
     }
+    
+    public Tto Map<Tto>(Func<T, Tto> whenSuccess, Func<Error, Tto> whenFailure) 
+        => Error == null ? whenSuccess(_value) : whenFailure((Error)Error);
 
     public T GetOr(T fallback) => Error == null ? _value : fallback;
+    
+    // Use Map<Tto> in most cases
     public T GetOrThrow() => Error == null ? _value : throw new InvalidOperationException();
     
     public static implicit operator DecodeResult<T>(Error error) => DecodeResult.Failure<T>(error);
@@ -19,18 +24,13 @@ public readonly record struct DecodeResult<T>
 
 public static class DecodeResult
 {
-    public static DecodeResult<T?> ToNullable<T>(DecodeResult<T> res) where T : class
+    public static DecodeResult<TNew> Convert<TOld, TNew>(DecodeResult<TOld> res) where TOld : TNew
     {
-        if (res.Error != null)
-            return (Error)res.Error;
-        return Success<T?>(res.GetOrThrow());
+        return res.Map(
+            value => Success<TNew>(value),
+            Failure<TNew>);
     }
-    public static DecodeResult<T?> ToNullableStruct<T>(DecodeResult<T> res) where T : struct
-    {
-        if (res.Error != null)
-            return (Error)res.Error;
-        return Success<T?>(res.GetOrThrow());
-    }
+    
     public static DecodeResult<T> Success<T>(T value) => new(value, null);
     public static DecodeResult<T> Failure<T>(Error err) => new(default!, err);
 }

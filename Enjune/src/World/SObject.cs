@@ -10,6 +10,7 @@ using OpenTK.Mathematics;
 
 namespace Enjune.World;
 
+[Obsolete]
 public class SObject
 {
     public static readonly MapCodec<SObject> Codec = Codecs

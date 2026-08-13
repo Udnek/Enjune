@@ -10,7 +10,7 @@ using Enjune.Misc;
 using Enjune.Registering;
 using Enjune.World;
 
-namespace SceneMaker;
+namespace SceneMaker.Misc;
 
 public static class SceneManager
 {
@@ -55,15 +55,17 @@ public static class SceneManager
             return CreateNewScene();
         }
 
-        var result = Scene.Codec.Decode(data);
-        if (result.Error != null)
-        {
-            Logger.Error(typeof(SceneManager), "can not load scene: " + result.Error);
-            return CreateNewScene();
-        }
-
-        Logger.Info(typeof(SceneManager), $"successfully load scene from {Path}");
-        return (result.GetOrThrow(), null);
+        return Scene.Codec.Decode(data).Map(
+            value =>
+            {
+                Logger.Info(typeof(SceneManager), $"successfully load scene from {Path}");
+                return (value, null);
+            },
+            err =>
+            {
+                Logger.Error(typeof(SceneManager), "can not load scene: " + err);
+                return CreateNewScene();
+            });
     }
     
     private static (Scene? Scene, Error? Error) CreateNewScene()

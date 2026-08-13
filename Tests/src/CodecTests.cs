@@ -23,15 +23,14 @@ public class CodecTests(ITestOutputHelper output)
             return error;
         }
         var decoded = codec.Decode(dataObject);
-        if (decoded.Error != null)
-        {
-            return decoded.Error;
-        }
-        var value = decoded.GetOrThrow();
-        _output.WriteLine($"decoded: {toStr(value)}");
-        
-        Assert.Equal(obj, value);
-        return null;
+        return decoded.Map<Error?>(
+            value =>
+            {
+                _output.WriteLine($"decoded: {toStr(value)}");
+                Assert.Equal(obj, value);
+                return null;
+            },
+            err => err);
     }
     
     [Fact]

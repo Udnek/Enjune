@@ -39,9 +39,9 @@ public sealed class World
 
     public void Update() => SystemManager.UpdateAll();
 
-    public Signature ConstructSignature(Action<SignatureBuilder> configure)
+    public Signature ConstructSignature(Action<Signature.Builder> configure)
     {
-        var builder = new SignatureBuilder(this);
+        var builder = new Signature.Builder(this);
         configure(builder);
         return builder.Build();
     }

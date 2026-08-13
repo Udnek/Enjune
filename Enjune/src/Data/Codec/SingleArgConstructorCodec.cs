@@ -12,9 +12,8 @@ public sealed class SingleArgConstructorCodec<TInstance, TArg>(
 
     public DecodeResult<TInstance> Decode(DataObject data)
     {
-        var result = codec.Decode(data);
-        if (result.Error != null)
-            return new Error("can not decode: " + result.Error);
-        return DecodeResult.Success(constructor(result.GetOrThrow()));
+        return codec.Decode(data).Map(
+            val => DecodeResult.Success(constructor(val)),
+            err => new Error("can not decode: " + err));
     }
 }

@@ -1,5 +1,3 @@
-using System.Runtime.CompilerServices;
-using Enjune.Graphic;
 using Enjune.Graphic.Api;
 using Enjune.Graphic.Key;
 using Enjune.Graphic.Modeling;
@@ -8,7 +6,8 @@ using Enjune.Misc;
 using Enjune.Registering;
 using Enjune.World;
 using OpenTK.Mathematics;
-namespace SceneMaker;
+
+namespace SceneMaker.Misc;
 
 public class EditorController
 {

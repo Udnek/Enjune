@@ -1,11 +1,9 @@
 using System.Reflection;
 using Enjune.Data.Codec;
-using Enjune.Graphic;
 using Enjune.Graphic.Modeling;
-using Enjune.Misc;
 using Enjune.Registering;
 
-namespace SceneMaker;
+namespace SceneMaker.Misc;
 
 public static class Models
 {

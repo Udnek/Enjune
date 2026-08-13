@@ -1,6 +1,6 @@
 using Enjune.Misc;
 
-namespace SceneMaker;
+namespace SceneMaker.Misc;
 
 public static class Colors
 {

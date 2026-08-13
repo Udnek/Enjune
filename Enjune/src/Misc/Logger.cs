@@ -112,8 +112,10 @@ public static class Logger
         return GetTypeName(authorType);
     }
 
+    // generates fancy-looking representation of type (including generic types)
     public static string GetTypeName<T>() => GetTypeName(typeof(T));
-
+    
+    // generates fancy-looking representation of type (including generic types)
     public static string GetTypeName(Type author)
     {
         string prefix;

@@ -1,4 +1,3 @@
-using Enjune.Graphic;
 using Enjune.Misc;
 
 namespace OpenGLApi.Component.Buffer;
@@ -53,13 +52,7 @@ public abstract class AbstractBuffer<T> : GlDisposable where T : unmanaged
     }
     
     public void Bind() => GL.BindBuffer(_target, Handle);
-    
-    public void BindAndPush(FixedBuffer<T> fixedBuffer)
-    {
-        Bind();
-        GL.BufferSubData(_target, 0, fixedBuffer.Count*_elementSize, fixedBuffer.Data);
-    }
-    
+
     public void BindAndPush(T[] array)
     {
         Bind();

@@ -16,6 +16,7 @@ public sealed class FieldCodec<TInstance, TField>(
     public Error? DecodeAndSet(ref TInstance instance, DataObject data)
     {
         var result = codec.Decode(data);
+        // not using map cause ref can not be used in lambdas
         if (result.Error != null) 
             return "can not decode: " + result.Error;
         setter(ref instance, result.GetOrThrow());

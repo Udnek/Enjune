@@ -46,14 +46,7 @@ public sealed class InstanceMatchCodec<TInstance> : ICodec<TInstance>
             _codecs.Add((
                 name,
                 i => i is T t ? codec.Encode(t) : null,
-                data =>
-                {
-                    var result = codec.Decode(data);
-                    if (result.Error != null)
-                        return (Error)result.Error;
-                    return DecodeResult.Success<TInstance>(result.GetOrThrow());
-                }
-                ));
+                data => DecodeResult.Convert<T, TInstance>(codec.Decode(data))));
             return this;
         }
 
