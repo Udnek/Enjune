@@ -1,4 +1,5 @@
 using System.Data;
+using System.Runtime.InteropServices;
 using Enjune.Ecs.Component;
 using Enjune.Ecs.EcsType;
 using Enjune.Ecs.Manager;
@@ -14,6 +15,8 @@ public sealed class World
     internal readonly ComponentManager ComponentManager = new ComponentManager();
     internal readonly EntityManager EntityManager = new EntityManager();
 
+    public int CacheVersion { get; private set; } = 0;
+
     public World(List<ISystem> systems, List<Type> componentTypes)
     {
         Logger.Info(this, "Registering managers using given systems and component types");
@@ -28,6 +31,12 @@ public sealed class World
             SystemManager.RegisterSystem(system);
     }
 
+    internal void InvalidateCache()
+    {
+        Logger.Info(this, "World cache invalidated.");
+        CacheVersion++;
+    }
+
     // PUBLIC API
     public void AddEntity(EntityAssembly assembly)
     {
@@ -39,13 +48,25 @@ public sealed class World
 
     public void Update() => SystemManager.UpdateAll();
 
-    public Signature ConstructSignature(Action<SignatureBuilder> configure)
+    public Signature ConstructSignature(Action<Signature.Builder> configure)
     {
-        var builder = new SignatureBuilder(this);
+        var builder = new Signature.Builder(this);
         configure(builder);
         return builder.Build();
     }
 
     public void QueryToUpdate(Signature signature, Action<Archetype> update) 
         => ArchetypeManager.Query(signature, update);
+
+    //TODO
+    public List<Entity.Snapshot>? GetAllEntities()
+    {
+        List<Entity.Snapshot> Snapshots = [];
+
+        ArchetypeManager.Query(Signature.Empty, archetype =>
+        {
+            
+        });
+        return null;
+    }
 }

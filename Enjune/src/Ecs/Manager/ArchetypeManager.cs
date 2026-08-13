@@ -20,7 +20,8 @@ public sealed class ArchetypeManager
         if (_archetypes.ContainsKey(signature)) return;
         
         _archetypes[signature] = new Archetype(signature, _world);
-        Logger.Info(this, $"archetype with signature {signature} created");
+        Logger.Info(this, $"Created an archetype with signature {signature}");
+        _world.InvalidateCache();
     }
 
     public void AddEntity(EntityAssembly assembly, EntityId Id)

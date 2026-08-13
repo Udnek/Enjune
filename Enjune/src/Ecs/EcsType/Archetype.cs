@@ -110,8 +110,12 @@ public sealed class Archetype
 
     public bool ContainsEntity(EntityId id) => _id2Row.ContainsKey(id);
 
+<<<<<<< Updated upstream
     // TODO: Entity Assembly is no longer suitable for runtime acquisation 
     public EntityAssembly? GetAssembly(EntityId id)
+=======
+    public Entity.Snapshot GetSnapshot(EntityId id)
+>>>>>>> Stashed changes
     {
         //if (!ContainsEntity(id)) return null;
         //int row = _id2Row[id];
@@ -124,4 +128,10 @@ public sealed class Archetype
         //return assembly;
         return null;
     }
+
+    //TODO
+    //public IEnumerable<Entity.Snapshot> GetAllEntities()
+    //{
+        
+    //}
 }

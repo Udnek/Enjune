@@ -8,7 +8,7 @@ namespace SceneMaker.Ecs.System;
 
 public class GravitySystem : BaseSystem
 {
-    protected override Signature GenerateSignature(SignatureBuilder builder)
+    protected override Signature GenerateSignature(Signature.Builder builder)
     {
         return builder
             .RegisterComponent<Acceleration>()

@@ -15,7 +15,7 @@ public class TrackingSystem : BaseSystem
         _trackedEntity = entityId;
     }
 
-    protected override Signature GenerateSignature(SignatureBuilder builder)
+    protected override Signature GenerateSignature(Signature.Builder builder)
     {
         return builder
             .RegisterComponent<Component.Position>()

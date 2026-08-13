@@ -8,7 +8,7 @@ namespace SceneMaker.Ecs.System;
 
 public class IntegrationSystem : BaseSystem
 {
-    protected override Signature GenerateSignature(SignatureBuilder builder)
+    protected override Signature GenerateSignature(Signature.Builder builder)
     {
         return builder
             .RegisterComponent<Component.Position>()
