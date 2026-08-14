@@ -57,9 +57,9 @@ public sealed class World
     public void RemoveEntity(Entity entity) => ArchetypeManager.RemoveEntity(entity);
 
     // very slow-poke
-    public List<Entity.Snapshot> GetAllEntities()
+    public List<(Entity, List<IComponent>)> GetAllEntities()
     {
-        List<Entity.Snapshot> snapshots = [];
+        List<(Entity, List<IComponent>)> snapshots = [];
         foreach (var archetype in QueryArchetypes(Signature.Empty, Signature.Empty))
         {
             foreach (var snapshot in archetype.GetAllEntitySnapshots())
@@ -70,5 +70,6 @@ public sealed class World
         return snapshots;
     }
     #endregion
+
     #endregion
 }

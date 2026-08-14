@@ -100,7 +100,7 @@ public sealed class Archetype
         Logger.Info(this, $"Removed {entity} successfully");
     }
     
-    private Entity.Snapshot? GetSnapshot(Entity entity)
+    private (Entity, List<IComponent>)? GetSnapshot(Entity entity)
     {
         if (!_rowToEntity.Contains(entity))
         {
@@ -108,19 +108,19 @@ public sealed class Archetype
             return null;
         }
 
-        Entity.Snapshot snapshot = new Entity.Snapshot(entity);
+        List<IComponent> components = [];
         foreach (IColumn column in _columns.Values)
         {
-            snapshot.AddComponent(column.GetValue(_entityToRow[entity]));
+            components.Add(column.GetValue(_entityToRow[entity]));
         }
-        return snapshot;
+        return (entity, components);
     }
     
-    internal IEnumerable<Entity.Snapshot> GetAllEntitySnapshots()
+    internal IEnumerable<(Entity, List<IComponent>)> GetAllEntitySnapshots()
     {
-        foreach (var id in _rowToEntity)
+        foreach (var entity in _rowToEntity)
         {
-            yield return GetSnapshot(id)!;
+            yield return GetSnapshot(entity)!.Value;
         }
     }
 }
