@@ -2,8 +2,8 @@ namespace Enjune.Registering;
 
 public class GenericRegistry<T>
 {
-    private static readonly Dictionary<Type, (string Name, ICodec<object> Codec)> TypeToCodec = new();
-    private static readonly Dictionary<Identifier, ICodec<object>> NameToCodec = new();
+    private static readonly Dictionary<Type, (string Name, ICodeс<object> Codec)> TypeToCodec = new();
+    private static readonly Dictionary<Identifier, ICodeс<object>> NameToCodec = new();
     
     public static void Register<T>(string name, ICodec<T> codec) where T : notnull, IComponent
     {
