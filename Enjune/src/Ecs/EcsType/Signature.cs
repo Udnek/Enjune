@@ -42,7 +42,7 @@ public readonly record struct Signature
 
     public override string ToString() => Convert.ToString(_bitSet, 2);
     
-    public class Builder(World world)
+    public sealed class Builder(World world)
     {
         private readonly ComponentManager _componentManager = world.ComponentManager;
         private Signature _signature = Empty;

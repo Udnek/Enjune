@@ -10,9 +10,9 @@ namespace Enjune.Ecs.EcsType;
 public sealed class EntityAssembly
 {
     private readonly Dictionary<Type, IComponent> _components = new();
-    
-    public List<IComponent> GetComponents() => _components.Values.ToList();
-    public List<Type> GetComponentTypes() => _components.Keys.ToList(); 
+
+    public IEnumerable<IComponent> GetComponents() => _components.Values;
+    public IEnumerable<Type> GetComponentTypes() => _components.Keys; 
 
     public EntityAssembly AddComponent(IComponent component)
     {

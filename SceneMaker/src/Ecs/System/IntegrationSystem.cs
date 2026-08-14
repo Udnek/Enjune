@@ -6,11 +6,11 @@ using SceneMaker.Ecs.Component;
 
 namespace SceneMaker.Ecs.System;
 
-public class IntegrationSystem : BaseSystem
+public class IntegrationSystem : SingleQuerySystem
 {
-    protected override Query.State BuildQuery(Query query)
+    protected override Query BuildQuery(Query.Builder builder)
     {
-        return query
+        return builder
             .With<Component.Position>()
             .With<Velocity>()
             .With<Acceleration>()

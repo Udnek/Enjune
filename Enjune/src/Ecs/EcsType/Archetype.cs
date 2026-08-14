@@ -6,8 +6,7 @@ namespace Enjune.Ecs.EcsType;
 public sealed class Archetype
 {
     public int EntityCount { get; private set; } = 0;
-    public Signature Signature { get; }
-    
+    private readonly Signature _signature;
     private readonly Dictionary<Type, IColumn> _columns = new();
     private Entity[] _rowToEntity;
     private readonly Dictionary<Entity, int> _entityToRow;
@@ -15,7 +14,7 @@ public sealed class Archetype
 
     public Archetype(Signature signature, World world)
     {
-        Signature = signature;
+        _signature = signature;
         _rowToEntity = new Entity[_capacity];
         _entityToRow = new Dictionary<Entity, int>(_capacity);
         
@@ -26,7 +25,17 @@ public sealed class Archetype
             RegisterColumn(types[i]);
     }
 
+    #region Public Api
+
     public Entity GetEntityByRow(int row) => _rowToEntity[row];
+
+    public Span<T> GetComponents<T>() where T : struct, IComponent
+    {
+        Column<T> column = (Column<T>)_columns[typeof(T)];
+        return column.GetSpan();
+    }
+    
+    #endregion
     
     private void RegisterColumn(Type compType)
     {
@@ -50,18 +59,17 @@ public sealed class Archetype
     }
     
     // TODO: Avoid using Collection<IComponent> because of boxing
-    public void AddEntity(EntityAssembly entityAssembly, Entity entity)
+    internal void AddEntity(EntityAssembly entityAssembly, Entity entity)
     {
-        Logger.Info(this, $"archetype with signature {Signature} acquired an entity {entity}");
+        Logger.Info(this, $"archetype with signature {_signature} acquired an entity {entity}");
         
         EnsureCapacity(EntityCount + 1);
 
         int row = EntityCount;
         _entityToRow[entity] = row;
         _rowToEntity[row] = entity;
-
-        List<IComponent> entityComponents = entityAssembly.GetComponents();
-        foreach (IComponent entityComponent in entityComponents)
+        
+        foreach (IComponent entityComponent in entityAssembly.GetComponents())
         {
             if (_columns.ContainsKey(entityComponent.GetType())) 
                 _columns[entityComponent.GetType()].SetValue(row, entityComponent);
@@ -69,12 +77,11 @@ public sealed class Archetype
          
         EntityCount++;
     }
-
     
-    public void RemoveEntity(Entity id)
+    internal void RemoveEntity(Entity entity)
     {
-        if (!_entityToRow.TryGetValue(id, out var entityRow)) 
-            Logger.Info(this, $"RemoveEntity: Entity {id} is not in {Signature} archetype.");
+        if (!_entityToRow.TryGetValue(entity, out var entityRow)) 
+            Logger.Info(this, $"{nameof(RemoveEntity)}: {entity} is not in {_signature} archetype.");
         
         var lastRow = EntityCount - 1;
 
@@ -88,23 +95,16 @@ public sealed class Archetype
             _entityToRow[lastId] = entityRow;
             _rowToEntity[entityRow] = lastId;
         }
-        _entityToRow.Remove(id);
+        _entityToRow.Remove(entity);
         EntityCount--;
-        Logger.Info(this, $"Removed entity {id} successfully");
+        Logger.Info(this, $"Removed {entity} successfully");
     }
-
-    public Span<T> GetComponents<T>() where T : struct, IComponent
-    {
-        Column<T> column = (Column<T>)_columns[typeof(T)];
-        return column.GetSpan();
-    }
-
-    public bool ContainsEntity(Entity entity) => _entityToRow.ContainsKey(entity);
-    public Entity.Snapshot? GetSnapshot(Entity entity)
+    
+    private Entity.Snapshot? GetSnapshot(Entity entity)
     {
         if (!_rowToEntity.Contains(entity))
         {
-            Logger.Warn(this, $"Snapshot: Requested entity {entity} doesn't exist in this archetype");
+            Logger.Warn(this, $"{nameof(GetSnapshot)}: Requested entity {entity} doesn't exist in this archetype");
             return null;
         }
 
@@ -115,16 +115,12 @@ public sealed class Archetype
         }
         return snapshot;
     }
-    public IEnumerable<Entity.Snapshot> GetAllEntities()
+    
+    internal IEnumerable<Entity.Snapshot> GetAllEntitySnapshots()
     {
         foreach (var id in _rowToEntity)
         {
             yield return GetSnapshot(id)!;
         }
-    }
-
-    public Column<T> GetColumn<T>() where T : struct, IComponent
-    {
-        return (Column<T>)_columns[typeof(T)];
     }
 }

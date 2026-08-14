@@ -6,7 +6,7 @@ using SceneMaker.Ecs.Component;
 namespace SceneMaker.Ecs.System;
 
 [Obsolete]
-public class TrackingSystem : BaseSystem
+public class TrackingSystem : SingleQuerySystem
 {
     //private EntityId _trackedEntity;
 

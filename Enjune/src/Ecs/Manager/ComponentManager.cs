@@ -13,13 +13,11 @@ public sealed class ComponentManager
 
     public ComponentManager()
     {
-        for (ComponentTypeId id = 0; id < EcsConstants.MaxComponents; id++)
+        for (ComponentTypeId id = 0; id < EcsConstants.MaxComponentsPerEntity; id++)
         {
             _availableComponentIds.Enqueue(id);
         }
     }
-    
-    public void RegisterComponentType<TComponent>() => RegisterComponentType(typeof(TComponent));
 
     public void RegisterComponentType(Type componentType)
     {

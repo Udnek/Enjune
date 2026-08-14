@@ -6,13 +6,11 @@ using SceneMaker.Ecs.Component;
 
 namespace SceneMaker.Ecs.System;
 
-public class GravitySystem : BaseSystem
+public class GravitySystem : SingleQuerySystem
 {
-    protected override Query.State BuildQuery(Query query)
+    protected override Query BuildQuery(Query.Builder builder)
     {
-        return query
-            .With<Acceleration>()
-            .Build();
+        return builder.With<Acceleration>().Build();
     }
 
     public override void Update(World world)

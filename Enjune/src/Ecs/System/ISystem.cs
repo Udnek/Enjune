@@ -4,6 +4,6 @@ namespace Enjune.Ecs.System;
 
 public interface ISystem
 {
-    void Initialize(Query preparedQuery);
+    void InitializeQueries(World world);
     void Update(World world);
 }

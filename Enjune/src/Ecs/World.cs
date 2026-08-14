@@ -18,15 +18,15 @@ public sealed class World
     // This cache version marks broad archetype structure version:
     // it increments when a new archetype gets created, but does not
     // increment when archetype's entity container changes
-    public int ArchetypeCacheVersion { get; private set; } = 0;
+    internal int ArchetypeCacheVersion { get; private set; } = 0;
 
-    public void InvalidateArchetypeCache()
+    internal void InvalidateArchetypeCache()
     {
         Logger.Info(this, "Invalidated archetype cache");
         ArchetypeCacheVersion++;
     }
 
-    public World(List<ISystem> systems, List<Type> componentTypes)
+    public World(IEnumerable<ISystem> systems, IEnumerable<Type> componentTypes)
     {
         Logger.Info(this, "Registering managers using given systems and component types");
 
@@ -40,12 +40,14 @@ public sealed class World
             SystemManager.RegisterSystem(system);
     }
 
-    // PUBLIC API
-    // Common
+    #region Public Api
+
     public void Update() => SystemManager.UpdateAll();
-
-
-    // Entity interactions
+    
+    public IEnumerable<Archetype> QueryArchetypes(Signature include, Signature exclude)
+        => ArchetypeManager.Query(include, exclude);
+    
+    #region Entity Interactions
     public void AddEntity(EntityAssembly assembly)
     {
         Entity entity = EntityManager.CreateEntity();
@@ -54,49 +56,19 @@ public sealed class World
 
     public void RemoveEntity(Entity entity) => ArchetypeManager.RemoveEntity(entity);
 
+    // very slow-poke
     public List<Entity.Snapshot> GetAllEntities()
     {
         List<Entity.Snapshot> snapshots = [];
-
-        ForEachMatchedArchetype(Signature.Empty, archetype =>
+        foreach (var archetype in QueryArchetypes(Signature.Empty, Signature.Empty))
         {
-            foreach (var snapshot in archetype.GetAllEntities())
+            foreach (var snapshot in archetype.GetAllEntitySnapshots())
             {
                 snapshots.Add(snapshot);
             }
-        });
+        }
         return snapshots;
     }
-
-
-    // Archetype interactions
-    public void ForEachMatchedArchetype(Signature signature, Action<Archetype> update)
-    {
-        foreach (var archetype in QueryArchetypesSimple(signature))
-            update(archetype);
-    }
-
-    public IEnumerable<Archetype> QueryArchetypesSimple(Signature signature)
-        => ArchetypeManager.QuerySimple(signature);
-
-    public IEnumerable<Archetype> QueryArchetypes(Signature includeSignature, Signature excludeSignature)
-        => ArchetypeManager.Query(includeSignature, excludeSignature);
-
-    public List<Archetype> GetMatchedArchetypes(Signature includeSignature, Signature excludeSignature) {
-        var archetypes = new List<Archetype>();
-        foreach (var archetype in QueryArchetypes(includeSignature, excludeSignature))
-            archetypes.Add(archetype);
-        return archetypes;
-    }
-
-    
-    // Component interactions
-    public List<Type> DeconstructSignature(Signature signature)
-        => ComponentManager.DeconstructSignature(signature);
-    public Signature ConstructSignature(Action<Signature.Builder> configure)
-    {
-        var builder = new Signature.Builder(this);
-        configure(builder);
-        return builder.Build();
-    }
+    #endregion
+    #endregion
 }
