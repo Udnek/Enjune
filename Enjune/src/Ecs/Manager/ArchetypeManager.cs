@@ -29,7 +29,7 @@ public sealed class ArchetypeManager(World world)
         }
     }
     
-    public void AddEntity(EntityAssembly assembly, Entity entity)
+    public void AddEntity(Entity.Assembly assembly, Entity entity)
     {
         Signature signature = assembly.GetSignature(_world);
         Logger.Info(this, $"got a request to add an entity {entity} with signature {signature}");

@@ -10,9 +10,10 @@ using SceneMaker.Ecs.System;
 
 namespace SceneMaker;
 
-public class EcsApp : AbstractDisposable, IApp
+public class EcsTestApp : AbstractDisposable, IApp
 {
     private World _world = null!;
+    private Dictionary<string, Entity> _testEntities = [];
     
     public Error? Init()
     {
@@ -31,12 +32,12 @@ public class EcsApp : AbstractDisposable, IApp
 
         _world = new World(systems, componentTypes);
         
-        var testEntity = new EntityAssembly()
+        var testEntity = new Entity.Assembly()
             .AddComponent(new Ecs.Component.Position(0, 0, 0))
             .AddComponent(new Velocity(0,0,0))
             .AddComponent(new Acceleration(0,0,0));
         
-        _world.AddEntity(testEntity);
+        _testEntities.Add("MAIN", _world.AddEntity(testEntity));
         
         return null;
     }
@@ -53,7 +54,7 @@ public class EcsApp : AbstractDisposable, IApp
         DateTime endTime = DateTime.Now;
         Logger.Info(this, $"Simulation took {endTime - startTime}");
         Logger.Info(this, $"Removing entity as a test");
-        _world.RemoveEntity(new Entity(0));
+        _world.RemoveEntity(_testEntities["MAIN"]);
         Logger.Info(this, $"Updating world once again");
         _world.Update();
     }

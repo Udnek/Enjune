@@ -59,7 +59,7 @@ public sealed class Archetype
     }
     
     // TODO: Avoid using Collection<IComponent> because of boxing
-    internal void AddEntity(EntityAssembly entityAssembly, Entity entity)
+    internal void AddEntity(Entity.Assembly entityAssembly, Entity entity)
     {
         Logger.Info(this, $"archetype with signature {_signature} acquired an entity {entity}");
         

@@ -48,15 +48,17 @@ public sealed class World
         => ArchetypeManager.Query(include, exclude);
     
     #region Entity Interactions
-    public void AddEntity(EntityAssembly assembly)
+    public Entity AddEntity(Entity.Assembly assembly)
     {
         Entity entity = EntityManager.CreateEntity();
         ArchetypeManager.AddEntity(assembly, entity);
+
+        return entity;
     }
 
     public void RemoveEntity(Entity entity) => ArchetypeManager.RemoveEntity(entity);
 
-    // very slow-poke
+    // Don't use in hot loops
     public List<(Entity, List<IComponent>)> GetAllEntities()
     {
         List<(Entity, List<IComponent>)> snapshots = [];

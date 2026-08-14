@@ -14,6 +14,6 @@ internal class Program
     private static void Main(string[] args)
     {
         Logger.RegisterNamespaceToDomain(typeof(Program).Assembly, "", new Logger.Domain("SceneMaker", ConsoleColor.DarkRed));
-        Enjune.Enjune.Run(new EcsApp(), args);
+        Enjune.Enjune.Run(new EcsTestApp(), args);
     }
 }
