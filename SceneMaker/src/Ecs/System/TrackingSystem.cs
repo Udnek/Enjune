@@ -29,11 +29,20 @@ public class TrackingSystem : SingleQuerySystem
     //{
 
     //}
-    protected override Query.State BuildQuery(Query preparedQuery)
+    //protected override Query.State BuildQuery(Query preparedQuery)
+    //{
+    //    throw new NotImplementedException();
+    //}
+    //public override void Update(World world)
+    //{
+    //    throw new NotImplementedException();
+    //}
+    public override void Update(World world)
     {
         throw new NotImplementedException();
     }
-    public override void Update(World world)
+
+    protected override Query BuildQuery(Query.Builder builder)
     {
         throw new NotImplementedException();
     }

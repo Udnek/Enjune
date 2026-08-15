@@ -11,6 +11,10 @@ public readonly record struct Entity
 
     public Entity(uint id) => _id = id;
     public Entity(int id) => _id = (uint)id;
+    public override string ToString()
+    {
+        return $"Entity {_id}";
+    }
 
     public class Assembly()
     {

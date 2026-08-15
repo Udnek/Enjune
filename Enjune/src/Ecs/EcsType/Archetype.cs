@@ -6,7 +6,7 @@ namespace Enjune.Ecs.EcsType;
 public sealed class Archetype
 {
     public int EntityCount { get; private set; } = 0;
-    private readonly Signature _signature;
+    public readonly Signature Signature;
     private readonly Dictionary<Type, IColumn> _columns = new();
     private Entity[] _rowToEntity;
     private readonly Dictionary<Entity, int> _entityToRow;
@@ -14,7 +14,7 @@ public sealed class Archetype
 
     public Archetype(Signature signature, World world)
     {
-        _signature = signature;
+        Signature = signature;
         _rowToEntity = new Entity[_capacity];
         _entityToRow = new Dictionary<Entity, int>(_capacity);
         
@@ -34,9 +34,11 @@ public sealed class Archetype
         Column<T> column = (Column<T>)_columns[typeof(T)];
         return column.GetSpan();
     }
-    
+
     #endregion
-    
+
+    internal bool Contains(Entity entity) => _rowToEntity.Contains(entity);
+
     private void RegisterColumn(Type compType)
     {
         Type columnType = typeof(Column<>).MakeGenericType(compType);
@@ -61,7 +63,7 @@ public sealed class Archetype
     // TODO: Avoid using Collection<IComponent> because of boxing
     internal void AddEntity(Entity.Assembly entityAssembly, Entity entity)
     {
-        Logger.Info(this, $"archetype with signature {_signature} acquired an entity {entity}");
+        Logger.Info(this, $"Archetype with signature {Signature} acquired {entity} as an assembly");
         
         EnsureCapacity(EntityCount + 1);
 
@@ -69,10 +71,10 @@ public sealed class Archetype
         _entityToRow[entity] = row;
         _rowToEntity[row] = entity;
         
-        foreach (IComponent entityComponent in entityAssembly.GetComponents())
+        foreach (IComponent component in entityAssembly.GetComponents())
         {
-            if (_columns.ContainsKey(entityComponent.GetType())) 
-                _columns[entityComponent.GetType()].SetValue(row, entityComponent);
+            if (_columns.ContainsKey(component.GetType())) 
+                _columns[component.GetType()].SetValue(row, component);
         }
          
         EntityCount++;
@@ -81,8 +83,9 @@ public sealed class Archetype
     internal void RemoveEntity(Entity entity)
     {
         if (!_entityToRow.TryGetValue(entity, out var entityRow)) 
-            Logger.Info(this, $"{nameof(RemoveEntity)}: {entity} is not in {_signature} archetype.");
-        
+            Logger.Info(this, $"{nameof(RemoveEntity)}: {entity} is not in {Signature} archetype.");
+        Logger.Info(this, $"Removing {entity}");
+
         var lastRow = EntityCount - 1;
 
         if (entityRow != lastRow)
@@ -97,7 +100,6 @@ public sealed class Archetype
         }
         _entityToRow.Remove(entity);
         EntityCount--;
-        Logger.Info(this, $"Removed {entity} successfully");
     }
     
     private (Entity, List<IComponent>)? GetSnapshot(Entity entity)
@@ -122,5 +124,41 @@ public sealed class Archetype
         {
             yield return GetSnapshot(entity)!.Value;
         }
+    }
+
+    internal IEnumerable<IComponent> GetAllEntityComponents(Entity entity)
+    {
+        var index = _entityToRow[entity];
+        foreach ((Type type, IColumn column) in _columns)
+        {
+            yield return column.GetValue(index);
+        }
+    }
+
+    // TODO: Probably needs more error protection
+    internal void AddEntity(Entity entity, IEnumerable<IComponent> components)
+    {
+        Logger.Info(this, $"Archetype with signature {Signature} acquired {entity} as a stream of components");
+
+        EnsureCapacity(EntityCount + 1);
+
+        int row = EntityCount;
+        _entityToRow[entity] = row;
+        _rowToEntity[row] = entity;
+
+        foreach (IComponent component in components)
+        {
+            if (_columns.ContainsKey(component.GetType()))
+                _columns[component.GetType()].SetValue(row, component);
+        }
+
+        EntityCount++;
+    }
+
+    internal void WriteComponent(Entity entity, IComponent component)
+    {
+        int row = _entityToRow[entity];
+        var column = _columns[component.GetType()];
+        column.SetValue(row, component);
     }
 }

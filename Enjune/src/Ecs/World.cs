@@ -19,6 +19,7 @@ public sealed class World
     // it increments when a new archetype gets created, but does not
     // increment when archetype's entity container changes
     internal int ArchetypeCacheVersion { get; private set; } = 0;
+    private List<Entity> _entities = [];
 
     internal void InvalidateArchetypeCache()
     {
@@ -52,11 +53,35 @@ public sealed class World
     {
         Entity entity = EntityManager.CreateEntity();
         ArchetypeManager.AddEntity(assembly, entity);
+        _entities.Add(entity);
 
         return entity;
     }
 
-    public void RemoveEntity(Entity entity) => ArchetypeManager.RemoveEntity(entity);
+    public void RemoveEntity(Entity entity)
+    {
+        ArchetypeManager.RemoveEntity(entity);
+        _entities.Remove(entity);
+    }
+
+    public void AddEntityComponent(Entity entity, IComponent component)
+    {
+        if (!_entities.Contains(entity)) { Logger.Error(this, $"AddEntityComponent: {entity} doesn't exist"); return; }
+        Archetype currentArchetype = ArchetypeManager.GetArchetypeByEntity(entity);
+        Signature targetSignature = currentArchetype.Signature.Set(GetComponentId(component));
+
+        Archetype targetArchetype = ArchetypeManager.GetOrAddArchetypeBySignature(targetSignature);
+
+        ArchetypeManager.MoveEntity(entity, currentArchetype, targetArchetype);
+        targetArchetype.WriteComponent(entity, component);
+
+        Logger.Info(this, $"{nameof(AddEntityComponent)}: Added component successfully");
+    }
+
+    public int GetComponentId(IComponent component)
+    {
+        return (int)ComponentManager.GetTypeIdByType(component.GetType());
+    }
 
     // Don't use in hot loops
     public List<(Entity, List<IComponent>)> GetAllEntities()
@@ -69,6 +94,7 @@ public sealed class World
                 snapshots.Add(snapshot);
             }
         }
+        Logger.Warn("Sergeant Hartman", "Do you suck dicks?!");
         return snapshots;
     }
     #endregion
