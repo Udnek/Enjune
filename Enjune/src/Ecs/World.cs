@@ -66,7 +66,11 @@ public sealed class World
 
     public void AddEntityComponent(Entity entity, IComponent component)
     {
-        if (!_entities.Contains(entity)) { Logger.Error(this, $"AddEntityComponent: {entity} doesn't exist"); return; }
+        if (!_entities.Contains(entity))
+        {
+            Logger.Error(this, $"AddEntityComponent: {entity} doesn't exist"); 
+            return;
+        }
         Archetype currentArchetype = ArchetypeManager.GetArchetypeByEntity(entity);
         Signature targetSignature = currentArchetype.Signature.Set(GetComponentId(component));
 
