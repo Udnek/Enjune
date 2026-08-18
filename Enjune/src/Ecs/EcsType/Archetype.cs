@@ -5,20 +5,18 @@ namespace Enjune.Ecs.EcsType;
 
 public sealed class Archetype
 {
-    private readonly Dictionary<Type, IColumn> _columns = new();
-    private EntityId[] _rowToId;
-    private readonly Dictionary<EntityId, int> _idToRow;
-    
-    private int _capacity = EcsConstants.InitialCapacity;
-    
     public int EntityCount { get; private set; } = 0;
-    public Signature Signature { get; }
+    public readonly Signature Signature;
+    private readonly Dictionary<Type, IColumn> _columns = new();
+    private Entity[] _rowToEntity;
+    private readonly Dictionary<Entity, int> _entityToRow;
+    private int _capacity = EcsConstants.InitialColumnCapacity;
 
     public Archetype(Signature signature, World world)
     {
         Signature = signature;
-        _rowToId = new EntityId[_capacity];
-        _idToRow = new Dictionary<EntityId, int>(_capacity);
+        _rowToEntity = new Entity[_capacity];
+        _entityToRow = new Dictionary<Entity, int>(_capacity);
         
         int nComponents = signature.GetSetBitsCount();
         
@@ -27,8 +25,20 @@ public sealed class Archetype
             RegisterColumn(types[i]);
     }
 
-    public EntityId GetIdByRow(int row) => _rowToId[row];
-    
+    #region Public Api
+
+    public Entity GetEntityByRow(int row) => _rowToEntity[row];
+
+    public Span<T> GetComponents<T>() where T : struct, IComponent
+    {
+        Column<T> column = (Column<T>)_columns[typeof(T)];
+        return column.GetSpan();
+    }
+
+    #endregion
+
+    internal bool Contains(Entity entity) => _rowToEntity.Contains(entity);
+
     private void RegisterColumn(Type compType)
     {
         Type columnType = typeof(Column<>).MakeGenericType(compType);
@@ -42,7 +52,7 @@ public sealed class Archetype
         if (targetCapacity <= _capacity) return;
         int newCapacity = _capacity * 2;
         
-        Array.Resize(ref _rowToId, newCapacity);
+        Array.Resize(ref _rowToEntity, newCapacity);
 
         foreach (IColumn column in _columns.Values ) 
             column.SetCapacity(newCapacity);
@@ -51,70 +61,104 @@ public sealed class Archetype
     }
     
     // TODO: Avoid using Collection<IComponent> because of boxing
-    public void AddEntity(EntityAssembly entityAssembly, EntityId id)
+    internal void AddEntity(Entity.Assembly entityAssembly, Entity entity)
     {
-        Logger.Info(this, $"archetype with signature {Signature} acquired an entity {id}");
+        Logger.Info(this, $"Archetype with signature {Signature} acquired {entity} as an assembly");
         
         EnsureCapacity(EntityCount + 1);
 
         int row = EntityCount;
-        _idToRow[id] = row;
-        _rowToId[row] = id;
-
-        List<IComponent> entityComponents = entityAssembly.GetComponents();
-        foreach (IComponent entityComponent in entityComponents)
+        _entityToRow[entity] = row;
+        _rowToEntity[row] = entity;
+        
+        foreach (IComponent component in entityAssembly.GetComponents())
         {
-            if (_columns.ContainsKey(entityComponent.GetType())) 
-                _columns[entityComponent.GetType()].SetValue(row, entityComponent);
+            if (_columns.ContainsKey(component.GetType())) 
+                _columns[component.GetType()].SetValue(row, component);
         }
          
         EntityCount++;
     }
-
     
-    public void RemoveEntity(EntityId id)
+    internal void RemoveEntity(Entity entity)
     {
-        if (!_idToRow.TryGetValue(id, out var entityRow)) 
-            Logger.Info(this, $"RemoveEntity: Entity {id} is not in {Signature} archetype.");
-        
+        if (!_entityToRow.TryGetValue(entity, out var entityRow)) 
+            Logger.Info(this, $"{nameof(RemoveEntity)}: {entity} is not in {Signature} archetype.");
+        Logger.Info(this, $"Removing {entity}");
+
         var lastRow = EntityCount - 1;
 
         if (entityRow != lastRow)
         {
-            var lastId = _rowToId[lastRow];
+            var lastId = _rowToEntity[lastRow];
 
             foreach (IColumn column in _columns.Values) 
                 column.SwapElements(lastRow, entityRow);
 
-            _idToRow[lastId] = entityRow;
-            _rowToId[entityRow] = lastId;
+            _entityToRow[lastId] = entityRow;
+            _rowToEntity[entityRow] = lastId;
         }
-        _idToRow.Remove(id);
+        _entityToRow.Remove(entity);
         EntityCount--;
-        Logger.Info(this, $"Removed entity {id} successfully");
+    }
+    
+    private (Entity, List<IComponent>)? GetSnapshot(Entity entity)
+    {
+        if (!_rowToEntity.Contains(entity))
+        {
+            Logger.Warn(this, $"{nameof(GetSnapshot)}: Requested entity {entity} doesn't exist in this archetype");
+            return null;
+        }
+
+        List<IComponent> components = [];
+        foreach (IColumn column in _columns.Values)
+        {
+            components.Add(column.GetValue(_entityToRow[entity]));
+        }
+        return (entity, components);
+    }
+    
+    internal IEnumerable<(Entity, List<IComponent>)> GetAllEntitySnapshots()
+    {
+        foreach (var entity in _rowToEntity)
+        {
+            yield return GetSnapshot(entity)!.Value;
+        }
     }
 
-    public Span<T> GetComponents<T>() where T : struct, IComponent
+    internal IEnumerable<IComponent> GetAllEntityComponents(Entity entity)
     {
-        Column<T> column = (Column<T>)_columns[typeof(T)];
-        return column.GetSpan();
+        var index = _entityToRow[entity];
+        foreach ((Type type, IColumn column) in _columns)
+        {
+            yield return column.GetValue(index);
+        }
     }
 
-    public bool ContainsEntity(EntityId id) => _idToRow.ContainsKey(id);
-
-    // TODO: Entity Assembly is no longer suitable for runtime acquisation 
-    [Obsolete]
-    public EntityAssembly? GetAssembly(EntityId id)
+    // TODO: Probably needs more error protection
+    internal void AddEntity(Entity entity, IEnumerable<IComponent> components)
     {
-        //if (!ContainsEntity(id)) return null;
-        //int row = _id2Row[id];
-        //EntityAssembly assembly = new EntityAssembly();
-        //foreach (IColumn column in _columns.Values)
-        //{
-        //    assembly.AddComponent(column.GetValue(row));
-        //}
+        Logger.Info(this, $"Archetype with signature {Signature} acquired {entity} as a stream of components");
 
-        //return assembly;
-        return null;
+        EnsureCapacity(EntityCount + 1);
+
+        int row = EntityCount;
+        _entityToRow[entity] = row;
+        _rowToEntity[row] = entity;
+
+        foreach (IComponent component in components)
+        {
+            if (_columns.ContainsKey(component.GetType()))
+                _columns[component.GetType()].SetValue(row, component);
+        }
+
+        EntityCount++;
+    }
+
+    internal void WriteComponent(Entity entity, IComponent component)
+    {
+        int row = _entityToRow[entity];
+        var column = _columns[component.GetType()];
+        column.SetValue(row, component);
     }
 }

@@ -15,7 +15,7 @@ public sealed class Column<T> : IColumn where T : struct, IComponent
 {
     private T[] _data;
 
-    public Column(int capacity = EcsConstants.InitialCapacity) => _data = new T[capacity];
+    public Column(int capacity = EcsConstants.InitialColumnCapacity) => _data = new T[capacity];
 
     public void SetValue(int row, IComponent value) => _data[row] = (T)value;
 

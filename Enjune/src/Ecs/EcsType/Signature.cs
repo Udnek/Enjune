@@ -6,6 +6,7 @@ namespace Enjune.Ecs.EcsType;
 public readonly record struct Signature
 {
     public static readonly Signature Empty = new(0);
+    public static readonly Signature Full = new(1);
     //uint -> 32-bit set
     //ulong -> 64-bit set
     private readonly SignatureInteger _bitSet;
@@ -21,7 +22,9 @@ public readonly record struct Signature
 
     public bool IsSet(int bitPosition) => (_bitSet & ( (SignatureInteger) 1 << bitPosition)) != 0;
 
-    public bool Contains(Signature other) => (_bitSet & other._bitSet) == other._bitSet;
+    public bool Includes(Signature other) => (_bitSet & other._bitSet) == other._bitSet;
+
+    public bool Excludes(Signature other) => (~other._bitSet & _bitSet) == _bitSet;
     
     public bool Matches(Signature other) => _bitSet == other._bitSet;
     
@@ -39,7 +42,7 @@ public readonly record struct Signature
 
     public override string ToString() => Convert.ToString(_bitSet, 2);
     
-    public class Builder(World world)
+    public sealed class Builder(World world)
     {
         private readonly ComponentManager _componentManager = world.ComponentManager;
         private Signature _signature = Empty;

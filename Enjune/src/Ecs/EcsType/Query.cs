@@ -1,0 +1,60 @@
+﻿using Enjune.Ecs.Component;
+using System;
+using System.Collections.Generic;
+using System.Net.Mail;
+using System.Reflection.Metadata.Ecma335;
+using System.Text;
+
+namespace Enjune.Ecs.EcsType;
+
+public sealed class Query(World world, Signature include, Signature exclude)
+{
+    private readonly World _world = world;
+    private readonly Signature _include = include;
+    private readonly Signature _exclude = exclude;
+
+    private readonly List<Archetype> _cachedArchetypes = [];
+    private int _cacheVersion = 0;
+        
+    // TODO: Ensure cache invalidation is in place in World logic
+    private void ValidateCache()
+    {
+        if (_world.ArchetypeCacheVersion == _cacheVersion) 
+            return;
+        
+        _cacheVersion = _world.ArchetypeCacheVersion;
+        _cachedArchetypes.Clear();
+        foreach (var archetype in _world.QueryArchetypes(_include, _exclude)) 
+            _cachedArchetypes.Add(archetype);
+    }
+
+    public void ForEachArchetype(Action<Archetype> action)
+    {
+        ValidateCache();
+        foreach (var archetype in _cachedArchetypes)
+            action(archetype);
+    }
+
+    public static Builder For(World world) => new(world);
+
+    public sealed class Builder(World world)
+    {
+        private readonly World _world = world;
+        private readonly Signature.Builder _includeBuilder = new Signature.Builder(world);
+        private readonly Signature.Builder _excludeBuilder = new Signature.Builder(world);
+
+        public Builder With<T>() where T : IComponent
+        {
+            _includeBuilder.RegisterComponent<T>();
+            return this;
+        }
+        
+        public Builder Without<T>() where T : IComponent
+        {
+            _excludeBuilder.RegisterComponent<T>();
+            return this;
+        }
+        
+        public Query Build() => new(_world, _includeBuilder.Build(), _excludeBuilder.Build());
+    }
+}

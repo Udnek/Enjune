@@ -6,14 +6,13 @@ namespace Enjune.Ecs.Manager;
 
 public sealed class SystemManager(World world)
 {
-    private readonly List<ISystem> _systems = [];
     private readonly World _world = world;
+    private readonly List<ISystem> _systems = [];
 
-    public SystemManager RegisterSystem(ISystem system)
+    public void RegisterSystem(ISystem system)
     {
         _systems.Add(system);
-        system.Initialize(new Signature.Builder(_world));
-        return this;
+        system.InitializeQueries(_world);
     }
 
     public void UpdateAll()
