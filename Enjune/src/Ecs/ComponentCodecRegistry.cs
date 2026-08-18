@@ -7,6 +7,7 @@ using Enjune.Misc;
 namespace Enjune.Ecs;
 
 // can be used when working with unbound values
+[Obsolete]
 public static class ComponentCodecRegistry
 {
     private static readonly Dictionary<Type, (string Name, ICodec<object> Codec)> TypeToCodec = new();

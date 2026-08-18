@@ -35,7 +35,7 @@ public sealed class MapCodec<TInstance> : IMapCodec<TInstance>
         return new DataObject.Map(encoded);
     }
 
-    public DecodeResult<TInstance> Decode(DataObject data)
+    public ResultOrError<TInstance> Decode(DataObject data)
     {
         var mapData = data.Cast<DataObject.Map>(out var error);
         if (mapData is null)

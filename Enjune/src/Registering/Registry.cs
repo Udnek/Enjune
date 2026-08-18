@@ -1,40 +1,87 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.Contracts;
 using Enjune.Misc;
 
 namespace Enjune.Registering;
 
 
-public interface IRegistry<T>
-{ 
-    ResourceKey<T> Register(Identifier id, T value);
-    T GetOrThrow(Identifier id);
-    T? GetOrNull(Identifier id);
-    bool TryGet(Identifier id, [MaybeNullWhen(false)] out T value);
+public interface IRegistry<out T>
+{
+    [Pure]
+    T? Get(Identifier id, out Error? error);
 }
 
-public sealed class Registry<T> : IRegistry<T>
+public sealed class WritableRegistry<T> : IRegistry<T> where T: notnull
 {
-    private readonly Dictionary<Identifier, T> _idToValue = [];
+    private readonly Identifier _id;
+    private readonly Dictionary<Identifier, T> _idToValue = new(0);
     
-    public ResourceKey<T> Register(Identifier id, T value)
+    public static WritableRegistry<T> CreateAndRegister(Identifier registryId)
+    {
+        var registry = new WritableRegistry<T>(registryId);
+        Registries.All.RegisterUnsafe(registryId, registry, out var error);
+        if (error is not null)
+            Logger.Error(typeof(WritableRegistry<T>), $"Can not register {registry}: {error}");
+        return registry;
+    }
+
+    internal static WritableRegistry<T> CreateRootRegistry(Identifier id) => new(id);
+
+    private WritableRegistry(Identifier id) => _id = id;
+
+    public RegistryReference<T> Register(Identifier id, T value)
     {
         if (_idToValue.ContainsKey(id))
-            Logger.Error(this, $"can not register value because id already presented: {id}");
-        else
-            _idToValue[id] = value;
-        return new ResourceKey<T>(this, id);
+            Logger.Warn(this, $"Item with id already presented: {id}; replacing");
+        _idToValue[id] = value;
+        return CreateReference(id);
     }
 
-    public T? GetOrNull(Identifier id)
+    public void Register(RegistryReference<T> reference, T value) => Register(reference.ItemId, value);
+
+    public RegistryReference<T> CreateReference(Identifier itemId)
     {
-        _idToValue.TryGetValue(id, out var value);
-        return value;
+        return new RegistryReference<T>(_id, itemId);
     }
 
-    public T GetOrThrow(Identifier id) => _idToValue[id];
+    public Identifier? GetId(T target)
+    {
+        foreach (var (key, value) in _idToValue)
+        {
+            if (Equals(value, target))
+                return key;
+        }
 
-    public bool TryGet(Identifier id, [MaybeNullWhen(false)] out T value) 
-        => _idToValue.TryGetValue(id, out value);
+        return null;
+    }
+    
+    [Pure]
+    public T? Get(Identifier id, out Error? error)
+    {
+        if (_idToValue.TryGetValue(id, out var value))
+        {
+            error = null;
+            return value;
+        }
 
-    public override string ToString() => Logger.GetTypeName<Registry<T>>();
+        error = $"registry doesn't contain {id}";
+        return default;
+    }
+    
+    public override string ToString() => $"{Logger.GetTypeName<WritableRegistry<T>>()}[{_id}]";
+    
+    // parent interface
+    
+    public void RegisterUnsafe(Identifier id, object value, out Error? error)
+    {
+        if (value is not T typed)
+        {
+            error = $"{this} expects {Logger.GetTypeName<T>()}, but got {value}";
+            return;
+        }
+
+        error = null;
+        Register(id, typed);
+    }
 }
+

@@ -7,12 +7,35 @@ using Enjune.Registering;
 
 namespace Enjune.Data.Codec;
 
-public interface ICodec<T>
+public interface IObjCodec
 {
+    [Pure]
+    ResultOrError<DataObject> EncodeObj(object? instance);
+    [Pure]
+    ResultOrError<object?> DecodeObj(DataObject data);
+}
+
+public interface ICodec<T> : IObjCodec
+{
+    [Obsolete("use generic method")]
+    ResultOrError<object?> IObjCodec.DecodeObj(DataObject data)
+    {
+        var result = Decode(data);
+        return DecodeResult.Convert<T, object?>(result);
+    }
+
+    [Obsolete("use generic method")]
+    ResultOrError<DataObject> IObjCodec.EncodeObj(object? instance)
+    {
+        if (instance is T)
+            return EncodeObj(instance);
+        return new Error($"Can not encode {instance} because expected {Logger.GetTypeName<T>()}; use generic method");
+    }
+
     [Pure]
     DataObject Encode(T instance);
     [Pure]
-    DecodeResult<T> Decode(DataObject data);
+    ResultOrError<T> Decode(DataObject data);
 }
 
 public static class Codecs

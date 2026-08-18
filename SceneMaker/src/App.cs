@@ -1,13 +1,18 @@
 using Enjune;
+using Enjune.Data.Codec;
+using Enjune.Ecs;
 using Enjune.File;
 using Enjune.Graphic.Api;
 using Enjune.Graphic.Asset;
 using Enjune.Graphic.Key;
 using Enjune.KitStart;
 using Enjune.Misc;
+using Enjune.Registering;
 using Enjune.World;
 using OpenGLApi;
 using OpenTK.Mathematics;
+using SceneMaker.Bridge;
+using SceneMaker.Ecs.Component;
 using SceneMaker.Misc;
 using SceneMaker.Ui;
 
@@ -30,7 +35,8 @@ public class App : AbstractDisposable, IApp
     public FlyingPlayerController WasdController { get; private set; } = null!;
     public EditorController EditorController { get; private set; } = null!;
     
-    //private Scene _scene = null!;
+    private GraphicBridge _graphicBridge = null!;
+    private World _world = null!;
     private UiManager _uiManager = null!;
     //public Focus Focused = Focus.Scene;
 
@@ -43,6 +49,18 @@ public class App : AbstractDisposable, IApp
         
         InputHandler = new BasicInputHandler(InitialWindowSize, 0.5f);
         _dumbTexturesBind = _binds.AddBind(new KeyBinds.Bind("dumb_textures", KeyCode.F2));
+
+        (Identifier Id, Type Type, IObjCodec Codec)[] comps = [
+            (Identifier.Of(Program.Assembly, "transform"), typeof(Transform), Transform.Codec),
+            (Identifier.Of(Program.Assembly, "spot_light"), typeof(SpotLightComponent), SpotLightComponent.Codec),
+            (Identifier.Of(Program.Assembly, "model"), typeof(ModelComponent), ModelComponent.Codec)
+        ]; 
+        
+        foreach (var (id, type, codec) in comps)
+        {
+            Registries.EcsComponentType.Register(id, type);
+            Registries.Codec.Register(id, codec);
+        }
     }
 
     public Error? Init()
@@ -53,12 +71,14 @@ public class App : AbstractDisposable, IApp
         var font = assetManager.AddFont(AssemblyPath.Of(Enjune.Enjune.Assembly, "Fonts", "vt323.ttf"), 128, out var error);
         if (font == null) return error;
 
-        // scene load
-        {
-            var result = SceneManager.Load(assetManager);
-            if (result.Scene is null) return result.Error;
-            _scene = result.Scene;
-        }
+        // // scene load
+        // {
+        //     var result = SceneManager.Load(assetManager);
+        //     if (result.Scene is null) return result.Error;
+        //     _scene = result.Scene;
+        // }
+
+        _world = new World();
         
         var assets = assetManager.Compile();
 
@@ -73,9 +93,9 @@ public class App : AbstractDisposable, IApp
         Grapi.SetCursorMode(IGraphicApi.CursorMode.Centered);
         
         // adding models
-        foreach (var obj in _scene.Objects)
+        foreach (var obj in _gra.Objects)
         {
-            var model = obj.Model?.GetOrNull();
+            var model = obj.Model?.Get(out _);
             if (model is null) continue;
             obj.RenderableModel = Grapi.CreateStaticRenderable(model);
         }
@@ -83,8 +103,8 @@ public class App : AbstractDisposable, IApp
         // controllers
         {
             WasdController = new FlyingPlayerController(Grapi, InputHandler, _wasd, 0.2f);
-            EditorController = new EditorController(Grapi, InputHandler, _scene);
-            _scene.Objects.Add(EditorController.AxisObject);
+            EditorController = new EditorController(Grapi, InputHandler, _gra);
+            _gra.Objects.Add(EditorController.AxisObject);
         }
 
         _uiManager = new UiManager(this, font);
@@ -101,7 +121,7 @@ public class App : AbstractDisposable, IApp
     public void MainCycle()
     {
         GraphicCycle();
-        SceneManager.Save(_scene);
+        SceneManager.Save(_gra);
     }
 
     private void GraphicCycle()
@@ -113,7 +133,7 @@ public class App : AbstractDisposable, IApp
         // cache to not create new list every frame
         List<SpotLight> spotLights = [];
         
-        Utils.RunTargetFpsLoopWhile(500,
+        Utils.RunTargetFpsLoopWhile(60,
             () => !Grapi.ShouldStop(),
             deltaTime =>
             {
@@ -152,16 +172,7 @@ public class App : AbstractDisposable, IApp
 
                 #region Lights
                 {
-                    spotLights.Clear();
-                    foreach (var sObject in _scene.Objects)
-                    {
-                        var light = sObject.SpotLight;
-                        if (light is null) continue;
-                        light.Position = sObject.Position;
-                        light.UpdateView();
-                        spotLights.Add(light);
-                    }
-                    Grapi.SetLights(spotLights.AsSpan());
+                    Grapi.SetLights(_graphicBridge.SpotLights.Values);
                 }
                 #endregion
 
@@ -171,15 +182,13 @@ public class App : AbstractDisposable, IApp
                     s.ForEachLight(() =>
                     {
                         Grapi.ClearRenderBuffer();
-                        foreach (var obj in _scene.Objects)
+                        foreach (var obj in _graphicBridge.Objects.Values)
                         {
-                            if (!obj.IsRealistic) continue;
+                            if (!obj.DropsShadow) continue;
                             if (obj.Hidden) continue;
-                            if (obj.RenderableModel is null) continue;
-                            if (obj.SpotLight is not null) continue;
                             
-                            s.ModelTransform(obj.ModelTransform);
-                            obj.RenderableModel.Render(s);
+                            s.ModelTransform(obj.TransformMatrix);
+                            obj.Model.Render(s);
                         }
                     });
                 });
@@ -193,19 +202,18 @@ public class App : AbstractDisposable, IApp
                     s.ViewTransform(view);
                     s.ViewPosition(WasdController.Position);
                     
-                    foreach (var obj in _scene.Objects)
+                    foreach (var obj in _graphicBridge.Objects.Values)
                     {
-                        if (!obj.IsRealistic) continue;
+                        if (!obj.DropsShadow) continue;
                         if (obj.Hidden) continue;
-                        if (obj.RenderableModel is null) continue;
                     
                         if (obj == EditorController.SelectedObject)
                             s.GlobalColor((1, 0.5f, 0f, 1f));
                         else
                             s.GlobalColor(new Color(1f));
                     
-                        s.ModelTransform(obj.ModelTransform);
-                        obj.RenderableModel.Render(s);
+                        s.ModelTransform(obj.TransformMatrix);
+                        obj.Model.Render(s);
                     }
                 });
                 #endregion
@@ -218,15 +226,14 @@ public class App : AbstractDisposable, IApp
                     s.ProjectionTransform(projection);
                     s.ViewTransform(view);
                     
-                    foreach (var obj in _scene.Objects)
+                    foreach (var obj in _graphicBridge.Objects.Values)
                     {
-                        if (obj.IsRealistic) continue;
+                        if (obj.DropsShadow) continue;
                         if (obj.Hidden) continue;
-                        if (obj.RenderableModel is null) continue;
                 
-                        s.ModelTransform(obj.ModelTransform);
+                        s.ModelTransform(obj.TransformMatrix);
                 
-                        obj.RenderableModel.Render(s);
+                        obj.Model.Render(s);
                     }
                     
                     // render UI
@@ -244,8 +251,8 @@ public class App : AbstractDisposable, IApp
 
     protected override void DisposeData()
     {
-        foreach (var o in _scene.Objects) 
-            o.RenderableModel?.Dispose();
+        foreach (var o in _graphicBridge.Objects.Values) 
+            o.Model.Dispose();
         
         Utils.DisposeAllFields(this);
     }

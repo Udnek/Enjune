@@ -24,7 +24,7 @@ public sealed class InstanceMatchCodec<TInstance> : ICodec<TInstance>
         return DataObject.Null;
     }
 
-    public DecodeResult<TInstance> Decode(DataObject data)
+    public ResultOrError<TInstance> Decode(DataObject data)
     {
         var map = data.Cast<DataObject.Map>(out var error);
         if (map is null) return 

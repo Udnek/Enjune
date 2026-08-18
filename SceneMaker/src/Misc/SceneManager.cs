@@ -20,15 +20,15 @@ public static class SceneManager
     
     private static Error? LoadModels(AssetManager assetManager)
     {
-        Models.Registry.Register(Identifier.Of(Assembly, "error_cube"),
+        Models.Registry.Register(Models.ErrorCube,
             new Model(Mesh.Cube(Position.Zero, 1f, TextureQuad.Full), new Model.PerMesh(assetManager.MissingMaterial)));
         
         var calaveraRawModel = new DotGlbReader()
             .Read(assetManager, AssemblyPath.Of(Enjune.Enjune.Assembly, "Models", "Calavera", "Calavera.glb"), out var error);
         if (calaveraRawModel == null) return error;
-        Models.Registry.Register(Identifier.Of(Assembly, "calavera"), calaveraRawModel);
+        Models.Registry.Register(Models.Calavera, calaveraRawModel);
         
-        Models.Registry.Register(Identifier.Of(Assembly, "white_cube"),
+        Models.Registry.Register(Models.WhiteCube,
             new Model.Builder()
                 .Add(Mesh.Cube(Position.Zero, 0.5f, TextureQuad.Full), new Model.PerMesh(assetManager.WhiteMaterial))
                 .Build());

@@ -33,7 +33,7 @@ public class GraphicSyncSystem(GraphicBridge bridge) : BaseSystem
                 obj.TransformMatrix =
                     MathUtils.CreateModelTransform(transform.Position, transform.Rotation, transform.Scale);
                 obj.DropsShadow = model.DropsShadow;
-                obj.IsHidden = model.IsHidden;
+                obj.Hidden = model.IsHidden;
                 
                 graphicObjs[entityId] = obj;
             }

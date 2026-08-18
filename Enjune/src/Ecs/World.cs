@@ -1,4 +1,5 @@
 using System.Data;
+using Enjune.Data.Codec;
 using Enjune.Ecs.Component;
 using Enjune.Ecs.EcsType;
 using Enjune.Ecs.Manager;

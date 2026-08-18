@@ -41,7 +41,7 @@ public class EditorController
         {
             IsRealistic = false,
             Model = model,
-            RenderableModel = _graphicApi.CreateStaticRenderable(model.GetOrThrow(), IGraphicApi.Primitive.Line),
+            RenderableModel = _graphicApi.CreateStaticRenderable(model.Get(out _)!, IGraphicApi.Primitive.Line),
             Hidden = true,
             Scale = new Vector3(2.5f),
             ToBeSerialized = false,
@@ -154,7 +154,7 @@ public class EditorController
     
     private Mesh? TraceLineObject(SObject obj, Matrix4 viewMat, Matrix4 projMat, float minimumAngleDegrees)
     {
-        var model = obj.Model?.GetOrNull();
+        var model = obj.Model?.Get(out _);
         if (model is null) return null;
         GetCursorVectors(viewMat, projMat, out var direction, out var cameraPos);
         
@@ -204,7 +204,7 @@ public class EditorController
     
     private static bool TraceObject(Vector3 cameraPos, Vector3 direction, SObject obj, out float distance)
     {
-        var model = obj.Model?.GetOrNull();
+        var model = obj.Model?.Get(out _);
         if (model is null || obj.RenderableModel?.CurrentPrimitive != IGraphicApi.Primitive.Triangle)
         {
             distance = 0;

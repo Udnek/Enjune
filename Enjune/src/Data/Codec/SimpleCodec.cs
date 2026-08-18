@@ -9,5 +9,5 @@ public sealed class SimpleCodec<TInstance>(
     : ICodec<TInstance>
 {
     public DataObject Encode(TInstance instance) => encoder(instance);
-    public DecodeResult<TInstance> Decode(DataObject data) => decoder(data);
+    public ResultOrError<TInstance> Decode(DataObject data) => decoder(data);
 }

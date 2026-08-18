@@ -29,7 +29,7 @@ public class SObject
     public bool ToBeSerialized = true;
     
     public IRenderableModel? RenderableModel;
-    public ResourceKey<Model>? Model;
+    public RegistryReference<Model>? Model;
     
     public SpotLight? SpotLight;
     

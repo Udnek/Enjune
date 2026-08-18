@@ -8,5 +8,11 @@ public readonly record struct Error(string Text)
 
     public override string ToString() => Text;
     
-    public void Log(object source) => Logger.Error(source, this);
+    public void Log(object source)
+    {
+        if (Text.Length == 0)
+            Logger.Error(source, Text);
+        else
+            Logger.Error(source, string.Concat(Text.First().ToString().ToUpper(), Text.AsSpan(1)));
+    }
 }

@@ -1,4 +1,5 @@
 using Enjune.Data.Codec.Misc;
+using Enjune.Misc;
 
 namespace Enjune.Data.Codec;
 
@@ -10,7 +11,7 @@ public sealed class SingleArgConstructorCodec<TInstance, TArg>(
 {
     public DataObject Encode(TInstance instance) => codec.Encode(getter(instance));
 
-    public DecodeResult<TInstance> Decode(DataObject data)
+    public ResultOrError<TInstance> Decode(DataObject data)
     {
         return codec.Decode(data).Map(
             val => DecodeResult.Success(constructor(val)),

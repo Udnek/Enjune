@@ -265,15 +265,16 @@ public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicAp
         return null;
     }
 
-    public void SetLights(Span<SpotLight> lights)
+    public void SetLights(IEnumerable<SpotLight> lights)
     {
-        var count = lights.Length;
-        if (count > MaxLights)
+        var data = lights.Select(l => new SpotLightData(l.View, l.Projection, l.Color, l.Position)).ToArray();
+        var len = data.Length;
+        if (len > MaxLights)
         {
-            Logger.Warn(this,$"lights size to big: {count}, but max capacity is {MaxLights}");
-            count = MaxLights;
+            Logger.Warn(this,$"lights size to big: {len}, but max capacity is {MaxLights}");
+            len = MaxLights;
         }
-        _lightSsbo.BindAndPush(new LightsLengthData(count), lights.Map(l => new SpotLightData(l.View, l.Projection, l.Color, l.Position)));
+        _lightSsbo.BindAndPush(new LightsLengthData(len), data);
     }
 
     public void SetRenderSize(Vector2i size)

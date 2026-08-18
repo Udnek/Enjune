@@ -16,28 +16,29 @@ public class EcsApp : AbstractDisposable, IApp
     
     public Error? Init()
     {
-        List<ISystem> systems =
-        [
-            new IntegrationSystem(),
-            new GravitySystem()
-        ];
-
-        List<Type> componentTypes =
-        [
-            typeof(Ecs.Component.Position),
-            typeof(Velocity),
-            typeof(Acceleration)
-        ];
-
-        _world = new World(systems, componentTypes);
-        
-        var testEntity = new EntityAssembly()
-            .AddComponent(new Ecs.Component.Position(0, 0, 0))
-            .AddComponent(new Velocity(0,0,0))
-            .AddComponent(new Acceleration(0,0,0));
-        
-        _world.AddEntity(testEntity);
-        
+        // List<ISystem> systems =
+        // [
+        //     new IntegrationSystem(),
+        //     new GravitySystem()
+        // ];
+        //
+        // List<Type> componentTypes =
+        // [
+        //     typeof(Ecs.Component.Position),
+        //     typeof(Velocity),
+        //     typeof(Acceleration)
+        // ];
+        //
+        // _world = new World(systems, componentTypes);
+        //
+        // var testEntity = new EntityAssembly()
+        //     .AddComponent(new Ecs.Component.Position(0, 0, 0))
+        //     .AddComponent(new Velocity(0,0,0))
+        //     .AddComponent(new Acceleration(0,0,0));
+        //
+        // _world.AddEntity(testEntity);
+        //
+        // return null;
         return null;
     }
 

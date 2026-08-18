@@ -1,34 +1,31 @@
 using System.Reflection;
 using Enjune.Data;
 using Enjune.Data.Codec;
+using Enjune.Data.Codec.Misc;
 using Enjune.Misc;
 
 namespace Enjune.Registering;
 
-public readonly struct Identifier : IEquatable<Identifier>
+public readonly record struct Identifier
 {
-    public static readonly SingleArgConstructorCodec<Identifier, string> Codec = Codecs
-        .ForOneArgConstructor(Parse, i => i._fullName, Codecs.String);
+    public static readonly ICodec<Identifier> Codec = new SimpleCodec<Identifier>(
+        i => Codecs.String.Encode(i._fullName),
+        data => Codecs.String.Decode(data).Map(Parse, err => err));
 
     public static readonly Identifier NullFallback = new("null", "null");
     
     private readonly string _fullName;
-    private readonly int _hash;
 
-    public static Identifier Parse(string namespaceAndKey)
+    public static ResultOrError<Identifier> Parse(string namespaceAndKey)
     {
         var i = namespaceAndKey.IndexOf(':');
-        if (i != -1) 
-            return new Identifier(namespaceAndKey[..i], namespaceAndKey[(i + 1)..]);
-        Logger.Error(typeof(Identifier),$"can not find ':' when parsing: '{namespaceAndKey}'");
-        return NullFallback;
+        if (i != -1)
+            return DecodeResult.Success(new Identifier(namespaceAndKey[..i], namespaceAndKey[(i + 1)..]));
+        return new Error($"can not find ':' when parsing: '{namespaceAndKey}'");
     }
     
-    private Identifier(string @namespace, string key)
-    {
-        _fullName = @namespace + ":" + key;
-        _hash = _fullName.GetHashCode();
-    }
+    private Identifier(string @namespace, string key) 
+        => _fullName = @namespace + ":" + key;
 
     public static Identifier Of(Assembly assembly, string name)
     {
@@ -42,9 +39,4 @@ public readonly struct Identifier : IEquatable<Identifier>
     }
 
     public override string ToString() => _fullName;
-    public override int GetHashCode() => _hash;
-    public override bool Equals(object? obj) => _hash == obj?.GetHashCode();
-    public bool Equals(Identifier other) => _hash == other._hash;
-    public static bool operator ==(Identifier left, Identifier right) => left.Equals(right);
-    public static bool operator !=(Identifier left, Identifier right) => !(left == right);
 }
