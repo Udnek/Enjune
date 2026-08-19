@@ -28,7 +28,7 @@ public class IntegrationSystem : SingleQuerySystem
             for (int i = 0; i < archetype.EntityCount; i++)
             {
                 const float dt = 0.01f;
-                Logger.Info(this, $"processing entity {archetype.GetEntityByRow(i)} with params:\n" +
+                Logger.Info(this, $"processing {archetype.GetEntityByRow(i)} with params:\n" +
                                       $"- - - - Position:     {positions[i].ToString()}\n" +
                                       $"- - - - Velocity:     {velocities[i].ToString()}\n" +
                                       $"- - - - Acceleration: {accelerations[i].ToString()}");

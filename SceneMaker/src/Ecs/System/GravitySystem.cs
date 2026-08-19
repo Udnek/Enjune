@@ -23,7 +23,7 @@ public class GravitySystem : SingleQuerySystem
                 // Simply add -9,80665 to Y acceleration
                 // TODO: Consider changing this behavior to something more accurate
                 accelerations[i].Y += -10;
-                Logger.Info(this, $"Added gravitational acceleration to entity {archetype.GetEntityByRow(i)}");
+                Logger.Info(this, $"Added gravitational acceleration to {archetype.GetEntityByRow(i)}");
             }
         });
     }
