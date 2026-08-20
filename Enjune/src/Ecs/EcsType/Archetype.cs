@@ -159,10 +159,11 @@ public sealed class Archetype
         Rows++;
     }
 
-    internal IComponent GetEntityComponent<TComponent>(Entity entity)
+    internal IComponent? GetEntityComponent<TComponent>(Entity entity)
     {
         int row = _entityToRow[entity];
-        return _columns[typeof(TComponent)].GetValue(_entityToRow[entity]);
+        _columns.TryGetValue(typeof(TComponent), out IColumn? column);
+        return column?.GetValue(_entityToRow[entity]);
 
     }
 

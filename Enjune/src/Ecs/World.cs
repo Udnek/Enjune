@@ -162,7 +162,7 @@ public sealed class World
         return snapshots;
     }
 
-    public IComponent GetEntityComponent<TComponent>(Entity entity)
+    public IComponent? GetEntityComponent<TComponent>(Entity entity)
     {
         Archetype archetype = ArchetypeManager.GetArchetypeByEntity(entity);
         return archetype.GetEntityComponent<TComponent>(entity);
