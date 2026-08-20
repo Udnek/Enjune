@@ -33,7 +33,7 @@ public sealed class ArchetypeManager(World world)
     public void AddEntity(Entity.Assembly assembly, Entity entity)
     {
         Signature signature = assembly.GetSignature(_world);
-        Logger.Info(this, $"got a request to add an entity {entity} with signature {signature}");
+        Logger.Info(this, $"Got a request to add {entity} with signature {signature}");
 
         EnsureArchetypeExistence(signature);
 
@@ -44,7 +44,7 @@ public sealed class ArchetypeManager(World world)
     
     public void RemoveEntity(Entity entity)
     {
-        Logger.Info(this, $"Got a request to remove entity {entity}");
+        Logger.Info(this, $"Got a request to remove {entity}");
         if (_entityToArchetype.TryGetValue(entity, out Archetype? archetype)) 
         {
             archetype.RemoveEntity(entity);

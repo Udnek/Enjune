@@ -40,7 +40,7 @@ public readonly record struct Signature
         return cnt;
     }
 
-    public override string ToString() => Convert.ToString(_bitSet, 2);
+    public override string ToString() => Convert.ToString(_bitSet, 2).PadLeft(8, '0');
     
     public sealed class Builder(World world)
     {
@@ -51,7 +51,7 @@ public readonly record struct Signature
 
         public Builder RegisterComponent(Type type)
         {
-            var bit = (int)_componentManager.GetTypeIdByType(type);
+            var bit = (int)_componentManager.GetIdByType(type);
             _signature = _signature.Set(bit);
             return this;
         }

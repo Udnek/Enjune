@@ -11,11 +11,9 @@ public interface IColumn
     IComponent GetValue(int row);
 }
 
-public sealed class Column<T> : IColumn where T : struct, IComponent
+public sealed class Column<T>(int capacity = EcsConstants.InitialColumnCapacity) : IColumn where T : struct, IComponent
 {
-    private T[] _data;
-
-    public Column(int capacity = EcsConstants.InitialColumnCapacity) => _data = new T[capacity];
+    private T[] _data = new T[capacity];
 
     public void SetValue(int row, IComponent value) => _data[row] = (T)value;
 
