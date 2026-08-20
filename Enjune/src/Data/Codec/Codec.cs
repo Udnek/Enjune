@@ -21,7 +21,7 @@ public interface ICodec<T> : IObjCodec
     ResultOrError<object?> IObjCodec.DecodeObj(DataObject data)
     {
         var result = Decode(data);
-        return DecodeResult.Convert<T, object?>(result);
+        return ResultOrError.Convert<T, object?>(result);
     }
 
     [Obsolete("use generic method")]
@@ -33,7 +33,7 @@ public interface ICodec<T> : IObjCodec
     }
 
     [Pure]
-    DataObject Encode(T instance);
+    ResultOrError<DataObject> Encode(T instance);
     [Pure]
     ResultOrError<T> Decode(DataObject data);
 }
@@ -43,17 +43,17 @@ public static class Codecs
     #region Primitives
     
     public static readonly SimpleCodec<float> Float = new(
-        instance => new DataObject.Number((decimal) instance),
+        instance => ResultOrError.Success<DataObject>(new DataObject.Number((decimal) instance)),
         data => 
         {
             var number = data.Cast<DataObject.Number>(out var castErr);
             if (number is null)
                 return new Error("can not decode float: " + castErr);
-            return DecodeResult.Success((float)number.Decimal);
+            return ResultOrError.Success((float)number.Decimal);
         });
     
     public static readonly SimpleCodec<int> Int = new(
-        instance => new DataObject.Number(instance),
+        instance => ResultOrError.Success<DataObject>(instance),
         data => 
         {
             var number = data.Cast<DataObject.Number>(out var castErr);
@@ -62,27 +62,27 @@ public static class Codecs
             var isInt = number.Decimal % 1 == 0;
             if (!isInt)
                 return new Error($"{number.Decimal} is not whole number");
-            return DecodeResult.Success((int)number.Decimal);
+            return ResultOrError.Success((int)number.Decimal);
         });
     
     public static readonly SimpleCodec<bool> Boolean = new(
-        DataObject.Boolean.Of,
+        instance => ResultOrError.Success<DataObject>(instance),
         data =>
         {
             var boolean = data.Cast<DataObject.Boolean>(out var castErr);
             if (boolean is null)
                 return new Error("can not decode bool: " + castErr);
-            return DecodeResult.Success(boolean.Val);
+            return ResultOrError.Success(boolean.Val);
         });
     
     public static readonly SimpleCodec<string> String = new(
-        instance => new DataObject.String(instance),
+        instance => ResultOrError.Success<DataObject>(instance),
         data =>
         {
             var str = data.Cast<DataObject.String>(out var castErr);
             if (str is null)
                 return new Error("can not decode str: " + castErr);
-            return DecodeResult.Success(str.Val);
+            return ResultOrError.Success(str.Val);
         });
 
     #endregion
@@ -123,9 +123,8 @@ public static class Codecs
         instance =>
         {
             var name = instance.FullName;
-            if (name is not null) return new DataObject.String(name);
-            Logger.Error(typeof(Codecs), $"can not encode assembly {instance} cause name is null");
-            return DataObject.Null;
+            if (name is not null) return ResultOrError.Success<DataObject>(name);
+            return new Error($"can not encode assembly {instance} cause name is null");
         },
         data =>
         {
@@ -141,7 +140,7 @@ public static class Codecs
             {
                 return new Error("can not load assembly: " + e);
             }
-            return DecodeResult.Success(assembly);
+            return ResultOrError.Success(assembly);
         });
     #endregion
 
@@ -150,26 +149,26 @@ public static class Codecs
     public static SimpleCodec<T?> NullableOf<T>(ICodec<T> codec) where T : class
     {
         return new SimpleCodec<T?>(
-            instance => instance is null ? DataObject.Null : codec.Encode(instance),
+            instance => instance is null ? ResultOrError.Success<DataObject>(DataObject.Null) : codec.Encode(instance),
             data =>
             {
                 if (data == DataObject.Null)
-                    return DecodeResult.Success<T?>(null);
+                    return ResultOrError.Success<T?>(null);
                 else
-                    return DecodeResult.Convert<T, T?>(codec.Decode(data));
+                    return ResultOrError.Convert<T, T?>(codec.Decode(data));
             });
     }
     public static SimpleCodec<T?> NullableOfStruct<T>(ICodec<T> codec) where T : struct
     {
         return new SimpleCodec<T?>(
-            instance => instance is null ? DataObject.Null : codec.Encode((T)instance),
+            instance => instance is null ? ResultOrError.Success<DataObject>(DataObject.Null) : codec.Encode((T)instance),
             data =>
             {
                 if (data == DataObject.Null)
-                    return DecodeResult.Success<T?>(null);
+                    return ResultOrError.Success<T?>(null);
                 else
                     return codec.Decode(data).Map(
-                        val => DecodeResult.Success<T?>(val),
+                        val => ResultOrError.Success<T?>(val),
                         err => err);
             });
     }
@@ -177,7 +176,26 @@ public static class Codecs
     public static SimpleCodec<T[]> ArrayOf<T>(ICodec<T> codec, bool skipInvalidItems = false)
     {
         return new SimpleCodec<T[]>(
-            instances => new DataObject.Array(instances.Map(codec.Encode).ToArray()), 
+            instances =>
+            {
+                List<DataObject> encoded = new (instances.Length);
+                foreach (var instance in instances)
+                {
+                    var result = codec.Encode(instance);
+                    if (result.Error == null)
+                    {
+                        encoded.Add(result.GetOrThrow());
+                        continue;
+                    }
+
+                    if (skipInvalidItems)
+                        Logger.Warn(typeof(Codecs), $"Can not decode {instance}: {result.Error}");
+                    else
+                        return new Error($"can not encode {instance}: {result.Error}");
+                }
+
+                return ResultOrError.Success<DataObject>(new DataObject.Array(encoded.ToArray()));
+            }, 
             data =>
             {
                 var array = data.Cast<DataObject.Array>(out var error);
@@ -203,7 +221,7 @@ public static class Codecs
 
                 }
 
-                return DecodeResult.Success(decoded.ToArray());
+                return ResultOrError.Success(decoded.ToArray());
             });
     }
 

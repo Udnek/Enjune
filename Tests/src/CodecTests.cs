@@ -15,7 +15,10 @@ public class CodecTests(ITestOutputHelper output)
     {
         _output.WriteLine("------------------");
         _output.WriteLine($"initial: {toStr(obj)}");
-        var json = JsonSerde.Tight.Serialize(codec.Encode(obj));
+        var encodeResult = codec.Encode(obj);
+        if (encodeResult.Error != null)
+            return encodeResult.Error;
+        var json = JsonSerde.Tight.Serialize(encodeResult.GetOrThrow());
         _output.WriteLine($"serialized: {json}");
         var dataObject = JsonSerde.Tight.Deserialize(json, out var error);
         if (dataObject is null)

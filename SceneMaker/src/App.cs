@@ -207,7 +207,7 @@ public class App : AbstractDisposable, IApp
                         if (!obj.DropsShadow) continue;
                         if (obj.Hidden) continue;
                     
-                        if (obj == EditorController.SelectedObject)
+                        if (obj == (object) EditorController.SelectedObject)
                             s.GlobalColor((1, 0.5f, 0f, 1f));
                         else
                             s.GlobalColor(new Color(1f));

@@ -5,23 +5,29 @@ namespace Enjune.Data.Codec;
 
 public sealed class InstanceMatchCodec<TInstance> : ICodec<TInstance>
 {
-    private readonly List<(string Name, Func<TInstance, DataObject?> EncodeIfInstance, Decoder<TInstance> Decoder)> _codecs;
+    private readonly List<(string Name, Func<TInstance, ResultOrError<DataObject>?> EncodeIfInstance, Decoder<TInstance> Decoder)> _codecs;
 
-    private InstanceMatchCodec(List<(string Name, Func<TInstance, DataObject?> EncodeIfInstance, Decoder<TInstance> Decoder)> codecs) 
+    private InstanceMatchCodec(List<(string Name, Func<TInstance, ResultOrError<DataObject>?> EncodeIfInstance, Decoder<TInstance> Decoder)> codecs) 
         => _codecs = codecs;
 
-    public DataObject Encode(TInstance instance)
+    public ResultOrError<DataObject> Encode(TInstance instance)
     {
         foreach (var (name, encodeIfInstance, _) in _codecs)
         {
-            var data = encodeIfInstance(instance);
-            if (data is null) continue;
-            var dict = new Dictionary<string, DataObject> { { name, data } };
-            return new DataObject.Map(dict);
+            var result = encodeIfInstance(instance);
+            if (result is null) continue;
+            if (result.Value.Error != null)
+                return new Error($"can not encode for type {name}");
+            
+            var data = result.Value.GetOrThrow();
+            var dict = new Dictionary<string, DataObject>
+            {
+                [name] = data
+            };
+            return ResultOrError.Success<DataObject>(dict);
         }
 
-        Logger.Error(this, $"can not encode {instance}: no suitable instance encoder");
-        return DataObject.Null;
+        return new Error($"can not encode {instance}: no suitable instance encoder");
     }
 
     public ResultOrError<TInstance> Decode(DataObject data)
@@ -39,14 +45,14 @@ public sealed class InstanceMatchCodec<TInstance> : ICodec<TInstance>
     
     public class Builder
     {
-        private readonly List<(string Name, Func<TInstance, DataObject?> EncodeIfInstance, Decoder<TInstance> Decoder)> _codecs = [];
+        private readonly List<(string Name, Func<TInstance, ResultOrError<DataObject>?> EncodeIfInstance, Decoder<TInstance> Decoder)> _codecs = [];
         
         public Builder IfInstance<T>(string name, ICodec<T> codec) where T : TInstance
         {
             _codecs.Add((
                 name,
                 i => i is T t ? codec.Encode(t) : null,
-                data => DecodeResult.Convert<T, TInstance>(codec.Decode(data))));
+                data => ResultOrError.Convert<T, TInstance>(codec.Decode(data))));
             return this;
         }
 

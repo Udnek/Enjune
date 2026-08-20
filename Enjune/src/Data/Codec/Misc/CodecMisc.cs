@@ -6,7 +6,7 @@ public delegate TInstance EmptyConstructor<out TInstance>();
 public delegate TField Getter<in TInstance, out TField>(TInstance instance);
 public delegate void Setter<TInstance, in TField>(ref TInstance instance, TField val);
 public delegate ResultOrError<T> Decoder<T>(DataObject data);
-public delegate DataObject Encoder<in T>(T instance);
+public delegate ResultOrError<DataObject> Encoder<in T>(T instance);
 
 public static class CodecMisc
 {

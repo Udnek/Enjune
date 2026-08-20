@@ -150,7 +150,7 @@ public class JsonSerde : ISerde
                 } 
             }
 
-            return map;
+            return new DataObject.Map(map);
         }
         
         DataObject.Array? ParseArray(out Error? error)
@@ -181,7 +181,7 @@ public class JsonSerde : ISerde
                 } 
             }
 
-            return list.ToArray();
+            return new DataObject.Array(list.ToArray());
         }
     }
 

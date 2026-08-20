@@ -17,10 +17,6 @@ global using Nanoseconds = long;
 global using Fps = float;
 global using Seconds = float;
 
-//TODO: This shouldn't be here?
-global using EntityId = uint; // (n=16) n-bits Entity ID -> 2^n entities are allowed to exist
-global using ComponentTypeId = uint; // (n=8) n-bits type ID -> 2^n components are allowed to exist
-global using SignatureInteger = uint; // (n=32) n-bits mask -> n components per entity allowed
 
 global using TexId = int;
 global using MatId = int;

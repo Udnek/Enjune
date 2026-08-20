@@ -1,8 +1,10 @@
+using Enjune.Misc;
+
 namespace Enjune.Data.Codec.Misc;
 
 public interface IFieldCodec<TInstance>
 {
-    DataObject GetAndEncode(TInstance instance);
+    ResultOrError<DataObject> GetAndEncode(TInstance instance);
     Error? DecodeAndSet(ref TInstance instance, DataObject data);
 }
 
@@ -11,7 +13,7 @@ public sealed class FieldCodec<TInstance, TField>(
     Setter<TInstance, TField> setter, 
     ICodec<TField> codec) : IFieldCodec<TInstance>
 {
-    public DataObject GetAndEncode(TInstance instance) => codec.Encode(getter(instance));
+    public ResultOrError<DataObject> GetAndEncode(TInstance instance) => codec.Encode(getter(instance));
 
     public Error? DecodeAndSet(ref TInstance instance, DataObject data)
     {

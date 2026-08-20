@@ -1,8 +1,9 @@
+using Enjune.Ecs.EcsType;
 using Enjune.Physic;
 
 namespace SceneMaker.Bridge;
 
 public class PhysicBridge
 {
-    public readonly Dictionary<EntityId, IPhysicObject> Objects = [];
+    public readonly Dictionary<Entity, IPhysicObject> Objects = [];
 }

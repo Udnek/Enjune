@@ -25,14 +25,18 @@ public sealed class MapCodec<TInstance> : IMapCodec<TInstance>
             consumer((name, codec));
     }
     
-    public DataObject Encode(TInstance instance)
+    public ResultOrError<DataObject> Encode(TInstance instance)
     {
-        var encoded = _fieldCodecs.Select(kv =>
+        Dictionary<string, DataObject> fields = [];
+        foreach (var (name, codec) in _fieldCodecs)
         {
-            var (name, codec) = kv;
-            return (key: name, codec.GetAndEncode(instance));
-        }).ToDictionary();
-        return new DataObject.Map(encoded);
+            var result = codec.GetAndEncode(instance);
+            if (result.Error != null)
+                return new Error($"can not encode field {name}: {result.Error}");
+            fields[name] = result.GetOrThrow();
+        }
+
+        return ResultOrError.Success<DataObject>(fields);
     }
 
     public ResultOrError<TInstance> Decode(DataObject data)
@@ -53,7 +57,7 @@ public sealed class MapCodec<TInstance> : IMapCodec<TInstance>
             else 
                 return new Error($"map {mapData} doesn't have key {name}");
         }
-        return DecodeResult.Success(instance);
+        return ResultOrError.Success(instance);
     }
 
     public class Builder(EmptyConstructor<TInstance> constructor)

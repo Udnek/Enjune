@@ -10,32 +10,36 @@ public sealed class ConstructorCodec<TInstance> : ICodec<TInstance>
     
     private readonly List<(
         string Name, 
-        Func<TInstance, DataObject> Encoder, 
+        Encoder<TInstance> Encoder, 
         Decoder Decoder)> _codecs;
     
     private readonly Func<List<object?>, TInstance> _constructor;
 
-    private ConstructorCodec(Func<List<object?>, TInstance> constructor, List<(string, Func<TInstance, DataObject>, Decoder)> codecs)
+    private ConstructorCodec(Func<List<object?>, TInstance> constructor, List<(string, Encoder<TInstance>, Decoder)> codecs)
     {
         _constructor = constructor;
         _codecs = codecs;
     }
     
-    public DataObject Encode(TInstance instance)
+    public ResultOrError<DataObject> Encode(TInstance instance)
     {
-        var dict = _codecs.Select(tuple =>
+        var dict = new Dictionary<string, DataObject>();
+        foreach (var (name, encoder, _) in _codecs)
         {
-            var (name, encoder, _) = tuple;
-            return (name, encoder(instance));
-        }).ToDictionary();
-        return new DataObject.Map(dict);
+            var result = encoder(instance);
+            if (result.Error != null)
+                return new Error($"can not encode field {name}: {result.Error}");
+            dict[name] = result.GetOrThrow();
+        }
+
+        return ResultOrError.Success<DataObject>(dict);
     }
 
     public ResultOrError<TInstance> Decode(DataObject data)
     {
         var mapData = data.Cast<DataObject.Map>(out var error);
         if (mapData is null)
-            return DecodeResult.Failure<TInstance>("can not decode: " + error);
+            return ResultOrError.Failure<TInstance>("can not decode: " + error);
         
         var args = new List<object?>(_codecs.Count);
         foreach (var (name, _, decoder) in _codecs)
@@ -50,14 +54,14 @@ public sealed class ConstructorCodec<TInstance> : ICodec<TInstance>
             return new Error($"map {mapData} doesn't have key {name}");
         }
         
-        return DecodeResult.Success(_constructor(args));
+        return ResultOrError.Success(_constructor(args));
     }
     
     public class Builder(Func<List<object?>, TInstance> constructor)
     {
         private readonly List<(
             string Name, 
-            Func<TInstance, DataObject> Encoder, 
+            Encoder<TInstance> Encoder, 
             Decoder Decoder)> _codecs = [];
         
         public Builder ForField<TField>(string name, Getter<TInstance, TField> getter, ICodec<TField> fieldCodec)

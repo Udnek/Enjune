@@ -1,9 +1,10 @@
+using Enjune.Ecs.EcsType;
 using Enjune.Graphic.Api;
 
 namespace SceneMaker.Bridge;
 
 public class GraphicBridge
 {
-    public readonly Dictionary<EntityId, GraphicObject> Objects = [];
-    public readonly Dictionary<EntityId, SpotLight> SpotLights = [];
+    public readonly Dictionary<Entity, GraphicObject> Objects = [];
+    public readonly Dictionary<Entity, SpotLight> SpotLights = [];
 }

@@ -8,15 +8,6 @@ namespace Enjune.Data;
 public abstract class DataObject
 {
     public static readonly NullVal Null = NullVal.Instance;
-    
-    [Pure]
-    [Obsolete]
-    private T AsOr<T>(T fallback, Error? errorToLog) where T : DataObject
-    {
-        if (this is T thisT) return thisT;
-        if (errorToLog != null) Logger.Warn(this, errorToLog);
-        return fallback;
-    }
 
     [Pure]
     public T? Cast<T>(out Error? error) where T : DataObject
@@ -26,18 +17,17 @@ public abstract class DataObject
             error = null;
             return thisT;
         }
-        error = $"can not cast {this} to ${Logger.GetTypeName(typeof(T))}";
+        error = $"can not cast {this} to ${Logger.GetTypeName<T>()}";
         return null;
     }
     
-    [Pure]
-    [Obsolete]
-    public T AsOr<T>(T fallback) where T : DataObject 
-        => AsOr(fallback, $"{this} is not a {Logger.GetTypeName(typeof(T))}, defaulting to {fallback}");
-
     public override string ToString() => JsonSerde.Tight.Serialize(this);
 
     public static implicit operator DataObject(Dictionary<string, DataObject> val) => new Map(val);
+    public static implicit operator DataObject(DataObject[] val) => new Array(val);
+    public static implicit operator DataObject(string val) => new String(val);
+    public static implicit operator DataObject(bool val) => Boolean.Of(val);
+    public static implicit operator DataObject(decimal val) => new Number(val);
 
     // primitives
     
@@ -46,8 +36,6 @@ public abstract class DataObject
         public static readonly Array Empty = new([]);
         
         public Span<DataObject> Val => val;
-        
-        public static implicit operator Array(DataObject[] val) => new(val);
     }
 
     public sealed class Map(IReadOnlyDictionary<string, DataObject> val) : DataObject
@@ -55,26 +43,6 @@ public abstract class DataObject
         public static readonly Map Empty = new(ReadOnlyDictionary<string, DataObject>.Empty);
         
         public IReadOnlyDictionary<string, DataObject> Val { get; } = val;
-        
-        // [Pure]
-        // public T GetOr<T>(string key, T fallback) where T : DataObject
-        // {
-        //     if (Val.TryGetValue(key, out var value))
-        //         return value as T ?? fallback;
-        //
-        //     return fallback;
-        // }
-
-        // [Pure]
-        // public T? GetOrNull<T>(string key) where T : DataObject
-        // {
-        //     if (Val.TryGetValue(key, out var value))
-        //         return value as T;
-        //
-        //     return null;
-        // }
-        
-        public static implicit operator Map(Dictionary<string, DataObject> val) => new(val);
     }
 
     public sealed class Boolean : DataObject

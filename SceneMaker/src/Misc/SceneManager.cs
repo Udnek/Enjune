@@ -55,17 +55,19 @@ public static class SceneManager
             return CreateNewScene();
         }
 
-        return Scene.Codec.Decode(data).Map(
-            value =>
-            {
-                Logger.Info(typeof(SceneManager), $"successfully load scene from {Path}");
-                return (value, null);
-            },
-            err =>
-            {
-                Logger.Error(typeof(SceneManager), "can not load scene: " + err);
-                return CreateNewScene();
-            });
+
+        return default;
+        // return Scene.Codec.Decode(TODO).Map(
+        //     value =>
+        //     {
+        //         Logger.Info(typeof(SceneManager), $"successfully load scene from {Path}");
+        //         return (value, null);
+        //     },
+        //     err =>
+        //     {
+        //         Logger.Error(typeof(SceneManager), "can not load scene: " + err);
+        //         return CreateNewScene();
+        //     });
     }
     
     private static (Scene? Scene, Error? Error) CreateNewScene()
@@ -100,7 +102,7 @@ public static class SceneManager
 
     public static void Save(Scene scene)
     {
-        var json = JsonSerde.Indent4.Serialize(Scene.Codec.Encode(scene));
+        var json = JsonSerde.Indent4.Serialize(Scene.Codec.Encode(scene).GetOrThrow());
         Path.Write(json, out var error);
         if (error != null) 
             Logger.Error(typeof(SceneManager), $"can not save scene to {Path}: {error}");

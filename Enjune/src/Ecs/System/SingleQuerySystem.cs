@@ -7,7 +7,7 @@ public abstract class SingleQuerySystem : ISystem
 {
     protected Query Query = null!;
     
-    public void InitializeQueries(World world) => Query = BuildQuery(Query.For(world));
+    public void InitializeQueries(World world) => Query = BuildQuery(new Query.Builder(world));
     
     protected abstract Query BuildQuery(Query.Builder builder);
 

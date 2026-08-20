@@ -1,3 +1,5 @@
+using System.Diagnostics.Contracts;
+
 namespace Enjune.Misc;
 
 public readonly record struct ResultOrError<T>
@@ -11,18 +13,21 @@ public readonly record struct ResultOrError<T>
         Error = error;
     }
     
-    public Tto Map<Tto>(Func<T, Tto> whenSuccess, Func<Error, Tto> whenFailure) 
+    [Pure]
+    public Tto Map<Tto>(Func<T, Tto> whenSuccess, Func<Error, Tto> whenFailure)
         => Error == null ? whenSuccess(_value) : whenFailure((Error)Error);
     
+    [Pure]
     public T GetOr(T fallback) => Error == null ? _value : fallback;
     
     // Use Map<Tto> in most cases
+    [Pure]
     public T GetOrThrow() => Error == null ? _value : throw new InvalidOperationException();
     
-    public static implicit operator ResultOrError<T>(Error error) => DecodeResult.Failure<T>(error);
+    public static implicit operator ResultOrError<T>(Error error) => ResultOrError.Failure<T>(error);
 }
 
-public static class DecodeResult
+public static class ResultOrError
 {
     public static ResultOrError<TNew> Convert<TOld, TNew>(ResultOrError<TOld> res) where TOld : TNew
     {

@@ -7,30 +7,30 @@ using SceneMaker.Ecs.Component;
 
 namespace SceneMaker.Ecs.System;
 
-public class PhysicWriteSyncSystem(PhysicBridge bridge): BaseSystem
+public class PhysicWriteSyncSystem(PhysicBridge bridge): SingleQuerySystem
 {
-    protected override Signature GenerateSignature(Signature.Builder builder)
+    protected override Query BuildQuery(Query.Builder builder)
     {
         return builder
-            .RegisterComponent<Transform>().Build();
+            .With<Transform>().Build();
     }
 
     public override void Update(World world)
     {
         var graphicObjs = bridge.Objects;
-        world.QueryToUpdate(Signature, archetype =>
+        Query.ForEachArchetype(archetype =>
         {
             var transforms = archetype.GetComponents<Transform>();
             for (int i = 0; i < archetype.EntityCount; i++) //TODO iterate over entityId
             {
-                var entityId = archetype.GetIdByRow(i);
+                var entity = archetype.GetEntityByRow(i);
                 var transform = transforms[i];
-                var obj = graphicObjs[entityId];
+                var obj = graphicObjs[entity];
 
                 obj.Position = transform.Position;
                 obj.Rotation = transform.Rotation;
 
-                graphicObjs[entityId] = obj;
+                graphicObjs[entity] = obj;
             }
         });
     }

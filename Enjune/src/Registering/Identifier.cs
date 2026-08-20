@@ -20,7 +20,7 @@ public readonly record struct Identifier
     {
         var i = namespaceAndKey.IndexOf(':');
         if (i != -1)
-            return DecodeResult.Success(new Identifier(namespaceAndKey[..i], namespaceAndKey[(i + 1)..]));
+            return ResultOrError.Success(new Identifier(namespaceAndKey[..i], namespaceAndKey[(i + 1)..]));
         return new Error($"can not find ':' when parsing: '{namespaceAndKey}'");
     }
     

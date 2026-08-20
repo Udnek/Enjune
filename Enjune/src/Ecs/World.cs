@@ -1,15 +1,62 @@
 using System.Data;
 using System.Runtime.InteropServices;
+using Enjune.Data;
+using Enjune.Data.Codec;
 using Enjune.Ecs.Component;
 using Enjune.Ecs.EcsType;
 using Enjune.Ecs.Manager;
 using Enjune.Ecs.System;
 using Enjune.Misc;
+using Enjune.Registering;
 
 namespace Enjune.Ecs;
 
 public sealed class World
 {
+    public static readonly ICodec<World> WithoutSystemsCodec = new SimpleCodec<World>(world =>
+        {
+            var allEntities = world.GetAllEntities();
+            List<DataObject> encodedEntities = new(allEntities.Count);
+            foreach (var (entity, components) in allEntities)
+            {
+                var result = IComponent.ArrayCodec.Encode(components.ToArray());
+                if (result.Error != null)
+                    return new Error($"can not encode {entity}'s components: {result.Error}");
+                
+                encodedEntities.Add(result.GetOrThrow());
+            }
+
+            return ResultOrError.Success<DataObject>(encodedEntities.ToArray());
+        },
+        data =>
+        {
+            var array = data.Cast<DataObject.Array>(out var castErr);
+            if (array is null)
+                return new Error($"can not decode: {castErr}");
+
+            List<Entity.Assembly> entities = [];
+            HashSet<Type> componentTypes = [];
+            foreach (var compsData in array.Val)
+            {
+                var result = IComponent.ArrayCodec.Decode(compsData);
+                if (result.Error != null)
+                    return new Error($"can not decode components: {result.Error}");
+                var assembly = new Entity.Assembly();
+                foreach (var comp in result.GetOrThrow())
+                {
+                    assembly.AddComponent(comp);
+                    componentTypes.Add(comp.GetType());
+                }
+                entities.Add(assembly);
+            }
+
+            var world = new World([], componentTypes);
+            foreach (var assembly in entities) 
+                world.AddEntity(assembly);
+            return ResultOrError.Success(world);
+        }
+        );
+    
     internal readonly ArchetypeManager ArchetypeManager;
     internal readonly SystemManager SystemManager;
     internal readonly ComponentManager ComponentManager = new ComponentManager();
@@ -42,6 +89,8 @@ public sealed class World
     }
 
     #region Public Api
+
+    public void AddSystem(ISystem system) => SystemManager.RegisterSystem(system);
 
     public void Update() => SystemManager.UpdateAll();
     
@@ -88,7 +137,7 @@ public sealed class World
     }
 
     // Don't use in hot loops
-    public List<(Entity, List<IComponent>)> GetAllEntities()
+    public List<(Entity Entity, List<IComponent> Components)> GetAllEntities()
     {
         List<(Entity, List<IComponent>)> snapshots = [];
         foreach (var archetype in QueryArchetypes(Signature.Empty, Signature.Empty))

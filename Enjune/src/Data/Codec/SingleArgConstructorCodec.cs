@@ -9,12 +9,12 @@ public sealed class SingleArgConstructorCodec<TInstance, TArg>(
     ICodec<TArg> codec)
     : ICodec<TInstance>
 {
-    public DataObject Encode(TInstance instance) => codec.Encode(getter(instance));
+    public ResultOrError<DataObject> Encode(TInstance instance) => codec.Encode(getter(instance));
 
-    public ResultOrError<TInstance> Decode(DataObject data)
+    public ResultOrError<TInstance> Decode(DataObject instance)
     {
-        return codec.Decode(data).Map(
-            val => DecodeResult.Success(constructor(val)),
-            err => new Error("can not decode: " + err));
+        return codec.Decode(instance).Map(
+            val => ResultOrError.Success(constructor(val)),
+            err => new Error("can not construct: " + err));
     }
 }
