@@ -7,6 +7,46 @@ using System.Text;
 
 namespace Enjune.Ecs.EcsType;
 
+
+public delegate void ForEachRef<T1, T2>(ref T1 t1, ref T2 t2) where T1 : struct, IComponent where T2 : struct, IComponent;
+
+public sealed class Query<T1, T2>(World world, Signature include, Signature exclude) where T1 : struct, IComponent where T2 : struct, IComponent
+{
+    private readonly World _world = world;
+    private readonly Signature _include = include;
+    private readonly Signature _exclude = exclude;
+    
+    private readonly List<Archetype> _cachedArchetypes = [];
+    private readonly List<(Column<T1> Column1, Column<T2> Column2)> _cachedColumns;
+    private int _cacheVersion = 0;
+
+    private void ValidateCache()
+    {
+        if (_world.ArchetypeCacheVersion == _cacheVersion)
+            return;
+
+        _cacheVersion = _world.ArchetypeCacheVersion;
+        _cachedArchetypes.Clear();
+        foreach (var archetype in _world.QueryArchetypes(_include, _exclude))
+            _cachedArchetypes.Add(archetype);
+    }
+
+    public void ForEach(ForEachRef<T1, T2> action)
+    {
+        foreach (var (col1, col2) in _cachedColumns)
+        {
+            int count = col1.; // Assume both have same length.
+            for (int i = 0; i < count; i++)
+            {
+                action(ref col1[i], ref col2[i]);
+            }
+        }
+    }
+
+
+}
+
+[Obsolete]
 public sealed class Query(World world, Signature include, Signature exclude)
 {
     private readonly World _world = world;

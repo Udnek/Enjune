@@ -159,6 +159,17 @@ public sealed class Archetype
         Rows++;
     }
 
+    public Dictionary<Type, IComponent> GetEntityComponents(Entity entity)
+    {
+        int row = _entityToRow[entity];
+        Dictionary<Type, IComponent> components = [];
+        foreach ((Type type, IColumn column) in _columns) {
+            components.Add(type, column.GetValue(row));
+        }
+        return components;
+
+    }
+
     internal void WriteComponent(Entity entity, IComponent component)
     {
         int row = _entityToRow[entity];

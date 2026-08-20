@@ -1,3 +1,5 @@
+using Enjune.Data;
+using Enjune.Data.Codec;
 using Enjune.Ecs.Component;
 using Enjune.Ecs.EcsType;
 using Enjune.Ecs.Manager;
@@ -158,6 +160,12 @@ public sealed class World
         }
         Logger.Warn("Sergeant Hartman", "Do you suck dicks?!");
         return snapshots;
+    }
+
+    public Dictionary<Type, IComponent> GetEntityComponents(Entity entity)
+    {
+        Archetype archetype = ArchetypeManager.GetArchetypeByEntity(entity);
+        return archetype.GetEntityComponents(entity);
     }
     #endregion
 
