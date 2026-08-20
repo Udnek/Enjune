@@ -162,10 +162,10 @@ public sealed class World
         return snapshots;
     }
 
-    public Dictionary<Type, IComponent> GetEntityComponents(Entity entity)
+    public IComponent GetEntityComponent<TComponent>(Entity entity)
     {
         Archetype archetype = ArchetypeManager.GetArchetypeByEntity(entity);
-        return archetype.GetEntityComponents(entity);
+        return archetype.GetEntityComponent<TComponent>(entity);
     }
     #endregion
 
