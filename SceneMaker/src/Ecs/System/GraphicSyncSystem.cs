@@ -23,7 +23,7 @@ public class GraphicSyncSystem(GraphicBridge bridge) : SingleQuerySystem
         {
             var models = archetype.GetComponents<ModelComponent>();
             var transforms = archetype.GetComponents<Transform>();
-            for (int i = 0; i < archetype.EntityCount; i++) //TODO iterate over entityId
+            for (int i = 0; i < archetype.Rows; i++) //TODO iterate over entityId
             {
                 var entity = archetype.GetEntityByRow(i);
                 var model = models[i];

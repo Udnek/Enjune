@@ -5,7 +5,7 @@ namespace Enjune.Ecs.EcsType;
 
 public sealed class Archetype
 {
-    public int EntityCount { get; private set; } = 0;
+    public int Rows { get; private set; } = 0;
     public readonly Signature Signature;
     private readonly Dictionary<Type, IColumn> _columns = new();
     private Entity[] _rowToEntity;
@@ -65,9 +65,9 @@ public sealed class Archetype
     {
         Logger.Info(this, $"Archetype with signature {Signature} acquired {entity} as an assembly");
         
-        EnsureCapacity(EntityCount + 1);
+        EnsureCapacity(Rows + 1);
 
-        int row = EntityCount;
+        int row = Rows;
         _entityToRow[entity] = row;
         _rowToEntity[row] = entity;
         
@@ -77,7 +77,7 @@ public sealed class Archetype
                 _columns[component.GetType()].SetValue(row, component);
         }
          
-        EntityCount++;
+        Rows++;
     }
     
     internal void RemoveEntity(Entity entity)
@@ -86,7 +86,7 @@ public sealed class Archetype
             Logger.Info(this, $"{nameof(RemoveEntity)}: {entity} is not in {Signature} archetype.");
         Logger.Info(this, $"Removing {entity}");
 
-        var lastRow = EntityCount - 1;
+        var lastRow = Rows - 1;
 
         if (entityRow != lastRow)
         {
@@ -99,7 +99,7 @@ public sealed class Archetype
             _rowToEntity[entityRow] = lastId;
         }
         _entityToRow.Remove(entity);
-        EntityCount--;
+        Rows--;
     }
     
     private (Entity, List<IComponent>)? GetSnapshot(Entity entity)
@@ -140,9 +140,9 @@ public sealed class Archetype
     {
         Logger.Info(this, $"Archetype with signature {Signature} acquired {entity} as a stream of components");
 
-        EnsureCapacity(EntityCount + 1);
+        EnsureCapacity(Rows + 1);
 
-        int row = EntityCount;
+        int row = Rows;
         _entityToRow[entity] = row;
         _rowToEntity[row] = entity;
 
@@ -152,7 +152,7 @@ public sealed class Archetype
                 _columns[component.GetType()].SetValue(row, component);
         }
 
-        EntityCount++;
+        Rows++;
     }
 
     internal void WriteComponent(Entity entity, IComponent component)

@@ -21,7 +21,7 @@ public class PhysicWriteSyncSystem(PhysicBridge bridge): SingleQuerySystem
         Query.ForEachArchetype(archetype =>
         {
             var transforms = archetype.GetComponents<Transform>();
-            for (int i = 0; i < archetype.EntityCount; i++) //TODO iterate over entityId
+            for (int i = 0; i < archetype.Rows; i++) //TODO iterate over entityId
             {
                 var entity = archetype.GetEntityByRow(i);
                 var transform = transforms[i];

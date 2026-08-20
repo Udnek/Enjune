@@ -23,6 +23,7 @@ public class PhysicReadSyncSystem(PhysicBridge bridge): SingleQuerySystem
             var transforms = archetype.GetComponents<Transform>();
             for (int i = 0; i < archetype.Rows; i++)
             {
+                var entity = archetype.GetEntityByRow(i);
                 var transform = transforms[i];
                 var obj = graphicObjs[entity];
 
@@ -31,10 +32,6 @@ public class PhysicReadSyncSystem(PhysicBridge bridge): SingleQuerySystem
 
                 transforms[i] = transform;
             }
-            archetype.ForEachRowAndEntity((i, entity) =>
-            {
-
-            });
         });
     }
 }
