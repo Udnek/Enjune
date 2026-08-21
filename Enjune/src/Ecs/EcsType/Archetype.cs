@@ -63,7 +63,7 @@ public sealed class Archetype
     // TODO: Avoid using Collection<IComponent> because of boxing
     internal void AddEntity(Entity.Assembly entityAssembly, Entity entity)
     {
-        Logger.Info(this, $"Archetype with signature {Signature} acquired {entity} as an assembly");
+        Logger.Info(Logger.Domain.Ecs, $"{this}[{Signature}].{nameof(AddEntity)}", $"Acquired {entity} as an assembly");
         
         EnsureCapacity(Rows + 1);
 
@@ -83,8 +83,8 @@ public sealed class Archetype
     internal void RemoveEntity(Entity entity)
     {
         if (!_entityToRow.TryGetValue(entity, out var entityRow)) 
-            Logger.Info(this, $"{nameof(RemoveEntity)}: {entity} is not in {Signature} archetype.");
-        Logger.Info(this, $"Removing {entity}");
+            Logger.Info(Logger.Domain.Ecs, $"{this}[{Signature}].{nameof(RemoveEntity)}", $"{entity} is not in {Signature} archetype.");
+        Logger.Info(Logger.Domain.Ecs, $"{this}[{Signature}].{nameof(RemoveEntity)}", $"Removing {entity}");
 
         var lastRow = Rows - 1;
 
@@ -106,7 +106,7 @@ public sealed class Archetype
     {
         if (!_rowToEntity.Contains(entity))
         {
-            Logger.Warn(this, $"{nameof(GetSnapshot)}: Requested entity {entity} doesn't exist in this archetype");
+            Logger.Warn(Logger.Domain.Ecs, $"{this}[{Signature}].{nameof(GetSnapshot)}", $"Requested {entity} doesn't exist in this archetype");
             return null;
         }
 
@@ -138,7 +138,7 @@ public sealed class Archetype
     // TODO: Probably needs more error protection
     internal void AddEntity(Entity entity, IEnumerable<IComponent> components)
     {
-        Logger.Info(this, $"Archetype with signature {Signature} acquired {entity} as a stream of components");
+        Logger.Info(Logger.Domain.Ecs, $"{this}[{Signature}].{nameof(AddEntity)}", $"Acquired {entity} as a stream of components");
 
         EnsureCapacity(Rows + 1);
 
@@ -149,7 +149,11 @@ public sealed class Archetype
         foreach (IComponent component in components)
         {
             if (_columns.ContainsKey(component.GetType()))
+            {
                 _columns[component.GetType()].SetValue(row, component);
+            } else {
+                Logger.Info(Logger.Domain.Ecs, $"{this}[{Signature}].{nameof(AddEntity)}", $"Omitting a component that does not belong to archetype {Signature}");
+            }
         }
 
         Rows++;

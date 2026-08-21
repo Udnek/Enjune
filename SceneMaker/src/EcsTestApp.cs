@@ -84,6 +84,32 @@ public class EcsTestApp : AbstractDisposable, IApp
         Logger.Info(this, "Updating world");
         _world.Update();
 
+        Logger.Info(this, "---- COMPONENT REMOVAL TEST ----");
+        testEntityAssembly = new Entity.Assembly()
+            .AddComponent(new Ecs.Component.Position())
+            .AddComponent(new Velocity())
+            .AddComponent(new Acceleration())
+            .AddComponent(new Mass());
+        Logger.Info(this, $"Adding an entity with all components");
+        entity = _world.AddEntity(testEntityAssembly);
+        Logger.Info(this, "Updating world");
+        _world.Update();
+
+        Logger.Info(this, $"Removing mass from {entity}");
+        _world.RemoveEntityComponent<Mass>(entity);
+        Logger.Info(this, "Updating world");
+        _world.Update();
+
+        Logger.Info(this, $"Removing acceleration from {entity}");
+        _world.RemoveEntityComponent<Acceleration>(entity);
+        Logger.Info(this, "Updating world");
+        _world.Update();
+
+        Logger.Info(this, $"Removing {entity}");
+        _world.RemoveEntity(entity);
+        Logger.Info(this, "Updating world");
+        _world.Update();
+
         Logger.Info(this, "Operation finished");
     }
 

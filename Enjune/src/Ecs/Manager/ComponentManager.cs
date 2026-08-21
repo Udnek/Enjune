@@ -51,11 +51,11 @@ public sealed class ComponentManager
         return result;
     }
 
-    public ComponentTypeId GetTypeIdByType(Type componentType)
+    public ComponentTypeId GetIdByType(Type componentType)
     {
         if (!_typeToId.ContainsKey(componentType))
         {
-            Logger.Error(this, $"{nameof(GetTypeIdByType)}: Unknown component requested. Did you forget to register it?");
+            Logger.Error(this, $"{nameof(GetIdByType)}: Unknown component requested. Did you forget to register it?");
             throw new KeyNotFoundException($"Component type {componentType} was not registered in {this}");
         }
         return _typeToId[componentType];

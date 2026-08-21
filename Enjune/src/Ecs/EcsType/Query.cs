@@ -40,8 +40,8 @@ public sealed class Query(World world, Signature include, Signature exclude)
     public sealed class Builder(World world)
     {
         private readonly World _world = world;
-        private readonly Signature.Builder _includeBuilder = new Signature.Builder(world);
-        private readonly Signature.Builder _excludeBuilder = new Signature.Builder(world);
+        private readonly Signature.Builder _includeBuilder = new(world);
+        private readonly Signature.Builder _excludeBuilder = new(world);
 
         public Builder With<T>() where T : IComponent
         {
