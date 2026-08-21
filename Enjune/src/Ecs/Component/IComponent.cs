@@ -63,7 +63,7 @@ public interface IComponent
             return ResultOrError.Success((idResult.GetOrThrow(), comp));
         });
     
-    public static readonly ICodec<IComponent> GenericCodec = new SimpleCodec<IComponent>(
+    public static readonly ICodec<IComponent> Codec = new SimpleCodec<IComponent>(
         comp =>
         {
             var id = Registries.EcsComponentType.GetId(comp.GetType());
@@ -79,5 +79,5 @@ public interface IComponent
             );
         });
 
-    public static readonly ICodec<IComponent[]> ArrayCodec = Codecs.ArrayOf(GenericCodec, true);
+    public static readonly ICodec<IComponent[]> ArrayCodec = Codecs.ArrayOf(Codec, true);
 }

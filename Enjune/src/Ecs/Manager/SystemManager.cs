@@ -12,12 +12,12 @@ public sealed class SystemManager(World world)
     public void RegisterSystem(ISystem system)
     {
         _systems.Add(system);
-        system.InitializeQueries(_world);
+        system.Initialize(_world);
     }
 
     public void UpdateAll()
     {
         foreach (var system in _systems) 
-            system.Update(_world);
+            system.Update();
     }
 }

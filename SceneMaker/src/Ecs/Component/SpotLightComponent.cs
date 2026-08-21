@@ -6,7 +6,7 @@ using Enjune.Registering;
 
 namespace SceneMaker.Ecs.Component;
 
-public record class SpotLightComponent(SpotLight Value) : IComponent
+public record struct SpotLightComponent(SpotLight Value) : IComponent
 {
     public static readonly ICodec<SpotLightComponent> Codec = Codecs.ForOneArgConstructor(
         v => new SpotLightComponent(v), i => i.Value, SpotLight.Codec);

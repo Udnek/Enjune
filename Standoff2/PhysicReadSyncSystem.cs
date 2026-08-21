@@ -1,4 +1,3 @@
-using Enjune.Ecs;
 using Enjune.Ecs.EcsType;
 using Enjune.Ecs.System;
 using Enjune.Misc;
@@ -15,7 +14,7 @@ public class PhysicReadSyncSystem(PhysicBridge bridge): SingleQuerySystem
             .With<Transform>().Build();
     }
 
-    public override void Update(World world)
+    public override void Update()
     {
         var graphicObjs = bridge.Objects;
         Query.ForEachArchetype(archetype =>

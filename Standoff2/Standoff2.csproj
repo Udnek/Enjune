@@ -11,6 +11,7 @@
       <ProjectReference Include="..\EcsPhysicEngine\EcsPhysicEngine.csproj" />
       <ProjectReference Include="..\Enjune\Enjune.csproj" />
       <ProjectReference Include="..\OpenGLApi\OpenGLApi.csproj" />
+      <ProjectReference Include="..\SceneMaker\SceneMaker.csproj" />
       <ProjectReference Include="..\UiAddon\UiAddon.csproj" />
     </ItemGroup>
 

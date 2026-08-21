@@ -104,7 +104,7 @@ public class App : AbstractDisposable, IApp
         {
             WasdController = new FlyingPlayerController(Grapi, InputHandler, _wasd, 0.2f);
             EditorController = new EditorController(Grapi, InputHandler, _gra);
-            _gra.Objects.Add(EditorController.AxisObject);
+            _graphicBridge.Objects.Add(EditorController.AxisObject);
         }
 
         _uiManager = new UiManager(this, font);
@@ -185,7 +185,7 @@ public class App : AbstractDisposable, IApp
                         foreach (var obj in _graphicBridge.Objects.Values)
                         {
                             if (!obj.DropsShadow) continue;
-                            if (obj.Hidden) continue;
+                            if (obj.IsHidden) continue;
                             
                             s.ModelTransform(obj.TransformMatrix);
                             obj.Model.Render(s);
@@ -205,7 +205,7 @@ public class App : AbstractDisposable, IApp
                     foreach (var obj in _graphicBridge.Objects.Values)
                     {
                         if (!obj.DropsShadow) continue;
-                        if (obj.Hidden) continue;
+                        if (obj.IsHidden) continue;
                     
                         if (obj == (object) EditorController.SelectedObject)
                             s.GlobalColor((1, 0.5f, 0f, 1f));
@@ -229,7 +229,7 @@ public class App : AbstractDisposable, IApp
                     foreach (var obj in _graphicBridge.Objects.Values)
                     {
                         if (obj.DropsShadow) continue;
-                        if (obj.Hidden) continue;
+                        if (obj.IsHidden) continue;
                 
                         s.ModelTransform(obj.TransformMatrix);
                 

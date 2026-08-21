@@ -5,16 +5,13 @@ using System.Text;
 
 namespace Enjune.Ecs.EcsType;
 
-public readonly record struct Entity
+public readonly struct Entity
 {
     private readonly uint _id;
 
     public Entity(uint id) => _id = id;
     public Entity(int id) => _id = (uint)id;
-    public override string ToString()
-    {
-        return $"Entity {_id}";
-    }
+    public override string ToString() => $"Entity {_id}";
 
     public class Assembly()
     {

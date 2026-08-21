@@ -1,3 +1,4 @@
+using Enjune.Ecs.EcsType;
 using Enjune.Graphic.Api;
 using Enjune.Graphic.Key;
 using Enjune.Graphic.Modeling;
@@ -15,7 +16,7 @@ public class EditorController
     private readonly BasicInputHandler _inputHandler;
     private readonly Scene _scene;
     private readonly KeyBinds.Bind _selectBind;
-    public SObject? SelectedObject { get; private set; }
+    public Entity? SelectedObject { get; private set; }
     private readonly Dictionary<Mesh, Ax> _meshToAx = new(3);
     private Ax? _selectedAx;
 

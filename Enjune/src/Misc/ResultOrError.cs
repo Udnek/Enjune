@@ -14,15 +14,18 @@ public readonly record struct ResultOrError<T>
     }
     
     [Pure]
-    public Tto Map<Tto>(Func<T, Tto> whenSuccess, Func<Error, Tto> whenFailure)
-        => Error == null ? whenSuccess(_value) : whenFailure((Error)Error);
-    
+    public TTo Map<TTo>(Func<T, TTo> whenSuccess, Func<Error, TTo> whenFailure)
+        => Error is null ? whenSuccess(_value) : whenFailure((Error)Error);
+
+    public ResultOrError<TTo> AndThen<TTo>(Func<T, ResultOrError<TTo>> run) 
+        => Error is null ? run(_value) : ResultOrError.Failure<TTo>(Error.Value);
+
     [Pure]
-    public T GetOr(T fallback) => Error == null ? _value : fallback;
+    public T GetOr(T fallback) => Error is null ? _value : fallback;
     
     // Use Map<Tto> in most cases
     [Pure]
-    public T GetOrThrow() => Error == null ? _value : throw new InvalidOperationException();
+    public T GetOrThrow() => Error is null ? _value : throw new InvalidOperationException();
     
     public static implicit operator ResultOrError<T>(Error error) => ResultOrError.Failure<T>(error);
 }

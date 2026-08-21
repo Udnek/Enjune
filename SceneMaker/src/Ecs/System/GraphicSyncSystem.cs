@@ -1,4 +1,3 @@
-using Enjune.Ecs;
 using Enjune.Ecs.EcsType;
 using Enjune.Ecs.System;
 using Enjune.Misc;
@@ -16,24 +15,23 @@ public class GraphicSyncSystem(GraphicBridge bridge) : SingleQuerySystem
             .With<Transform>().Build();
     }
 
-    public override void Update(World world)
+    public override void Update()
     {
         var graphicObjs = bridge.Objects;
         Query.ForEachArchetype(archetype =>
         {
             var models = archetype.GetComponents<ModelComponent>();
             var transforms = archetype.GetComponents<Transform>();
-            for (int i = 0; i < archetype.Rows; i++) //TODO iterate over entityId
+            for (int i = 0; i < archetype.Rows; i++)
             {
                 var entity = archetype.GetEntityByRow(i);
                 var model = models[i];
                 var transform = transforms[i];
                 var obj = graphicObjs[entity];
-                
-                obj.TransformMatrix =
-                    MathUtils.CreateModelTransform(transform.Position, transform.Rotation, transform.Scale);
+
+                obj.TransformMatrix = transform.Matrix;
                 obj.DropsShadow = model.DropsShadow;
-                obj.Hidden = model.IsHidden;
+                obj.IsHidden = model.IsHidden;
                 
                 graphicObjs[entity] = obj;
             }
