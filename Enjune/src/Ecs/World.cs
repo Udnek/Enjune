@@ -1,3 +1,5 @@
+using Enjune.Data;
+using Enjune.Data.Codec;
 using Enjune.Ecs.Component;
 using Enjune.Ecs.EcsType;
 using Enjune.Ecs.Manager;
@@ -9,6 +11,7 @@ namespace Enjune.Ecs;
 
 public sealed class World
 {
+    #region Codec
     public static readonly ICodec<World> WithoutSystemsCodec = new SimpleCodec<World>(world =>
         {
             var allEntities = world.GetAllEntities();
@@ -50,8 +53,8 @@ public sealed class World
             foreach (var assembly in entities) 
                 world.AddEntity(assembly);
             return ResultOrError.Success(world);
-        }
-        );
+        });
+    #endregion
     
     internal readonly ArchetypeManager ArchetypeManager;
     internal readonly SystemManager SystemManager;
@@ -116,11 +119,16 @@ public sealed class World
 
     public void AddEntityComponent(Entity entity, IComponent component)
     {
-        if (!_entities.Contains(entity)) { Logger.Error(Logger.Domain.Ecs, $"{this}.{nameof(AddEntityComponent)}", $"{entity} doesn't exist"); return; }
+        if (!_entities.Contains(entity))
+        {
+            Logger.Error(Logger.Domain.Ecs, $"{this}.{nameof(AddEntityComponent)}", $"{entity} doesn't exist"); 
+            return;
+        }
         Archetype currentArchetype = ArchetypeManager.GetArchetypeByEntity(entity);
         Signature targetSignature = currentArchetype.Signature.Set(GetComponentId(component.GetType()));
 
-        if (targetSignature.Equals(currentArchetype.Signature)) { Logger.Warn(this, $"Trying to add a component that already exists"); }
+        if (targetSignature.Equals(currentArchetype.Signature)) 
+            Logger.Warn(this, $"Trying to add a component that already exists");
 
         Archetype targetArchetype = ArchetypeManager.GetOrAddArchetypeBySignature(targetSignature);
 
@@ -132,14 +140,20 @@ public sealed class World
 
     public void RemoveEntityComponent<TComponent>(Entity entity) where TComponent : struct, IComponent
     {
-        if (!_entities.Contains(entity)) { Logger.Error(Logger.Domain.Ecs, $"{this}.{nameof(RemoveEntityComponent)}", $"{entity} doesn't exist"); return; }
+        if (!_entities.Contains(entity))
+        {
+            Logger.Error(Logger.Domain.Ecs, $"{this}.{nameof(RemoveEntityComponent)}", $"{entity} doesn't exist"); 
+            return;
+        }
         Archetype currentArchetype = ArchetypeManager.GetArchetypeByEntity(entity);
         Signature targetSignature = currentArchetype.Signature.Unset(GetComponentId(typeof(TComponent)));
 
-        if (targetSignature.Equals(currentArchetype.Signature)) { Logger.Warn(this, $"Trying to remove a component that doesn't exist"); }
+        if (targetSignature.Equals(currentArchetype.Signature))
+        {
+            Logger.Warn(this, $"Trying to remove a component that doesn't exist");
+        }
 
         Archetype targetArchetype = ArchetypeManager.GetOrAddArchetypeBySignature(targetSignature);
-
         ArchetypeManager.MoveEntity(entity, currentArchetype, targetArchetype);
 
         Logger.Info(this, $"{nameof(AddEntityComponent)}: Removed component successfully");

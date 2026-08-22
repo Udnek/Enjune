@@ -128,9 +128,10 @@ public class EditorSystem : SingleQuerySystem
             
             if (!MathUtils.VectorsIntersect(camPos, projectedDir, axPos, axDir, out var intersection))
                 return false;
-
             
-            SelectedObject!.Position = intersection;
+  
+            // TODO
+            _world.AddEntityComponent(SelectedEntity.Value, intersection);
             return true;
         }
     }
