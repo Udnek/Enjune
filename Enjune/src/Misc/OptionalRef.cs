@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Runtime.InteropServices;
-using System.Text;
+﻿using System.Runtime.InteropServices;
 
 // Если вы когда-нибудь почувствуете себя хуесосом то вспомните ref
+namespace Enjune.Misc;
+
 public readonly ref struct OptionalRef<T>
 {
     private readonly Span<T> _storage;
