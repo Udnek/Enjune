@@ -1,4 +1,6 @@
 using Enjune.Misc;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using IComponent = Enjune.Ecs.Component.IComponent;
 
 namespace Enjune.Ecs.EcsType;
@@ -159,12 +161,15 @@ public sealed class Archetype
         Rows++;
     }
 
-    internal IComponent? GetEntityComponent<TComponent>(Entity entity)
+    internal OptionalRef<TComponent> TryGetEntityComponent<TComponent>(Entity entity) where TComponent : struct, IComponent
     {
         int row = _entityToRow[entity];
-        _columns.TryGetValue(typeof(TComponent), out IColumn? column);
-        return column?.GetValue(_entityToRow[entity]);
-
+        if (_columns.TryGetValue(typeof(TComponent), out var column))
+        {
+            Logger.Info(this, $"{entity} has component {typeof(TComponent)}: {((Column<TComponent>)column)[row]}");
+            return new OptionalRef<TComponent>(ref ((Column<TComponent>)column)[row]);
+        }
+        return new OptionalRef<TComponent>();
     }
 
     internal void WriteComponent(Entity entity, IComponent component)

@@ -162,10 +162,11 @@ public sealed class World
         return snapshots;
     }
 
-    public IComponent? GetEntityComponent<TComponent>(Entity entity)
+    // Tries to create an OptionalRef with component value inside. Contains nothing in case of failure (HasValue is false)
+    public OptionalRef<TComponent> TryGetEntityComponent<TComponent>(Entity entity) where TComponent : struct, IComponent
     {
         Archetype archetype = ArchetypeManager.GetArchetypeByEntity(entity);
-        return archetype.GetEntityComponent<TComponent>(entity);
+        return archetype.TryGetEntityComponent<TComponent>(entity);
     }
     #endregion
 

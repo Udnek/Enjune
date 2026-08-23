@@ -17,7 +17,7 @@ public sealed class Query<T1, T2>(World world, Signature include, Signature excl
     private readonly Signature _exclude = exclude;
     
     private readonly List<Archetype> _cachedArchetypes = [];
-    private readonly List<(Column<T1> Column1, Column<T2> Column2)> _cachedColumns;
+    private readonly List<(Column<T1> Column1, Column<T2> Column2)> _cachedColumns = [];
     private int _cacheVersion = 0;
 
     private void ValidateCache()
@@ -33,10 +33,10 @@ public sealed class Query<T1, T2>(World world, Signature include, Signature excl
 
     public void ForEach(ForEachRef<T1, T2> action)
     {
+        ValidateCache();
         foreach (var (col1, col2) in _cachedColumns)
         {
-            int count = col1.; // Assume both have same length.
-            for (int i = 0; i < count; i++)
+            for (int i = 0; i < col1.Count; i++)
             {
                 action(ref col1[i], ref col2[i]);
             }
