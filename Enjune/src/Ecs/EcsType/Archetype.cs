@@ -167,11 +167,11 @@ public sealed class Archetype
         return ((Column<TComponent>)_columns[typeof(TComponent)])[row];
     }
 
-    internal void ModifyComponent<TComponent>(Entity entity, Func<TComponent, TComponent> modification) where TComponent: struct, IComponent
+    internal void ModifyComponent<TComponent>(Entity entity, Func<TComponent, TComponent> modifier) where TComponent: struct, IComponent
     {
         int row = _entityToRow[entity];
         Column<TComponent> column = (Column<TComponent>)_columns[typeof(TComponent)];
-        column[row] = modification(column[row]);
+        column[row] = modifier(column[row]);
     }
 
     internal void WriteComponent(Entity entity, IComponent component)
