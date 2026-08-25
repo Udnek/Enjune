@@ -7,6 +7,7 @@ using Enjune.Ecs.System;
 using Enjune.Misc;
 using Standoff2.Ecs.System;
 using Standoff2.Ecs.Component;
+using System.Runtime.CompilerServices;
 
 public class EcsTestApp : AbstractDisposable, IApp
 {
@@ -35,6 +36,14 @@ public class EcsTestApp : AbstractDisposable, IApp
 
     public void MainCycle()
     {
+        void UpdateTimes(int n)
+        {
+            for (int i = 0; i < n; i++)
+            {
+                _world.Update();
+            }
+        }
+
         var testEntityAssembly = new Entity.Assembly()
             .AddComponent(new Position(0, 0, 0))
             .AddComponent(new Velocity(0, 0, 0))
@@ -108,27 +117,36 @@ public class EcsTestApp : AbstractDisposable, IApp
         Logger.Info(this, "Updating world");
         _world.Update();
 
-        Logger.Info(this, "---- CHERRY-PICK COMPONENT EDIT TEST ----");
+        Logger.Info(this, "---- ENTITY-ACCESS METHODS TEST ----");
         testEntityAssembly = new Entity.Assembly()
-            .AddComponent(new Position(10, 0, 10))
-            .AddComponent(new Velocity())
-            .AddComponent(new Acceleration())
-            .AddComponent(new Mass());
-        Logger.Info(this, $"Adding an entity with all components");
+            .AddComponent(new Position(0,0,0));
+        Logger.Info(this, $"Adding an entity with Position(0,0,0)");
         entity = _world.AddEntity(testEntityAssembly);
         Logger.Info(this, "Updating world");
         _world.Update();
 
         Logger.Info(this, $"Changing {entity} position to 100 0 100");
-        var optRef = _world.TryGetEntityComponent<Position>(entity);
-        Position position = optRef.Value;
-        optRef.Value.X = 100; optRef.Value.Z = 100;
+        var optRef = _world.ModifyEntityComponent<Position>(entity, pos => {
+            pos.X = 100;
+            pos.Z = 100;
+            return pos;
+        });
+        Logger.Info(this, $"Adding remaining components");
+        _world.AddEntityComponent(entity, new Velocity(0, 0, 0));
+        _world.AddEntityComponent(entity, new Acceleration(0, 0, 0));
+        _world.AddEntityComponent(entity, new Mass(0));
 
         Logger.Info(this, "Updating world 3 times");
-        for (int i = 0; i < 3; i++)
-        {
-            _world.Update();
-        }
+        UpdateTimes(3);
+
+        Logger.Info(this, $"Removing position");
+        _world.RemoveEntityComponent<Position>(entity);
+
+        Logger.Info(this, "Updating world 3 times");
+        UpdateTimes(3);
+
+        Logger.Info(this, $"Getting {entity} velocity");
+        Logger.Info(this, $"{_world.GetEntityComponent<Velocity>(entity)}");
 
         Logger.Info(this, "Operation finished");
     }

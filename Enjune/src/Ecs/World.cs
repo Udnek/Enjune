@@ -116,9 +116,14 @@ public sealed class World
         return (int)ComponentManager.GetIdByType(component);
     }
 
-    public void AddEntityComponent(Entity entity, IComponent component)
+    // Don't use in hot loops
+    public bool AddEntityComponent(Entity entity, IComponent component)
     {
-        if (!_entities.Contains(entity)) { Logger.Error(Logger.Domain.Ecs, $"{this}.{nameof(AddEntityComponent)}", $"{entity} doesn't exist"); return; }
+        if (!_entities.Contains(entity)) 
+        { 
+            Logger.Error(Logger.Domain.Ecs, $"{this}.{nameof(AddEntityComponent)}", $"{entity} doesn't exist"); 
+            return false; 
+        }
         Archetype currentArchetype = ArchetypeManager.GetArchetypeByEntity(entity);
         Signature targetSignature = currentArchetype.Signature.Set(GetComponentId(component.GetType()));
 
@@ -130,11 +135,17 @@ public sealed class World
         targetArchetype.WriteComponent(entity, component);
 
         Logger.Info(this, $"{nameof(AddEntityComponent)}: Added component successfully");
+        return true;
     }
 
-    public void RemoveEntityComponent<TComponent>(Entity entity) where TComponent : struct, IComponent
+    // Don't use in hot loops
+    public bool RemoveEntityComponent<TComponent>(Entity entity) where TComponent : struct, IComponent
     {
-        if (!_entities.Contains(entity)) { Logger.Error(Logger.Domain.Ecs, $"{this}.{nameof(RemoveEntityComponent)}", $"{entity} doesn't exist"); return; }
+        if (!_entities.Contains(entity)) 
+        { 
+            Logger.Error(Logger.Domain.Ecs, $"{this}.{nameof(RemoveEntityComponent)}", $"{entity} doesn't exist"); 
+            return false; 
+        }
         Archetype currentArchetype = ArchetypeManager.GetArchetypeByEntity(entity);
         Signature targetSignature = currentArchetype.Signature.Unset(GetComponentId(typeof(TComponent)));
 
@@ -145,6 +156,35 @@ public sealed class World
         ArchetypeManager.MoveEntity(entity, currentArchetype, targetArchetype);
 
         Logger.Info(this, $"{nameof(AddEntityComponent)}: Removed component successfully");
+        return true;
+    }
+
+    // Don't use in hot loops
+    // Returns a copy of a component
+    public TComponent? GetEntityComponent<TComponent>(Entity entity) where TComponent : struct, IComponent
+    {
+        if (!_entities.Contains(entity))
+        {
+            Logger.Error(Logger.Domain.Ecs, $"{this}.{nameof(GetEntityComponent)}", $"{entity} doesn't exist");
+            return null;
+        }
+
+        Archetype archetype = ArchetypeManager.GetArchetypeByEntity(entity);
+        return archetype.GetComponentCopy<TComponent>(entity);
+    }
+
+    // Don't use in hot loops
+    public bool ModifyEntityComponent<TComponent>(Entity entity, Func<TComponent, TComponent> modification) where TComponent : struct, IComponent
+    {
+        if (!_entities.Contains(entity))
+        {
+            Logger.Error(Logger.Domain.Ecs, $"{this}.{nameof(ModifyEntityComponent)}", $"{entity} doesn't exist");
+            return false;
+        }
+
+        Archetype archetype = ArchetypeManager.GetArchetypeByEntity(entity);
+        archetype.ModifyComponent<TComponent>(entity, modification);
+        return true;
     }
 
     // Don't use in hot loops
@@ -162,12 +202,6 @@ public sealed class World
         return snapshots;
     }
 
-    // Tries to create an OptionalRef with component value inside. Contains nothing in case of failure (HasValue is false)
-    public OptionalRef<TComponent> TryGetEntityComponent<TComponent>(Entity entity) where TComponent : struct, IComponent
-    {
-        Archetype archetype = ArchetypeManager.GetArchetypeByEntity(entity);
-        return archetype.TryGetEntityComponent<TComponent>(entity);
-    }
     #endregion
 
     #endregion
