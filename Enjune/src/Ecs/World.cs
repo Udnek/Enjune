@@ -152,8 +152,11 @@ public sealed class World
         Archetype currentArchetype = ArchetypeManager.GetArchetypeByEntity(entity);
         Signature targetSignature = currentArchetype.Signature.Unset(GetComponentId(typeof(TComponent)));
 
-        if (targetSignature.Equals(currentArchetype.Signature)) 
-            Logger.Warn(this, $"Trying to remove a component that doesn't exist");
+        if (targetSignature.Equals(currentArchetype.Signature))
+        {
+            Logger.Warn(this, "Trying to remove a component that doesn't exist");
+            return false;
+        }
 
         Archetype targetArchetype = ArchetypeManager.GetOrAddArchetypeBySignature(targetSignature);
 
