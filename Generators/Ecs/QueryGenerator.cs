@@ -1,10 +1,10 @@
 ﻿using Microsoft.CodeAnalysis;
 using System;
 
-namespace Generators
+namespace Generators.Ecs
 {
     [Generator]
-    public class EcsQueryGenerator : ISourceGenerator
+    public class QueryGenerator : ISourceGenerator
     {
         public void Execute(GeneratorExecutionContext context)
         {

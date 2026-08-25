@@ -2,9 +2,9 @@ using Enjune.Ecs;
 using Enjune.Ecs.EcsType;
 using Enjune.Ecs.System;
 using Enjune.Misc;
-using SceneMaker.Ecs.Component;
+using Standoff2.Ecs.Component;
 
-namespace SceneMaker.Ecs.System;
+namespace Standoff2.Ecs.System;
 
 public class GravitySystem : SingleQuerySystem
 {
@@ -18,7 +18,7 @@ public class GravitySystem : SingleQuerySystem
         Query.ForEachArchetype(archetype =>
         {
             Span<Acceleration> accelerations = archetype.GetComponents<Acceleration>();
-            for (int i = 0; i < archetype.EntityCount; i++)
+            for (int i = 0; i < archetype.Rows; i++)
             {
                 // Simply add -9,80665 to Y acceleration
                 // TODO: Consider changing this behavior to something more accurate

@@ -2,16 +2,16 @@ using Enjune.Ecs;
 using Enjune.Ecs.EcsType;
 using Enjune.Ecs.System;
 using Enjune.Misc;
-using SceneMaker.Ecs.Component;
+using Standoff2.Ecs.Component;
 
-namespace SceneMaker.Ecs.System;
+namespace Standoff2.Ecs.System;
 
 public class IntegrationSystem : SingleQuerySystem
 {
     protected override Query BuildQuery(Query.Builder builder)
     {
         return builder
-            .With<Component.Position>()
+            .With<Position>()
             .With<Velocity>()
             .With<Acceleration>()
             .Build();
@@ -21,11 +21,11 @@ public class IntegrationSystem : SingleQuerySystem
     {
         Query.ForEachArchetype(archetype =>
         {
-            Span<Component.Position> positions = archetype.GetComponents<Component.Position>();
+            Span<Position> positions = archetype.GetComponents<Position>();
             Span<Velocity> velocities = archetype.GetComponents<Velocity>();
             Span<Acceleration> accelerations = archetype.GetComponents<Acceleration>();
 
-            for (int i = 0; i < archetype.EntityCount; i++)
+            for (int i = 0; i < archetype.Rows; i++)
             {
                 const float dt = 0.01f;
                 Logger.Info(this, $"processing {archetype.GetEntityByRow(i)} with params:\n" +
