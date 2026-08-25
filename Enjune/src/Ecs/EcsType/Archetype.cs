@@ -1,4 +1,7 @@
 using Enjune.Misc;
+using System.ComponentModel;
+using System.ComponentModel.Design;
+using System.Runtime.CompilerServices;
 using IComponent = Enjune.Ecs.Component.IComponent;
 
 namespace Enjune.Ecs.EcsType;
@@ -135,7 +138,6 @@ public sealed class Archetype
         }
     }
 
-    // TODO: Probably needs more error protection
     internal void AddEntity(Entity entity, IEnumerable<IComponent> components)
     {
         Logger.Info(Logger.Domain.Ecs, $"{this}[{Signature}].{nameof(AddEntity)}", $"Acquired {entity} as a stream of components");
@@ -157,6 +159,19 @@ public sealed class Archetype
         }
 
         Rows++;
+    }
+
+    internal TComponent GetComponentCopy<TComponent>(Entity entity) where TComponent : struct, IComponent
+    {
+        int row = _entityToRow[entity];
+        return ((Column<TComponent>)_columns[typeof(TComponent)])[row];
+    }
+
+    internal void ModifyComponent<TComponent>(Entity entity, Func<TComponent, TComponent> modifier) where TComponent: struct, IComponent
+    {
+        int row = _entityToRow[entity];
+        Column<TComponent> column = (Column<TComponent>)_columns[typeof(TComponent)];
+        column[row] = modifier(column[row]);
     }
 
     internal void WriteComponent(Entity entity, IComponent component)

@@ -14,6 +14,8 @@ public interface IColumn
 public sealed class Column<T>(int capacity = EcsConstants.InitialColumnCapacity) : IColumn where T : struct, IComponent
 {
     private T[] _data = new T[capacity];
+    internal ref T this[int i] => ref _data[i];
+    public int Count => _data.Length;
 
     public void SetValue(int row, IComponent value) => _data[row] = (T)value;
 
