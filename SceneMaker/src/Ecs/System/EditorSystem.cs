@@ -86,7 +86,7 @@ public class EditorSystem : SingleQuerySystem
         if (SelectedEntity != null)
         {
             // trying to trace axis first
-            var mesh = EditorMisc.TraceLineObject(_axisObject, viewMat, projMat, 5);
+            var mesh = EditorMisc.TraceLineObject(_axisObject, camPos, camDir, 5);
             if (mesh != null)
             {
                 _selectedAx = _meshToAx[mesh];
