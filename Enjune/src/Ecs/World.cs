@@ -183,7 +183,7 @@ public sealed class World
     }
 
     // Don't use in hot loops
-    public bool ModifyEntityComponent<TComponent>(Entity entity, Func<TComponent, TComponent> modification) where TComponent : struct, IComponent
+    public bool ModifyEntityComponent<TComponent>(Entity entity, Func<TComponent, TComponent> modifier) where TComponent : struct, IComponent
     {
         if (!_entities.Contains(entity))
         {
@@ -192,7 +192,7 @@ public sealed class World
         }
 
         Archetype archetype = ArchetypeManager.GetArchetypeByEntity(entity);
-        archetype.ModifyComponent<TComponent>(entity, modification);
+        archetype.ModifyComponent(entity, modifier);
         return true;
     }
 
