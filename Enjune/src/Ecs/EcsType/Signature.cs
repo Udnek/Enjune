@@ -26,8 +26,6 @@ public readonly record struct Signature
 
     public bool Excludes(Signature other) => (~other._bitSet & _bitSet) == _bitSet;
     
-    public bool Matches(Signature other) => _bitSet == other._bitSet;
-    
     public int GetSetBitsCount()
     {
         int cnt = 0;

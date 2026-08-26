@@ -64,6 +64,7 @@ public sealed class World
     // it increments when a new archetype gets created, but does not
     // increment when archetype's entity container changes
     internal int ArchetypeCacheVersion { get; private set; } = 0;
+    internal int EntityCacheVersion { get; private set; } = 0;
     private List<Entity> _entities = [];
 
     internal void InvalidateArchetypeCache()
@@ -127,7 +128,11 @@ public sealed class World
         Archetype currentArchetype = ArchetypeManager.GetArchetypeByEntity(entity);
         Signature targetSignature = currentArchetype.Signature.Set(GetComponentId(component.GetType()));
 
-        if (targetSignature.Equals(currentArchetype.Signature)) { Logger.Warn(this, $"Trying to add a component that already exists"); }
+        if (targetSignature.Equals(currentArchetype.Signature)) 
+        {
+            Logger.Error(Logger.Domain.Ecs, $"{this}.{nameof(AddEntityComponent)}", $"Tried to add component that already exists");
+            return false;
+        }
 
         Archetype targetArchetype = ArchetypeManager.GetOrAddArchetypeBySignature(targetSignature);
 
@@ -149,7 +154,11 @@ public sealed class World
         Archetype currentArchetype = ArchetypeManager.GetArchetypeByEntity(entity);
         Signature targetSignature = currentArchetype.Signature.Unset(GetComponentId(typeof(TComponent)));
 
-        if (targetSignature.Equals(currentArchetype.Signature)) { Logger.Warn(this, $"Trying to remove a component that doesn't exist"); }
+        if (targetSignature.Equals(currentArchetype.Signature)) 
+        { 
+            Logger.Error(Logger.Domain.Ecs, $"{this}.{nameof(RemoveEntityComponent)}", $"Trying to remove a component that doesn't exist");
+            return false;
+        }
 
         Archetype targetArchetype = ArchetypeManager.GetOrAddArchetypeBySignature(targetSignature);
 

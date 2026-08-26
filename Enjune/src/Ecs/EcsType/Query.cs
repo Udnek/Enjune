@@ -22,13 +22,13 @@ public sealed class Query<T1, T2>(World world, Signature include, Signature excl
 
     private void ValidateCache()
     {
-        if (_world.ArchetypeCacheVersion == _cacheVersion)
-            return;
-
-        _cacheVersion = _world.ArchetypeCacheVersion;
-        _cachedArchetypes.Clear();
-        foreach (var archetype in _world.QueryArchetypes(_include, _exclude))
-            _cachedArchetypes.Add(archetype);
+        if (_world.ArchetypeCacheVersion != _cacheVersion)
+        {
+            _cacheVersion = _world.ArchetypeCacheVersion;
+            _cachedArchetypes.Clear();
+            foreach (var archetype in _world.QueryArchetypes(_include, _exclude))
+                _cachedArchetypes.Add(archetype);
+        }
     }
 
     public void ForEach(ForEachRef<T1, T2> action)
