@@ -71,6 +71,13 @@ public sealed class World
     {
         Logger.Info(this, "Invalidated archetype cache");
         ArchetypeCacheVersion++;
+        EntityCacheVersion++;
+    }
+
+    internal void InvalidateEntityCache()
+    {
+        Logger.Info(this, "Invalidated entity cache");
+        EntityCacheVersion++;
     }
 
     public World(IEnumerable<ISystem> systems, IEnumerable<Type> componentTypes)
