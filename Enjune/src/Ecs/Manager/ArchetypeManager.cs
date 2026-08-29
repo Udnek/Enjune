@@ -14,7 +14,7 @@ public sealed class ArchetypeManager(World world)
     public void EnsureArchetypeExistence(Signature signature)
     {
         if (_signatureToArchetype.ContainsKey(signature)) return;
-        _world.InvalidateArchetypeCache();
+        _world.InvalidateCache();
         _signatureToArchetype[signature] = new Archetype(signature, _world);
         Logger.Info(this, $"Created an archetype with signature {signature}");
     }

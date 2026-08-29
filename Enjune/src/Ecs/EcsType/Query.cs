@@ -22,9 +22,9 @@ public sealed class Query<T1, T2>(World world, Signature include, Signature excl
 
     private void ValidateCache()
     {
-        if (_world.ArchetypeCacheVersion != _cacheVersion)
+        if (_world.CacheVersion != _cacheVersion)
         {
-            _cacheVersion = _world.ArchetypeCacheVersion;
+            _cacheVersion = _world.CacheVersion;
             _cachedArchetypes.Clear();
             foreach (var archetype in _world.QueryArchetypes(_include, _exclude))
                 _cachedArchetypes.Add(archetype);
@@ -59,10 +59,10 @@ public sealed class Query(World world, Signature include, Signature exclude)
     // TODO: Ensure cache invalidation is in place in World logic
     private void ValidateCache()
     {
-        if (_world.ArchetypeCacheVersion == _cacheVersion) 
+        if (_world.CacheVersion == _cacheVersion) 
             return;
         
-        _cacheVersion = _world.ArchetypeCacheVersion;
+        _cacheVersion = _world.CacheVersion;
         _cachedArchetypes.Clear();
         foreach (var archetype in _world.QueryArchetypes(_include, _exclude)) 
             _cachedArchetypes.Add(archetype);
