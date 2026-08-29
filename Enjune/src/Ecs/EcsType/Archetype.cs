@@ -82,7 +82,32 @@ public sealed class Archetype
          
         Rows++;
     }
-    
+
+    internal void AddEntity(Entity entity, IEnumerable<IComponent> components)
+    {
+        Logger.Info(Logger.Domain.Ecs, $"{this}[{Signature}].{nameof(AddEntity)}", $"Acquired {entity} as a stream of components");
+
+        EnsureCapacity(Rows + 1);
+
+        int row = Rows;
+        _entityToRow[entity] = row;
+        _rowToEntity[row] = entity;
+
+        foreach (IComponent component in components)
+        {
+            if (_columns.ContainsKey(component.GetType()))
+            {
+                _columns[component.GetType()].SetValue(row, component);
+            }
+            else
+            {
+                Logger.Info(Logger.Domain.Ecs, $"{this}[{Signature}].{nameof(AddEntity)}", $"Omitting a component that does not belong to archetype {Signature}");
+            }
+        }
+
+        Rows++;
+    }
+
     internal void RemoveEntity(Entity entity)
     {
         if (!_entityToRow.TryGetValue(entity, out var entityRow)) 
@@ -105,14 +130,8 @@ public sealed class Archetype
         Rows--;
     }
     
-    private (Entity, List<IComponent>)? GetSnapshot(Entity entity)
+    private (Entity, List<IComponent>) GetSnapshot(Entity entity)
     {
-        if (!_rowToEntity.Contains(entity))
-        {
-            Logger.Warn(Logger.Domain.Ecs, $"{this}[{Signature}].{nameof(GetSnapshot)}", $"Requested {entity} doesn't exist in this archetype");
-            return null;
-        }
-
         List<IComponent> components = [];
         foreach (IColumn column in _columns.Values)
         {
@@ -123,9 +142,9 @@ public sealed class Archetype
     
     internal IEnumerable<(Entity, List<IComponent>)> GetAllEntitySnapshots()
     {
-        foreach (var entity in _rowToEntity)
+        for (int row = 0; row < Rows; row++)
         {
-            yield return GetSnapshot(entity)!.Value;
+            yield return GetSnapshot(_rowToEntity[row]);
         }
     }
 
@@ -136,29 +155,6 @@ public sealed class Archetype
         {
             yield return column.GetValue(index);
         }
-    }
-
-    internal void AddEntity(Entity entity, IEnumerable<IComponent> components)
-    {
-        Logger.Info(Logger.Domain.Ecs, $"{this}[{Signature}].{nameof(AddEntity)}", $"Acquired {entity} as a stream of components");
-
-        EnsureCapacity(Rows + 1);
-
-        int row = Rows;
-        _entityToRow[entity] = row;
-        _rowToEntity[row] = entity;
-
-        foreach (IComponent component in components)
-        {
-            if (_columns.ContainsKey(component.GetType()))
-            {
-                _columns[component.GetType()].SetValue(row, component);
-            } else {
-                Logger.Info(Logger.Domain.Ecs, $"{this}[{Signature}].{nameof(AddEntity)}", $"Omitting a component that does not belong to archetype {Signature}");
-            }
-        }
-
-        Rows++;
     }
 
     internal TComponent GetComponentCopy<TComponent>(Entity entity) where TComponent : struct, IComponent
