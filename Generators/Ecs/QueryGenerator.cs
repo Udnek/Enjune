@@ -74,9 +74,9 @@ namespace Generators.Ecs
             sb.AppendLine($"        var cache = Cache<{typeParamList}>.GetColumns(_world, _include, _exclude);");
             sb.AppendLine($"        foreach (var {deconstructPattern} in cache)");
             sb.AppendLine("        {");
-            sb.AppendLine("        for (int i = 0; i < col1.Count; i++)");
+            sb.AppendLine("            for (int i = 0; i < col1.Count; i++)");
             sb.AppendLine("            {");
-            sb.AppendLine($"                action({actionArgs});");
+            sb.AppendLine($"                    action({actionArgs});");
             sb.AppendLine("            }");
             sb.AppendLine("        }");
             sb.AppendLine("    }");

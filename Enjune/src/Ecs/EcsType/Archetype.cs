@@ -35,6 +35,13 @@ public sealed class Archetype
                              throw new InvalidOperationException($"Failed to instantiate {Logger.GetTypeName(columnType)}");
     }
 
+    // TODO: Ineffective, should move into methods
+    private void SyncColumnCounts()
+    {
+        foreach (IColumn column in _columns.Values)
+            column.Count = Rows;
+    }
+
     #region Public Api
 
     public Entity GetEntityByRow(int row) => _rowToEntity[row];
@@ -76,8 +83,9 @@ public sealed class Archetype
             if (_columns.ContainsKey(component.GetType())) 
                 _columns[component.GetType()].SetValue(row, component);
         }
-         
+
         Rows++;
+        SyncColumnCounts();
     }
 
     internal void AddEntity(Entity entity, IEnumerable<IComponent> components)
@@ -103,6 +111,7 @@ public sealed class Archetype
         }
 
         Rows++;
+        SyncColumnCounts();
     }
 
     internal void RemoveEntity(Entity entity)
@@ -123,8 +132,10 @@ public sealed class Archetype
             _entityToRow[lastId] = entityRow;
             _rowToEntity[entityRow] = lastId;
         }
+
         _entityToRow.Remove(entity);
         Rows--;
+        SyncColumnCounts();
     }
     
     private (Entity, List<IComponent>) GetSnapshot(Entity entity)

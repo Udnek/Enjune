@@ -5,6 +5,7 @@ namespace Enjune.Ecs.EcsType;
 
 public interface IColumn
 {
+    int Count { get; internal set; }
     void SetValue(int row, IComponent value);
     void SetCapacity(int capacity);
     void SwapElements(int rowFrom, int rowTo);
@@ -15,7 +16,8 @@ public sealed class Column<T>(int capacity = EcsConstants.InitialColumnCapacity)
 {
     private T[] _data = new T[capacity];
     internal ref T this[int i] => ref _data[i];
-    public int Count => _data.Length;
+    public int Count;
+    int IColumn.Count { get => Count; set => Count = value; }
 
     public void SetValue(int row, IComponent value) => _data[row] = (T)value;
 
