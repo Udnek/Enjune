@@ -63,13 +63,13 @@ public sealed class World
     // This cache version marks broad archetype structure version:
     // it increments when a new archetype gets created, but does not
     // increment when archetype's entity container changes
-    internal int ArchetypeCacheVersion { get; private set; } = 0;
+    internal int CacheVersion { get; private set; } = 0;
     private List<Entity> _entities = [];
 
-    internal void InvalidateArchetypeCache()
+    internal void InvalidateCache()
     {
         Logger.Info(this, "Invalidated archetype cache");
-        ArchetypeCacheVersion++;
+        CacheVersion++;
     }
 
     public World(IEnumerable<ISystem> systems, IEnumerable<Type> componentTypes)
@@ -127,9 +127,10 @@ public sealed class World
         Archetype currentArchetype = ArchetypeManager.GetArchetypeByEntity(entity);
         Signature targetSignature = currentArchetype.Signature.Set(GetComponentId(component.GetType()));
 
-        if (targetSignature.Equals(currentArchetype.Signature))
+        if (targetSignature.Equals(currentArchetype.Signature)) 
         {
-            Logger.Warn(this, $"Trying to add a component that already exists");
+            Logger.Error(Logger.Domain.Ecs, $"{this}.{nameof(AddEntityComponent)}", $"Tried to add component that already exists");
+            return false;
         }
 
         Archetype targetArchetype = ArchetypeManager.GetOrAddArchetypeBySignature(targetSignature);
@@ -152,9 +153,9 @@ public sealed class World
         Archetype currentArchetype = ArchetypeManager.GetArchetypeByEntity(entity);
         Signature targetSignature = currentArchetype.Signature.Unset(GetComponentId(typeof(TComponent)));
 
-        if (targetSignature.Equals(currentArchetype.Signature))
-        {
-            Logger.Warn(this, "Trying to remove a component that doesn't exist");
+        if (targetSignature.Equals(currentArchetype.Signature)) 
+        { 
+            Logger.Error(Logger.Domain.Ecs, $"{this}.{nameof(RemoveEntityComponent)}", $"Trying to remove a component that doesn't exist");
             return false;
         }
 

@@ -14,7 +14,7 @@ public sealed class ArchetypeManager(World world)
     public void EnsureArchetypeExistence(Signature signature)
     {
         if (_signatureToArchetype.ContainsKey(signature)) return;
-        _world.InvalidateArchetypeCache();
+        _world.InvalidateCache();
         _signatureToArchetype[signature] = new Archetype(signature, _world);
         Logger.Info(this, $"Created an archetype with signature {signature}");
     }
@@ -30,7 +30,7 @@ public sealed class ArchetypeManager(World world)
         }
     }
     
-    public void AddEntity(Entity.Assembly assembly, Entity entity)
+    internal void AddEntity(Entity.Assembly assembly, Entity entity)
     {
         
         Signature signature = assembly.GetSignature(_world);
@@ -43,7 +43,7 @@ public sealed class ArchetypeManager(World world)
         _entityToArchetype[entity] = matchedArchetype;
     }
     
-    public void RemoveEntity(Entity entity)
+    internal void RemoveEntity(Entity entity)
     {
         Logger.Info(this, $"Got a request to remove {entity}");
         if (_entityToArchetype.TryGetValue(entity, out Archetype? archetype)) 
