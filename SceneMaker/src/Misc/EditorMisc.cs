@@ -7,14 +7,10 @@ namespace SceneMaker.Misc;
 
 public static class EditorMisc
 {
-    
-    public static Mesh? TraceLineObject(ModelComponent modelComp, Transform transform, Vector3 camPos, Vector3 camDir, float minimumAngleDegrees)
+    public static Mesh? TraceLineObject(Vector3 camPos, Vector3 camDir, Model model, Matrix4 transform, float minimumAngleDegrees)
     {
-        var model = modelComp.Model?.Get(out _);
-        if (model is null) return null;
-        
         // applying 
-        var modelMatInv = transform.Matrix.Inverted();
+        var modelMatInv = transform.Inverted();
         camDir = modelMatInv.TransformDirection(camDir).Normalized();
         camPos = modelMatInv.TransformPosition(camPos);
 
@@ -41,18 +37,12 @@ public static class EditorMisc
         return nearestMesh;
     }
     
-    public static bool TraceObject(Vector3 cameraPos, Vector3 direction, ModelComponent modelComp, Transform modelTransform, out float distance)
+    public static bool TraceObject(Vector3 camPos, Vector3 camDir, Model model, Matrix4 modelTransform, out float distance)
     {
-        var model = modelComp.Model?.Get(out _);
-        if (model is null) // TODO || obj.RenderableModel?.CurrentPrimitive != IGraphicApi.Primitive.Triangle)
-        {
-            distance = 0;
-            return false;
-        }
-        var modelMatInv = modelTransform.Matrix.Inverted();
+        var modelMatInv = modelTransform.Inverted();
         
-        var localDirection = modelMatInv.TransformDirection(direction).Normalized();
-        var localCameraPos = modelMatInv.TransformPosition(cameraPos);
+        var localDirection = modelMatInv.TransformDirection(camDir).Normalized();
+        var localCameraPos = modelMatInv.TransformPosition(camPos);
         
         foreach (var (mesh, _) in model.Meshes)
         {

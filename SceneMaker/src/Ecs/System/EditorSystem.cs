@@ -17,9 +17,7 @@ namespace SceneMaker.Ecs.System;
 
 public class EditorSystem : SingleQuerySystem
 {
-    private readonly IGraphicApi _graphicApi;
-    private readonly BasicInputHandler _inputHandler;
-    private readonly GraphicBridge _bridge;
+    private readonly App _app;
     private readonly KeyBinds.Bind _selectBind;
     private readonly Dictionary<Mesh, Ax> _meshToAx = new(3);
     private World _world = null!;
@@ -27,12 +25,12 @@ public class EditorSystem : SingleQuerySystem
     public Entity? SelectedEntity { get; private set; }
     private Ax? _selectedAx;
     private GraphicObject _axisObject;
+    private readonly Model _axisModel;
+    private const float AxisSize = 2;
 
-    public EditorSystem(IGraphicApi graphicApi, BasicInputHandler inputHandler, GraphicBridge bridge)
+    public EditorSystem(App app)
     {
-        _graphicApi = graphicApi;
-        _inputHandler = inputHandler;
-        _bridge = bridge;
+        _app = app;
         _selectBind = new KeyBinds.Bind("select", KeyCode.LeftMouseButton);
 
         #region Constructing Axis Obj
@@ -40,22 +38,23 @@ public class EditorSystem : SingleQuerySystem
             var x = new Mesh([Vector3.Zero, Vector3.UnitX], [default, default], [0, 1]);
             var y = new Mesh([Vector3.Zero, Vector3.UnitY], [default, default], [0, 1]);
             var z = new Mesh([Vector3.Zero, Vector3.UnitZ], [default, default], [0, 1]);
-            _axisObject = new GraphicObject()
+            _axisModel = new Model.Builder()
+                .Add(x, new Model.PerMesh(new Color(1f, 0f, 0f, 1f)))
+                .Add(y, new Model.PerMesh(new Color(0f, 1f, 0f, 1f)))
+                .Add(z, new Model.PerMesh(new Color(0f, 0f, 1f, 1f)))
+                .Build(false);
+            _axisObject = new GraphicObject(app.GraphicApi.CreateStaticRenderable(_axisModel, IGraphicApi.Primitive.Line))
             {
                 DropsShadow = false,
-                Model = _graphicApi.CreateStaticRenderable(
-                    new Model.Builder()
-                        .Add(x, new Model.PerMesh(new Color(1f, 0f, 0f, 1f)))
-                        .Add(y, new Model.PerMesh(new Color(0f, 1f, 0f, 1f)))
-                        .Add(z, new Model.PerMesh(new Color(0f, 0f, 1f, 1f)))
-                        .Build(false), IGraphicApi.Primitive.Line),
-                IsHidden = true,
+                IsHidden = true
             };
             _meshToAx[x] = Ax.X;
             _meshToAx[y] = Ax.Y;
             _meshToAx[z] = Ax.Z;   
         }
         #endregion
+        
+        _app.GraphicEngine.Objects[Guid.NewGuid()] = _axisObject;
     }
 
     public override void Initialize(World world)
@@ -73,20 +72,21 @@ public class EditorSystem : SingleQuerySystem
 
     public override void Update()
     {
-        
+        GetCursorVectors(_app.WasdController.View, _app.GraphicEngine.Projection, out Vector3 camPos, out var camDir);
+        Update(camPos, camDir);
     }
 
-    public void Update(Vector3 camPos, Vector3 camDir)
+    private void Update(Vector3 camPos, Vector3 camDir)
     {
         if (SelectedEntity != null) 
             UpdateSelectedEntity(camPos, camDir);
         
         if (_selectedAx != null) return; // don't need to trace anything
-        if (!_inputHandler.IsPressed(_selectBind)) return;
+        if (!_app.InputHandler.IsPressed(_selectBind)) return;
         if (SelectedEntity != null)
         {
             // trying to trace axis first
-            var mesh = EditorMisc.TraceLineObject(_axisObject, camPos, camDir, 5);
+            var mesh = EditorMisc.TraceLineObject(camPos, camDir, _axisModel, _axisObject.TransformMatrix, 5);
             if (mesh != null)
             {
                 _selectedAx = _meshToAx[mesh];
@@ -94,26 +94,33 @@ public class EditorSystem : SingleQuerySystem
                 return;
             }
         }
-        SelectedEntity = TraceObjects(viewMat, projMat);
-        _axisObject.Hidden = SelectedEntity == null;
+        SelectedEntity = TraceObjects(camPos, camDir);
+        _axisObject.IsHidden = SelectedEntity is null;
     }
     
     private void UpdateSelectedEntity(Vector3 camPos, Vector3 camDir)
     {
         if (SelectedEntity == null) return;
-        if (_inputHandler.IsJustReleased(_selectBind))
+        if (_app.InputHandler.IsJustReleased(_selectBind))
             _selectedAx = null;
         else if (_selectedAx != null) 
             DragSelectedEntity(camPos, camDir);
-        
-        _axisObject.Position = SelectedObject.Position;
-        _axisObject.Rotation = SelectedObject.Rotation;
+
+        var selectedTransform = _world.GetEntityComponent<Transform>(SelectedEntity.Value);
+        if (selectedTransform is null)
+        {
+            Logger.Warn(this, $"{SelectedEntity.Value} doesn't have {nameof(Transform)}");
+            return;
+        }
+
+        _axisObject.TransformMatrix = MathUtils.CreateModelTransform(
+            selectedTransform.Value.Position, selectedTransform.Value.Rotation, new Vector3(AxisSize));
     }
 
     private void DragSelectedEntity(Vector3 camPos, Vector3 camDir)
     {
         if (SelectedEntity == null || _selectedAx == null) return;
-        if (_inputHandler.DeltaCursorPosition == (0, 0)) return;
+        if (_app.InputHandler.DeltaCursorPosition == (0, 0)) return;
         
         var axToVec = AxToVec(_selectedAx.Value);
 
@@ -129,9 +136,13 @@ public class EditorSystem : SingleQuerySystem
             if (!MathUtils.VectorsIntersect(camPos, projectedDir, axPos, axDir, out var intersection))
                 return false;
             
-  
-            // TODO
-            _world.AddEntityComponent(SelectedEntity.Value, intersection);
+            var modified = _world.ModifyEntityComponent<Transform>(SelectedEntity.Value, transform =>
+            {
+                transform.Position = intersection;
+                return transform;
+            });
+            if (!modified) 
+                Logger.Warn(this, $"{SelectedEntity.Value} doesn't have {nameof(Transform)}");
             return true;
         }
     }
@@ -146,7 +157,13 @@ public class EditorSystem : SingleQuerySystem
             var models = archetype.GetComponents<ModelComponent>();
             for (int row = 0; row < archetype.Rows; row++)
             {
-                if (!EditorMisc.TraceObject(camPos, camDir, models[row], transforms[row], out var distance)) continue;
+                var model = models[row].Model.Get(out var error);
+                if (model is null)
+                {
+                    Logger.Warn(this, $"Model for {archetype.GetEntityByRow(row)} is null: {error}");
+                    continue;
+                }
+                if (!EditorMisc.TraceObject(camPos, camDir, model, transforms[row].Matrix, out var distance)) continue;
                 if (distance >= closestDistance) continue;
                 closestDistance = distance;
                 closest = archetype.GetEntityByRow(row);
@@ -159,12 +176,12 @@ public class EditorSystem : SingleQuerySystem
     
     private Vector2 GetNdcCursorPosition()
     {
-        var screenSize = _graphicApi.GetWindowSize();
+        var screenSize = _app.GraphicApi.GetWindowSize();
         Vector2 cursorPos;
-        if (_graphicApi.GetCursorMode() == IGraphicApi.CursorMode.Centered) 
+        if (_app.GraphicApi.GetCursorMode() == IGraphicApi.CursorMode.Centered) 
             cursorPos = screenSize / 2;
         else
-            cursorPos = _inputHandler.CursorPosition;
+            cursorPos = _app.InputHandler.CursorPosition;
 
         var ndc = cursorPos / screenSize * 2f - (1, 1);
         return ndc;

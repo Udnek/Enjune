@@ -10,9 +10,7 @@ public readonly record struct Identifier
 {
     public static readonly ICodec<Identifier> Codec = new SimpleCodec<Identifier>(
         i => Codecs.String.Encode(i._fullName),
-        data => Codecs.String.Decode(data).Map(Parse, err => err));
-
-    public static readonly Identifier NullFallback = new("null", "null");
+        data => Codecs.String.Decode(data).AndThen(Parse));
     
     private readonly string _fullName;
 
@@ -33,7 +31,7 @@ public readonly record struct Identifier
         if (assemblyName is null)
         {
             Logger.Error(typeof(Identifier), $"can not get assembly name for {assembly}");
-            return NullFallback;
+            return new Identifier("null", "null");
         }
         return new Identifier(assemblyName, name);
     }

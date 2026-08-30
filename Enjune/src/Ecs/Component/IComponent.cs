@@ -7,9 +7,13 @@ namespace Enjune.Ecs.Component;
 
 public interface IComponent
 {
-    private static readonly string IdKey = "id";
-    private static readonly string ComponentKey = "component";
+    Identifier Id();
     
+    #region Codec
+
+    private const string IdKey = "id";
+    private const string ComponentKey = "component";
+
     private static readonly ICodec<(Identifier Id, IComponent Comp)> KeyedCodec = new SimpleCodec<(Identifier Id, IComponent Comp)>(
         tuple =>
         {
@@ -64,20 +68,10 @@ public interface IComponent
         });
     
     public static readonly ICodec<IComponent> Codec = new SimpleCodec<IComponent>(
-        comp =>
-        {
-            var id = Registries.EcsComponentType.GetId(comp.GetType());
-            if (id is null)
-                return new Error($"can not find component id {id} in {Registries.EcsComponentType}");
-            return KeyedCodec.Encode((id.Value, comp));
-        },
-        data =>
-        {
-            return KeyedCodec.Decode(data).Map<ResultOrError<IComponent>>(
-                val => ResultOrError.Success(val.Comp),
-                err => err
-            );
-        });
+        comp => KeyedCodec.Encode((comp.Id(), comp)),
+        data => KeyedCodec.Decode(data).AndThen(val => val.Comp));
 
     public static readonly ICodec<IComponent[]> ArrayCodec = Codecs.ArrayOf(Codec, true);
+
+    #endregion
 }

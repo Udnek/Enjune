@@ -118,7 +118,7 @@ public static class Codecs
     
     #endregion
 
-    #region Assebly
+    #region Other
     public static readonly SimpleCodec<Assembly> Assembly = new(
         instance =>
         {
@@ -142,6 +142,17 @@ public static class Codecs
             }
             return ResultOrError.Success(assembly);
         });
+
+    public static readonly SimpleCodec<Guid> Guid = new(
+        guid => ResultOrError.Success<DataObject>(guid.ToString()),
+        data => String.Decode(data).AndThen(str =>
+        {
+            if (System.Guid.TryParse(str, out Guid guid))
+                return ResultOrError.Success(guid);
+            return new Error($"can not parse: {str}");
+        })
+    );
+    
     #endregion
 
     #region Utils
@@ -167,9 +178,7 @@ public static class Codecs
                 if (data == DataObject.Null)
                     return ResultOrError.Success<T?>(null);
                 else
-                    return codec.Decode(data).Map(
-                        val => ResultOrError.Success<T?>(val),
-                        err => err);
+                    return codec.Decode(data).AndThen<T?>(val => val);
             });
     }
     

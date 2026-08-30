@@ -18,15 +18,5 @@ internal class Program
     {
         Logger.RegisterNamespaceToDomain(typeof(Program).Assembly, "", new Logger.Domain("SceneMaker", ConsoleColor.DarkRed));
         Enjune.Enjune.Run(new App(), args);
-        
-        // Logger.Info(typeof(Program), JsonSerde.Indent4.Serialize(ModelComponent.Codec.Encode(
-        //     new ModelComponent 
-        //     { 
-        //         Model = Models.Calavera, 
-        //         DropsShadow = true, 
-        //         IsHidden = false 
-        //     }
-        //     )
-        // ));
     }
 }

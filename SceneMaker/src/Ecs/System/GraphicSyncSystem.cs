@@ -6,7 +6,7 @@ using SceneMaker.Ecs.Component;
 
 namespace SceneMaker.Ecs.System;
 
-public class GraphicSyncSystem(GraphicBridge bridge) : SingleQuerySystem
+public class GraphicSyncSystem(GraphicEngine engine) : SingleQuerySystem
 {
     protected override Query BuildQuery(Query.Builder builder)
     {
@@ -17,23 +17,22 @@ public class GraphicSyncSystem(GraphicBridge bridge) : SingleQuerySystem
 
     public override void Update()
     {
-        var graphicObjs = bridge.Objects;
+        var graphicObjs = engine.Objects;
         Query.ForEachArchetype(archetype =>
         {
             var models = archetype.GetComponents<ModelComponent>();
             var transforms = archetype.GetComponents<Transform>();
             for (int i = 0; i < archetype.Rows; i++)
             {
-                var entity = archetype.GetEntityByRow(i);
                 var model = models[i];
                 var transform = transforms[i];
-                var obj = graphicObjs[entity];
+                var obj = graphicObjs[model.GraphicId];
 
                 obj.TransformMatrix = transform.Matrix;
                 obj.DropsShadow = model.DropsShadow;
                 obj.IsHidden = model.IsHidden;
                 
-                graphicObjs[entity] = obj;
+                graphicObjs[model.GraphicId] = obj;
             }
         });
     }

@@ -1,4 +1,4 @@
-using Enjune.Ecs.EcsType;
+/*using Enjune.Ecs.EcsType;
 using Enjune.Graphic.Api;
 using Enjune.Graphic.Key;
 using Enjune.Graphic.Modeling;
@@ -234,4 +234,4 @@ public class EditorController
         distance = 0;
         return false;
     }
-}
+}*/

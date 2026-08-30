@@ -17,7 +17,7 @@ public class IntegrationSystem : SingleQuerySystem
             .Build();
     }
 
-    public override void Update(World world)
+    public override void Update()
     {
         Query.ForEachArchetype(archetype =>
         {

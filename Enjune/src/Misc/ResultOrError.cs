@@ -19,6 +19,9 @@ public readonly record struct ResultOrError<T>
 
     public ResultOrError<TTo> AndThen<TTo>(Func<T, ResultOrError<TTo>> run) 
         => Error is null ? run(_value) : ResultOrError.Failure<TTo>(Error.Value);
+    
+    public ResultOrError<TTo> AndThen<TTo>(Func<T, TTo> run) 
+        => Error is null ? ResultOrError.Success(run(_value)) : ResultOrError.Failure<TTo>(Error.Value);
 
     [Pure]
     public T GetOr(T fallback) => Error is null ? _value : fallback;

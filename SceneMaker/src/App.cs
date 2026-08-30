@@ -1,6 +1,7 @@
 using Enjune;
 using Enjune.Data.Codec;
 using Enjune.Ecs;
+using Enjune.Ecs.EcsType;
 using Enjune.File;
 using Enjune.Graphic.Api;
 using Enjune.Graphic.Asset;
@@ -13,6 +14,7 @@ using OpenGLApi;
 using OpenTK.Mathematics;
 using SceneMaker.Bridge;
 using SceneMaker.Ecs.Component;
+using SceneMaker.Ecs.System;
 using SceneMaker.Misc;
 using SceneMaker.Ui;
 
@@ -21,46 +23,43 @@ namespace SceneMaker;
 public class App : AbstractDisposable, IApp
 {
     private static readonly Vector2i InitialWindowSize = (480*2, 360*2);
-    
+
+    #region Public
+
     [DisposeAtLast("other objects may cause segfault when disposing //TODO fix")] // TODO probably dispose all GlModels in GlApi itself?
-    public IGraphicApi Grapi = null!;
-    
-    private readonly KeyBinds _binds;
-    private readonly Wasd _wasd;
-    private readonly KeyBinds.Bind _dumbTexturesBind;
-    private readonly KeyBinds.Bind _freeCursorBind;
-    private readonly KeyBinds.Bind _lockCursorBind;
-    
+    public IGraphicApi GraphicApi { get; private set; } = null!;
+    public readonly GraphicEngine GraphicEngine;
     public readonly BasicInputHandler InputHandler;
     public FlyingPlayerController WasdController { get; private set; } = null!;
-    public EditorController EditorController { get; private set; } = null!;
+    public EditorSystem EditorSystem { get; private set; } = null!;
+    public UiManager UiManager { get; private set; } = null!;
+    public readonly KeyBinds Binds;
+
+    #endregion
     
-    private GraphicBridge _graphicBridge = null!;
     private World _world = null!;
-    private UiManager _uiManager = null!;
-    //public Focus Focused = Focus.Scene;
+    
+    private readonly Wasd _wasd;
+    private readonly KeyBinds.Bind _dumbTexturesBind;
 
     public App()
     {
-        _binds = KeyBinds.CreateEmpty();
-        _wasd = Wasd.AddTo(_binds);
-        _freeCursorBind = _binds.AddBind(new KeyBinds.Bind("free_cursor", KeyCode.Escape));
-        _lockCursorBind = _binds.AddBind(new KeyBinds.Bind("lock_cursor", KeyCode.RightMouseButton));
+        Binds = KeyBinds.CreateEmpty();
+        _wasd = Wasd.AddTo(Binds);
         
         InputHandler = new BasicInputHandler(InitialWindowSize, 0.5f);
-        _dumbTexturesBind = _binds.AddBind(new KeyBinds.Bind("dumb_textures", KeyCode.F2));
+        _dumbTexturesBind = Binds.AddBind(new KeyBinds.Bind("dumb_textures", KeyCode.F2));
 
-        (Identifier Id, Type Type, IObjCodec Codec)[] comps = [
-            (Identifier.Of(Program.Assembly, "transform"), typeof(Transform), Transform.Codec),
-            (Identifier.Of(Program.Assembly, "spot_light"), typeof(SpotLightComponent), SpotLightComponent.Codec),
-            (Identifier.Of(Program.Assembly, "model"), typeof(ModelComponent), ModelComponent.Codec)
+        (Identifier Id, IObjCodec Codec)[] comps = [
+            (Identifier.Of(Program.Assembly, "transform"), Transform.Codec),
+            (Identifier.Of(Program.Assembly, "spot_light"), SpotLightComponent.Codec),
+            (Identifier.Of(Program.Assembly, "model"), ModelComponent.Codec)
         ]; 
         
-        foreach (var (id, type, codec) in comps)
-        {
-            Registries.EcsComponentType.Register(id, type);
+        foreach (var (id, codec) in comps) 
             Registries.Codec.Register(id, codec);
-        }
+
+        GraphicEngine = new GraphicEngine(this);
     }
 
     public Error? Init()
@@ -68,46 +67,65 @@ public class App : AbstractDisposable, IApp
         var assetManager = new AssetManager();
 
         // font
-        var font = assetManager.AddFont(AssemblyPath.Of(Enjune.Enjune.Assembly, "Fonts", "vt323.ttf"), 128, out var error);
-        if (font == null) return error;
+        var font = assetManager.AddFont(AssemblyPath.Of(Enjune.Enjune.Assembly, "Fonts", "vt323.ttf"), 128, out var fontError);
+        if (font == null) return fontError;
 
-        // // scene load
-        // {
-        //     var result = SceneManager.Load(assetManager);
-        //     if (result.Scene is null) return result.Error;
-        //     _scene = result.Scene;
-        // }
-
-        _world = new World();
+        // models
+        {
+            var modelsError = ResourceManager.LoadModels(assetManager);
+            if (modelsError != null) return modelsError;
+        }
         
+        // compile assets
         var assets = assetManager.Compile();
 
-        // grapi
+        // graphicApi
         {
-            var grapi = new OpenGlApi().Init(assets, InitialWindowSize, "Scene Maker", InputHandler, out error);
-            if (grapi == null) return error;
-            Grapi = grapi;
+            var graphicApi = new OpenGlApi().Init(assets, InitialWindowSize, "Scene Maker", InputHandler, out var graphicError);
+            if (graphicApi == null) 
+                return graphicError;
+            GraphicApi = graphicApi;
         }
-        Grapi.SetVsync(false);
-        Grapi.SetClearColor(new Color(0.2f, 0.2f, 0.2f, 0f));
-        Grapi.SetCursorMode(IGraphicApi.CursorMode.Centered);
+        GraphicApi.SetVsync(false);
+        GraphicApi.SetClearColor(new Color(0.2f, 0.2f, 0.2f, 0f));
+        GraphicApi.SetCursorMode(IGraphicApi.CursorMode.Centered);
+        
+        // world load
+        {
+            var result = ResourceManager.LoadWorld();
+            if (result.Error != null)
+                return result.Error;
+            _world = result.GetOrThrow();
+            
+            _world.AddSystem(new GraphicSyncSystem(GraphicEngine));
+            EditorSystem = new EditorSystem(this);
+            _world.AddSystem(EditorSystem);
+        }
         
         // adding models
-        foreach (var obj in _gra.Objects)
-        {
-            var model = obj.Model?.Get(out _);
-            if (model is null) continue;
-            obj.RenderableModel = Grapi.CreateStaticRenderable(model);
-        }
+        new Query.Builder(_world)
+            .With<ModelComponent>()
+            .Build().ForEachArchetype(archetype =>
+            {
+                var models = archetype.GetComponents<ModelComponent>();
+                for (int row = 0; row < archetype.Rows; row++)
+                {
+                    var modelComponent = models[row];
+                    GraphicEngine.Objects[modelComponent.GraphicId] = new GraphicObject()
+                    {
+                        Model = GraphicApi.CreateStaticRenderable(modelComponent.Model.GetOr(Models.ErrorCube.GetOrThrow())),
+                        IsHidden = modelComponent.IsHidden,
+                        DropsShadow = modelComponent.DropsShadow
+                    };
+                }
+            });
 
         // controllers
         {
-            WasdController = new FlyingPlayerController(Grapi, InputHandler, _wasd, 0.2f);
-            EditorController = new EditorController(Grapi, InputHandler, _gra);
-            _graphicBridge.Objects.Add(EditorController.AxisObject);
+            WasdController = new FlyingPlayerController(GraphicApi, InputHandler, _wasd, 0.2f);
         }
 
-        _uiManager = new UiManager(this, font);
+        UiManager = new UiManager(this, font);
         
         return null;
     }
@@ -120,138 +138,44 @@ public class App : AbstractDisposable, IApp
 
     public void MainCycle()
     {
-        GraphicCycle();
-        SceneManager.Save(_gra);
+        Utils.RunTargetFpsLoopWhile(300, 
+            () => !GraphicApi.ShouldStop(),
+            GraphicCycle
+            );
+        var error = ResourceManager.Save(_world);
+        error?.Log(this);
     }
 
-    private void GraphicCycle()
+    private void GraphicCycle(float deltaTime)
     {
-        var projection = Matrix4.CreatePerspectiveFieldOfView(
-            MathF.PI / 2, (float) InputHandler.WindowSize.X / InputHandler.WindowSize.Y, 0.1f, 100f);
-        var view = WasdController.View;
+        InputHandler.PrepareAtFrameStart();
+        _world.Update();
         
-        // cache to not create new list every frame
-        List<SpotLight> spotLights = [];
+        // UI
+        UiManager.Update(deltaTime); 
         
-        Utils.RunTargetFpsLoopWhile(60,
-            () => !Grapi.ShouldStop(),
-            deltaTime =>
-            {
-                InputHandler.PrepareAtFrameStart();
-                
-                // window size change
-                if (InputHandler.WindowSizeChanged)
-                {
-                    Grapi.SetRenderSize(InputHandler.WindowSize);
-                    projection = Matrix4.CreatePerspectiveFieldOfView(
-                        MathF.PI / 2, (float) InputHandler.WindowSize.X / InputHandler.WindowSize.Y, 0.1f, 100f);
-                }
-                
-                // UI
-                _uiManager.Update(deltaTime); 
-                
-                // wasd && editor controller
-                if (!_uiManager.Ui.IsFocused)
-                {
-                    WasdController.Update(deltaTime);
-                    view = WasdController.View;
-                    
-                    EditorController.Update(view, projection);
-                }
-                
-                // genera; keyboard input
-                if (InputHandler.IsPressed(_freeCursorBind))
-                    Grapi.SetCursorMode(IGraphicApi.CursorMode.Normal);
-                else if (InputHandler.IsPressed(_lockCursorBind))
-                    Grapi.SetCursorMode(IGraphicApi.CursorMode.Centered);
-                
-                if (InputHandler.IsPressed(_dumbTexturesBind)) 
-                    Grapi.DumpTextures(ExternalPath.Of("."));
-                
-                // render
-
-                #region Lights
-                {
-                    Grapi.SetLights(_graphicBridge.SpotLights.Values);
-                }
-                #endregion
-
-                #region Shadows
-                Grapi.UseShader<IShader.IShadowMap>(s =>
-                {
-                    s.ForEachLight(() =>
-                    {
-                        Grapi.ClearRenderBuffer();
-                        foreach (var obj in _graphicBridge.Objects.Values)
-                        {
-                            if (!obj.DropsShadow) continue;
-                            if (obj.IsHidden) continue;
-                            
-                            s.ModelTransform(obj.TransformMatrix);
-                            obj.Model.Render(s);
-                        }
-                    });
-                });
-                #endregion
-                
-                #region Material
-                Grapi.UseShader<IShader.ICamera.IMaterial>(s =>
-                {
-                    Grapi.ClearRenderBuffer();
-                    s.ProjectionTransform(projection);
-                    s.ViewTransform(view);
-                    s.ViewPosition(WasdController.Position);
-                    
-                    foreach (var obj in _graphicBridge.Objects.Values)
-                    {
-                        if (!obj.DropsShadow) continue;
-                        if (obj.IsHidden) continue;
-                    
-                        if (obj == (object) EditorController.SelectedObject)
-                            s.GlobalColor((1, 0.5f, 0f, 1f));
-                        else
-                            s.GlobalColor(new Color(1f));
-                    
-                        s.ModelTransform(obj.TransformMatrix);
-                        obj.Model.Render(s);
-                    }
-                });
-                #endregion
-                
-                #region Flat Color
-                Grapi.UseShader<IShader.ICamera.IColor>(s =>
-                {
-                    // drawing everything else over
-                    Grapi.ClearRenderBuffer(false);
-                    s.ProjectionTransform(projection);
-                    s.ViewTransform(view);
-                    
-                    foreach (var obj in _graphicBridge.Objects.Values)
-                    {
-                        if (obj.DropsShadow) continue;
-                        if (obj.IsHidden) continue;
-                
-                        s.ModelTransform(obj.TransformMatrix);
-                
-                        obj.Model.Render(s);
-                    }
-                    
-                    // render UI
-                    Grapi.ClearRenderBuffer(false, true);
-                    _uiManager.Ui.Render(s);
-                });
-                #endregion
-                
-                // end
-                Grapi.UpdateScreen();
-                InputHandler.ClearForNextFrame();
-                Grapi.UpdateEvents();
-            });
+        // wasd && editor controller
+        if (!UiManager.Ui.IsFocused)
+        {
+            WasdController.Update(deltaTime);
+        }
+        
+        // render
+        GraphicEngine.Update(deltaTime);
+        
+        // keyboard input
+        if (InputHandler.IsPressed(_dumbTexturesBind)) 
+            GraphicApi.DumpTextures(ExternalPath.Of("."));
+        
+        
+        GraphicApi.UpdateScreen();
+        InputHandler.ClearForNextFrame();
+        GraphicApi.UpdateEvents();
     }
 
     protected override void DisposeData()
     {
-        foreach (var o in _graphicBridge.Objects.Values) 
+        foreach (var o in GraphicEngine.Objects.Values) 
             o.Model.Dispose();
         
         Utils.DisposeAllFields(this);
