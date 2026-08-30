@@ -1,7 +1,5 @@
 using Enjune.Ecs.EcsType;
 using Enjune.Ecs.System;
-using Enjune.Misc;
-using SceneMaker.Bridge;
 using SceneMaker.Ecs.Component;
 
 namespace SceneMaker.Ecs.System;

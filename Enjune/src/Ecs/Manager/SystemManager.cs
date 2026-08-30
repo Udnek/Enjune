@@ -1,6 +1,4 @@
-using Enjune.Ecs.EcsType;
 using Enjune.Ecs.System;
-using Enjune.Misc;
 
 namespace Enjune.Ecs.Manager;
 

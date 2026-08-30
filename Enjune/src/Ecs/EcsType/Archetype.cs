@@ -1,7 +1,4 @@
 using Enjune.Misc;
-using System.ComponentModel;
-using System.ComponentModel.Design;
-using System.Runtime.CompilerServices;
 using IComponent = Enjune.Ecs.Component.IComponent;
 
 namespace Enjune.Ecs.EcsType;

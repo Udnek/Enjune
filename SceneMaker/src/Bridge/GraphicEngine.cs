@@ -1,7 +1,5 @@
-using Enjune.Ecs.EcsType;
 using Enjune.Graphic.Api;
 using Enjune.Graphic.Key;
-using Enjune.Misc;
 
 namespace SceneMaker.Bridge;
 

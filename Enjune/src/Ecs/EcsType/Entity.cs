@@ -1,7 +1,5 @@
 ﻿using Enjune.Ecs.Component;
 using Enjune.Misc;
-using System;
-using System.Text;
 
 namespace Enjune.Ecs.EcsType;
 

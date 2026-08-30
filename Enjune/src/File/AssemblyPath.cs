@@ -1,5 +1,4 @@
 using System.Reflection;
-using Enjune.Data;
 using Enjune.Data.Codec;
 using Enjune.Misc;
 

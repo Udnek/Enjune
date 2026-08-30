@@ -5,13 +5,13 @@ using Enjune.Ecs.EcsType;
 using Enjune.Ecs.Manager;
 using Enjune.Ecs.System;
 using Enjune.Misc;
-using Enjune.Registering;
 
 namespace Enjune.Ecs;
 
 public sealed class World
 {
-    public static readonly ICodec<World> WithoutSystemsCodec = new SimpleCodec<World>(world =>
+    public static readonly ICodec<World> WithoutSystemsCodec = new SimpleCodec<World>(
+        world =>
         {
             var allEntities = world.GetAllEntities();
             List<DataObject> encodedEntities = new(allEntities.Count);
@@ -52,8 +52,7 @@ public sealed class World
             foreach (var assembly in entities) 
                 world.AddEntity(assembly);
             return ResultOrError.Success(world);
-        }
-        );
+        });
     
     internal readonly ArchetypeManager ArchetypeManager;
     internal readonly SystemManager SystemManager;
@@ -206,7 +205,6 @@ public sealed class World
                 snapshots.Add(snapshot);
             }
         }
-        Logger.Warn("Sergeant Hartman", "Do you suck dicks?!");
         return snapshots;
     }
 

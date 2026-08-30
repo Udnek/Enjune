@@ -1,6 +1,4 @@
-using System.Runtime.CompilerServices;
 using Enjune.File;
-using Enjune.Graphic;
 using Enjune.Graphic.Api;
 using Enjune.Graphic.Key;
 using Enjune.Misc;

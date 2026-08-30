@@ -1,13 +1,10 @@
-using System.ComponentModel;
 using Enjune;
 using Enjune.Ecs;
-using Enjune.Ecs.Component;
 using Enjune.Ecs.EcsType;
 using Enjune.Ecs.System;
 using Enjune.Misc;
-using Standoff2.Ecs.System;
 using Standoff2.Ecs.Component;
-using System.Runtime.CompilerServices;
+using Standoff2.Ecs.System;
 
 public class EcsTestApp : AbstractDisposable, IApp
 {

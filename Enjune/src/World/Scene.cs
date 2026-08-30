@@ -1,4 +1,3 @@
-using Enjune.Data;
 using Enjune.Data.Codec;
 
 namespace Enjune.World;

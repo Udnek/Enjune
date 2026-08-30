@@ -34,7 +34,7 @@ public sealed class InstanceMatchCodec<TInstance> : ICodec<TInstance>
     {
         var map = data.Cast<DataObject.Map>(out var error);
         if (map is null) return 
-            new Error("can not decode: " + error);
+            new Error("data is not map: " + error);
         foreach (var (name, _, decoder) in _codecs)
         {
             if (map.Val.TryGetValue(name, out var value))

@@ -1,9 +1,7 @@
 using System.Diagnostics.Contracts;
 using System.Reflection;
-using System.Text;
 using Enjune.Data.Codec.Misc;
 using Enjune.Misc;
-using Enjune.Registering;
 
 namespace Enjune.Data.Codec;
 
@@ -27,9 +25,9 @@ public interface ICodec<T> : IObjCodec
     [Obsolete("use generic method")]
     ResultOrError<DataObject> IObjCodec.EncodeObj(object? instance)
     {
-        if (instance is T)
-            return EncodeObj(instance);
-        return new Error($"Can not encode {instance} because expected {Logger.GetTypeName<T>()}; use generic method");
+        if (instance is T t)
+            return Encode(t);
+        return new Error($"can not encode {instance} because expected {Logger.GetTypeName<T>()}; use generic method");
     }
 
     [Pure]
@@ -198,7 +196,7 @@ public static class Codecs
                     }
 
                     if (skipInvalidItems)
-                        Logger.Warn(typeof(Codecs), $"Can not decode {instance}: {result.Error}");
+                        Logger.Warn(typeof(Codecs), $"Can not encode {instance}: {result.Error}; skipping");
                     else
                         return new Error($"can not encode {instance}: {result.Error}");
                 }
@@ -224,7 +222,7 @@ public static class Codecs
 
                     if (err == null) continue;
                     if (skipInvalidItems)
-                        Logger.Warn(typeof(Codecs), $"Could not decode item {item} in array {array}");
+                        Logger.Warn(typeof(Codecs), $"Could not decode \nitem {item} in \narray {array} \nbecause: {err}");
                     else
                         return new Error(err);
 
@@ -253,6 +251,4 @@ public static class Codecs
 
     #endregion
     
-
-
 }

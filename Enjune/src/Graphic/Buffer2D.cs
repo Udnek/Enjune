@@ -1,6 +1,5 @@
 using System.Runtime.CompilerServices;
 using Enjune.Misc;
-using Buffer = System.Buffer;
 
 namespace Enjune.Graphic;
 

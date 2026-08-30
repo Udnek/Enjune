@@ -1,5 +1,3 @@
-using System.Runtime.CompilerServices;
-using Microsoft.VisualBasic;
 using OpenTK.Mathematics;
 using static System.MathF;
 

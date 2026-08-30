@@ -9,8 +9,6 @@ using Enjune.Graphic.Api;
 using Enjune.Graphic.Asset;
 using Enjune.Graphic.Modeling;
 using Enjune.Misc;
-using Enjune.Registering;
-using Enjune.World;
 using SceneMaker.Ecs.Component;
 
 namespace SceneMaker.Misc;
@@ -39,7 +37,7 @@ public static class ResourceManager
         return null;
     }
     
-    public static ResultOrError<World> LoadWorld()
+    public static ResultOrError<World> LoadOrCreateWorld()
     {
         var json = Path.LoadText(out var error);
         if (json == null)

@@ -1,5 +1,4 @@
 using Enjune.Data.Codec;
-using Enjune.Ecs;
 using Enjune.Ecs.Component;
 using Enjune.Graphic.Api;
 using Enjune.Registering;

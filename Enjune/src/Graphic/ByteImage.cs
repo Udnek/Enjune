@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Security.Cryptography;
 using Enjune.Misc;
 using StbImageSharp;

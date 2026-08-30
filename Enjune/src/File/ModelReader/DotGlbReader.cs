@@ -1,11 +1,9 @@
-using Enjune.Data;
 using Enjune.Graphic;
 using Enjune.Graphic.Asset;
 using Enjune.Graphic.Modeling;
 using Enjune.Misc;
 using SharpGLTF.Schema2;
-using SixLabors.ImageSharp;
-using Image = SixLabors.ImageSharp.Image;
+using StbImageSharp;
 using Mesh = Enjune.Graphic.Modeling.Mesh;
 
 
@@ -61,7 +59,7 @@ public class DotGlbReader : AbstractModelReader
             var rawImg = channel.Value.Texture?.PrimaryImage;
             if (rawImg is null) return null;
             using var stream = rawImg.Content.Open();
-            var img = StbImageSharp.ImageResult.FromStream(stream);
+            var img = ImageResult.FromStream(stream);
             return new ByteImage(img.Width, img.Height, ByteImage.ImType.FromStb(img.Comp), img.Data);
         }
     }

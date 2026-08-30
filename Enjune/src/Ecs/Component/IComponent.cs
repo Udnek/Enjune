@@ -22,13 +22,13 @@ public interface IComponent
             if (idResult.Error != null)
                 return new Error($"can not encode {id}: {idResult.Error}");
             
-            var compCodec = Registries.Codec.Get(id, out var err);
+            var compCodec = Registries.Codec.Get(id, out var findCodecErr);
             if (compCodec is null)
-                return new Error($"can not encode {tuple}: {err}");
+                return new Error($"can not encode {tuple}: {findCodecErr}");
 
-            var compResult = compCodec.EncodeObj(tuple);
+            var compResult = compCodec.EncodeObj(comp);
             if (compResult.Error != null)
-                return new Error($"can not encode {tuple}: {compResult.Error}");
+                return new Error($"can not encode {comp}: {compResult.Error}");
 
             return ResultOrError.Success<DataObject>(new Dictionary<string, DataObject>()
             {
@@ -44,18 +44,19 @@ public interface IComponent
             
             // id
             if (!map.Val.TryGetValue(IdKey, out var idData))
-                return new Error($"can not find 'id' in {map}");
+                return new Error($"can not find key {IdKey} in {map}");
             
             var idResult = Identifier.Codec.Decode(idData);
             if (idResult.Error != null)
                 return new Error($"can not decode: {idResult.Error}");
+            
             var compCodec = Registries.Codec.Get(idResult.GetOrThrow(), out var regErr);
             if (compCodec is null)
                 return new Error($"can not decode: {regErr}");
 
             // data
             if (!map.Val.TryGetValue(ComponentKey, out var compData))
-                return new Error($"can not find 'data' in {compData}");
+                return new Error($"can not find key {ComponentKey} in {compData}");
 
             var compResult = compCodec.DecodeObj(compData);
             if (compResult.Error != null)

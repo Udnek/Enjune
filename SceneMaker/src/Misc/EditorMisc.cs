@@ -1,7 +1,6 @@
 using Enjune.Graphic.Modeling;
 using Enjune.Misc;
 using OpenTK.Mathematics;
-using SceneMaker.Ecs.Component;
 
 namespace SceneMaker.Misc;
 

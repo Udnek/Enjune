@@ -1,6 +1,5 @@
 using Enjune.Misc;
 using OpenTK.Mathematics;
-using OpenTK.Windowing.GraphicsLibraryFramework;
 
 namespace OpenGLApi.Component.Buffer;
 

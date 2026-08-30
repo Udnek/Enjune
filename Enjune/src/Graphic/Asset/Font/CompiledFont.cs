@@ -1,5 +1,4 @@
 using Enjune.Graphic.Modeling;
-using Enjune.Misc;
 
 namespace Enjune.Graphic.Asset.Font;
 

@@ -1,5 +1,4 @@
 using Enjune;
-using Enjune.Data.Codec;
 using Enjune.Ecs;
 using Enjune.Ecs.EcsType;
 using Enjune.File;
@@ -9,7 +8,6 @@ using Enjune.Graphic.Key;
 using Enjune.KitStart;
 using Enjune.Misc;
 using Enjune.Registering;
-using Enjune.World;
 using OpenGLApi;
 using OpenTK.Mathematics;
 using SceneMaker.Bridge;
@@ -38,7 +36,6 @@ public class App : AbstractDisposable, IApp
     #endregion
     
     private World _world = null!;
-    
     private readonly Wasd _wasd;
     private readonly KeyBinds.Bind _dumbTexturesBind;
 
@@ -49,15 +46,10 @@ public class App : AbstractDisposable, IApp
         
         InputHandler = new BasicInputHandler(InitialWindowSize, 0.5f);
         _dumbTexturesBind = Binds.AddBind(new KeyBinds.Bind("dumb_textures", KeyCode.F2));
-
-        (Identifier Id, IObjCodec Codec)[] comps = [
-            (Identifier.Of(Program.Assembly, "transform"), Transform.Codec),
-            (Identifier.Of(Program.Assembly, "spot_light"), SpotLightComponent.Codec),
-            (Identifier.Of(Program.Assembly, "model"), ModelComponent.Codec)
-        ]; 
         
-        foreach (var (id, codec) in comps) 
-            Registries.Codec.Register(id, codec);
+        Registries.Codec.Register(new Transform().Id(), Transform.Codec);
+        Registries.Codec.Register(new SpotLightComponent().Id(), SpotLightComponent.Codec);
+        Registries.Codec.Register(new ModelComponent().Id(), ModelComponent.Codec);
 
         GraphicEngine = new GraphicEngine(this);
     }
@@ -92,7 +84,7 @@ public class App : AbstractDisposable, IApp
         
         // world load
         {
-            var result = ResourceManager.LoadWorld();
+            var result = ResourceManager.LoadOrCreateWorld();
             if (result.Error != null)
                 return result.Error;
             _world = result.GetOrThrow();

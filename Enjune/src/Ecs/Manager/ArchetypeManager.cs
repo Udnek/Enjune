@@ -1,7 +1,5 @@
-using Enjune.Ecs.Component;
 using Enjune.Ecs.EcsType;
 using Enjune.Misc;
-using System.Reflection.Metadata.Ecma335;
 
 namespace Enjune.Ecs.Manager;
 
