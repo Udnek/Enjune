@@ -80,7 +80,7 @@ public partial class Query(World world, Signature include, Signature exclude)
 //}
 
 [Obsolete]
-public sealed class OldQuery(World world, Signature include, Signature exclude)
+public sealed class LegacyQuery(World world, Signature include, Signature exclude)
 {
     private readonly World _world = world;
     private readonly Signature _include = include;
@@ -127,6 +127,6 @@ public sealed class OldQuery(World world, Signature include, Signature exclude)
             return this;
         }
 
-        public OldQuery Build() => new(_world, _includeBuilder.Build(), _excludeBuilder.Build());
+        public LegacyQuery Build() => new(_world, _includeBuilder.Build(), _excludeBuilder.Build());
     }
 }
