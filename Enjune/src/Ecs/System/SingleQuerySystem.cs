@@ -2,7 +2,7 @@ using Enjune.Ecs.EcsType;
 
 namespace Enjune.Ecs.System;
 
-// utility class when you need to set up simple system
+// utility class for when you need to set up simple system
 public abstract class SingleQuerySystem : ISystem
 {
     protected Query Query = null!;

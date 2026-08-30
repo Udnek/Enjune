@@ -8,6 +8,7 @@ namespace Standoff2.Ecs.System;
 
 public class GravitySystem : SingleQuerySystem
 {
+    
     protected override Query BuildQuery(Query.Builder builder)
     {
         return builder.With<Acceleration>().Build();

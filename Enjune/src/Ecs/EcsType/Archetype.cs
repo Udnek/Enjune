@@ -27,6 +27,13 @@ public sealed class Archetype
         for (var i = 0; i < nComponents; i++) 
             RegisterColumn(types[i]);
     }
+    private void RegisterColumn(Type compType)
+    {
+        Type columnType = typeof(Column<>).MakeGenericType(compType);
+        var columnInstance = Activator.CreateInstance(columnType, _capacity) as IColumn;
+        _columns[compType] = columnInstance ??
+                             throw new InvalidOperationException($"Failed to instantiate {Logger.GetTypeName(columnType)}");
+    }
 
     #region Public Api
 
@@ -39,16 +46,6 @@ public sealed class Archetype
     }
 
     #endregion
-
-    internal bool Contains(Entity entity) => _rowToEntity.Contains(entity);
-
-    private void RegisterColumn(Type compType)
-    {
-        Type columnType = typeof(Column<>).MakeGenericType(compType);
-        var columnInstance = Activator.CreateInstance(columnType, _capacity) as IColumn;
-        _columns[compType] = columnInstance ?? 
-                             throw new InvalidOperationException($"Failed to instantiate {Logger.GetTypeName(columnType)}");
-    }
 
     private void EnsureCapacity(int targetCapacity)
     {
@@ -163,6 +160,7 @@ public sealed class Archetype
         return ((Column<TComponent>)_columns[typeof(TComponent)])[row];
     }
 
+    // Modifies a component effectively by taking a delegate
     internal void ModifyComponent<TComponent>(Entity entity, Func<TComponent, TComponent> modifier) where TComponent: struct, IComponent
     {
         int row = _entityToRow[entity];
@@ -170,10 +168,17 @@ public sealed class Archetype
         column[row] = modifier(column[row]);
     }
 
-    internal void WriteComponent(Entity entity, IComponent component)
+    // Completely rewrites a component by copying a new one in place of the old one
+    internal void SetComponent(Entity entity, IComponent component)
     {
         int row = _entityToRow[entity];
         var column = _columns[component.GetType()];
         column.SetValue(row, component);
+    }
+
+    // TODO: Maybe think of a way to avoid reflection
+    internal Column<TComponent> GetColumn<TComponent>() where TComponent : struct, IComponent
+    {
+        return (Column<TComponent>)_columns[typeof(TComponent)];
     }
 }
