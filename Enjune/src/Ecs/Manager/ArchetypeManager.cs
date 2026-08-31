@@ -1,8 +1,10 @@
+using Enjune.Attribute;
 using Enjune.Ecs.EcsType;
 using Enjune.Misc;
 
 namespace Enjune.Ecs.Manager;
 
+[LogParams(logCallingMethod: true)]
 public sealed class ArchetypeManager(World world)
 {
     private readonly Dictionary<Signature, Archetype> _signatureToArchetype = new();
@@ -54,7 +56,7 @@ public sealed class ArchetypeManager(World world)
 
     internal void MoveEntity(Entity entity, Archetype from, Archetype to)
     {
-        Logger.Info(this, $"{nameof(MoveEntity)}: Moving {entity} from {from.Signature} to {to.Signature}");
+        Logger.Info(this, $"Moving {entity} from {from.Signature} to {to.Signature}");
         to.AddEntity(entity, from.GetAllEntityComponents(entity));
         from.RemoveEntity(entity);
         _entityToArchetype[entity] = to;

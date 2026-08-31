@@ -1,6 +1,5 @@
 using Enjune.Data.Codec;
 using Enjune.Ecs.Component;
-using Enjune.Graphic.Api;
 using Enjune.Registering;
 
 namespace SceneMaker.Ecs.Component;

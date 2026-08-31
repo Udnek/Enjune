@@ -1,7 +1,6 @@
 using Enjune.Ecs;
 using Enjune.Ecs.EcsType;
 using Enjune.Ecs.System;
-using Enjune.Graphic.Modeling;
 using Enjune.Misc;
 using SceneMaker.Bridge;
 using SceneMaker.Ecs.Component;

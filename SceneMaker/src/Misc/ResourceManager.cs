@@ -5,7 +5,6 @@ using Enjune.Ecs.EcsType;
 using Enjune.File;
 using Enjune.File.ModelReader;
 using Enjune.Graphic;
-using Enjune.Graphic.Api;
 using Enjune.Graphic.Asset;
 using Enjune.Graphic.Modeling;
 using Enjune.Misc;

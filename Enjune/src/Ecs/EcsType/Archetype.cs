@@ -1,9 +1,10 @@
-using System.Runtime.CompilerServices;
+using Enjune.Attribute;
 using Enjune.Misc;
 using IComponent = Enjune.Ecs.Component.IComponent;
 
 namespace Enjune.Ecs.EcsType;
 
+[LogParams(logCallingMethod: true, method: LogParamsAttribute.Method.ToString)]
 public sealed class Archetype
 {
     public int Rows { get; private set; } = 0;
@@ -68,7 +69,7 @@ public sealed class Archetype
     // TODO: Avoid using Collection<IComponent> because of boxing
     internal void AddEntity(Entity.Assembly entityAssembly, Entity entity)
     {
-        Logger.Info(Logger.Domain.Ecs, $"{this}[{Signature}].{nameof(AddEntity)}", $"Acquired {entity} as an assembly");
+        Logger.Info(this, $"Acquired {entity} as an assembly");
         
         EnsureCapacity(Rows + 1);
 
@@ -88,7 +89,7 @@ public sealed class Archetype
 
     internal void AddEntity(Entity entity, IEnumerable<IComponent> components)
     {
-        Logger.Info(Logger.Domain.Ecs, $"{this}[{Signature}].{nameof(AddEntity)}", $"Acquired {entity} as a stream of components");
+        Logger.Info(this, $"Acquired {entity} as a stream of components");
 
         EnsureCapacity(Rows + 1);
 
@@ -104,7 +105,7 @@ public sealed class Archetype
             }
             else
             {
-                Logger.Info(Logger.Domain.Ecs, $"{this}[{Signature}].{nameof(AddEntity)}", $"Omitting a component that does not belong to archetype {Signature}");
+                Logger.Info(this, $"Omitting a component that does not belong to archetype {Signature}");
             }
         }
 
@@ -115,8 +116,8 @@ public sealed class Archetype
     internal void RemoveEntity(Entity entity)
     {
         if (!_entityToRow.TryGetValue(entity, out var entityRow)) 
-            Logger.Info(Logger.Domain.Ecs, $"{this}[{Signature}].{nameof(RemoveEntity)}", $"{entity} is not in {Signature} archetype.");
-        Logger.Info(Logger.Domain.Ecs, $"{this}[{Signature}].{nameof(RemoveEntity)}", $"Removing {entity}");
+            Logger.Info(this, $"{entity} is not in {Signature} archetype.");
+        Logger.Info(this, $"Removing {entity}");
 
         var lastRow = Rows - 1;
 
@@ -190,4 +191,6 @@ public sealed class Archetype
     {
         return (Column<TComponent>)_columns[typeof(TComponent)];
     }
+
+    public override string ToString() => $"{nameof(Archetype)}[{Signature}]";
 }

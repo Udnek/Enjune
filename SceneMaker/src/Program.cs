@@ -7,11 +7,14 @@ internal class Program
 {
     
     public static Assembly Assembly => typeof(Program).Assembly;
+
+    static Program()
+    {
+        Logger.RegisterNamespaceToDomain(typeof(Program).Assembly, "", new Logger.Domain("SceneMaker", ConsoleColor.DarkRed));
+    }
     
     private static void Main(string[] args)
     {
-        Logger.RegisterNamespaceToDomain(typeof(Program).Assembly, "", new Logger.Domain("SceneMaker", ConsoleColor.DarkRed));
-        // Enjune.Enjune.Run(new App(), args);
-        Logger.Info(typeof(Program), "fucking niggas");
+        Enjune.Enjune.Run(new App(), args);
     }
 }

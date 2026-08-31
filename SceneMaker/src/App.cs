@@ -8,7 +8,6 @@ using Enjune.Graphic.Asset;
 using Enjune.Graphic.Key;
 using Enjune.KitStart;
 using Enjune.Misc;
-using Enjune.Registering;
 using OpenGLApi;
 using OpenTK.Mathematics;
 using SceneMaker.Bridge;

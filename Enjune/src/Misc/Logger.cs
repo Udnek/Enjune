@@ -1,5 +1,6 @@
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using Enjune.Attribute;
 
 namespace Enjune.Misc;
 
@@ -84,13 +85,18 @@ public static class Logger
     private static void Print(Domain? domain, object author, string member, object? msg, string severityType, ConsoleColor? msgColor = null)
     {
         string time = DateTime.Now.ToString("HH:mm:ss.fff");
-        string authorName = GetAuthorName(author);
+        var logParams = GetLogParams(author);
+        string authorName = GetAuthorName(author, logParams?.Mtd ?? LogParamsAttribute.Method.FancyTypeToString);
         domain ??= GetRegisteredDomainFor(author as Type ?? author.GetType()) ?? Domain.Default;
 
         PrintWithColor($"[{time}] ", null);
         PrintWithColor($"[{severityType}] ", msgColor);
         PrintWithColor($"[{domain.Value.Name}] ", domain.Value.Color);
-        PrintWithColor($"{authorName}.{member}: {msg ?? "null"}\n", msgColor);
+        if (logParams?.LogCallingMethod ?? false)
+            PrintWithColor($"{authorName}.{member}: {msg ?? "null"}\n", msgColor);
+        else
+            PrintWithColor($"{authorName}: {msg ?? "null"}\n", msgColor);
+            
     }
 
     private static void PrintWithColor(string text, ConsoleColor? color)
@@ -106,16 +112,36 @@ public static class Logger
         }
     }
 
-    public static string GetAuthorName(object author)
+    private static LogParamsAttribute? GetLogParams(object author)
     {
-        if (author is string authorName) return authorName;
         Type authorType;
         if (author is Type at)
             authorType = at;
         else
             authorType = author.GetType();
+
+        return authorType.GetCustomAttribute(typeof(LogParamsAttribute)) as LogParamsAttribute;
+    }
+
+    private static string GetAuthorName(object author, LogParamsAttribute.Method method)
+    {
+        switch (method)
+        {
+            case LogParamsAttribute.Method.ToString:
+                return author.ToString() ?? "null";
+            case LogParamsAttribute.Method.FancyTypeToString:
+            {
+                if (author is string authorName) 
+                    return authorName;
         
-        return GetTypeName(authorType);
+                if (author is Type at)
+                    return GetTypeName(at);
+                
+                return GetTypeName(author.GetType());
+            }
+            default:
+                throw new ArgumentOutOfRangeException(nameof(method), method, null);
+        }
     }
 
     // generates fancy-looking representation of type (including generic types)
