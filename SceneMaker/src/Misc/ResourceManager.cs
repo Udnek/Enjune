@@ -9,6 +9,8 @@ using Enjune.Graphic.Api;
 using Enjune.Graphic.Asset;
 using Enjune.Graphic.Modeling;
 using Enjune.Misc;
+using Enjune.Registering;
+using OpenTK.Mathematics;
 using SceneMaker.Ecs.Component;
 
 namespace SceneMaker.Misc;
@@ -39,6 +41,11 @@ public static class ResourceManager
     
     public static ResultOrError<World> LoadOrCreateWorld()
     {
+        Registries.Codec.Register(new Transform().Id(), Transform.Codec);
+        Registries.Codec.Register(new SpotLightComponent().Id(), SpotLightComponent.Codec);
+        Registries.Codec.Register(new ModelComponent().Id(), ModelComponent.Codec);
+        Registries.Codec.Register(new SelectedInEditor().Id(), SelectedInEditor.Codec);
+        
         var json = Path.LoadText(out var error);
         if (json == null)
         {
@@ -58,7 +65,13 @@ public static class ResourceManager
     
     private static ResultOrError<World> CreateNewWorld()
     {
-        var world = new World([], [typeof(Transform), typeof(ModelComponent), typeof(SpotLightComponent)]);
+        var world = new World([],
+            [
+                typeof(Transform),
+                typeof(ModelComponent),
+                typeof(SpotLightComponent),
+                typeof(SelectedInEditor)
+            ]);
 
         // calavera
         world.AddEntity(new Entity.Assembly()
@@ -72,12 +85,14 @@ public static class ResourceManager
                 .AddComponent(new ModelComponent(Models.WhiteCube))
                 .AddComponent(new Transform()
                 {
-                    Position = (0, 20, -25 / 2f)
+                    Position = (0, 20, -25 / 2f),
+                    Rotation = Quaternion.FromAxisAngle(Vector3.UnitX, -90)
                 })
-                .AddComponent(new SpotLightComponent(SpotLight.Ortho(
-                    new Vector3(-0.5f, -1, -0.5f),
-                    new Color(244 / 255f, 233 / 255f, 200 / 255f, 1f) * 1.5f, 
-                    (30, 30))))
+                .AddComponent(new SpotLightComponent()
+                {
+                    Projection = Matrix4.CreateOrthographic(30f, 30f, 0.1f, 100f),
+                    Color = new Color(244 / 255f, 233 / 255f, 200 / 255f, 1f) * 1.5f
+                })
             );
             
             
@@ -85,9 +100,14 @@ public static class ResourceManager
                 .AddComponent(new ModelComponent(Models.WhiteCube))
                 .AddComponent(new Transform()
                 {
-                    Position = (6, 4, 0)
+                    Position = (6, 4, 0),
+                    Rotation = Quaternion.FromAxisAngle(Vector3.UnitX, -90)
                 })
-                .AddComponent(new SpotLightComponent(SpotLight.Perspective(-Vector3.UnitY, new Color(1, 1, 0, 1), 45f)))
+                .AddComponent(new SpotLightComponent()
+                {
+                    Projection = Matrix4.CreatePerspectiveFieldOfView(MathHelper.DegreesToRadians(45), 1, 0.1f, 100f),
+                    Color = new Color(1, 1, 0, 1)
+                })
             );
         }
         return ResultOrError.Success(world);

@@ -28,7 +28,7 @@ public class GraphicEngine
         _lockCursorBind = _app.Binds.AddBind(new KeyBinds.Bind("lock_cursor", KeyCode.RightMouseButton));
     }
 
-    public void Update(float deltaTime)
+    public void Update()
     {
         var inputHandler = _app.InputHandler;
         var graphicApi = _app.GraphicApi;

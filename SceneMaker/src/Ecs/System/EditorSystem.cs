@@ -11,14 +11,18 @@ using SceneMaker.Misc;
 
 namespace SceneMaker.Ecs.System;
 
-public class EditorSystem : SingleQuerySystem
+public class EditorSystem : ISystem
 {
     private readonly App _app;
     private readonly KeyBinds.Bind _selectBind;
+    private readonly KeyBinds.Bind _selectSeveralBind;
+    
     private readonly Dictionary<Mesh, Ax> _meshToAx = new(3);
     private World _world = null!;
+    private Query _allQuery = null!;
+    private Query _selectedQuery = null!;
     
-    public Entity? SelectedEntity { get; private set; }
+    //public Entity? SelectedEntity { get; private set; }
     private Ax? _selectedAx;
     private GraphicObject _axisObject;
     private readonly Model _axisModel;
@@ -28,6 +32,7 @@ public class EditorSystem : SingleQuerySystem
     {
         _app = app;
         _selectBind = new KeyBinds.Bind("select", KeyCode.LeftMouseButton);
+        _selectSeveralBind = new KeyBinds.Bind("select_several", KeyCode.LeftShift);
 
         #region Constructing Axis Obj
         {
@@ -53,33 +58,33 @@ public class EditorSystem : SingleQuerySystem
         _app.GraphicEngine.Objects[Guid.NewGuid()] = _axisObject;
     }
 
-    public override void Initialize(World world)
+    public void Initialize(World world)
     {
-        base.Initialize(world);
         _world = world;
-    }
-
-    protected override Query BuildQuery(Query.Builder builder)
-    {
-        return builder
+        _allQuery = Query.For(world)
             .With<ModelComponent>()
             .With<Transform>().Build();
+        _selectedQuery = Query.For(world)
+            .With<ModelComponent>()
+            .With<Transform>()
+            .With<SelectedInEditor>().Build();
     }
 
-    public override void Update()
+    public void Update()
     {
         GetCursorVectors(_app.WasdController.View, _app.GraphicEngine.Projection, out Vector3 camPos, out var camDir);
         Update(camPos, camDir);
     }
 
+    
     private void Update(Vector3 camPos, Vector3 camDir)
     {
-        if (SelectedEntity != null) 
+        if (SelectedEntity is not null) 
             UpdateSelectedEntity(camPos, camDir);
         
         if (_selectedAx != null) return; // don't need to trace anything
         if (!_app.InputHandler.IsPressed(_selectBind)) return;
-        if (SelectedEntity != null)
+        if (SelectedEntity is not null)
         {
             // trying to trace axis first
             var mesh = EditorMisc.TraceLineObject(camPos, camDir, _axisModel, _axisObject.TransformMatrix, 5);
@@ -90,16 +95,33 @@ public class EditorSystem : SingleQuerySystem
                 return;
             }
         }
-        SelectedEntity = TraceObjects(camPos, camDir);
+
+        var traced = TraceObjects(camPos, camDir);
+        if (traced is null)
+        {
+            SelectedEntity = ;
+        }
+        
         _axisObject.IsHidden = SelectedEntity is null;
+    }
+
+    private void ClearSelection()
+    {
+        _selectedQuery.ForEachArchetype(archetype =>
+        {
+            for (int row = 0; row < archetype.Rows; row++)
+            {
+                
+            }
+        });
     }
     
     private void UpdateSelectedEntity(Vector3 camPos, Vector3 camDir)
     {
-        if (SelectedEntity == null) return;
+        if (SelectedEntity is null) return;
         if (_app.InputHandler.IsJustReleased(_selectBind))
             _selectedAx = null;
-        else if (_selectedAx != null) 
+        else if (_selectedAx is not null) 
             DragSelectedEntity(camPos, camDir);
 
         var selectedTransform = _world.GetEntityComponent<Transform>(SelectedEntity.Value);
@@ -115,7 +137,7 @@ public class EditorSystem : SingleQuerySystem
 
     private void DragSelectedEntity(Vector3 camPos, Vector3 camDir)
     {
-        if (SelectedEntity == null || _selectedAx == null) return;
+        if (SelectedEntity is null || _selectedAx is null) return;
         if (_app.InputHandler.DeltaCursorPosition == (0, 0)) return;
         
         var axToVec = AxToVec(_selectedAx.Value);
@@ -147,7 +169,7 @@ public class EditorSystem : SingleQuerySystem
     {
         Entity? closest = null;
         var closestDistance = float.MaxValue;
-        Query.ForEachArchetype(archetype =>
+        _allQuery.ForEachArchetype(archetype =>
         {
             var transforms = archetype.GetComponents<Transform>();
             var models = archetype.GetComponents<ModelComponent>();

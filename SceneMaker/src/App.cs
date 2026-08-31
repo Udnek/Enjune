@@ -46,10 +46,6 @@ public class App : AbstractDisposable, IApp
         
         InputHandler = new BasicInputHandler(InitialWindowSize, 0.5f);
         _dumbTexturesBind = Binds.AddBind(new KeyBinds.Bind("dumb_textures", KeyCode.F2));
-        
-        Registries.Codec.Register(new Transform().Id(), Transform.Codec);
-        Registries.Codec.Register(new SpotLightComponent().Id(), SpotLightComponent.Codec);
-        Registries.Codec.Register(new ModelComponent().Id(), ModelComponent.Codec);
 
         GraphicEngine = new GraphicEngine(this);
     }
@@ -111,6 +107,19 @@ public class App : AbstractDisposable, IApp
                     };
                 }
             });
+        
+        // adding lights
+        new Query.Builder(_world)
+            .With<SpotLightComponent>()
+            .Build().ForEachArchetype(archetype =>
+            {
+                var lights = archetype.GetComponents<SpotLightComponent>();
+                for (int row = 0; row < archetype.Rows; row++)
+                {
+                    var lightComponent = lights[row];
+                    GraphicEngine.SpotLights[lightComponent.GraphicId] = new SpotLight();
+                }
+            });
 
         // controllers
         {
@@ -130,7 +139,8 @@ public class App : AbstractDisposable, IApp
 
     public void MainCycle()
     {
-        Utils.RunTargetFpsLoopWhile(300, 
+        Utils.RunTargetFpsLoopWhile(
+            300, 
             () => !GraphicApi.ShouldStop(),
             GraphicCycle
             );
@@ -153,7 +163,7 @@ public class App : AbstractDisposable, IApp
         }
         
         // render
-        GraphicEngine.Update(deltaTime);
+        GraphicEngine.Update();
         
         // keyboard input
         if (InputHandler.IsPressed(_dumbTexturesBind)) 
