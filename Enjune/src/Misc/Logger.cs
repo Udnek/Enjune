@@ -1,22 +1,28 @@
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace Enjune.Misc;
 
 public static class Logger
 {
-    public static void Info(object author, object? msg) => Info(null, author, msg);
-    public static void Warn(object author, object? msg) => Warn(null, author, msg);
-    public static void Error(object author, object? msg) => Error(null, author, msg);
-    public static void Highlight(object author, object? msg) => Highlight(null, author, msg);
+    static Logger()
+    {
+        RegisterTypeToDomain(typeof(Logger), Domain.Logger);
+    }
+    
+    public static void Info(object author, object? msg, [CallerMemberName] string member = "") => Info(null, author, msg, member);
+    public static void Warn(object author, object? msg, [CallerMemberName] string member = "") => Warn(null, author, msg, member);
+    public static void Error(object author, object? msg, [CallerMemberName] string member = "") => Error(null, author, msg, member);
+    public static void Highlight(object author, object? msg, [CallerMemberName] string member = "") => Highlight(null, author, msg, member);
 
-    public static void Info(Domain? domain, object author, object? msg)
+    public static void Info(Domain? domain, object author, object? msg, [CallerMemberName] string member = "")
     {
         if (IgnoreInfoLogs) return;
-        Print(domain, author, msg, "INF");
+        Print(domain, author, member, msg, "INF");
     }
-    public static void Warn(Domain? domain, object author, object? msg) => Print(domain, author, msg, "WAR", ConsoleColor.Yellow);
-    public static void Error(Domain? domain, object author, object? msg) => Print(domain, author, msg, "ERR", ConsoleColor.Red);
-    public static void Highlight(Domain? domain, object author, object? msg) => Print(domain, author, msg, "HIL", ConsoleColor.Green);
+    public static void Warn(Domain? domain, object author, object? msg, [CallerMemberName] string member = "") => Print(domain, author, member, msg, "WRN", ConsoleColor.Yellow);
+    public static void Error(Domain? domain, object author, object? msg, [CallerMemberName] string member = "") => Print(domain, author, member, msg, "ERR", ConsoleColor.Red);
+    public static void Highlight(Domain? domain, object author, object? msg, [CallerMemberName] string member = "") => Print(domain, author, member, msg, "HIL", ConsoleColor.Green);
 
     public static bool IgnoreInfoLogs { get; set; } = false;
 
@@ -25,7 +31,7 @@ public static class Logger
     public static void RegisterTypeToDomain(Type type, Domain domain)
     {
         TypeToDomain[type] = domain;
-        Info(Domain.Logger,typeof(Logger), $"registered domain [{domain.Name}] for type {type.Name}");
+        Info(typeof(Logger), $"registered domain [{domain.Name}] for type {type.Name}");
     }
     private static readonly List<(Assembly Assembly, string Namespace, Domain domain)> NamespaceToDomain = [];
     public static void RegisterNamespaceToDomain(Assembly assembly, string namespaceName, Domain domain)
@@ -40,7 +46,7 @@ public static class Logger
             if (right.Namespace.Contains(left.Namespace)) return 1;
             return 0;
         });
-        Info(Domain.Logger, typeof(Logger), $"registered domain [{domain.Name}] for assembly {assembly.GetName().Name} and namespace '{namespaceName}'");
+        Info(typeof(Logger), $"registered domain [{domain.Name}] for assembly {assembly.GetName().Name} and namespace '{namespaceName}'");
     }
     // end registering domain
 
@@ -75,16 +81,16 @@ public static class Logger
         public readonly ConsoleColor? Color = color;
     }
     
-    private static void Print(Domain? domain, object author, object? msg, string type, ConsoleColor? msgColor = null)
+    private static void Print(Domain? domain, object author, string member, object? msg, string severityType, ConsoleColor? msgColor = null)
     {
         string time = DateTime.Now.ToString("HH:mm:ss.fff");
         string authorName = GetAuthorName(author);
         domain ??= GetRegisteredDomainFor(author as Type ?? author.GetType()) ?? Domain.Default;
 
         PrintWithColor($"[{time}] ", null);
-        PrintWithColor($"[{type}] ", msgColor);
+        PrintWithColor($"[{severityType}] ", msgColor);
         PrintWithColor($"[{domain.Value.Name}] ", domain.Value.Color);
-        PrintWithColor($"{authorName}: {msg ?? "null"}\n", msgColor);
+        PrintWithColor($"{authorName}.{member}: {msg ?? "null"}\n", msgColor);
     }
 
     private static void PrintWithColor(string text, ConsoleColor? color)

@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Enjune.Attribute;
 using Enjune.Ecs.EcsType;
 using Enjune.Graphic.Asset.Font;
 using Enjune.Graphic.Key;

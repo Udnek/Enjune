@@ -1,4 +1,5 @@
 using Enjune;
+using Enjune.Attribute;
 using Enjune.Ecs;
 using Enjune.Ecs.EcsType;
 using Enjune.File;
@@ -91,36 +92,26 @@ public class App : AbstractDisposable, IApp
         }
         
         // adding models
-        new Query.Builder(_world)
+        Query.For(_world)
             .With<ModelComponent>()
-            .Build().ForEachArchetype(archetype =>
+            .Build().ForEach((ref ModelComponent modelComponent) =>
             {
-                var models = archetype.GetComponents<ModelComponent>();
-                for (int row = 0; row < archetype.Rows; row++)
+                GraphicEngine.Objects[modelComponent.GraphicId] = new GraphicObject()
                 {
-                    var modelComponent = models[row];
-                    GraphicEngine.Objects[modelComponent.GraphicId] = new GraphicObject()
-                    {
-                        Model = GraphicApi.CreateStaticRenderable(modelComponent.Model.GetOr(Models.ErrorCube.GetOrThrow())),
-                        IsHidden = modelComponent.IsHidden,
-                        DropsShadow = modelComponent.DropsShadow
-                    };
-                }
+                    Model = GraphicApi.CreateStaticRenderable(modelComponent.Model.GetOr(Models.ErrorCube.GetOrThrow())),
+                    IsHidden = modelComponent.IsHidden,
+                    DropsShadow = modelComponent.DropsShadow
+                };
             });
         
         // adding lights
-        new Query.Builder(_world)
+        Query.For(_world)
             .With<SpotLightComponent>()
-            .Build().ForEachArchetype(archetype =>
+            .Build().ForEach((ref SpotLightComponent light) =>
             {
-                var lights = archetype.GetComponents<SpotLightComponent>();
-                for (int row = 0; row < archetype.Rows; row++)
-                {
-                    var lightComponent = lights[row];
-                    GraphicEngine.SpotLights[lightComponent.GraphicId] = new SpotLight();
-                }
+                GraphicEngine.SpotLights[light.GraphicId] = new SpotLight();
             });
-
+        
         // controllers
         {
             WasdController = new FlyingPlayerController(GraphicApi, InputHandler, _wasd, 0.2f);

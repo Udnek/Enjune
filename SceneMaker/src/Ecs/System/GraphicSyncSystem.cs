@@ -34,22 +34,15 @@ public class GraphicSyncSystem(GraphicEngine engine) : ISystem
         #region Models
         {
             var graphicObjs = engine.Objects;
-            _modelQuery.ForEachArchetype(archetype =>
+            _modelQuery.ForEach((ref ModelComponent model, ref Transform transform) =>
             {
-                var models = archetype.GetComponents<ModelComponent>();
-                var transforms = archetype.GetComponents<Transform>();
-                for (int row = 0; row < archetype.Rows; row++)
-                {
-                    var model = models[row];
-                    var transform = transforms[row];
-                    var obj = graphicObjs[model.GraphicId];
+                var obj = graphicObjs[model.GraphicId];
 
-                    obj.TransformMatrix = transform.Matrix;
-                    obj.DropsShadow = model.DropsShadow;
-                    obj.IsHidden = model.IsHidden;
+                obj.TransformMatrix = transform.Matrix;
+                obj.DropsShadow = model.DropsShadow;
+                obj.IsHidden = model.IsHidden;
                 
-                    graphicObjs[model.GraphicId] = obj;
-                }
+                graphicObjs[model.GraphicId] = obj;
             });
         }
         #endregion
@@ -57,23 +50,16 @@ public class GraphicSyncSystem(GraphicEngine engine) : ISystem
         #region SpotLights
         {
             var graphicSpotLights = engine.SpotLights;
-            _spotLightQuery.ForEachArchetype(archetype =>
+            _spotLightQuery.ForEach((ref SpotLightComponent light, ref Transform transform) =>
             {
-                var spotLights = archetype.GetComponents<SpotLightComponent>();
-                var transforms = archetype.GetComponents<Transform>();
-                for (int i = 0; i < archetype.Rows; i++)
-                {
-                    var light = spotLights[i];
-                    var transform = transforms[i];
-                    var graphicLight = graphicSpotLights[light.GraphicId];
+                var graphicLight = graphicSpotLights[light.GraphicId];
 
-                    graphicLight.Projection = light.Projection;
-                    graphicLight.Color = light.Color;
-                    graphicLight.Position = transform.Position;
-                    graphicLight.View = MathUtils.CreateView(transform.Position, transform.Rotation);
+                graphicLight.Projection = light.Projection;
+                graphicLight.Color = light.Color;
+                graphicLight.Position = transform.Position;
+                graphicLight.View = MathUtils.CreateView(transform.Position, transform.Rotation);
 
-                    graphicSpotLights[light.GraphicId] = graphicLight;
-                }
+                graphicSpotLights[light.GraphicId] = graphicLight;
             });
         }
         #endregion
@@ -82,22 +68,18 @@ public class GraphicSyncSystem(GraphicEngine engine) : ISystem
         {
             var graphicObjects = engine.Objects;
             // un-highlighting
-            foreach (var kv in graphicObjects)
+            foreach (var (key, _) in graphicObjects)
             {
-                var obj = graphicObjects[kv.Key];
+                var obj = graphicObjects[key];
                 obj.IsHighlighted = false;
-                graphicObjects[kv.Key] = obj;
+                graphicObjects[key] = obj;
             }
             // highlighting
-            _selectedInEditorQuery.ForEachArchetype(archetype =>
+            _selectedInEditorQuery.ForEach((ref ModelComponent model) =>
             {
-                var models = archetype.GetComponents<ModelComponent>();
-                for (int row = 0; row < archetype.Rows; row++)
-                {
-                    var obj = graphicObjects[models[row].GraphicId];
-                    obj.IsHighlighted = true;
-                    graphicObjects[models[row].GraphicId] = obj;
-                }
+                var obj = graphicObjects[model.GraphicId];
+                obj.IsHighlighted = true;
+                graphicObjects[model.GraphicId] = obj;
             });
         }
         #endregion

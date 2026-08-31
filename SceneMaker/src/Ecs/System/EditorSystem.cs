@@ -22,7 +22,7 @@ public class EditorSystem : ISystem
     private Query _allQuery = null!;
     private Query _selectedQuery = null!;
     
-    //public Entity? SelectedEntity { get; private set; }
+    public Entity? SelectedEntity { get; private set; }
     private Ax? _selectedAx;
     private GraphicObject _axisObject;
     private readonly Model _axisModel;
@@ -97,23 +97,12 @@ public class EditorSystem : ISystem
         }
 
         var traced = TraceObjects(camPos, camDir);
-        if (traced is null)
-        {
-            SelectedEntity = ;
-        }
-        
+        SelectedEntity = traced;
         _axisObject.IsHidden = SelectedEntity is null;
     }
 
     private void ClearSelection()
     {
-        _selectedQuery.ForEachArchetype(archetype =>
-        {
-            for (int row = 0; row < archetype.Rows; row++)
-            {
-                
-            }
-        });
     }
     
     private void UpdateSelectedEntity(Vector3 camPos, Vector3 camDir)
@@ -169,23 +158,18 @@ public class EditorSystem : ISystem
     {
         Entity? closest = null;
         var closestDistance = float.MaxValue;
-        _allQuery.ForEachArchetype(archetype =>
+        _allQuery.ForEach((ref Transform transform, ref ModelComponent modelComp) =>
         {
-            var transforms = archetype.GetComponents<Transform>();
-            var models = archetype.GetComponents<ModelComponent>();
-            for (int row = 0; row < archetype.Rows; row++)
+            var model = modelComp.Model.Get(out var error);
+            if (model is null)
             {
-                var model = models[row].Model.Get(out var error);
-                if (model is null)
-                {
-                    Logger.Warn(this, $"Model for {archetype.GetEntityByRow(row)} is null: {error}");
-                    continue;
-                }
-                if (!EditorMisc.TraceObject(camPos, camDir, model, transforms[row].Matrix, out var distance)) continue;
-                if (distance >= closestDistance) continue;
-                closestDistance = distance;
-                closest = archetype.GetEntityByRow(row);
+                Logger.Warn(this, $"Model for {{TODO entity}} is null: {error}");
+                return;
             }
+            if (!EditorMisc.TraceObject(camPos, camDir, model, transform.Matrix, out var distance)) return;
+            if (distance >= closestDistance) return;
+            closestDistance = distance;
+            closest = new Entity(0); // TODO
         });
         return closest;
     }

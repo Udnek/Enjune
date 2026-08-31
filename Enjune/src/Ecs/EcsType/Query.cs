@@ -13,7 +13,7 @@ public partial class Query(World world, Signature include, Signature exclude)
     private readonly World _world = world;
     private readonly Signature _include = include;
     private readonly Signature _exclude = exclude;
-
+    
     public static Builder For(World world) => new(world);
     
     public sealed class Builder

@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Enjune.Misc;
 using IComponent = Enjune.Ecs.Component.IComponent;
 
