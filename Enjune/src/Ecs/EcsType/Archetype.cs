@@ -22,7 +22,7 @@ public sealed class Archetype
         _entityToRow = new Dictionary<Entity, int>(_capacity);
         
         int nComponents = signature.GetSetBitsCount();
-        
+
         List<Type> types = world.ComponentManager.DeconstructSignature(signature);
         for (var i = 0; i < nComponents; i++) 
             RegisterColumn(types[i]);
@@ -191,5 +191,10 @@ public sealed class Archetype
     internal Column<TComponent> GetColumn<TComponent>() where TComponent : struct, IComponent
     {
         return (Column<TComponent>)_columns[typeof(TComponent)];
+    }
+
+    internal Entity[] GetEntities()
+    {
+        return _rowToEntity;
     }
 }
