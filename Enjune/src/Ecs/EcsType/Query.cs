@@ -1,11 +1,4 @@
 ﻿using Enjune.Ecs.Component;
-using System;
-using System.Collections.Generic;
-using System.Net;
-using System.Net.Mail;
-using System.Reflection.Metadata.Ecma335;
-using System.Runtime.InteropServices;
-using System.Text;
 
 namespace Enjune.Ecs.EcsType;
 

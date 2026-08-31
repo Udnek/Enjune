@@ -1,11 +1,8 @@
+using System.Runtime.InteropServices;
 using FluentAssertions;
 using OpenGLApi.Component.Buffer;
 
 namespace Tests;
-
-using FluentAssertions;
-using System.Runtime.InteropServices;
-using Xunit;
 
 /// <summary>
 /// DeepSeek slop

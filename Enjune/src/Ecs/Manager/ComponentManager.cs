@@ -1,9 +1,11 @@
+using Enjune.Attribute;
 using Enjune.Ecs.Component;
 using Enjune.Ecs.EcsType;
 using Enjune.Misc;
 
 namespace Enjune.Ecs.Manager;
 
+[LogParams(logCallingMethod: true)]
 public sealed class ComponentManager
 {
     private readonly Dictionary<Type, ComponentTypeId> _typeToId = new();
@@ -55,7 +57,7 @@ public sealed class ComponentManager
     {
         if (!_typeToId.ContainsKey(componentType))
         {
-            Logger.Error(this, $"{nameof(GetIdByType)}: Unknown component requested. Did you forget to register it?");
+            Logger.Error(this, $"Unknown component {componentType} requested. Did you forget to register it?");
             throw new KeyNotFoundException($"Component type {componentType} was not registered in {this}");
         }
         return _typeToId[componentType];

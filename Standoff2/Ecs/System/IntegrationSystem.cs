@@ -1,4 +1,3 @@
-using Enjune.Ecs;
 using Enjune.Ecs.EcsType;
 using Enjune.Ecs.System;
 using Enjune.Misc;
@@ -17,7 +16,7 @@ public class IntegrationSystem : SingleQuerySystem
             .Build();
     }
 
-    public override void Update(World world)
+    public override void Update()
     {
         Query.ForEach((
             Entity entity,

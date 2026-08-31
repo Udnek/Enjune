@@ -1,9 +1,7 @@
 using Enjune.Graphic.Api;
-using OpenGLApi.Component;
 using OpenGLApi.Component.Buffer;
 using OpenGLApi.Component.Texture;
 using OpenGLApi.Component.Uniform;
-using SharpGLTF.Schema2;
 
 namespace OpenGLApi.Shader;
 

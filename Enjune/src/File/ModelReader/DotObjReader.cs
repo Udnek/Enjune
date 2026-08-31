@@ -2,7 +2,6 @@ using Enjune.Graphic;
 using Enjune.Graphic.Asset;
 using Enjune.Graphic.Modeling;
 using Enjune.Misc;
-using Buffer = System.Buffer;
 
 namespace Enjune.File.ModelReader;
 

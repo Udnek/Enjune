@@ -1,7 +1,5 @@
 ﻿using Enjune.Ecs.Component;
 using Enjune.Misc;
-using System;
-using System.Text;
 
 namespace Enjune.Ecs.EcsType;
 
@@ -11,12 +9,10 @@ public readonly record struct Entity
 
     public Entity(uint id) => _id = id;
     public Entity(int id) => _id = (uint)id;
-    public override string ToString()
-    {
-        return $"Entity {_id}";
-    }
-
-    public class Assembly()
+    
+    public override string ToString() => $"Entity {_id}";
+    
+    public sealed class Assembly()
     {
         private readonly Dictionary<Type, IComponent> _components = new();
 

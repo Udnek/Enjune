@@ -1,13 +1,10 @@
-using Enjune.Ecs;
 using Enjune.Ecs.EcsType;
 using Enjune.Ecs.System;
-using Enjune.Misc;
-using SceneMaker.Bridge;
 using SceneMaker.Ecs.Component;
 
 namespace SceneMaker.Ecs.System;
 
-public class PhysicReadSyncSystem(PhysicBridge bridge): SingleLegacyQuerySystem
+public class PhysicWriteSyncSystem(PhysicBridge bridge): SingleLegacyQuerySystem
 {
     protected override LegacyQuery BuildQuery(LegacyQuery.Builder builder)
     {
@@ -15,22 +12,22 @@ public class PhysicReadSyncSystem(PhysicBridge bridge): SingleLegacyQuerySystem
             .With<Transform>().Build();
     }
 
-    public override void Update(World world)
+    public override void Update()
     {
         var graphicObjs = bridge.Objects;
         Query.ForEachArchetype(archetype =>
         {
             var transforms = archetype.GetComponents<Transform>();
-            for (int i = 0; i < archetype.Rows; i++)
+            for (int i = 0; i < archetype.Rows; i++) //TODO iterate over entityId
             {
                 var entity = archetype.GetEntityByRow(i);
                 var transform = transforms[i];
                 var obj = graphicObjs[entity];
 
-                transform.Position = obj.Position;
-                transform.Rotation = obj.Rotation;
+                obj.Position = transform.Position;
+                obj.Rotation = transform.Rotation;
 
-                transforms[i] = transform;
+                graphicObjs[entity] = obj;
             }
         });
     }

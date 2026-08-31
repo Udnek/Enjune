@@ -5,6 +5,13 @@ namespace Enjune.Registering;
 
 public sealed record RegistryReference<T> where T : notnull
 {
+    public static ICodec<RegistryReference<T>> Codec =>
+        field ??= Codecs
+            .ForConstructor(args => new RegistryReference<T>((Identifier)args[0]!, (Identifier)args[1]!))
+            .ForField("registry_id", i => i.RegistryId, Identifier.Codec)
+            .ForField("item_id", i => i.ItemId, Identifier.Codec)
+            .Build();
+    
     public readonly Identifier RegistryId;
     public readonly Identifier ItemId;
     private T? _value = default;
@@ -16,13 +23,24 @@ public sealed record RegistryReference<T> where T : notnull
         ItemId = itemId;
     }
 
-    public static ICodec<RegistryReference<T>> Codec =>
-        field ??= Codecs
-            .ForConstructor(args => new RegistryReference<T>((Identifier)args[0]!, (Identifier)args[1]!))
-            .ForField("registry_id", i => i.RegistryId, Identifier.Codec)
-            .ForField("item_id", i => i.ItemId, Identifier.Codec)
-            .Build();
+    public override string ToString() => $"{Logger.GetTypeName(GetType())}[{RegistryId} / {ItemId}]";
 
+    public T GetOr(T fallback)
+    {
+        var value = Get(out var error);
+        if (value is not null)
+            return value;
+        Logger.Warn(this, error);
+        _value = fallback;
+        return fallback;
+    }
+
+    public T GetOrThrow()
+    {
+        var value = Get(out var error);
+        return value ?? throw new Exception($"Value for {this} is null: {error}");
+    }
+    
     public T? Get(out Error? error)
     {
         if (_triedGetting)

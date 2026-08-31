@@ -1,8 +1,9 @@
 using System.Diagnostics;
+using Enjune.Attribute;
+using Enjune.Ecs.EcsType;
 using Enjune.Graphic.Asset.Font;
 using Enjune.Graphic.Key;
 using Enjune.Misc;
-using Enjune.World;
 using SceneMaker.Misc;
 using UiAddon;
 using UiAddon.Element;
@@ -57,7 +58,7 @@ public class UiManager : AbstractDisposable
         );
         
         Ui = new UiAddon.Element.Ui(
-            app.Grapi, app.InputHandler,
+            app.GraphicApi, app.InputHandler,
             [_fps, _inspectorBackground]
         );
         
@@ -81,13 +82,13 @@ public class UiManager : AbstractDisposable
     }
 
     private readonly Stopwatch _fpsStopWatch = Stopwatch.StartNew();
-    private readonly Remember<SObject?> _rememberSelectedObject = new(null);
+    private readonly Remember<Entity?> _rememberSelectedObject = new(null);
     private readonly Remember<bool> _rememberUiFocused = false;
 
     public void Update(Seconds deltaTime)
     {
         var inputHandler = _app.InputHandler;
-        var editControl = _app.EditorController;
+        var editControl = _app.EditorSystem;
         
         // global changes
         if (Ui.IsFocused && inputHandler.DeltaWheelScroll.Y != 0 && inputHandler.IsPressed(_sizeChangeBind))
@@ -98,7 +99,7 @@ public class UiManager : AbstractDisposable
         Ui.Update();
         
         _rememberUiFocused.Val = Ui.IsFocused;
-        _rememberSelectedObject.Val = editControl.SelectedObject;
+        _rememberSelectedObject.Val = editControl.SelectedEntity;
         
         // pop up inspector
         if (_rememberSelectedObject.Changed)

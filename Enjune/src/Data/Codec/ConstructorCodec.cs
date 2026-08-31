@@ -1,4 +1,3 @@
-using System.Text;
 using Enjune.Data.Codec.Misc;
 using Enjune.Misc;
 
@@ -39,7 +38,7 @@ public sealed class ConstructorCodec<TInstance> : ICodec<TInstance>
     {
         var mapData = data.Cast<DataObject.Map>(out var error);
         if (mapData is null)
-            return ResultOrError.Failure<TInstance>("can not decode: " + error);
+            return ResultOrError.Failure<TInstance>("data is not map: " + error);
         
         var args = new List<object?>(_codecs.Count);
         foreach (var (name, _, decoder) in _codecs)
@@ -50,8 +49,9 @@ public sealed class ConstructorCodec<TInstance> : ICodec<TInstance>
                 if (fieldErr != null)
                     return new Error($"can not decode field {name}: " + fieldErr);
                 args.Add(arg);
-            }
-            return new Error($"map {mapData} doesn't have key {name}");
+            } 
+            else 
+                return new Error($"map {mapData} doesn't have key {name}");
         }
         
         return ResultOrError.Success(_constructor(args));
@@ -76,7 +76,7 @@ public sealed class ConstructorCodec<TInstance> : ICodec<TInstance>
                         error = $"can not decode field {name}: " + result.Error;
                     else
                         error = null;
-                    return result;
+                    return result.GetOrThrow();
                 }));
             return this;
         }

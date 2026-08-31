@@ -76,7 +76,7 @@ public class Mesh : AbstractMesh<Mesh.PerVertex>
 
 
     public static Mesh Triangle<TPerVert>(Position p1, Position p2, Position p3, 
-        Mesh.PerVertex pv1, Mesh.PerVertex pv2, Mesh.PerVertex pv3)
+        PerVertex pv1, PerVertex pv2, PerVertex pv3)
     {
         return new Mesh([p1, p2, p3],
             [pv1, pv2, pv3],
@@ -93,7 +93,7 @@ public class Mesh : AbstractMesh<Mesh.PerVertex>
     }
 
 
-    public static Mesh Ngon(Position[] poses, Mesh.PerVertex[] perVertexData)
+    public static Mesh Ngon(Position[] poses, PerVertex[] perVertexData)
     {
         if (perVertexData.Length != poses.Length)
             throw new ArgumentException(
@@ -130,7 +130,7 @@ public class Mesh : AbstractMesh<Mesh.PerVertex>
         var arrayIndexes = indexes.ToArray();
         var normals = GenerateSmoothNormals(poses, arrayIndexes);
         return new Mesh(poses, 
-            texPoses.Select((tc, i) => new Mesh.PerVertex(tc, normals[i])).ToArray(), 
+            texPoses.Select((tc, i) => new PerVertex(tc, normals[i])).ToArray(), 
             arrayIndexes);
     }
 

@@ -11,10 +11,5 @@ public sealed class SingleArgConstructorCodec<TInstance, TArg>(
 {
     public ResultOrError<DataObject> Encode(TInstance instance) => codec.Encode(getter(instance));
 
-    public ResultOrError<TInstance> Decode(DataObject instance)
-    {
-        return codec.Decode(instance).Map(
-            val => ResultOrError.Success(constructor(val)),
-            err => new Error("can not construct: " + err));
-    }
+    public ResultOrError<TInstance> Decode(DataObject instance) => codec.Decode(instance).AndThen(arg => constructor(arg));
 }

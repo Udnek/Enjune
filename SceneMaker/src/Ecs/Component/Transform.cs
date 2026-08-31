@@ -1,6 +1,6 @@
 using Enjune.Data.Codec;
-using Enjune.Ecs;
 using Enjune.Ecs.Component;
+using Enjune.Misc;
 using Enjune.Registering;
 
 namespace SceneMaker.Ecs.Component;
@@ -18,6 +18,8 @@ public record struct Transform() : IComponent
     public Position Position = Position.Zero;
     public Quaternion Rotation = Quaternion.Identity;
     public Vector3 Scale = Vector3.One;
+
+    public Matrix4 Matrix => MathUtils.CreateModelTransform(Position, Rotation, Scale);
     
     public Identifier Id() => Identifier.Of(Program.Assembly, "transform");
 }

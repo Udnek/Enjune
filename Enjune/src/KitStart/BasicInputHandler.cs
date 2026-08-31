@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using Enjune.Graphic.Api;
 using Enjune.Graphic.Key;
-using Enjune.Misc;
 using OpenTK.Mathematics;
 
 namespace Enjune.KitStart;

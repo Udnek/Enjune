@@ -1,5 +1,3 @@
-using System.Runtime.CompilerServices;
-using Microsoft.VisualBasic;
 using OpenTK.Mathematics;
 using static System.MathF;
 
@@ -11,7 +9,18 @@ public static class MathUtils
     
     public static Matrix4 CreateModelTransform(Position pos, Quaternion rot, Vector3 scale) 
         => Matrix4.CreateScale(scale) * Matrix4.CreateFromQuaternion(rot) * Matrix4.CreateTranslation(pos); // todo wtf why this order works?
+
+    public static Matrix4 CreateView(Position pos, Vector3 dir)
+    {
+        var up = Vector3.UnitY;
+        if (1 - Math.Abs(Vector3.Dot(dir, Vector3.UnitY)) < Epsilon) 
+            up = Vector3.UnitX;
+        return Matrix4.LookAt(pos, pos + dir, up);
+    }
     
+    public static Matrix4 CreateView(Position pos, Quaternion rot) 
+        => Matrix4.CreateFromQuaternion(rot) * Matrix4.CreateTranslation(pos);
+
     public static bool RayIntersectsLine(Position origin, Vector3 direction, Position p0, Position p1, out float cosDistance)
     {
         p0 -= origin;

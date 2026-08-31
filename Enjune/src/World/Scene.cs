@@ -1,8 +1,8 @@
-using Enjune.Data;
 using Enjune.Data.Codec;
 
 namespace Enjune.World;
 
+[Obsolete]
 public class Scene
 {
     public static readonly MapCodec<Scene> Codec = Codecs

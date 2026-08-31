@@ -7,9 +7,13 @@ namespace Enjune.Ecs.Component;
 
 public interface IComponent
 {
-    private static readonly string IdKey = "id";
-    private static readonly string ComponentKey = "component";
+    Identifier Id();
     
+    #region Codec
+
+    private const string IdKey = "id";
+    private const string ComponentKey = "component";
+
     private static readonly ICodec<(Identifier Id, IComponent Comp)> KeyedCodec = new SimpleCodec<(Identifier Id, IComponent Comp)>(
         tuple =>
         {
@@ -18,13 +22,13 @@ public interface IComponent
             if (idResult.Error != null)
                 return new Error($"can not encode {id}: {idResult.Error}");
             
-            var compCodec = Registries.Codec.Get(id, out var err);
+            var compCodec = Registries.Codec.Get(id, out var findCodecErr);
             if (compCodec is null)
-                return new Error($"can not encode {tuple}: {err}");
+                return new Error($"can not encode {tuple}: {findCodecErr}");
 
-            var compResult = compCodec.EncodeObj(tuple);
+            var compResult = compCodec.EncodeObj(comp);
             if (compResult.Error != null)
-                return new Error($"can not encode {tuple}: {compResult.Error}");
+                return new Error($"can not encode {comp}: {compResult.Error}");
 
             return ResultOrError.Success<DataObject>(new Dictionary<string, DataObject>()
             {
@@ -40,18 +44,19 @@ public interface IComponent
             
             // id
             if (!map.Val.TryGetValue(IdKey, out var idData))
-                return new Error($"can not find 'id' in {map}");
+                return new Error($"can not find key {IdKey} in {map}");
             
             var idResult = Identifier.Codec.Decode(idData);
             if (idResult.Error != null)
                 return new Error($"can not decode: {idResult.Error}");
+            
             var compCodec = Registries.Codec.Get(idResult.GetOrThrow(), out var regErr);
             if (compCodec is null)
                 return new Error($"can not decode: {regErr}");
 
             // data
             if (!map.Val.TryGetValue(ComponentKey, out var compData))
-                return new Error($"can not find 'data' in {compData}");
+                return new Error($"can not find key {ComponentKey} in {compData}");
 
             var compResult = compCodec.DecodeObj(compData);
             if (compResult.Error != null)
@@ -63,21 +68,11 @@ public interface IComponent
             return ResultOrError.Success((idResult.GetOrThrow(), comp));
         });
     
-    public static readonly ICodec<IComponent> GenericCodec = new SimpleCodec<IComponent>(
-        comp =>
-        {
-            var id = Registries.EcsComponentType.GetId(comp.GetType());
-            if (id is null)
-                return new Error($"can not find component id {id} in {Registries.EcsComponentType}");
-            return KeyedCodec.Encode((id.Value, comp));
-        },
-        data =>
-        {
-            return KeyedCodec.Decode(data).Map<ResultOrError<IComponent>>(
-                val => ResultOrError.Success(val.Comp),
-                err => err
-            );
-        });
+    public static readonly ICodec<IComponent> Codec = new SimpleCodec<IComponent>(
+        comp => KeyedCodec.Encode((comp.Id(), comp)),
+        data => KeyedCodec.Decode(data).AndThen(val => val.Comp));
 
-    public static readonly ICodec<IComponent[]> ArrayCodec = Codecs.ArrayOf(GenericCodec, true);
+    public static readonly ICodec<IComponent[]> ArrayCodec = Codecs.ArrayOf(Codec, true);
+
+    #endregion
 }

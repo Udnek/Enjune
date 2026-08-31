@@ -1,4 +1,3 @@
-using Enjune.Graphic;
 using Enjune.Graphic.Asset;
 using Enjune.Graphic.Modeling;
 using Enjune.Misc;

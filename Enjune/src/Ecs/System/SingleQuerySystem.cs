@@ -7,9 +7,9 @@ public abstract class SingleQuerySystem : ISystem
 {
     protected Query Query = null!;
 
-    public void InitializeQueries(World world) => Query = BuildQuery(new Query.Builder(world));
-
+    public virtual void Initialize(World world) => Query = BuildQuery(new Query.Builder(world));
+    
     protected abstract Query BuildQuery(Query.Builder builder);
 
-    public abstract void Update(World world);
+    public abstract void Update();
 }

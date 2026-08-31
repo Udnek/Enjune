@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using Enjune.Ecs.Component;
 
 namespace Enjune.Ecs.EcsType;

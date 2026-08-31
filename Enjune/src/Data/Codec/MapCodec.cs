@@ -43,7 +43,7 @@ public sealed class MapCodec<TInstance> : IMapCodec<TInstance>
     {
         var mapData = data.Cast<DataObject.Map>(out var error);
         if (mapData is null)
-            return new Error("can not decode: " + error);
+            return new Error("data is not map: " + error);
         
         var instance = _constructor();
         foreach (var (name, codec) in _fieldCodecs)

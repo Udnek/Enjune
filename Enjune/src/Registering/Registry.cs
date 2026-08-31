@@ -1,4 +1,3 @@
-using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using Enjune.Misc;
 
@@ -40,10 +39,7 @@ public sealed class WritableRegistry<T> : IRegistry<T> where T: notnull
     public void Register(RegistryReference<T> reference, T value) => Register(reference.ItemId, value);
 
     [Pure]
-    public RegistryReference<T> CreateReference(Identifier itemId)
-    {
-        return new RegistryReference<T>(_id, itemId);
-    }
+    public RegistryReference<T> CreateReference(Identifier itemId) => new(_id, itemId);
 
     [Pure]
     public Identifier? GetId(T target)
