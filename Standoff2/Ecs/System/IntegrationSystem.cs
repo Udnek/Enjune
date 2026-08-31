@@ -20,6 +20,7 @@ public class IntegrationSystem : SingleQuerySystem
     public override void Update(World world)
     {
         Query.ForEach((
+            Entity entity,
             ref Position pos,
             ref Velocity vel,
             ref Acceleration acc) =>

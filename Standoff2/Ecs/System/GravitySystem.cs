@@ -16,12 +16,12 @@ public class GravitySystem : SingleQuerySystem
 
     public override void Update(World world)
     {
-        Query.ForEach((ref Acceleration acc) =>
+        Query.ForEach((Entity entity, ref Acceleration acc) =>
         {
             // Simply add -9,80665 to Y acceleration
             // TODO: Consider changing this behavior to something more accurate
             acc.Y -= 9.80665;
-            Logger.Info(this, $"Added gravitational acceleration to entity");
+            Logger.Info(this, $"Added gravitational acceleration to {entity}");
         });
     }
 }

@@ -50,7 +50,7 @@ namespace Generators.Ecs
             string constraints = string.Join(" ", typeParams.Select(t => $"where {t} : struct, IComponent"));
             string refParams = string.Join(", ", typeParams.Select((t, idx) => $"ref {t} t{idx + 1}"));
 
-            sb.AppendLine($"public delegate void ForEachDelegate<{typeParamList}>({refParams}) {constraints};");
+            sb.AppendLine($"public delegate void ForEachDelegate<{typeParamList}>(Entity entity, {refParams}) {constraints};");
         }
 
         private static void AddDelegateSeries(StringBuilder sb)
@@ -64,19 +64,17 @@ namespace Generators.Ecs
             string typeParamList = string.Join(", ", typeParams);
             string constraints = string.Join(" ", typeParams.Select(t => $"where {t} : struct, IComponent"));
 
-            string deconstructPattern = arity == 1
-                ? "col1"
-                : $"({string.Join(", ", Enumerable.Range(1, arity).Select(i => $"col{i}"))})";
+            string deconstructPattern = $"(entities, {string.Join(", ", Enumerable.Range(1, arity).Select(i => $"col{i}"))})";
             string actionArgs = string.Join(", ", Enumerable.Range(1, arity).Select(i => $"ref col{i}[i]"));
 
             sb.AppendLine($"    public void ForEach<{typeParamList}>(ForEachDelegate<{typeParamList}> action) {constraints}");
             sb.AppendLine("    {");
-            sb.AppendLine($"        var cache = Cache<{typeParamList}>.GetColumns(_world, _include, _exclude);");
+            sb.AppendLine($"        var cache = Cache<{typeParamList}>.GetCache(_world, _include, _exclude);");
             sb.AppendLine($"        foreach (var {deconstructPattern} in cache)");
             sb.AppendLine("        {");
             sb.AppendLine("            for (int i = 0; i < col1.Count; i++)");
             sb.AppendLine("            {");
-            sb.AppendLine($"                    action({actionArgs});");
+            sb.AppendLine($"                    action(entities[i], {actionArgs});");
             sb.AppendLine("            }");
             sb.AppendLine("        }");
             sb.AppendLine("    }");
@@ -92,28 +90,24 @@ namespace Generators.Ecs
             var typeParams = Enumerable.Range(1, arity).Select(i => $"T{i}").ToArray();
             string typeParamList = string.Join(", ", typeParams);
             string constraints = string.Join(" ", typeParams.Select(t => $"where {t} : struct, IComponent"));
-            string cachedColumnsType = arity == 1
-                ? "Column<T1>"
-                : $"({string.Join(", ", typeParams.Select((t, idx) => $"Column<{t}> Column{idx + 1}"))})";
-            string getColumnsExpr = arity == 1
-                ? "archetype.GetColumn<T1>()"
-                : $"({string.Join(", ", typeParams.Select(t => $"archetype.GetColumn<{t}>()"))})";
+            string cacheType = $"(Entity[] entities, {string.Join(", ", typeParams.Select((t, idx) => $"Column<{t}> Column{idx + 1}"))})";
+            string getColumnsExpr = $"(archetype.GetEntities(), {string.Join(", ", typeParams.Select(t => $"archetype.GetColumn<{t}>()"))})";
 
             sb.AppendLine($"    private static class Cache<{typeParamList}> {constraints}");
             sb.AppendLine("    {");
-            sb.AppendLine($"        private static List<{cachedColumnsType}> _columns = [];");
+            sb.AppendLine($"        private static List<{cacheType}> _cache = [];");
             sb.AppendLine($"        private static int _cacheVersion = -1;");
-            sb.AppendLine($"        internal static List<{cachedColumnsType}> GetColumns(");
+            sb.AppendLine($"        internal static List<{cacheType}> GetCache(");
             sb.AppendLine( "            World world, Signature include, Signature exclude)");
             sb.AppendLine( "        {");
-            sb.AppendLine("            if (world.CacheVersion == _cacheVersion) return _columns;");
-            sb.AppendLine("            _columns.Clear();");
+            sb.AppendLine("            if (world.CacheVersion == _cacheVersion) return _cache;");
+            sb.AppendLine("            _cache.Clear();");
             sb.AppendLine("            foreach (var archetype in world.QueryArchetypes(include, exclude))");
             sb.AppendLine("            {");
-            sb.AppendLine($"                _columns.Add({getColumnsExpr});");
+            sb.AppendLine($"                _cache.Add({getColumnsExpr});");
             sb.AppendLine("            }");
             sb.AppendLine("            _cacheVersion = world.CacheVersion;");
-            sb.AppendLine("            return _columns;");
+            sb.AppendLine("            return _cache;");
             sb.AppendLine("        }");
             sb.AppendLine("    }");
         }
