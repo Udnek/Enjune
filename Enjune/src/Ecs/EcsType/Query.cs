@@ -1,6 +1,7 @@
 ﻿using Enjune.Ecs.Component;
 using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Net.Mail;
 using System.Reflection.Metadata.Ecma335;
 using System.Runtime.InteropServices;
@@ -13,6 +14,34 @@ public partial class Query(World world, Signature include, Signature exclude)
     private readonly World _world = world;
     private readonly Signature _include = include;
     private readonly Signature _exclude = exclude;
+
+    public void ForEach(Action<Entity> action)
+    {
+        var cache = Cache.GetCache(_world, _include, _exclude);
+        foreach (var entity in cache)
+            action(entity);
+    }
+    private static class Cache
+    {
+        private static List<Entity> _cache = [];
+        private static int _cacheVersion = -1;
+        internal static List<Entity> GetCache(
+            World world, Signature include, Signature exclude)
+        {
+            if (world.CacheVersion == _cacheVersion) return _cache;
+            _cache.Clear();
+            foreach (var archetype in world.QueryArchetypes(include, exclude))
+            {
+                var entities = archetype.GetEntities();
+                for (int i = 0; i < archetype.Rows; i++)
+                {
+                    _cache.Add(entities[i]);
+                }
+            }
+            _cacheVersion = world.CacheVersion;
+            return _cache;
+        }
+    }
 
     public static Builder For(World world) => new(world);
     
