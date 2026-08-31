@@ -16,8 +16,7 @@ public sealed class Column<T>(int capacity = EcsConstants.InitialColumnCapacity)
 {
     private T[] _data = new T[capacity];
     internal ref T this[int i] => ref _data[i];
-    public int Count;
-    int IColumn.Count { get => Count; set => Count = value; }
+    public int Count { get; set; }
 
     public void SetValue(int row, IComponent value) => _data[row] = (T)value;
 
@@ -25,7 +24,7 @@ public sealed class Column<T>(int capacity = EcsConstants.InitialColumnCapacity)
 
     public IComponent GetValue(int row) => _data[row];
 
-    public Span<T> GetSpan() => _data.AsSpan();
+    public Span<T> GetSpan() => _data.AsSpan(0, Count);
 
     void IColumn.SetCapacity(int capacity) => Array.Resize(ref _data, capacity);
 }
