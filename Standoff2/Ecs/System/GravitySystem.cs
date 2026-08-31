@@ -7,6 +7,7 @@ namespace Standoff2.Ecs.System;
 
 public class GravitySystem : SingleQuerySystem
 {
+    
     protected override Query BuildQuery(Query.Builder builder)
     {
         return builder.With<Acceleration>().Build();
@@ -14,16 +15,12 @@ public class GravitySystem : SingleQuerySystem
 
     public override void Update()
     {
-        Query.ForEachArchetype(archetype =>
+        Query.ForEach((ref Acceleration acc) =>
         {
-            Span<Acceleration> accelerations = archetype.GetComponents<Acceleration>();
-            for (int i = 0; i < archetype.Rows; i++)
-            {
-                // Simply add -9,80665 to Y acceleration
-                // TODO: Consider changing this behavior to something more accurate
-                accelerations[i].Y += -10;
-                Logger.Info(this, $"Added gravitational acceleration to {archetype.GetEntityByRow(i)}");
-            }
+            // Simply add -9,80665 to Y acceleration
+            // TODO: Consider changing this behavior to something more accurate
+            acc.Y -= 9.80665;
+            Logger.Info(this, $"Added gravitational acceleration to entity");
         });
     }
 }

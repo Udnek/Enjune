@@ -67,7 +67,7 @@ public sealed class World
 
     internal void InvalidateCache()
     {
-        Logger.Info(this, "Invalidated archetype cache");
+        Logger.Info(this, "Invalidated cache");
         CacheVersion++;
     }
 
@@ -93,14 +93,15 @@ public sealed class World
     
     public IEnumerable<Archetype> QueryArchetypes(Signature include, Signature exclude)
         => ArchetypeManager.Query(include, exclude);
-    
+
+
     #region Entity Interactions
     public Entity AddEntity(Entity.Assembly assembly)
     {
         Entity entity = EntityManager.CreateEntity();
         ArchetypeManager.AddEntity(assembly, entity);
         _entities.Add(entity);
-
+        InvalidateCache();
         return entity;
     }
 
@@ -108,6 +109,7 @@ public sealed class World
     {
         ArchetypeManager.RemoveEntity(entity);
         _entities.Remove(entity);
+        InvalidateCache();
     }
 
     public int GetComponentId(Type component)
@@ -135,9 +137,10 @@ public sealed class World
         Archetype targetArchetype = ArchetypeManager.GetOrAddArchetypeBySignature(targetSignature);
 
         ArchetypeManager.MoveEntity(entity, currentArchetype, targetArchetype);
-        targetArchetype.WriteComponent(entity, component);
+        targetArchetype.SetComponent(entity, component);
 
         Logger.Info(this, $"{nameof(AddEntityComponent)}: Added component successfully");
+        InvalidateCache();
         return true;
     }
 
@@ -163,6 +166,7 @@ public sealed class World
         ArchetypeManager.MoveEntity(entity, currentArchetype, targetArchetype);
 
         Logger.Info(this, $"{nameof(AddEntityComponent)}: Removed component successfully");
+        InvalidateCache();
         return true;
     }
 
@@ -191,6 +195,7 @@ public sealed class World
 
         Archetype archetype = ArchetypeManager.GetArchetypeByEntity(entity);
         archetype.ModifyComponent(entity, modifier);
+        InvalidateCache();
         return true;
     }
 

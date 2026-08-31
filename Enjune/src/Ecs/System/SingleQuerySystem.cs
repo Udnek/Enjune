@@ -1,12 +1,12 @@
-using Enjune.Ecs.EcsType;
+﻿using Enjune.Ecs.EcsType;
 
 namespace Enjune.Ecs.System;
 
-// utility class when you need to set up simple system
+// utility class for when you need to set up simple system
 public abstract class SingleQuerySystem : ISystem
 {
     protected Query Query = null!;
-    
+
     public virtual void Initialize(World world) => Query = BuildQuery(new Query.Builder(world));
     
     protected abstract Query BuildQuery(Query.Builder builder);

@@ -24,6 +24,20 @@ public sealed class Archetype
         for (var i = 0; i < nComponents; i++) 
             RegisterColumn(types[i]);
     }
+    private void RegisterColumn(Type compType)
+    {
+        Type columnType = typeof(Column<>).MakeGenericType(compType);
+        var columnInstance = Activator.CreateInstance(columnType, _capacity) as IColumn;
+        _columns[compType] = columnInstance ??
+                             throw new InvalidOperationException($"Failed to instantiate {Logger.GetTypeName(columnType)}");
+    }
+
+    // TODO: Ineffective, should move into methods
+    private void SyncColumnCounts()
+    {
+        foreach (IColumn column in _columns.Values)
+            column.Count = Rows;
+    }
 
     #region Public Api
 
@@ -36,16 +50,6 @@ public sealed class Archetype
     }
 
     #endregion
-
-    internal bool Contains(Entity entity) => _rowToEntity.Contains(entity);
-
-    private void RegisterColumn(Type compType)
-    {
-        Type columnType = typeof(Column<>).MakeGenericType(compType);
-        var columnInstance = Activator.CreateInstance(columnType, _capacity) as IColumn;
-        _columns[compType] = columnInstance ?? 
-                             throw new InvalidOperationException($"Failed to instantiate {Logger.GetTypeName(columnType)}");
-    }
 
     private void EnsureCapacity(int targetCapacity)
     {
@@ -76,8 +80,9 @@ public sealed class Archetype
             if (_columns.ContainsKey(component.GetType())) 
                 _columns[component.GetType()].SetValue(row, component);
         }
-         
+
         Rows++;
+        SyncColumnCounts();
     }
 
     internal void AddEntity(Entity entity, IEnumerable<IComponent> components)
@@ -103,6 +108,7 @@ public sealed class Archetype
         }
 
         Rows++;
+        SyncColumnCounts();
     }
 
     internal void RemoveEntity(Entity entity)
@@ -123,8 +129,10 @@ public sealed class Archetype
             _entityToRow[lastId] = entityRow;
             _rowToEntity[entityRow] = lastId;
         }
+
         _entityToRow.Remove(entity);
         Rows--;
+        SyncColumnCounts();
     }
     
     private (Entity, List<IComponent>) GetSnapshot(Entity entity)
@@ -160,6 +168,7 @@ public sealed class Archetype
         return ((Column<TComponent>)_columns[typeof(TComponent)])[row];
     }
 
+    // Modifies a component effectively by taking a delegate
     internal void ModifyComponent<TComponent>(Entity entity, Func<TComponent, TComponent> modifier) where TComponent: struct, IComponent
     {
         int row = _entityToRow[entity];
@@ -167,10 +176,17 @@ public sealed class Archetype
         column[row] = modifier(column[row]);
     }
 
-    internal void WriteComponent(Entity entity, IComponent component)
+    // Completely rewrites a component by copying a new one in place of the old one
+    internal void SetComponent(Entity entity, IComponent component)
     {
         int row = _entityToRow[entity];
         var column = _columns[component.GetType()];
         column.SetValue(row, component);
+    }
+
+    // TODO: Maybe think of a way to avoid reflection
+    internal Column<TComponent> GetColumn<TComponent>() where TComponent : struct, IComponent
+    {
+        return (Column<TComponent>)_columns[typeof(TComponent)];
     }
 }

@@ -4,9 +4,9 @@ using SceneMaker.Ecs.Component;
 
 namespace SceneMaker.Ecs.System;
 
-public class PhysicReadSyncSystem(PhysicBridge bridge): SingleQuerySystem
+public class PhysicReadSyncSystem(PhysicBridge bridge): SingleLegacyQuerySystem
 {
-    protected override Query BuildQuery(Query.Builder builder)
+    protected override LegacyQuery BuildQuery(LegacyQuery.Builder builder)
     {
         return builder
             .With<Transform>().Build();

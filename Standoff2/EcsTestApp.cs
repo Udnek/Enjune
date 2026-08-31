@@ -51,7 +51,7 @@ public class EcsTestApp : AbstractDisposable, IApp
         Logger.Info(this, "---- SIMPLE LOOP TEST ----");
         Logger.Info(this, "Starting the main loop");
         DateTime startTime = DateTime.Now;
-        for (var i = 0; i < 50; i ++)
+        for (var i = 0; i < 5; i ++)
         {
             _world.Update();
             Logger.Info(this, $"Finished step {i + 1} of the loop");

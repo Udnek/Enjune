@@ -18,34 +18,30 @@ public class IntegrationSystem : SingleQuerySystem
 
     public override void Update()
     {
-        Query.ForEachArchetype(archetype =>
+        Query.ForEach((
+            ref Position pos,
+            ref Velocity vel,
+            ref Acceleration acc) =>
         {
-            Span<Position> positions = archetype.GetComponents<Position>();
-            Span<Velocity> velocities = archetype.GetComponents<Velocity>();
-            Span<Acceleration> accelerations = archetype.GetComponents<Acceleration>();
-
-            for (int i = 0; i < archetype.Rows; i++)
-            {
-                const float dt = 0.01f;
-                Logger.Info(this, $"processing {archetype.GetEntityByRow(i)} with params:\n" +
-                                      $"- - - - Position:     {positions[i].ToString()}\n" +
-                                      $"- - - - Velocity:     {velocities[i].ToString()}\n" +
-                                      $"- - - - Acceleration: {accelerations[i].ToString()}");
-                // First we integrate positions
-                positions[i].X += dt * velocities[i].X;
-                positions[i].Y += dt * velocities[i].Y;
-                positions[i].Z += dt * velocities[i].Z;
-
-                // Then we integrate velocities
-                velocities[i].X += dt * accelerations[i].X;
-                velocities[i].Y += dt * accelerations[i].Y;
-                velocities[i].Z += dt * accelerations[i].Z;
-
-                // Lastly, we reset all accelerations
-                accelerations[i].X = 0;
-                accelerations[i].Y = 0;
-                accelerations[i].Z = 0;
-            }
+            const float dt = 0.01f;
+            Logger.Info(this, $"processing entity? with params:\n" +
+                                  $"- - - - Position:     {pos.ToString()}\n" +
+                                  $"- - - - Velocity:     {vel.ToString()}\n" +
+                                  $"- - - - Acceleration: {acc.ToString()}");
+            // First we integrate positions
+            pos.X += dt * vel.X;
+            pos.Y += dt * vel.Y;
+            pos.Z += dt * vel.Z;
+            
+            // Then we integrate velocities
+            vel.X += dt * acc.X;
+            vel.Y += dt * acc.Y;
+            vel.Z += dt * acc.Z;
+            
+            // Lastly, we reset all accelerations
+            acc.X = 0;
+            acc.Y = 0;
+            acc.Z = 0;
         });
     }
 }
