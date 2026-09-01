@@ -73,7 +73,7 @@ public sealed class World
 
     public World(IEnumerable<ISystem> systems)
     {
-        Logger.Info(this, "Registering managers using given systems and component types");
+        Logger.Info(this, "Registering managers");
 
         ArchetypeManager = new ArchetypeManager(this);
         SystemManager = new SystemManager(this);
