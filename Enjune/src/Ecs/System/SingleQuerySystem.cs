@@ -5,11 +5,11 @@ namespace Enjune.Ecs.System;
 // utility class for when you need to set up simple system
 public abstract class SingleQuerySystem : ISystem
 {
-    protected Query Query = null!;
+    protected QueryBuilder Builder = null!;
 
-    public void InitializeQueries(World world) => Query = BuildQuery(new Query.Builder(world));
+    public void OnInit(World world) => Builder = new QueryBuilder(world);
 
-    protected abstract Query BuildQuery(Query.Builder builder);
+    protected abstract void BuildQuery(QueryBuilder builder);
 
-    public abstract void Update(World world);
+    public abstract void OnUpdate(World world);
 }

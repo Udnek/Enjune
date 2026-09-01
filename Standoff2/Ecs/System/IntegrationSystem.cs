@@ -6,20 +6,17 @@ using Standoff2.Ecs.Component;
 
 namespace Standoff2.Ecs.System;
 
-public class IntegrationSystem : SingleQuerySystem
+public class IntegrationSystem : ISystem
 {
-    protected override Query BuildQuery(Query.Builder builder)
+    private Query<Position, Velocity, Acceleration> _query;
+    public void OnInit(World world)
     {
-        return builder
-            .With<Position>()
-            .With<Velocity>()
-            .With<Acceleration>()
-            .Build();
+        _query = new QueryBuilder(world).Retrieve<Position, Velocity, Acceleration>();
     }
 
-    public override void Update(World world)
+    public void OnUpdate(World world)
     {
-        Query.ForEach((
+        _query.ForEach((
             Entity entity,
             ref Position pos,
             ref Velocity vel,
