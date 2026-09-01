@@ -58,7 +58,7 @@ public class EditorSystem : ISystem
         _app.GraphicEngine.Objects[Guid.NewGuid()] = _axisObject;
     }
 
-    public void Initialize(World world)
+    public void OnInit(World world)
     {
         _world = world;
         _allQuery = Query.For(world)
@@ -71,7 +71,7 @@ public class EditorSystem : ISystem
             .Build();
     }
 
-    public void Update()
+    public void OnUpdate()
     {
         // do not update if focused
         if (_app.UiManager.Ui.IsFocused)
