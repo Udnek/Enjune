@@ -13,7 +13,6 @@ public readonly record struct ResultOrError<T>
         Error = error;
     }
     
-    [Pure]
     public TTo Map<TTo>(Func<T, TTo> whenSuccess, Func<Error, TTo> whenFailure)
         => Error is null ? whenSuccess(_value) : whenFailure((Error)Error);
 

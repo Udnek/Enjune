@@ -115,7 +115,17 @@ public class UiManager : AbstractDisposable
                 
                 // adding inputs
                 _inspectorComps.Children.Clear();
-                List<(string Name, float Val)> components = [("aboba", 42f), ("bebra", 52), ("kek", 123)]; //  
+                List<(string Name, string Val)> components;
+                if (_app.EditorSystem.SelectedEntity is null) 
+                    components = [("nothing selected", ":(")];
+                else
+                {
+                    _app.World
+                }
+                List<(string Name, float Val)> components = [("aboba", 42f), ("bebra", 52), ("kek", 123)];
+                
+                
+                
                 const float elemYSize = 40f;
                 const float betweenComp = 10f;
             

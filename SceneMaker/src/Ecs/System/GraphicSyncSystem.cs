@@ -24,7 +24,7 @@ public class GraphicSyncSystem(GraphicEngine engine) : ISystem
             .With<Transform>().Build();
 
         _selectedInEditorQuery = Query.For(world)
-            .With<SelectedInEditor>()
+            //.With<SelectedInEditor>() // TODO return it
             .With<ModelComponent>().Build();
     }
 
@@ -33,7 +33,7 @@ public class GraphicSyncSystem(GraphicEngine engine) : ISystem
         #region Models
         {
             var graphicObjs = engine.Objects;
-            _modelQuery.ForEach((ref ModelComponent model, ref Transform transform) =>
+            _modelQuery.ForEach((Entity _, ref ModelComponent model, ref Transform transform) =>
             {
                 var obj = graphicObjs[model.GraphicId];
 
@@ -49,7 +49,7 @@ public class GraphicSyncSystem(GraphicEngine engine) : ISystem
         #region SpotLights
         {
             var graphicSpotLights = engine.SpotLights;
-            _spotLightQuery.ForEach((ref SpotLightComponent light, ref Transform transform) =>
+            _spotLightQuery.ForEach((Entity _, ref SpotLightComponent light, ref Transform transform) =>
             {
                 var graphicLight = graphicSpotLights[light.GraphicId];
 
@@ -74,7 +74,7 @@ public class GraphicSyncSystem(GraphicEngine engine) : ISystem
                 graphicObjects[key] = obj;
             }
             // highlighting
-            _selectedInEditorQuery.ForEach((ref ModelComponent model) =>
+            _selectedInEditorQuery.ForEach((Entity _, ref ModelComponent model) =>
             {
                 var obj = graphicObjects[model.GraphicId];
                 obj.IsHighlighted = true;

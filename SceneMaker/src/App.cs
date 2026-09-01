@@ -32,10 +32,10 @@ public class App : AbstractDisposable, IApp
     public EditorSystem EditorSystem { get; private set; } = null!;
     public UiManager UiManager { get; private set; } = null!;
     public readonly KeyBinds Binds;
+    public World World { get; private set; } = null!;
 
     #endregion
     
-    private World _world = null!;
     private readonly Wasd _wasd;
     private readonly KeyBinds.Bind _dumbTexturesBind;
 
@@ -83,17 +83,17 @@ public class App : AbstractDisposable, IApp
             var result = ResourceManager.LoadOrCreateWorld();
             if (result.Error != null)
                 return result.Error;
-            _world = result.GetOrThrow();
+            World = result.GetOrThrow();
             
-            _world.AddSystem(new GraphicSyncSystem(GraphicEngine));
+            World.AddSystem(new GraphicSyncSystem(GraphicEngine));
             EditorSystem = new EditorSystem(this);
-            _world.AddSystem(EditorSystem);
+            World.AddSystem(EditorSystem);
         }
         
         // adding models
-        Query.For(_world)
+        Query.For(World)
             .With<ModelComponent>()
-            .Build().ForEach((ref ModelComponent modelComponent) =>
+            .Build().ForEach((Entity _, ref ModelComponent modelComponent) =>
             {
                 GraphicEngine.Objects[modelComponent.GraphicId] = new GraphicObject()
                 {
@@ -104,9 +104,9 @@ public class App : AbstractDisposable, IApp
             });
         
         // adding lights
-        Query.For(_world)
+        Query.For(World)
             .With<SpotLightComponent>()
-            .Build().ForEach((ref SpotLightComponent light) =>
+            .Build().ForEach((Entity _, ref SpotLightComponent light) =>
             {
                 GraphicEngine.SpotLights[light.GraphicId] = new SpotLight();
             });
@@ -134,17 +134,19 @@ public class App : AbstractDisposable, IApp
             () => !GraphicApi.ShouldStop(),
             GraphicCycle
             );
-        var error = ResourceManager.Save(_world);
+        var error = ResourceManager.Save(World);
         error?.Log(this);
     }
 
     private void GraphicCycle(float deltaTime)
     {
         InputHandler.PrepareAtFrameStart();
-        _world.Update();
         
         // UI
         UiManager.Update(deltaTime); 
+        
+        // world
+        World.Update();
         
         // wasd && editor controller
         if (!UiManager.Ui.IsFocused)

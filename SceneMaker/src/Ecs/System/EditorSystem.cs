@@ -67,15 +67,18 @@ public class EditorSystem : ISystem
         _selectedQuery = Query.For(world)
             .With<ModelComponent>()
             .With<Transform>()
-            .With<SelectedInEditor>().Build();
+            //.With<SelectedInEditor>() // TODO return it
+            .Build();
     }
 
     public void Update()
     {
+        // do not update if focused
+        if (_app.UiManager.Ui.IsFocused)
+            return;
         GetCursorVectors(_app.WasdController.View, _app.GraphicEngine.Projection, out Vector3 camPos, out var camDir);
         Update(camPos, camDir);
     }
-
     
     private void Update(Vector3 camPos, Vector3 camDir)
     {
@@ -158,7 +161,7 @@ public class EditorSystem : ISystem
     {
         Entity? closest = null;
         var closestDistance = float.MaxValue;
-        _allQuery.ForEach((ref Transform transform, ref ModelComponent modelComp) =>
+        _allQuery.ForEach((Entity _, ref Transform transform, ref ModelComponent modelComp) =>
         {
             var model = modelComp.Model.Get(out var error);
             if (model is null)
