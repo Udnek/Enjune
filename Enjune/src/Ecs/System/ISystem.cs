@@ -2,6 +2,6 @@ namespace Enjune.Ecs.System;
 
 public interface ISystem
 {
-    void Initialize(World world);
-    void Update();
+    void OnInit(World world);
+    void OnUpdate(World world);
 }

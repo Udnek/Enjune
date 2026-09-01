@@ -5,17 +5,16 @@ using Standoff2.Ecs.Component;
 
 namespace Standoff2.Ecs.System;
 
-public class GravitySystem : SingleQuerySystem
+public class GravitySystem : ISystem
 {
-    
-    protected override Query BuildQuery(Query.Builder builder)
+    private Query<Acceleration> _query;
+    public void OnInit(World world)
     {
-        return builder.With<Acceleration>().Build();
+        _query = new QueryBuilder(world).Retrieve<Acceleration>();
     }
-
-    public override void Update()
+    public void OnUpdate(World world)
     {
-        Query.ForEach((Entity entity, ref Acceleration acc) =>
+        _query.ForEach((Entity entity, ref Acceleration acc) =>
         {
             // Simply add -9,80665 to Y acceleration
             // TODO: Consider changing this behavior to something more accurate
@@ -23,4 +22,6 @@ public class GravitySystem : SingleQuerySystem
             Logger.Info(this, $"Added gravitational acceleration to {entity}");
         });
     }
+
+    
 }
