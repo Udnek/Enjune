@@ -14,7 +14,8 @@ public class UiEditableText : UiText
         float globalZ,
         CompiledFont font,
         string text,
-        Color color) : base(children, localAnchor, margin, globalZ, font, text, color)
+        float textSize,
+        Color color) : base(children, localAnchor, margin, globalZ, font, text, textSize, color)
     {
         IsHovered.OnChange += (_, hovered)
             => Color.Val += new Vector4(0.4f, 0.4f, 0.4f, 0) * (hovered ? 1 : -1);
@@ -37,8 +38,7 @@ public class UiEditableText : UiText
             text = text[..^1];
 
         Text.Val = text;
-            
-        RegenerateMeshesEntirely();
+        
         return BeingFocusedAction.ContinueBeing;
     }
 }

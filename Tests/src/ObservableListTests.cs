@@ -6,23 +6,23 @@ namespace Tests;
 /// <summary>
 /// DeepSeek slop
 /// </summary>
-public class NotifyChangeListTests
+public class ObservableListTests
 {
     #region Constructors
 
     [Fact]
     public void Constructor_WithCapacity_ShouldCreateEmptyList()
     {
-        var list = new NotifyChangeList<string>(10);
+        var list = new ObservableList<string>(10);
         Assert.Empty(list);
-        Assert.IsType<NotifyChangeList<string>>(list);
+        Assert.IsType<ObservableList<string>>(list);
     }
 
     [Fact]
     public void Constructor_WithCollection_ShouldInitializeWithItems()
     {
         var source = new[] { "Apple", "Banana", "Cherry" };
-        var list = new NotifyChangeList<string>(source);
+        var list = new ObservableList<string>(source);
 
         Assert.Equal(3, list.Count);
         Assert.Equal("Apple", list[0]);
@@ -34,14 +34,14 @@ public class NotifyChangeListTests
     public void Constructor_WithEmptyCollection_ShouldCreateEmptyList()
     {
         var source = Enumerable.Empty<int>();
-        var list = new NotifyChangeList<int>(source);
+        var list = new ObservableList<int>(source);
         Assert.Empty(list);
     }
 
     [Fact]
     public void Constructor_WithNullCollection_ShouldThrowArgumentNullException()
     {
-        Assert.Throws<ArgumentNullException>(() => new NotifyChangeList<string>(null!));
+        Assert.Throws<ArgumentNullException>(() => new ObservableList<string>(null!));
     }
 
     #endregion
@@ -51,7 +51,7 @@ public class NotifyChangeListTests
     [Fact]
     public void ForEach_ShouldExecuteActionForEachItem()
     {
-        var list = new NotifyChangeList<int> { 1, 2, 3 };
+        var list = new ObservableList<int> { 1, 2, 3 };
         var results = new List<int>();
 
         list.ForEach(x => results.Add(x * 2));
@@ -62,7 +62,7 @@ public class NotifyChangeListTests
     [Fact]
     public void ForEach_WithEmptyList_ShouldDoNothing()
     {
-        var list = new NotifyChangeList<string>();
+        var list = new ObservableList<string>();
         bool actionCalled = false;
 
         list.ForEach(_ => actionCalled = true);
@@ -73,7 +73,7 @@ public class NotifyChangeListTests
     [Fact]
     public void ForEach_WithNullAction_ShouldThrowArgumentNullException()
     {
-        var list = new NotifyChangeList<int> { 1, 2, 3 };
+        var list = new ObservableList<int> { 1, 2, 3 };
 
         // List<T>.ForEach throws ArgumentNullException if the action is null.
         Assert.Throws<ArgumentNullException>(() => list.ForEach(null!));
@@ -82,7 +82,7 @@ public class NotifyChangeListTests
     [Fact]
     public void ForEach_ShouldNotFireAnyChangeEvents()
     {
-        var list = new NotifyChangeList<int> { 1, 2 };
+        var list = new ObservableList<int> { 1, 2 };
         bool addedFired = false;
         bool removedFired = false;
 
@@ -102,7 +102,7 @@ public class NotifyChangeListTests
     [Fact]
     public void Add_ShouldIncreaseCountAndFireAfterElementAdded()
     {
-        var list = new NotifyChangeList<string>();
+        var list = new ObservableList<string>();
         var eventArgs = new List<string>();
         list.AfterElementAdded += (item) => eventArgs.Add(item);
 
@@ -118,7 +118,7 @@ public class NotifyChangeListTests
     public void Add_AfterElementAdded_FiresAfterItemIsAdded()
     {
         // Proves the "After" semantic: the item is already in the list when the event runs.
-        var list = new NotifyChangeList<int>();
+        var list = new ObservableList<int>();
         bool containsDuringEvent = false;
 
         list.AfterElementAdded += (item) =>
@@ -135,7 +135,7 @@ public class NotifyChangeListTests
     [Fact]
     public void Add_ShouldNotThrowIfNoSubscribers()
     {
-        var list = new NotifyChangeList<int>();
+        var list = new ObservableList<int>();
         list.Add(10);
         Assert.Single(list);
     }
@@ -147,7 +147,7 @@ public class NotifyChangeListTests
     [Fact]
     public void Remove_ExistingItem_ShouldReturnTrueAndFireAfterElementRemoved()
     {
-        var list = new NotifyChangeList<string> { "A", "B" };
+        var list = new ObservableList<string> { "A", "B" };
         var removedItem = string.Empty;
         list.AfterElementRemoved += (item) => removedItem = item;
 
@@ -162,7 +162,7 @@ public class NotifyChangeListTests
     [Fact]
     public void Remove_AfterElementRemoved_FiresAfterItemIsRemoved()
     {
-        var list = new NotifyChangeList<int> { 1, 2, 3 };
+        var list = new ObservableList<int> { 1, 2, 3 };
         bool containsDuringEvent = true;
 
         list.AfterElementRemoved += (item) =>
@@ -179,7 +179,7 @@ public class NotifyChangeListTests
     [Fact]
     public void Remove_NonExistingItem_ShouldReturnFalseAndNotFireEvent()
     {
-        var list = new NotifyChangeList<string> { "A" };
+        var list = new ObservableList<string> { "A" };
         bool eventFired = false;
         list.AfterElementRemoved += (_) => eventFired = true;
 
@@ -197,7 +197,7 @@ public class NotifyChangeListTests
     [Fact]
     public void Insert_ShouldAddAtSpecifiedIndexAndFireAfterElementAdded()
     {
-        var list = new NotifyChangeList<string> { "A", "C" };
+        var list = new ObservableList<string> { "A", "C" };
         var eventArgs = new List<string>();
         list.AfterElementAdded += (item) => eventArgs.Add(item);
 
@@ -214,7 +214,7 @@ public class NotifyChangeListTests
     [Fact]
     public void Insert_AfterElementAdded_FiresAfterItemIsInserted()
     {
-        var list = new NotifyChangeList<int> { 1, 2 };
+        var list = new ObservableList<int> { 1, 2 };
         bool containsDuringEvent = false;
 
         list.AfterElementAdded += (item) =>
@@ -235,7 +235,7 @@ public class NotifyChangeListTests
     [Fact]
     public void RemoveAt_ShouldRemoveItemAndFireAfterElementRemoved()
     {
-        var list = new NotifyChangeList<string> { "X", "Y", "Z" };
+        var list = new ObservableList<string> { "X", "Y", "Z" };
         object? removedEventArg = null;
         list.AfterElementRemoved += (item) => removedEventArg = item;
 
@@ -250,7 +250,7 @@ public class NotifyChangeListTests
     [Fact]
     public void RemoveAt_AfterElementRemoved_FiresAfterItemIsRemoved()
     {
-        var list = new NotifyChangeList<int> { 10, 20, 30 };
+        var list = new ObservableList<int> { 10, 20, 30 };
         bool containsDuringEvent = true;
 
         list.AfterElementRemoved += (item) =>
@@ -267,7 +267,7 @@ public class NotifyChangeListTests
     [Fact]
     public void RemoveAt_InvalidIndex_ShouldThrowArgumentOutOfRangeException()
     {
-        var list = new NotifyChangeList<int> { 1, 2 };
+        var list = new ObservableList<int> { 1, 2 };
         Assert.Throws<ArgumentOutOfRangeException>(() => list.RemoveAt(99));
     }
 
@@ -278,7 +278,7 @@ public class NotifyChangeListTests
     [Fact]
     public void Clear_WithItems_ShouldRemoveAllAndFireAfterElementRemovedForEachItem()
     {
-        var list = new NotifyChangeList<int> { 1, 2, 3 };
+        var list = new ObservableList<int> { 1, 2, 3 };
         var firedItems = new List<int>();
         list.AfterElementRemoved += (item) => firedItems.Add(item);
 
@@ -294,7 +294,7 @@ public class NotifyChangeListTests
     [Fact]
     public void Clear_AfterElementRemoved_FiresAfterListIsAlreadyCleared()
     {
-        var list = new NotifyChangeList<int> { 10, 20 };
+        var list = new ObservableList<int> { 10, 20 };
         int countDuringEvent = -1;
 
         list.AfterElementRemoved += (_) =>
@@ -311,7 +311,7 @@ public class NotifyChangeListTests
     [Fact]
     public void Clear_WithEmptyList_ShouldDoNothingAndNotFireEvents()
     {
-        var list = new NotifyChangeList<string>();
+        var list = new ObservableList<string>();
         bool eventFired = false;
         list.AfterElementRemoved += (_) => eventFired = true;
 
@@ -328,7 +328,7 @@ public class NotifyChangeListTests
     [Fact]
     public void Indexer_Set_ShouldFireAfterElementRemovedForOld_ThenAfterElementAddedForNew()
     {
-        var list = new NotifyChangeList<string> { "OldValue" };
+        var list = new ObservableList<string> { "OldValue" };
         var eventLog = new List<string>();
 
         list.AfterElementRemoved += (item) => eventLog.Add($"Removed: {item}");
@@ -347,7 +347,7 @@ public class NotifyChangeListTests
     [Fact]
     public void Indexer_Set_AfterElementRemovedShouldSeeTheNewValueInList()
     {
-        var list = new NotifyChangeList<int> { 100 };
+        var list = new ObservableList<int> { 100 };
         int? oldValueDuringEvent = null;
         int? newValueDuringEvent = null;
 
@@ -366,7 +366,7 @@ public class NotifyChangeListTests
     [Fact]
     public void Indexer_Set_AfterElementAddedShouldSeeTheNewValueInList()
     {
-        var list = new NotifyChangeList<int> { 100 };
+        var list = new ObservableList<int> { 100 };
         int? valueDuringEvent = null;
 
         list.AfterElementAdded += (item) =>
@@ -386,7 +386,7 @@ public class NotifyChangeListTests
     [Fact]
     public void Contains_ShouldReturnCorrectResult()
     {
-        var list = new NotifyChangeList<string> { "Apple", "Banana" };
+        var list = new ObservableList<string> { "Apple", "Banana" };
         Assert.True(list.Contains("Apple"));
         Assert.False(list.Contains("Cherry"));
     }
@@ -394,7 +394,7 @@ public class NotifyChangeListTests
     [Fact]
     public void IndexOf_ShouldReturnCorrectIndex()
     {
-        var list = new NotifyChangeList<string> { "Apple", "Banana" };
+        var list = new ObservableList<string> { "Apple", "Banana" };
         Assert.Equal(1, list.IndexOf("Banana"));
         Assert.Equal(-1, list.IndexOf("Cherry"));
     }
@@ -402,7 +402,7 @@ public class NotifyChangeListTests
     [Fact]
     public void CopyTo_ShouldCopyElementsToArray()
     {
-        var list = new NotifyChangeList<int> { 1, 2, 3 };
+        var list = new ObservableList<int> { 1, 2, 3 };
         var array = new int[3];
 
         list.CopyTo(array, 0);
@@ -413,7 +413,7 @@ public class NotifyChangeListTests
     [Fact]
     public void CopyTo_ThrowsIfArrayTooSmall()
     {
-        var list = new NotifyChangeList<int> { 1, 2, 3 };
+        var list = new ObservableList<int> { 1, 2, 3 };
         var array = new int[2];
 
         Assert.Throws<ArgumentException>(() => list.CopyTo(array, 0));
@@ -422,7 +422,7 @@ public class NotifyChangeListTests
     [Fact]
     public void GetEnumerator_ShouldIterateOverAllItems()
     {
-        var list = new NotifyChangeList<string> { "A", "B" };
+        var list = new ObservableList<string> { "A", "B" };
         var items = new List<string>();
 
         foreach (var item in list) items.Add(item);
@@ -433,7 +433,7 @@ public class NotifyChangeListTests
     [Fact]
     public void ExplicitNonGenericEnumerator_ShouldWorkCorrectly()
     {
-        var list = new NotifyChangeList<int> { 1, 2 };
+        var list = new ObservableList<int> { 1, 2 };
         IEnumerable enumerable = list;
 
         var enumerator = enumerable.GetEnumerator();
@@ -451,12 +451,12 @@ public class NotifyChangeListTests
     #region Interface Compliance
 
     [Fact]
-    public void IsReadOnly_ShouldReturnFalse() => Assert.False(new NotifyChangeList<int>().IsReadOnly);
+    public void IsReadOnly_ShouldReturnFalse() => Assert.False(new ObservableList<int>().IsReadOnly);
 
     [Fact]
     public void Count_ShouldReturnCorrectNumberOfItems()
     {
-        var list = new NotifyChangeList<int> { 1, 2, 3 };
+        var list = new ObservableList<int> { 1, 2, 3 };
         Assert.Equal(3, list.Count);
         list.Remove(2);
         Assert.Equal(2, list.Count);
@@ -465,8 +465,8 @@ public class NotifyChangeListTests
     [Fact]
     public void Implements_INotifyChangeReadonlyList()
     {
-        var list = new NotifyChangeList<int>();
-        Assert.IsAssignableFrom<INotifyChangeReadonlyList<int>>(list);
+        var list = new ObservableList<int>();
+        Assert.IsAssignableFrom<IObservableReadonlyList<int>>(list);
         Assert.IsAssignableFrom<IReadOnlyList<int>>(list);
     }
 
@@ -477,7 +477,7 @@ public class NotifyChangeListTests
     [Fact]
     public void Add_WithNullReferenceType_ShouldFireAfterElementAddedWithNull()
     {
-        var list = new NotifyChangeList<string?>();
+        var list = new ObservableList<string?>();
         object? eventArg = "Not Null";
         list.AfterElementAdded += (item) => eventArg = item;
 
@@ -490,7 +490,7 @@ public class NotifyChangeListTests
     [Fact]
     public void Add_WithValueType_ShouldFireAfterElementAddedWithCorrectValue()
     {
-        var list = new NotifyChangeList<int>();
+        var list = new ObservableList<int>();
         int eventArg = 0;
         list.AfterElementAdded += (item) => eventArg = item;
 
@@ -504,7 +504,7 @@ public class NotifyChangeListTests
     public void Remove_WithReferenceType_ShouldFireAfterElementRemovedWithReference()
     {
         var obj = new object();
-        var list = new NotifyChangeList<object> { obj };
+        var list = new ObservableList<object> { obj };
         object? eventArg = null;
         list.AfterElementRemoved += (item) => eventArg = item;
 
@@ -518,7 +518,7 @@ public class NotifyChangeListTests
     {
         var obj1 = new object();
         var obj2 = new object();
-        var list = new NotifyChangeList<object> { obj1, obj2 };
+        var list = new ObservableList<object> { obj1, obj2 };
         var firedItems = new List<object>();
         list.AfterElementRemoved += (item) => firedItems.Add(item);
 

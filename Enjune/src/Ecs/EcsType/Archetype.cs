@@ -100,13 +100,9 @@ public sealed class Archetype
         foreach (IComponent component in components)
         {
             if (_columns.ContainsKey(component.GetType()))
-            {
                 _columns[component.GetType()].SetValue(row, component);
-            }
             else
-            {
                 Logger.Info(this, $"Omitting a component that does not belong to archetype {Signature}");
-            }
         }
 
         Rows++;
@@ -137,31 +133,17 @@ public sealed class Archetype
         SyncColumnCounts();
     }
     
-    private (Entity, List<IComponent>) GetSnapshot(Entity entity)
-    {
-        List<IComponent> components = [];
-        foreach (IColumn column in _columns.Values)
-        {
-            components.Add(column.GetValue(_entityToRow[entity]));
-        }
-        return (entity, components);
-    }
-    
-    internal IEnumerable<(Entity, List<IComponent>)> GetAllEntitySnapshots()
+    internal IEnumerable<(Entity, List<IComponent>)> GetEntitySnapshots()
     {
         for (int row = 0; row < Rows; row++)
-        {
-            yield return GetSnapshot(_rowToEntity[row]);
-        }
+            yield return (_rowToEntity[row], GetEntityComponents(_rowToEntity[row]).ToList());
     }
 
-    internal IEnumerable<IComponent> GetAllEntityComponents(Entity entity)
+    internal IEnumerable<IComponent> GetEntityComponents(Entity entity)
     {
         var index = _entityToRow[entity];
-        foreach ((Type type, IColumn column) in _columns)
-        {
+        foreach ((Type _, IColumn column) in _columns)
             yield return column.GetValue(index);
-        }
     }
 
     internal TComponent GetComponentCopy<TComponent>(Entity entity) where TComponent : struct, IComponent

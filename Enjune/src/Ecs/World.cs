@@ -1,3 +1,4 @@
+using Enjune.Attribute;
 using Enjune.Data;
 using Enjune.Data.Codec;
 using Enjune.Ecs.Component;
@@ -8,12 +9,13 @@ using Enjune.Misc;
 
 namespace Enjune.Ecs;
 
+[LogParams(logCallingMethod: true)]
 public sealed class World
 {
     public static readonly ICodec<World> WithoutSystemsCodec = new SimpleCodec<World>(
         world =>
         {
-            var allEntities = world.GetAllEntities();
+            var allEntities = world.GetAllEntities().ToList();
             List<DataObject> encodedEntities = new(allEntities.Count);
             foreach (var (entity, components) in allEntities)
             {
@@ -65,12 +67,6 @@ public sealed class World
     internal int CacheVersion { get; private set; } = 0;
     private List<Entity> _entities = [];
 
-    internal void InvalidateCache()
-    {
-        Logger.Info(this, "Invalidated cache");
-        CacheVersion++;
-    }
-
     public World(IEnumerable<ISystem> systems)
     {
         Logger.Info(this, "Registering managers using given systems and component types");
@@ -82,15 +78,22 @@ public sealed class World
             SystemManager.RegisterSystem(system);
     }
 
+    private void InvalidateCache()
+    {
+        Logger.Info(this, "Invalidated cache");
+        CacheVersion++;
+    }
+    
+    private int GetComponentId(Type component) => ComponentManager.GetIdByType(component);
+    
+    internal IEnumerable<Archetype> QueryArchetypes(Signature include, Signature exclude)
+        => ArchetypeManager.Query(include, exclude);
+    
     #region Public Api
 
     public void AddSystem(ISystem system) => SystemManager.RegisterSystem(system);
 
     public void Update() => SystemManager.UpdateAll();
-    
-    public IEnumerable<Archetype> QueryArchetypes(Signature include, Signature exclude)
-        => ArchetypeManager.Query(include, exclude);
-
 
     #region Entity Interactions
     public Entity AddEntity(Entity.Assembly assembly)
@@ -108,18 +111,12 @@ public sealed class World
         _entities.Remove(entity);
         InvalidateCache();
     }
-
-    public int GetComponentId(Type component)
-    {
-        return (int)ComponentManager.GetIdByType(component);
-    }
-
-    // Don't use in hot loops
+    
     public bool AddEntityComponent(Entity entity, IComponent component)
     {
         if (!_entities.Contains(entity)) 
         { 
-            Logger.Error(Logger.Domain.Ecs, $"{this}.{nameof(AddEntityComponent)}", $"{entity} doesn't exist"); 
+            Logger.Error(this, $"{entity} doesn't exist"); 
             return false; 
         }
         Archetype currentArchetype = ArchetypeManager.GetArchetypeByEntity(entity);
@@ -127,7 +124,7 @@ public sealed class World
 
         if (targetSignature.Equals(currentArchetype.Signature)) 
         {
-            Logger.Error(Logger.Domain.Ecs, $"{this}.{nameof(AddEntityComponent)}", $"Tried to add component that already exists");
+            Logger.Error(this, $"Tried to add component {component} that already exists");
             return false;
         }
 
@@ -136,7 +133,7 @@ public sealed class World
         ArchetypeManager.MoveEntity(entity, currentArchetype, targetArchetype);
         targetArchetype.SetComponent(entity, component);
 
-        Logger.Info(this, $"{nameof(AddEntityComponent)}: Added component successfully");
+        Logger.Info(this,  $"Added component {component} successfully");
         InvalidateCache();
         return true;
     }
@@ -146,7 +143,7 @@ public sealed class World
     {
         if (!_entities.Contains(entity)) 
         { 
-            Logger.Error(Logger.Domain.Ecs, $"{this}.{nameof(RemoveEntityComponent)}", $"{entity} doesn't exist"); 
+            Logger.Error(this, $"{entity} doesn't exist"); 
             return false; 
         }
         Archetype currentArchetype = ArchetypeManager.GetArchetypeByEntity(entity);
@@ -154,7 +151,7 @@ public sealed class World
 
         if (targetSignature.Equals(currentArchetype.Signature)) 
         { 
-            Logger.Error(Logger.Domain.Ecs, $"{this}.{nameof(RemoveEntityComponent)}", $"Trying to remove a component that doesn't exist");
+            Logger.Error(this, $"Trying to remove a component {typeof(TComponent)} that doesn't exist");
             return false;
         }
 
@@ -166,6 +163,10 @@ public sealed class World
         InvalidateCache();
         return true;
     }
+    
+    #endregion
+    
+    #region Heavy Api
 
     // Don't use in hot loops
     // Returns a copy of a component
@@ -173,7 +174,7 @@ public sealed class World
     {
         if (!_entities.Contains(entity))
         {
-            Logger.Error(Logger.Domain.Ecs, $"{this}.{nameof(GetEntityComponent)}", $"{entity} doesn't exist");
+            Logger.Error(this, $"{entity} doesn't exist");
             return null;
         }
 
@@ -186,7 +187,7 @@ public sealed class World
     {
         if (!_entities.Contains(entity))
         {
-            Logger.Error(Logger.Domain.Ecs, $"{this}.{nameof(ModifyEntityComponent)}", $"{entity} doesn't exist");
+            Logger.Error(this, $"{entity} doesn't exist");
             return false;
         }
 
@@ -197,17 +198,21 @@ public sealed class World
     }
 
     // Don't use in hot loops
-    public List<(Entity Entity, List<IComponent> Components)> GetAllEntities()
+    public IEnumerable<IComponent> GetEntityComponents(Entity entity)
     {
-        List<(Entity, List<IComponent>)> snapshots = [];
+        return ArchetypeManager.GetArchetypeByEntity(entity).GetEntityComponents(entity);
+    }
+    
+    // Don't use in hot loops
+    public IEnumerable<(Entity Entity, List<IComponent> Components)> GetAllEntities()
+    {
         foreach (var archetype in QueryArchetypes(Signature.Empty, Signature.Empty))
         {
-            foreach (var snapshot in archetype.GetAllEntitySnapshots())
+            foreach (var snapshot in archetype.GetEntitySnapshots())
             {
-                snapshots.Add(snapshot);
+                yield return snapshot;
             }
         }
-        return snapshots;
     }
 
     #endregion

@@ -3,7 +3,7 @@ using System.Collections;
 namespace Enjune.Misc;
 
 
-public interface INotifyChangeReadonlyList<T> : IReadOnlyList<T>
+public interface IObservableReadonlyList<T> : IReadOnlyList<T>
 {
     event Action<T> AfterElementAdded;
     event Action<T> AfterElementRemoved;
@@ -11,13 +11,13 @@ public interface INotifyChangeReadonlyList<T> : IReadOnlyList<T>
     public void ForEach(Action<T> action);
 }
 
-public class NotifyChangeList<T> : IList<T>, INotifyChangeReadonlyList<T>
+public class ObservableList<T> : IList<T>, IObservableReadonlyList<T>
 {
     private readonly List<T> _list;
 
-    public NotifyChangeList(int capacity = 0) => _list = new List<T>(capacity);
+    public ObservableList(int capacity = 0) => _list = new List<T>(capacity);
 
-    public NotifyChangeList(IEnumerable<T> collection) => _list = new List<T>(collection);
+    public ObservableList(IEnumerable<T> collection) => _list = new List<T>(collection);
 
     public event Action<T>? AfterElementAdded;
     public event Action<T>? AfterElementRemoved;

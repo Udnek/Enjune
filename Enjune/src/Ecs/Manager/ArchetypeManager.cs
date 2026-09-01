@@ -57,13 +57,14 @@ public sealed class ArchetypeManager(World world)
     internal void MoveEntity(Entity entity, Archetype from, Archetype to)
     {
         Logger.Info(this, $"Moving {entity} from {from.Signature} to {to.Signature}");
-        to.AddEntity(entity, from.GetAllEntityComponents(entity));
+        to.AddEntity(entity, from.GetEntityComponents(entity));
         from.RemoveEntity(entity);
         _entityToArchetype[entity] = to;
     }
 
     internal Archetype GetArchetypeByEntity(Entity entity)
         => _entityToArchetype[entity];
+    
     internal Archetype GetOrAddArchetypeBySignature(Signature signature)
     {
         EnsureArchetypeExistence(signature);

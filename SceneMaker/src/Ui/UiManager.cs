@@ -1,9 +1,11 @@
 using System.Diagnostics;
 using Enjune.Attribute;
+using Enjune.Data.Json;
 using Enjune.Ecs.EcsType;
 using Enjune.Graphic.Asset.Font;
 using Enjune.Graphic.Key;
 using Enjune.Misc;
+using Enjune.Registering;
 using SceneMaker.Misc;
 using UiAddon;
 using UiAddon.Element;
@@ -19,7 +21,6 @@ public class UiManager : AbstractDisposable
     public readonly UiAddon.Element.Ui Ui;
     private readonly UiText _fps;
     private readonly UiRect _inspectorBackground;
-    //private readonly UiText _text;
     private readonly UiRect _toggleVisibilityButton;
     private readonly UiDirectory _inspectorComps;
     private readonly KeyBinds.Bind _sizeChangeBind = new("ui_size_change", KeyCode.LeftCtrl, true);
@@ -37,6 +38,7 @@ public class UiManager : AbstractDisposable
             99,
             font, 
             "fps",
+            20,
             Colors.UiText
         );
         
@@ -115,48 +117,76 @@ public class UiManager : AbstractDisposable
                 
                 // adding inputs
                 _inspectorComps.Children.Clear();
-                List<(string Name, string Val)> components;
-                if (_app.EditorSystem.SelectedEntity is null) 
-                    components = [("nothing selected", ":(")];
+                List<(string Name, string Content)> components = [];
+                var entity = _app.EditorSystem.SelectedEntity;
+                if (entity is null) 
+                    components.Add(("nothing selected", ":("));
                 else
                 {
-                    _app.World
+                    foreach (var component in _app.World.GetEntityComponents(entity.Value))
+                    {
+                        var compId = component.Id();
+                        var codec = Registries.Codec.Get(compId, out var getCodecErr);
+                        if (codec is null)
+                        {
+                            var errTxt = $"Codec for {compId} not found: {getCodecErr}";
+                            Logger.Warn(this, errTxt);
+                            components.Add((compId.ToString(), errTxt));
+                            continue;
+                        }
+
+                        var resultOrError = codec.EncodeObj(component);
+                        resultOrError.Map(data =>
+                        {
+                            components.Add((compId.ToString(), JsonSerde.Indent4.Serialize(data)));
+                        },
+                        err =>
+                        {
+                            var errTxt = $"Can not encode component {component}: {err}";
+                            Logger.Warn(this, errTxt);
+                            components.Add((compId.ToString(), errTxt));
+                        });
+                    }
                 }
-                List<(string Name, float Val)> components = [("aboba", 42f), ("bebra", 52), ("kek", 123)];
                 
-                
-                
-                const float elemYSize = 40f;
+                const float previousYSize = 0f;
                 const float betweenComp = 10f;
             
-                float yOffset = betweenComp + elemYSize;
+                float yOffset = betweenComp + previousYSize;
                 foreach (var component in components)
                 {
+                    var ySize = (component.Content.Count('\n') + 1) * 40f;
+                    
                     var nameElem = new UiText([],
-                        Anchor.OfXy((0, 0), Anchor.Stretch),
+                        Anchor.FixedAt(0, 1),
                         Margin.No,
                         3,
                         _font,
                         component.Name,
+                        20,
                         Colors.UiText);
 
-                    var valueElem = new UiEditableText([],
-                        Anchor.OfXy((0.3f, 1f), Anchor.Stretch),
+                    var contentElem = new UiEditableText([],
+                        Anchor.OfXy((0.3f, 1f), (1, 1)),
                         Margin.No,
                         3,
                         _font,
-                        component.Val.ToString(),
+                        component.Content,
+                        20,
                         Colors.UiText
                     );
 
-                    var elem = new UiRect([nameElem, valueElem],
-                        Anchor.OfXy(Anchor.Stretch, (1, 1)),
-                        new Margin(betweenComp, -elemYSize / 2, betweenComp, -elemYSize / 2).Move(0, -yOffset),
+                    var elem = new UiRect([nameElem, contentElem],
+                        Anchor.OfXy(Anchor.Stretch, (1f, 1f)),
+                        new Margin(
+                            10, -ySize / 2,
+                            10, -ySize / 2)
+                            .Move(0, -yOffset),
                         2,
                         Colors.Blue
                     );    
    
-                    yOffset += elemYSize+betweenComp;
+                    yOffset += ySize+betweenComp;
                     _inspectorComps.Children.Add(elem);
                 }
             }

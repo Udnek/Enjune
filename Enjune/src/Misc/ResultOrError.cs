@@ -15,6 +15,14 @@ public readonly record struct ResultOrError<T>
     
     public TTo Map<TTo>(Func<T, TTo> whenSuccess, Func<Error, TTo> whenFailure)
         => Error is null ? whenSuccess(_value) : whenFailure((Error)Error);
+    
+    public void Map(Action<T> whenSuccess, Action<Error> whenFailure)
+    {
+        if (Error is null)
+            whenSuccess(_value);
+        else
+            whenFailure((Error)Error);
+    }
 
     public ResultOrError<TTo> AndThen<TTo>(Func<T, ResultOrError<TTo>> run) 
         => Error is null ? run(_value) : ResultOrError.Failure<TTo>(Error.Value);

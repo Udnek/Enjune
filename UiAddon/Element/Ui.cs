@@ -15,7 +15,7 @@ public sealed class Ui : UiElement, IDisposable
     }
 
     // public api
-    public readonly NotifyChange<float> PixelsPerUnit = 1;
+    public readonly ObservableValue<float> PixelsPerUnit = 1;
     public bool IsFocused => FocusedElement is not null;
     public UiElement? FocusedElement { get; private set; }
     
@@ -68,7 +68,7 @@ public sealed class Ui : UiElement, IDisposable
         RecursiveChildrenExplore(elem =>
         {
             if (!elem.LocalVisible) return false;
-            _meshes.AddRange(elem.Meshes);
+            elem.Displays.ForEach(d => _meshes.AddRange(d.Meshes));
             return true;
         });
     }
@@ -80,18 +80,6 @@ public sealed class Ui : UiElement, IDisposable
         var rect = new Rect((0f, 0f), (x, y));
         _projectionTransform = Matrix4.CreateOrthographicOffCenter(0, x, 0, y, -100, 100);
         UpdateGlobalRect(rect);
-    }
-
-    protected override void UpdateShape(Rect oldValue, Rect newValue)
-    {
-        Children.ForEach(ch => Upd(ch, newValue));
-        return;
-        
-        void Upd(UiElement elem, Rect parentRect)
-        {
-            elem.UpdateGlobalRect(parentRect);
-            elem.Children.ForEach(ch => Upd(ch, elem.GlobalRect));
-        }
     }
     
     private void RecheckHoveredElements()
@@ -131,7 +119,7 @@ public sealed class Ui : UiElement, IDisposable
     [Pure]
     private Model CreateModel() => new(_meshes.ToArray());
 
-    protected override void OnChildMeshesChanges() => _someMeshesChanged = true;
+    public override void OnMeshesChanged() => _someMeshesChanged = true;
 
     // utils
     

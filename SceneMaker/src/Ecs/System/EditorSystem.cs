@@ -67,7 +67,7 @@ public class EditorSystem : ISystem
         _selectedQuery = Query.For(world)
             .With<ModelComponent>()
             .With<Transform>()
-            //.With<SelectedInEditor>() // TODO return it
+            .With<SelectedInEditor>()
             .Build();
     }
 
@@ -161,18 +161,18 @@ public class EditorSystem : ISystem
     {
         Entity? closest = null;
         var closestDistance = float.MaxValue;
-        _allQuery.ForEach((Entity _, ref Transform transform, ref ModelComponent modelComp) =>
+        _allQuery.ForEach((Entity entity, ref Transform transform, ref ModelComponent modelComp) =>
         {
             var model = modelComp.Model.Get(out var error);
             if (model is null)
             {
-                Logger.Warn(this, $"Model for {{TODO entity}} is null: {error}");
+                Logger.Warn(this, $"Model for {entity} is null: {error}");
                 return;
             }
             if (!EditorMisc.TraceObject(camPos, camDir, model, transform.Matrix, out var distance)) return;
             if (distance >= closestDistance) return;
             closestDistance = distance;
-            closest = new Entity(0); // TODO
+            closest = entity;
         });
         return closest;
     }

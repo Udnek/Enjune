@@ -24,7 +24,7 @@ public class GraphicSyncSystem(GraphicEngine engine) : ISystem
             .With<Transform>().Build();
 
         _selectedInEditorQuery = Query.For(world)
-            //.With<SelectedInEditor>() // TODO return it
+            .With<SelectedInEditor>()
             .With<ModelComponent>().Build();
     }
 
@@ -74,7 +74,7 @@ public class GraphicSyncSystem(GraphicEngine engine) : ISystem
                 graphicObjects[key] = obj;
             }
             // highlighting
-            _selectedInEditorQuery.ForEach((Entity _, ref ModelComponent model) =>
+            _selectedInEditorQuery.ForEach((Entity _, ref SelectedInEditor _, ref ModelComponent model) =>
             {
                 var obj = graphicObjects[model.GraphicId];
                 obj.IsHighlighted = true;

@@ -6,6 +6,4 @@ public class UiDirectory(UiElement[] children, Rect localAnchor, Margin margin)
     public UiDirectory(UiElement[] children) : this(children, Anchor.FullStretch, UiAddon.Margin.No)
     {
     } 
-
-    protected override void UpdateShape(Rect oldValue, Rect newValue) { }
 }

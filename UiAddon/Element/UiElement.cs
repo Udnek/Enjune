@@ -1,30 +1,34 @@
+using System.Collections.ObjectModel;
+using Enjune.Attribute;
 using Enjune.Graphic;
 using Enjune.Graphic.Key;
 using Enjune.Graphic.Modeling;
 using Enjune.KitStart;
 using Enjune.Misc;
+using UiAddon.Display;
 
 namespace UiAddon.Element;
 
+[LogParams(logCallingMethod: true)]
 public abstract class UiElement
 {
     #region Public
     public Rect GlobalRect => _globalRect;
     
-    public readonly NotifyChange<float> GlobalZ;
-    public readonly NotifyChange<Rect> LocalAnchor;
-    public readonly NotifyChange<Margin> Margin;
-    public readonly NotifyChange<bool> LocalVisible = true; // self and children visibility
-    public readonly NotifyChange<bool> IsHovered = false;
+    public readonly ObservableValue<float> GlobalZ;
+    public readonly ObservableValue<Rect> LocalAnchor;
+    public readonly ObservableValue<Margin> Margin;
+    public readonly ObservableValue<bool> LocalVisible = true; // self and children visibility
+    public readonly ObservableValue<bool> IsHovered = false;
     
     public IList<UiElement> Children => _children;
-    public IList<Model.Entry> Meshes => _meshes;
+    public IList<UiDisplay> Displays => _displays;
     #endregion
     
-    private readonly NotifyChange<Rect> _globalRect = new Rect((0, 0), (500, 500));
+    private readonly ObservableValue<Rect> _globalRect = new Rect((0, 0), (500, 500));
     private UiElement? _parent;
-    private readonly NotifyChangeList<UiElement> _children;
-    private readonly NotifyChangeList<Model.Entry> _meshes = [];
+    private readonly ObservableList<UiElement> _children;
+    private readonly ObservableList<UiDisplay> _displays = [];
 
     protected UiElement(UiElement[] children, Rect localAnchor, Margin margin, float globalZ)
     {
@@ -33,32 +37,45 @@ public abstract class UiElement
         GlobalZ = globalZ;
 
         #region Children
-        _children = new NotifyChangeList<UiElement>(children.Length);
+        _children = new ObservableList<UiElement>(children.Length);
         _children.AfterElementAdded += child =>
         {
             child._parent = this;
-            if (child.Meshes.Count > 0)
-                NotifyParentAboutMeshChanges();
+            OnMeshesChanged();
         };
         _children.AfterElementRemoved += child =>
         {
             child._parent = null;
-            if (child.Meshes.Count > 0)
-                NotifyParentAboutMeshChanges();
+            OnMeshesChanged();
         };
         children.ForEach(ch => _children.Add(ch));
         #endregion
         
-        #region Meshes
-        _meshes.AfterElementAdded += _ => NotifyParentAboutMeshChanges();
-        _meshes.AfterElementRemoved += _ => NotifyParentAboutMeshChanges();
+        #region Displayes
+
+        _displays.AfterElementAdded += display =>
+        {
+            display.Parent = this;
+            OnMeshesChanged();
+        };
+        _displays.AfterElementRemoved += display => 
+        {
+            display.Parent = null;
+            OnMeshesChanged();
+        };
+        
         #endregion
         
         GlobalZ.OnChange += (oldValue, newValue) =>
         {
             var diff = newValue - oldValue;
-            foreach (var entry in Meshes)
-                entry.Mesh.Offset((0, 0, diff));
+            foreach (var display in Displays)
+            {
+                foreach (var mesh in display.Meshes)
+                {
+                    mesh.Mesh.Offset((0, 0, diff));
+                }
+            }
         };
         LocalAnchor.OnChange += (_, _) =>
         {
@@ -74,48 +91,24 @@ public abstract class UiElement
             else 
                 UpdateGlobalRect(_parent._globalRect);
         };
-        LocalVisible.OnChange += (_, _) => NotifyParentAboutMeshChanges();
+        LocalVisible.OnChange += (_, _) => OnMeshesChanged();
 
 
         _globalRect.OnChange += (_, newRect) => _children.ForEach(ch => ch.UpdateGlobalRect(newRect));
-        _globalRect.OnChange += UpdateShape;
-    }
-
-    protected abstract void UpdateShape(Rect oldValue, Rect newValue);
-
-    // debug purpose
-    protected void AddDebugArrowsToMeshes()
-    {
-        var anchorSize = MathF.Max(10, MathF.Sqrt(_globalRect.Val.Size.X + _globalRect.Val.Size.Y));
-        var color = Color.One;
-        {
-            var minAnchor = Mesh.Triangle((0.5f, 0, 0), (1, 1, 0), (0, 0.5f, 0), TextureQuad.Full);
-            minAnchor.Offset((-1, -1, 0));
-            minAnchor.Multiply(new Vector3(anchorSize)); // just resizing to be visible on screen;
-            minAnchor.Offset(new Vector3(_globalRect.Val.Min));
-            minAnchor.Offset((0, 0, GlobalZ + 5));
-            Meshes.Add(new Model.Entry(minAnchor, new Model.PerMesh(color)));
-        }
-        {
-            var maxAnchor = Mesh.Triangle((0f, 0, 0), (1f, 0.5f, 0), (0.5f, 1, 0), TextureQuad.Full);
-            maxAnchor.Multiply(new Vector3(anchorSize)); // just resizing to be visible on screen;
-            maxAnchor.Offset(new Vector3(_globalRect.Val.Max));
-            maxAnchor.Offset((0, 0, GlobalZ + 5));
-            Meshes.Add(new Model.Entry(maxAnchor, new Model.PerMesh(color)));
-        }
+        _globalRect.OnChange += (oldR, newR) => Displays.ForEach(d => d.UpdateMeshes(oldR, newR));
     }
     
     private void NotifyParentAboutMeshChanges()
     {
         if (_parent is null)
         {
-            Logger.Warn(this, $"can not execute {nameof(NotifyParentAboutMeshChanges)} cause {nameof(_parent)} is null");
+            Logger.Warn(this, $"can not notify cause {nameof(_parent)} is null");
             return;
         }
-        _parent.OnChildMeshesChanges();
+        _parent.OnMeshesChanged();
     }
 
-    protected virtual void OnChildMeshesChanges() => NotifyParentAboutMeshChanges(); // pass it up
+    public virtual void OnMeshesChanged() => NotifyParentAboutMeshChanges(); // pass it up
 
     public void UpdateGlobalRect(Rect newParentRect)
     {
@@ -149,5 +142,15 @@ public abstract class UiElement
         StopBeing
     }
     
+    #endregion
+
+    #region Debug
+
+    // debug purpose
+    protected void AddDebugArrowsToMeshes()
+    {
+
+    }
+
     #endregion
 }
