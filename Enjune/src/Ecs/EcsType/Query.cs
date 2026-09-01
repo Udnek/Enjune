@@ -65,13 +65,13 @@ public sealed partial class QueryBuilder(World world)
     private readonly Signature.Builder _includeBuilder = new(world);
     private readonly Signature.Builder _excludeBuilder = new(world);
 
-    public QueryBuilder IncludeWith<T>() where T : struct, IComponent
+    public QueryBuilder Including<T>() where T : struct, IComponent
     {
         _includeBuilder.RegisterComponent<T>();
         return this;
     }
 
-    public QueryBuilder ExcludeWith<T>() where T : struct, IComponent
+    public QueryBuilder Excluding<T>() where T : struct, IComponent
     {
         _excludeBuilder.RegisterComponent<T>();
         return this;

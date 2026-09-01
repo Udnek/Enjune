@@ -17,10 +17,10 @@ public class IntegrationSystem : ISystem
     public void OnUpdate()
     {
         _query.ForEach((
-            Entity entity,
-            ref Position pos,
-            ref Velocity vel,
-            ref Acceleration acc) =>
+            entity,
+            ref pos,
+            ref vel,
+            ref acc) =>
         {
             const float dt = 0.01f;
             Logger.Info(this, $"processing entity? with params:\n" +
