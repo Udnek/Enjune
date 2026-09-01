@@ -1,21 +1,21 @@
 using Enjune.Ecs.EcsType;
 using Enjune.Ecs.System;
+using Enjune.Ecs;
 using Enjune.Misc;
 using Standoff2.Ecs.Component;
 
 namespace Standoff2.Ecs.System;
 
-public class GravitySystem : SingleQuerySystem
+public class GravitySystem : ISystem
 {
-    
-    protected override Query BuildQuery(Query.Builder builder)
+    private Query<Acceleration> _query = null!;
+    public void OnInit(World world)
     {
-        return builder.With<Acceleration>().Build();
+        _query = new QueryBuilder(world).Including<Position>().Retrieve<Acceleration>();
     }
-
-    public override void Update()
+    public void OnUpdate()
     {
-        Query.ForEach((Entity entity, ref Acceleration acc) =>
+        _query.ForEach((Entity entity, ref Acceleration acc) =>
         {
             // Simply add -9,80665 to Y acceleration
             // TODO: Consider changing this behavior to something more accurate

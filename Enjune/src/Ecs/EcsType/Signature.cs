@@ -19,13 +19,13 @@ public readonly record struct Signature
     public Signature Set(int bitPosition) => new(_bitSet | (SignatureInteger) 1 << bitPosition);
     [Pure]
     public Signature Unset(int bitPosition) => new(_bitSet & ~( (SignatureInteger) 1 << bitPosition));
-
+    
     public bool IsSet(int bitPosition) => (_bitSet & ( (SignatureInteger) 1 << bitPosition)) != 0;
 
     public bool Includes(Signature other) => (_bitSet & other._bitSet) == other._bitSet;
 
     public bool Excludes(Signature other) => (~other._bitSet & _bitSet) == _bitSet;
-    
+    public Signature Or(Signature other) => new(_bitSet | other._bitSet);
     public int GetSetBitsCount()
     {
         int cnt = 0;

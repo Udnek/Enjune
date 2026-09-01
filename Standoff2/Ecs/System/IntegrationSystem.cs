@@ -1,3 +1,4 @@
+using Enjune.Ecs;
 using Enjune.Ecs.EcsType;
 using Enjune.Ecs.System;
 using Enjune.Misc;
@@ -5,30 +6,27 @@ using Standoff2.Ecs.Component;
 
 namespace Standoff2.Ecs.System;
 
-public class IntegrationSystem : SingleQuerySystem
+public class IntegrationSystem : ISystem
 {
-    protected override Query BuildQuery(Query.Builder builder)
+    private Query<Position, Velocity, Acceleration> _query = null!;
+    public void OnInit(World world)
     {
-        return builder
-            .With<Position>()
-            .With<Velocity>()
-            .With<Acceleration>()
-            .Build();
+        _query = new QueryBuilder(world).Retrieve<Position, Velocity, Acceleration>();
     }
 
-    public override void Update()
+    public void OnUpdate()
     {
-        Query.ForEach((
-            Entity entity,
-            ref Position pos,
-            ref Velocity vel,
-            ref Acceleration acc) =>
+        _query.ForEach((
+            entity,
+            ref pos,
+            ref vel,
+            ref acc) =>
         {
             const float dt = 0.01f;
             Logger.Info(this, $"processing entity? with params:\n" +
-                                  $"- - - - Position:     {pos.ToString()}\n" +
-                                  $"- - - - Velocity:     {vel.ToString()}\n" +
-                                  $"- - - - Acceleration: {acc.ToString()}");
+                                  $"- - - - Position:     {pos}\n" +
+                                  $"- - - - Velocity:     {vel}\n" +
+                                  $"- - - - Acceleration: {acc}");
             // First we integrate positions
             pos.X += dt * vel.X;
             pos.Y += dt * vel.Y;

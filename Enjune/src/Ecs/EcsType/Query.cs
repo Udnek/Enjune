@@ -38,18 +38,11 @@ public partial class Query(World world, Signature include, Signature exclude)
 
     public static Builder For(World world) => new(world);
     
-    public sealed class Builder
+    public sealed class Builder(World world)
     {
-        private readonly World _world;
-        private readonly Signature.Builder _includeBuilder;
-        private readonly Signature.Builder _excludeBuilder;
-
-        internal Builder(World world)
-        {
-            _world = world;
-            _includeBuilder = new Signature.Builder(world);
-            _excludeBuilder = new Signature.Builder(world);
-        }
+        private readonly World _world = world;
+        private readonly Signature.Builder _includeBuilder = new(world);
+        private readonly Signature.Builder _excludeBuilder = new(world);
 
         public Builder With<T>() where T : IComponent
         {
@@ -64,5 +57,23 @@ public partial class Query(World world, Signature include, Signature exclude)
         }
 
         public Query Build() => new(_world, _includeBuilder.Build(), _excludeBuilder.Build());
+    }
+}
+public sealed partial class QueryBuilder(World world)
+{
+    private readonly World _world = world;
+    private readonly Signature.Builder _includeBuilder = new(world);
+    private readonly Signature.Builder _excludeBuilder = new(world);
+
+    public QueryBuilder Including<T>() where T : struct, IComponent
+    {
+        _includeBuilder.RegisterComponent<T>();
+        return this;
+    }
+
+    public QueryBuilder Excluding<T>() where T : struct, IComponent
+    {
+        _excludeBuilder.RegisterComponent<T>();
+        return this;
     }
 }
