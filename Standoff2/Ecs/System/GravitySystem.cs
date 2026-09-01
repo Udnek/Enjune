@@ -11,7 +11,7 @@ public class GravitySystem : ISystem
     private Query<Acceleration> _query = null!;
     public void OnInit(World world)
     {
-        _query = new QueryBuilder(world).Including<Position>().Retrieve<Acceleration>();
+        _query = new QueryBuilder(world).Retrieve<Acceleration>();
     }
     public void OnUpdate()
     {

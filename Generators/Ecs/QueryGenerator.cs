@@ -127,7 +127,7 @@ namespace Generators.Ecs
             sb.AppendLine(@"    {");
             foreach (string typeParam in typeParams)
             {
-                sb.AppendLine($"        IncludeWith<{typeParam}>();");
+                sb.AppendLine($"        Including<{typeParam}>();");
             }
             sb.AppendLine($"        return new Query<{typeParamList}>(_world, _includeBuilder.Build(), _excludeBuilder.Build());");
             sb.AppendLine(@"    }");
