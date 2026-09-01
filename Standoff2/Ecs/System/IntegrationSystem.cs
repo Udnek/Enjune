@@ -8,7 +8,7 @@ namespace Standoff2.Ecs.System;
 
 public class IntegrationSystem : ISystem
 {
-    private Query<Position, Velocity, Acceleration> _query;
+    private Query<Position, Velocity, Acceleration> _query = null!;
     public void OnInit(World world)
     {
         _query = new QueryBuilder(world).Retrieve<Position, Velocity, Acceleration>();
@@ -24,9 +24,9 @@ public class IntegrationSystem : ISystem
         {
             const float dt = 0.01f;
             Logger.Info(this, $"processing entity? with params:\n" +
-                                  $"- - - - Position:     {pos.ToString()}\n" +
-                                  $"- - - - Velocity:     {vel.ToString()}\n" +
-                                  $"- - - - Acceleration: {acc.ToString()}");
+                                  $"- - - - Position:     {pos}\n" +
+                                  $"- - - - Velocity:     {vel}\n" +
+                                  $"- - - - Acceleration: {acc}");
             // First we integrate positions
             pos.X += dt * vel.X;
             pos.Y += dt * vel.Y;
