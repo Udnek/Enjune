@@ -14,7 +14,7 @@ public class IntegrationSystem : ISystem
         _query = new QueryBuilder(world).Retrieve<Position, Velocity, Acceleration>();
     }
 
-    public void OnUpdate(World world)
+    public void OnUpdate()
     {
         _query.ForEach((
             Entity entity,

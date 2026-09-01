@@ -8,12 +8,12 @@ namespace Standoff2.Ecs.System;
 
 public class GravitySystem : ISystem
 {
-    private Query<Acceleration> _query;
+    private Query<Acceleration> _query = null!;
     public void OnInit(World world)
     {
         _query = new QueryBuilder(world).Retrieve<Acceleration>();
     }
-    public void OnUpdate(World world)
+    public void OnUpdate()
     {
         _query.ForEach((Entity entity, ref Acceleration acc) =>
         {
@@ -23,6 +23,4 @@ public class GravitySystem : ISystem
             Logger.Info(this, $"Added gravitational acceleration to {entity}");
         });
     }
-
-    
 }
