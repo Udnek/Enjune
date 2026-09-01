@@ -16,6 +16,6 @@ public sealed class SystemManager(World world)
     public void UpdateAll()
     {
         foreach (var system in _systems) 
-            system.OnUpdate(_world);
+            system.OnUpdate();
     }
 }
