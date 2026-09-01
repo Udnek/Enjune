@@ -18,15 +18,7 @@ public class EcsTestApp : AbstractDisposable, IApp
             new GravitySystem()
         ];
 
-        List<Type> componentTypes =
-        [
-            typeof(Position),
-            typeof(Velocity),
-            typeof(Acceleration),
-            typeof(Mass)
-        ];
-
-        _world = new World(systems, componentTypes);
+        _world = new World(systems);
         
         return null;
     }

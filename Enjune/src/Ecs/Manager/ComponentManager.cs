@@ -53,15 +53,12 @@ public sealed class ComponentManager
         return result;
     }
 
-    public ComponentTypeId GetIdByType(Type componentType)
+    internal ComponentTypeId GetIdByType(Type componentType)
     {
         if (!_typeToId.ContainsKey(componentType))
-        {
-            Logger.Error(this, $"Unknown component {componentType} requested. Did you forget to register it?");
-            throw new KeyNotFoundException($"Component type {componentType} was not registered in {this}");
-        }
+            RegisterComponentType(componentType);
         return _typeToId[componentType];
     }
 
-    public Type GetTypeByTypeId(ComponentTypeId componentTypeId) => _idToType[componentTypeId];
+    internal Type GetTypeByTypeId(ComponentTypeId componentTypeId) => _idToType[componentTypeId];
 }

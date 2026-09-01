@@ -64,13 +64,7 @@ public static class ResourceManager
     
     private static ResultOrError<World> CreateNewWorld()
     {
-        var world = new World([],
-            [
-                typeof(Transform),
-                typeof(ModelComponent),
-                typeof(SpotLightComponent),
-                typeof(SelectedInEditor)
-            ]);
+        var world = new World([]);
 
         // calavera
         world.AddEntity(new Entity.Assembly()

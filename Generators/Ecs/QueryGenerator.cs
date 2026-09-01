@@ -72,7 +72,7 @@ namespace Generators.Ecs
             sb.AppendLine("        {");
             sb.AppendLine("            for (int i = 0; i < col1.Count; i++)");
             sb.AppendLine("            {");
-            sb.AppendLine($"                    action(entities[i], {actionArgs});");
+            sb.AppendLine($"                action(entities[i], {actionArgs});");
             sb.AppendLine("            }");
             sb.AppendLine("        }");
             sb.AppendLine("    }");

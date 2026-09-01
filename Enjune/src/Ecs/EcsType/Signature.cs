@@ -43,17 +43,25 @@ public readonly record struct Signature
     public sealed class Builder(World world)
     {
         private readonly ComponentManager _componentManager = world.ComponentManager;
-        private Signature _signature = Empty;
+        private List<Type> _componentTypes = [];
 
         public Builder RegisterComponent<T>() => RegisterComponent(typeof(T));
 
         public Builder RegisterComponent(Type type)
         {
-            var bit = (int)_componentManager.GetIdByType(type);
-            _signature = _signature.Set(bit);
+            _componentTypes.Add(type);
             return this;
         }
 
-        public Signature Build() => _signature;
+        public Signature Build()
+        {
+            var signature = Empty;
+            foreach (var type in _componentTypes)
+            {
+                var bit = _componentManager.GetIdByType(type);
+                signature = signature.Set(bit);
+            }
+            return signature;
+        }
     }
 }

@@ -48,7 +48,7 @@ public sealed class World
                 entities.Add(assembly);
             }
 
-            var world = new World([], componentTypes);
+            var world = new World([]);
             foreach (var assembly in entities) 
                 world.AddEntity(assembly);
             return ResultOrError.Success(world);
@@ -71,15 +71,12 @@ public sealed class World
         CacheVersion++;
     }
 
-    public World(IEnumerable<ISystem> systems, IEnumerable<Type> componentTypes)
+    public World(IEnumerable<ISystem> systems)
     {
         Logger.Info(this, "Registering managers using given systems and component types");
 
         ArchetypeManager = new ArchetypeManager(this);
         SystemManager = new SystemManager(this);
-        
-        foreach (Type componentType in componentTypes) 
-            ComponentManager.RegisterComponentType(componentType);
         
         foreach (ISystem system in systems) 
             SystemManager.RegisterSystem(system);
