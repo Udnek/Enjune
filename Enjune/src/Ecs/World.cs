@@ -1,3 +1,4 @@
+using Enjune.Attribute;
 using Enjune.Data;
 using Enjune.Data.Codec;
 using Enjune.Ecs.Component;
@@ -8,6 +9,7 @@ using Enjune.Misc;
 
 namespace Enjune.Ecs;
 
+[LogParams(logCallingMethod:true)]
 public sealed class World
 {
     public static readonly ICodec<World> WithoutSystemsCodec = new SimpleCodec<World>(
@@ -119,7 +121,7 @@ public sealed class World
     {
         if (!_entities.Contains(entity)) 
         { 
-            Logger.Error(Logger.Domain.Ecs, $"{this}.{nameof(AddEntityComponent)}", $"{entity} doesn't exist"); 
+            Logger.Error(this, $"{entity} doesn't exist"); 
             return false; 
         }
         Archetype currentArchetype = ArchetypeManager.GetArchetypeByEntity(entity);
@@ -127,7 +129,7 @@ public sealed class World
 
         if (targetSignature.Equals(currentArchetype.Signature)) 
         {
-            Logger.Error(Logger.Domain.Ecs, $"{this}.{nameof(AddEntityComponent)}", $"Tried to add component that already exists");
+            Logger.Error(this, $"{entity} already has {component.GetType()}. Use {nameof(ModifyEntityComponent)}");
             return false;
         }
 
@@ -136,7 +138,7 @@ public sealed class World
         ArchetypeManager.MoveEntity(entity, currentArchetype, targetArchetype);
         targetArchetype.SetComponent(entity, component);
 
-        Logger.Info(this, $"{nameof(AddEntityComponent)}: Added component successfully");
+        Logger.Info(this, $"Added {component.GetType()} to {entity}");
         InvalidateCache();
         return true;
     }
@@ -146,7 +148,7 @@ public sealed class World
     {
         if (!_entities.Contains(entity)) 
         { 
-            Logger.Error(Logger.Domain.Ecs, $"{this}.{nameof(RemoveEntityComponent)}", $"{entity} doesn't exist"); 
+            Logger.Error(this, $"{entity} doesn't exist"); 
             return false; 
         }
         Archetype currentArchetype = ArchetypeManager.GetArchetypeByEntity(entity);
@@ -154,7 +156,7 @@ public sealed class World
 
         if (targetSignature.Equals(currentArchetype.Signature)) 
         { 
-            Logger.Error(Logger.Domain.Ecs, $"{this}.{nameof(RemoveEntityComponent)}", $"Trying to remove a component that doesn't exist");
+            Logger.Error(this, $"{entity} doesn't have {typeof(TComponent)}");
             return false;
         }
 
@@ -162,7 +164,7 @@ public sealed class World
 
         ArchetypeManager.MoveEntity(entity, currentArchetype, targetArchetype);
 
-        Logger.Info(this, $"{nameof(AddEntityComponent)}: Removed component successfully");
+        Logger.Info(this,$"Removed {typeof(TComponent)} from {entity} successfully");
         InvalidateCache();
         return true;
     }
@@ -173,12 +175,12 @@ public sealed class World
     {
         if (!_entities.Contains(entity))
         {
-            Logger.Error(Logger.Domain.Ecs, $"{this}.{nameof(GetEntityComponent)}", $"{entity} doesn't exist");
+            Logger.Error(this, $"{entity} doesn't exist");
             return null;
         }
 
         Archetype archetype = ArchetypeManager.GetArchetypeByEntity(entity);
-        return archetype.GetComponentCopy<TComponent>(entity);
+        return archetype.GetComponent<TComponent>(entity);
     }
 
     // Don't use in hot loops
@@ -186,7 +188,7 @@ public sealed class World
     {
         if (!_entities.Contains(entity))
         {
-            Logger.Error(Logger.Domain.Ecs, $"{this}.{nameof(ModifyEntityComponent)}", $"{entity} doesn't exist");
+            Logger.Error(this, $"{entity} doesn't exist");
             return false;
         }
 
