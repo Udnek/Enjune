@@ -1,23 +1,9 @@
-﻿using Enjune.Physic;
+﻿using Enjune.Physics;
 
 namespace EcsPhysicEngine
 {
-    public class EcsPhysicsEngine : IPhysicsEngine
+    public class EcsPhysicsEngine
     {
-        public IPhysicsWorld CreateWorld()
-        {
-            throw new NotImplementedException();
-        }
 
-
-
-        #region TheAbyss
-        // fuck this stupid useless chungis shitfuck method that exists purely to annoy me by its presence while serving no purpose whatsoever
-        public void Dispose()
-        {
-            //throw new NillKiggersException();
-            return;
-        }
-        #endregion
     }
 }
