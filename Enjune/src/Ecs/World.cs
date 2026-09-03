@@ -61,9 +61,6 @@ public sealed class World
     internal readonly ComponentManager ComponentManager = new ComponentManager();
     internal readonly EntityManager EntityManager = new EntityManager();
 
-    // This cache version marks broad archetype structure version:
-    // it increments when a new archetype gets created, but does not
-    // increment when archetype's entity container changes
     internal int CacheVersion { get; private set; } = 0;
     private List<Entity> _entities = [];
 

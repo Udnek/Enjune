@@ -13,7 +13,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenGLApi", "OpenGLApi\Open
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UiAddon", "UiAddon\UiAddon.csproj", "{43CF66EA-FB5E-4389-B74B-EDBB91C0DC54}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EcsPhysicEngine", "EcsPhysicEngine\EcsPhysicEngine.csproj", "{51FD890C-55AB-4712-B2C4-79E9A60B2535}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EcsPhysicsEngine", "EcsPhysicEngine\EcsPhysicsEngine.csproj", "{51FD890C-55AB-4712-B2C4-79E9A60B2535}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Standoff2", "Standoff2\Standoff2.csproj", "{72739987-0441-4139-8D1E-688228AEC29A}"
 EndProject

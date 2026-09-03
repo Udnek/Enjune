@@ -186,16 +186,12 @@ public sealed class Archetype
         column.SetValue(row, component);
     }
 
-    // TODO: Maybe think of a way to avoid reflection
     internal Column<TComponent> GetColumn<TComponent>() where TComponent : struct, IComponent
     {
         return (Column<TComponent>)_columns[typeof(TComponent)];
     }
 
-    internal Entity[] GetEntities()
-    {
-        return _rowToEntity;
-    }
+    internal Entity[] GetEntities() => _rowToEntity;
     
     public override string ToString() => $"{nameof(Archetype)}[{Signature}]";
 }

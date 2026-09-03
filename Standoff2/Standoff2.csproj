@@ -8,7 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\EcsPhysicEngine\EcsPhysicEngine.csproj" />
+      <ProjectReference Include="..\EcsPhysicEngine\EcsPhysicsEngine.csproj" />
       <ProjectReference Include="..\Enjune\Enjune.csproj" />
       <ProjectReference Include="..\OpenGLApi\OpenGLApi.csproj" />
       <ProjectReference Include="..\SceneMaker\SceneMaker.csproj" />
