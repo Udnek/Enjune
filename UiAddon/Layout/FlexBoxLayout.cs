@@ -7,7 +7,7 @@ namespace UiAddon.Layout;
 /// <summary>
 /// https://css-tricks.com/snippets/css/a-guide-to-flexbox/
 /// </summary>
-public readonly record struct FlexBox() : ILayout
+public readonly record struct FlexBoxLayout() : ILayout
 {
     #region Properties as container
 
@@ -23,48 +23,14 @@ public readonly record struct FlexBox() : ILayout
     public DimensionBehaviour MainMode { get; init; } = DimensionBehaviour.Grow;
     public DimensionBehaviour CrossMode { get; init; } = DimensionBehaviour.Grow;
 
-    public float MainMax
-    {
-        get;
-        init
-        {
-            field = value;
-            DesiredSizeXy = DesiredSizeXy; // updating to fit
-        }
-    } = float.PositiveInfinity;
-    public float MainMin
-    {         
-        get;
-        init
-        {
-            field = value;
-            DesiredSizeXy = DesiredSizeXy; // updating to fit
-        } } = 50;
-    public float CrossMax
-    { 
-        get;
-        init
-        {
-            field = value;
-            DesiredSizeXy = DesiredSizeXy; // updating to fit
-        } 
-    } = float.PositiveInfinity;
-    public float CrossMin
-    {
-        get;
-        init
-        {
-            field = value;
-            DesiredSizeXy = DesiredSizeXy; // updating to fit
-        }
-    } = 50;
+    public float MainMax { get; init; } = float.PositiveInfinity;
+    public float MainMin { get; init; } = 0;
+    public float CrossMax { get; init; } = float.PositiveInfinity;
+
+    public float CrossMin { get; init; } = 50;
 
     // size when it don't want to grow;
-    public Vector2 DesiredSizeXy
-    {
-        get;
-        init;
-    } = new();
+    public Vector2 DesiredSizeXy { get; init; } = new();
     
     #endregion
 
@@ -72,7 +38,7 @@ public readonly record struct FlexBox() : ILayout
     private Vector2 DesiredSize(Axis main) => (main == Axis.X) ? DesiredSizeXy : DesiredSizeXy.Yx;
 
     [System.Diagnostics.Contracts.Pure]
-    private FlexBox WithDesiredSize(Axis main, Vector2 value) => this with {DesiredSizeXy = (main == Axis.X) ? value : value.Yx};
+    private FlexBoxLayout WithDesiredSize(Axis main, Vector2 value) => this with {DesiredSizeXy = (main == Axis.X) ? value : value.Yx};
 
     public ILayout UpdateSelfLayoutAndChildrenRects(Rect selfRect, IList<IUiElement> allChildren)
     {
@@ -82,7 +48,7 @@ public readonly record struct FlexBox() : ILayout
         bool atLeastOneChild = false;
         foreach (var (child, _) in ValidChildren(allChildren))
         {
-            if (!selfRect.FullyContains(child.Rect)) 
+            if (!selfRect.FullyContains(child.Rect.Val)) 
                 Logger.Warn(this, $"Child {child.Rect.Val} out of bounds of parent {selfRect}");
             min = Vector2.ComponentMin(min, child.Rect.Val.Min);
             max = Vector2.ComponentMax(max, child.Rect.Val.Max);
@@ -95,12 +61,25 @@ public readonly record struct FlexBox() : ILayout
             max += (Padding.Right, Padding.Top);
         }
 
-        newLayout = newLayout with { DesiredSizeXy = max - min};
+        var desiredSize = newLayout.DesiredSizeXy;
+        var (xMode, yMode) = ToXy(MainMode, CrossMode);
+        if (xMode == DimensionBehaviour.Fit) 
+            desiredSize.X = max.X - min.X;
+        else if (xMode == DimensionBehaviour.Grow)
+            desiredSize.X = selfRect.Width;
+        
+        if (yMode == DimensionBehaviour.Fit) 
+            desiredSize.Y = max.Y - min.Y;
+        else if (xMode == DimensionBehaviour.Grow)
+            desiredSize.Y = selfRect.Height;
+        
+        
+        newLayout = newLayout with { DesiredSizeXy = desiredSize};
         
         return newLayout;
     }
 
-    private FlexBox UpdateChildren(Rect selfRect, IList<IUiElement> allChildren)
+    private FlexBoxLayout UpdateChildren(Rect selfRect, IList<IUiElement> allChildren)
     {
         var main = DirToAx(ContentDirection);
         Vector2 spaceTaken = new Vector2();
@@ -123,10 +102,10 @@ public readonly record struct FlexBox() : ILayout
             desiredSize = Vector2.Clamp(desiredSize, 
                 (childLayout.MainMin, childLayout.CrossMin), 
                 (childLayout.MainMax, childLayout.CrossMax));
-            Logger.Highlight(this, $"{nameof(desiredSize)}: {desiredSize}");
+
             spaceTaken.X += desiredSize.X; // adding space when main
             spaceTaken.Y = Math.Max(desiredSize.Y, spaceTaken.Y); // maxing when cross
-            child.Layout = childLayout.WithDesiredSize(main, desiredSize); // setting clamped value
+            child.Layout.Val = childLayout.WithDesiredSize(main, desiredSize); // setting clamped value
         }
         
         // we are adding gaps between children along main axis
@@ -134,12 +113,10 @@ public readonly record struct FlexBox() : ILayout
 
         var crossPossibleSize = ToMainCross(selfRect.Size).Y - crossPadding.Start - crossPadding.End;
         
-        Logger.Highlight(this, $"{nameof(spaceTaken)}: {spaceTaken}");
         
         #region Resizing
 
         Vector2 spaceAvailable = ToMainCross(selfRect.Size.X, selfRect.Size.Y) - spaceTaken;
-        Logger.Highlight(this, $"{nameof(spaceAvailable)}: {spaceAvailable}");
         
         // main
 
@@ -147,7 +124,6 @@ public readonly record struct FlexBox() : ILayout
         
         while (spaceAvailable.X > 0)
         {
-            Logger.Highlight(this, $"Going to grow main: {spaceAvailable.X}");
             int growers = 0;
             foreach (var (_, childLayout) in ValidChildren(allChildren))
             {
@@ -167,10 +143,9 @@ public readonly record struct FlexBox() : ILayout
                 var canGrow = childLayout.MainMax - desiredSize.X;
                 if (canGrow <= 0) continue;
                 var willGrow = Math.Min(canGrow, growPerChild);
-                Logger.Highlight(this, $"Growing child: {willGrow}");
                 spaceAvailable.X -= willGrow;
                 desiredSize.X += willGrow;
-                child.Layout = childLayout.WithDesiredSize(main, desiredSize);
+                child.Layout.Val = childLayout.WithDesiredSize(main, desiredSize);
             }
         }
         
@@ -180,7 +155,6 @@ public readonly record struct FlexBox() : ILayout
 
         while (spaceAvailable.X < 0)
         {
-            Logger.Highlight(this, $"Going to shrink main: {spaceAvailable.X}");
             int shrinkers = 0;
             foreach (var (_, childLayout) in ValidChildren(allChildren))
             {
@@ -200,7 +174,7 @@ public readonly record struct FlexBox() : ILayout
                 var willShrink = Math.Min(canShrink, shrinkPerChild);
                 spaceAvailable.X += willShrink;
                 desiredSize.X -= willShrink;
-                child.Layout = childLayout.WithDesiredSize(main, desiredSize);
+                child.Layout.Val = childLayout.WithDesiredSize(main, desiredSize);
             }
         }
         
@@ -219,7 +193,7 @@ public readonly record struct FlexBox() : ILayout
             {
                 desiredSize.Y = Math.Max(childLayout.CrossMin, crossPossibleSize);
             }
-            child.Layout = childLayout.WithDesiredSize(main, desiredSize);
+            child.Layout.Val = childLayout.WithDesiredSize(main, desiredSize);
         }
         
         #endregion
@@ -228,18 +202,17 @@ public readonly record struct FlexBox() : ILayout
         
         var @this = this;
         [MustUseReturnValue]
-        Vector2 Proceed(IUiElement child, in FlexBox childLayout, Vector2 offset, float mainMul)
+        Vector2 ProceedRectChange(IUiElement child, in FlexBoxLayout childLayout, Vector2 offset, float mainMul)
         {
             var size = childLayout.DesiredSize(main);
             size.X *= mainMul;
             var newRect = new Rect(@this.ToXy(offset), @this.ToXy(offset + size));
-            Logger.Highlight(@this, $"New child rect: {newRect}");
-            child.Rect.Val = newRect;
+            child.SetRectAsParent(newRect);
             offset.X += size.X + @this.ChildGap * mainMul;
             return offset;
         }
         
-        Vector2 startOffset = (mainPadding.Start, crossPadding.Start);
+        Vector2 startOffset = ToMainCross(selfRect.Min) + (mainPadding.Start, crossPadding.Start);
         Vector2 endOffset = (ToMainCross(selfRect.Max).X, ToMainCross(selfRect.Min).Y);
         endOffset += (-mainPadding.End, crossPadding.End);
         float mainMul = 1;
@@ -251,8 +224,8 @@ public readonly record struct FlexBox() : ILayout
 
 
         //fistCorner = currentOffset;
-        List<(IUiElement Child, FlexBox ChildLayout)> centering = [];
-        List<(IUiElement Child, FlexBox ChildLayout)> ending = [];
+        List<(IUiElement Child, FlexBoxLayout ChildLayout)> centering = [];
+        List<(IUiElement Child, FlexBoxLayout ChildLayout)> ending = [];
         
         foreach (var (child, childLayout) in ValidChildren(allChildren))
         {
@@ -268,20 +241,16 @@ public readonly record struct FlexBox() : ILayout
             }
 
             // auto 
-            startOffset = Proceed(child, childLayout, startOffset, mainMul);
+            startOffset = ProceedRectChange(child, childLayout, startOffset, mainMul);
         }
         
         // end
         foreach (var (child, childLayout) in ending)
         {
-            endOffset = Proceed(child, childLayout, endOffset, -mainMul);
+            endOffset = ProceedRectChange(child, childLayout, endOffset, -mainMul);
         }
         
-        //var secondCorner = currentOffset;
-        
         #endregion
-        
-        //var newThis = WithDesiredSize(main, Vector2.Abs(secondCorner - fistCorner));
 
         return this;
     }
@@ -296,16 +265,19 @@ public readonly record struct FlexBox() : ILayout
     
     [System.Diagnostics.Contracts.Pure]
     private (T Main, T Cross) ToMainCross<T>(T x, T y) => DirToAx(ContentDirection) == Axis.X ? (x, y) : (y, x);
+    
+    [System.Diagnostics.Contracts.Pure]
+    private (T Main, T Cross) ToXy<T>(T x, T y) => DirToAx(ContentDirection) == Axis.X ? (x, y) : (y, x);
 
-    private IEnumerable<(IUiElement Child, FlexBox ChildLayout)> ValidChildren(IList<IUiElement> raw)
+    private IEnumerable<(IUiElement Child, FlexBoxLayout ChildLayout)> ValidChildren(IList<IUiElement> raw)
     {
         foreach (var child in raw)
         {
-            if (child.Layout is FlexBox childLayout)
+            if (child.Layout.Val is FlexBoxLayout childLayout)
                 yield return (child, childLayout);
             else
                 Logger.Warn(this,
-                    $"Child {child} has incompatible layout {child.Layout}, expected {typeof(FlexBox)}");
+                    $"Child {child} has incompatible layout {child.Layout}, expected {typeof(FlexBoxLayout)}");
         }
     }
 

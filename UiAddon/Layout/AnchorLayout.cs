@@ -3,9 +3,9 @@ using UiAddon.Element;
 
 namespace UiAddon.Layout;
 
-public readonly record struct AnchorData : ILayout
+public readonly record struct AnchorLayout : ILayout
 {
-    public static readonly AnchorData FullFill = new AnchorData
+    public static readonly AnchorLayout FullFill = new AnchorLayout
     {
         Anchor = UiAddon.Anchor.FullStretch,
         Margin = Margin.No
@@ -18,12 +18,12 @@ public readonly record struct AnchorData : ILayout
     {
         foreach (var child in allChildren)
         {
-            if (child.Layout is not AnchorData childAnchor)
+            if (child.Layout.Val is not AnchorLayout childAnchor)
             {
-                Logger.Warn(this, $"Child {child} has incompatible layout {child.Layout}, expected {typeof(AnchorData)}");
+                Logger.Warn(this, $"Child {child} has incompatible layout {child.Layout}, expected {typeof(AnchorLayout)}");
                 continue;
             }
-            child.Rect.Val = UiAddon.Anchor.CalculateRectFromParent(selfRect, childAnchor.Anchor, childAnchor.Margin);
+            child.SetRectAsParent(UiAddon.Anchor.CalculateRectFromParent(selfRect, childAnchor.Anchor, childAnchor.Margin));
         }
 
         return this;

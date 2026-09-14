@@ -1,24 +1,31 @@
 using Enjune.Graphic.Key;
 using Enjune.KitStart;
+using Enjune.Misc;
 using UiAddon.Display;
-using UiAddon.Element;
+using UiAddon.Layout;
 
-namespace UiAddon.Presets;
+namespace UiAddon.Element;
 
-public class ButtonElement : UiElement
+public class ButtonElement : AbstractUiElement
 {
-    public ButtonElement(UiElement[] children, UiDisplay[] displays, Rect localAnchor, Margin margin, float globalZ, Action onClick) 
-        : base(children, displays, localAnchor, margin, globalZ)
+    // mostly for Displays to observe
+    public readonly ObservableValue<int> Clicks = 0;
+    
+    public ButtonElement(Action onClick, ILayout layout, float globalZ = 0, IEnumerable<IUiElement>? children = null) 
+        : base(layout, globalZ, children)
     {
         OnClick = onClick;
     }
 
-    protected readonly Action OnClick;
+    public Action OnClick;
 
-    public override BeingFocusedAction UpdateBeingFocused(BasicInputHandler inputHandler)
+    public override IUiElement.BeingFocusedAction UpdateBeingFocused(BasicInputHandler inputHandler)
     {
-        if (inputHandler.IsJustPressed(KeyCode.LeftMouseButton)) 
+        if (inputHandler.IsJustPressed(KeyCode.LeftMouseButton))
+        {
             OnClick();
+            Clicks.Val += 1;
+        }
         return base.UpdateBeingFocused(inputHandler);
     }
 }

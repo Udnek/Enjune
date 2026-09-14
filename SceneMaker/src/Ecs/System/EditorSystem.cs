@@ -19,8 +19,8 @@ public class EditorSystem : ISystem
     
     private readonly Dictionary<Mesh, Ax> _meshToAx = new(3);
     private World _world = null!;
-    private Query _allQuery = null!;
-    private Query _selectedQuery = null!;
+    private Query<ModelComponent, Transform> _allQuery = null!;
+    private Query<ModelComponent, Transform> _selectedQuery = null!;
     
     public Entity? SelectedEntity { get; private set; }
     private Ax? _selectedAx;
@@ -61,14 +61,11 @@ public class EditorSystem : ISystem
     public void OnInit(World world)
     {
         _world = world;
-        _allQuery = Query.For(world)
-            .With<ModelComponent>()
-            .With<Transform>().Build();
-        _selectedQuery = Query.For(world)
-            .With<ModelComponent>()
-            .With<Transform>()
-            .With<SelectedInEditor>()
-            .Build();
+        _allQuery = new QueryBuilder(world)
+            .Retrieve<ModelComponent, Transform>();
+        _selectedQuery = new QueryBuilder(world)
+            .Including<SelectedInEditor>()
+            .Retrieve<ModelComponent, Transform>();
     }
 
     public void OnUpdate()
@@ -161,7 +158,8 @@ public class EditorSystem : ISystem
     {
         Entity? closest = null;
         var closestDistance = float.MaxValue;
-        _allQuery.ForEach((Entity entity, ref Transform transform, ref ModelComponent modelComp) =>
+        
+        _allQuery.ForEach((entity, ref modelComp, ref transform) =>
         {
             var model = modelComp.Model.Get(out var error);
             if (model is null)

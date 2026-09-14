@@ -6,10 +6,21 @@ using UiAddon.Element;
 
 namespace UiAddon.Display;
 
-public interface IUiDisplay
+public interface IUiDisplay : IDisposable
 {
+    /// <summary>
+    /// Meshes for Ui to be collected
+    /// </summary>
     IList<Model.Entry> Meshes { get; }
-    void OnRectChange(Rect oldRect, Rect newRect);
-    void OnHoverChange(bool hovered);
-    void OnFocusChange(bool focused);
+    
+    /// <summary>
+    /// UiElement calls when this display removed from it to avoid memory leaks with ObservableValue subscription
+    /// </summary>
+    public void UnsubscribeFromParent();
+
+    /// <summary>
+    /// Called when is added to UiElement.
+    /// Should be used initialize subscriptions
+    /// </summary>
+    public void Initialize();
 }

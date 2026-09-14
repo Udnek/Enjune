@@ -1,39 +1,57 @@
 using Enjune.Graphic.Asset.Font;
 using Enjune.Graphic.Modeling;
 using Enjune.Misc;
+using UiAddon.Element;
+using UiAddon.Layout;
 
-namespace UiAddon.Display;
+namespace UiAddon.Display.Abstraction;
 
-public abstract class TextDisplay : ColoredDisplay
+public abstract class TextDisplay<TParent> : ColoredDisplay<TParent> where TParent : TextElement
 {
-    public readonly ObservableValue<CompiledFont> Font;
-    public readonly ObservableValue<string> Text;
-    public readonly ObservableValue<float> Size;
-
-    protected TextDisplay(float zOffset, Color color, CompiledFont font, string text, float size) : base(zOffset, color)
+    public override void Initialize()
     {
-        Font = font;
-        Text = text;
-        Size = size;
-
-        Font.OnChange += (_, _) => UpdateMeshes();
-        Text.OnChange += (_, _) => UpdateMeshes();
-        Size.OnChange += (_, _) => UpdateMeshes();
+        SubscribeToParent(Parent.TextLines, (_, _) => RegenerateMeshes(), (_, _) => RegenerateMeshes());
+        base.Initialize();
     }
 
-    protected abstract void UpdateMeshes();
-    
-    protected void CreateMeshes(Action<Model.Entry> action)
+    protected abstract void RegenerateMeshes();
+
+    protected void CreateMeshes(IList<string> textLines, CompiledFont font, float height, Alignment alignment, Action<(Model.Entry Mesh, int line, int CharIndex)> action)
     {
-        var perMeshData = new Model.PerMesh(Font.Val.Material, Color.Val);
-        var split = Text.Val.Split('\n');
-        for (var i = 0; i < split.Length; i++)
+        var perMeshData = new Model.PerMesh(font.Material, Color.Val);
+        var rect = Parent.Rect.Val;
+        float initialYOffset;
+        switch (alignment)
         {
-            var line = split[i];
-            Font.Val.GenerateMeshes(line, Size, mesh =>
+            case Alignment.Top:
+                initialYOffset = rect.Max.Y - height;
+                break;
+            case Alignment.Center:
+                var center = rect.Min.Y + rect.Size.Y/2;
+                var textSize = textLines.Count * height;
+                initialYOffset = center - textSize/2;
+                break;
+            case Alignment.Bottom:
+                initialYOffset = rect.Min.Y;
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
+        for (var lineIdx = textLines.Count - 1; lineIdx >= 0; lineIdx--)
+        {
+            var line = textLines[lineIdx];
+            font.GenerateMeshes(line, height, mesh =>
             {
-                action(new Model.Entry(mesh, perMeshData));
+                mesh.Mesh.Offset((rect.Min.X, initialYOffset + lineIdx * -height, Z));
+                action((new Model.Entry(mesh.Mesh, perMeshData), lineIdx, mesh.CharIdx));
             });
         }
+    }
+    
+    public enum Alignment
+    {
+        Top,
+        Center,
+        Bottom
     }
 }

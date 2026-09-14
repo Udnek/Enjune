@@ -1,8 +1,10 @@
+using Enjune.Attribute;
 using OpenTK.Mathematics;
 using static System.MathF;
 
 namespace Enjune.Misc;
 
+[LogParams(logCallingMethod: true)]
 public static class MathUtils
 {
     public const float Epsilon = 1e-6f; // don't fucking touch it, increasing accuracy may break everything
@@ -82,7 +84,7 @@ public static class MathUtils
         {
             if (Abs(detA) < Epsilon)
             {
-                Logger.Error($"{nameof(MathUtils)}.{nameof(VectorsIntersect)}", $"detA = {detA}");
+                Logger.Error(typeof(MathUtils), $"detA = {detA}");
                 return -1;
             }
             var detAi = Det(b, secondColumn);
@@ -101,7 +103,7 @@ public static class MathUtils
         var planeNorm = PlaneNormNotNormalized(p0, p1, p2);
         if (planeNorm.LengthSquared < Epsilon)
         {
-            Logger.Error($"{nameof(MathUtils)}.{nameof(ProjectVectorOnPlane)}", $"plane norm is too small: {planeNorm}");
+            Logger.Error(typeof(MathUtils), $"plane norm is too small: {planeNorm}");
             return direction;
         }
         return direction - ProjectAonB(direction, planeNorm);
@@ -111,7 +113,7 @@ public static class MathUtils
     {
         if (b.LengthSquared < Epsilon)
         {
-            Logger.Error($"{nameof(MathUtils)}.{nameof(ProjectAonB)}", $"b vec is too small: {b}");
+            Logger.Error(typeof(MathUtils), $"b vec is too small: {b}");
             return a;
         }
         b.Normalize();

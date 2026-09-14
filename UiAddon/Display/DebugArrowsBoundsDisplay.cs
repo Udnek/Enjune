@@ -1,11 +1,13 @@
 using Enjune.Graphic;
 using Enjune.Graphic.Modeling;
+using UiAddon.Display.Abstraction;
+using UiAddon.Element;
 
 namespace UiAddon.Display;
 
-public class DebugArrowsBoundsDisplay(float zOffset) : UiDisplay(zOffset)
+public class DebugArrowsBoundsDisplay : AbstractUiDisplay<IUiElement>
 {
-    public override void UpdateMeshes(Rect _, Rect rect)
+    protected override void OnRectChange(Rect _, Rect rect)
     {
         var anchorSize = MathF.Max(10, MathF.Sqrt(rect.Size.X + rect.Size.Y));
         var color = Color.One;

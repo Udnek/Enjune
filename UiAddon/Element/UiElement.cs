@@ -13,65 +13,111 @@ namespace UiAddon.Element;
 public interface IUiElement
 {
     // main properties
-    public ILayoutData Layout { get; }
-    public ObservableValue<Rect> Rect { get; } // should only be modified via parent
-    
-    public ObservableValue<float> GlobalZ { get; }
-    public ObservableValue<bool> LocalVisible { get; } // self and children visibility
-    public ObservableValue<bool> IsHovered { get; }
-    public ObservableValue<bool> IsFocused { get; }
-    
-    IReadOnlyList<IUiElement> Children { get; }
-    public IList<IUiDisplay> Displays { get; }
-    bool ParentShouldUpdateMyRect { get; set; }
-}
+    ObservableValue<ILayout> Layout { get; }
+    IReadonlyObservableValue<Rect> Rect { get; } // should only be modified via parent
+    void SetRectAsParent(Rect newRect);
 
-public interface IUiElement<TLayout> : IUiElement where TLayout : ILayoutData
-{
-    new ObservableValue<TLayout> Layout { get; }
+    ObservableValue<float> GlobalZ { get; }
+    ObservableValue<bool> LocalVisible { get; } // self and children visibility
+    ObservableValue<bool> IsHovered { get; }
+    ObservableValue<bool> IsFocused { get; }
+
+    /// <summary>
+    /// Element should set to true when becoming invisible or Displays should set to true when their meshes change
+    /// </summary>
+    bool MeshesChanged { get; set; }
+
+    IList<IUiElement> Children { get; }
+    IList<IUiDisplay> Displays { get; }
+    bool ParentShouldUpdateMyRect { get; }
+
+    /// <summary>
+    /// Called from Ui's Update each frame
+    /// </summary>
+    /// <param name="deltaTime"></param>
+    void RecursiveUpdate(float deltaTime);
+    
+    #region Hovering and Focusing
+
+    /// <summary>
+    /// Should decide if element become focused when being hovered
+    /// </summary>
+    /// <param name="inputHandler"></param>
+    /// <returns></returns>
+    BeingHoveredAction UpdateBeingHovered(BasicInputHandler inputHandler);
+
+    /// <summary>
+    /// Should decide if element continue being focused
+    /// </summary>
+    /// <param name="inputHandler"></param>
+    /// <returns></returns>
+    BeingFocusedAction UpdateBeingFocused(BasicInputHandler inputHandler);
+    
+    enum BeingHoveredAction
+    {
+        BecomeFocused,
+        DoNotBecomeFocused
+    }
+    enum BeingFocusedAction
+    {
+        ContinueBeing,
+        StopBeing
+    }
+    
+    #endregion
 }
 
 [LogParams(logCallingMethod: true)]
-public class AbstractUiElement<TSelfLayout, TChildLayout> : IUiElement<TSelfLayout> where TSelfLayout : ILayoutData where TChildLayout : ILayoutData
+public class AbstractUiElement : IUiElement
 {
     #region Public
 
-    ILayoutData IUiElement.Layout => Layout.Val;
-    public ObservableValue<TSelfLayout> Layout { get; set; }
-    public ObservableValue<Rect> Rect { get; } = new Rect((0, 0), (500, 500)); // initially set to notice bugs earlier
-    
-    public ObservableValue<float> GlobalZ { get; }
-    public ObservableValue<bool> LocalVisible { get; } = false;
+    public IReadonlyObservableValue<Rect> Rect => _rect;
+    public ObservableValue<ILayout> Layout { get; }
+    public ObservableValue<bool> LocalVisible { get; } = true;
     public ObservableValue<bool> IsHovered { get; } = false;
     public ObservableValue<bool> IsFocused { get; } = false;
-    
-    public IReadOnlyList<IUiElement> Children => _children;
+    public ObservableValue<float> GlobalZ { get; }
+
+    public bool MeshesChanged { get; set; } = false;
+    IList<IUiElement> IUiElement.Children => _children;
+    public IList<IUiElement> Children => _children;
     public IList<IUiDisplay> Displays => _displays;
-    public bool ParentShouldUpdateMyRect { get; set; }
+    public bool ParentShouldUpdateMyRect { get; private set; }
 
     #endregion
     
-    private readonly ObservableList<IUiElement<TChildLayout>> _children;
+    private ObservableValue<Rect> _rect { get; } = new Rect((0, 0), (500, 500)); // initially set to notice bugs earlier
+    private readonly ObservableList<IUiElement> _children;
     private readonly ObservableList<IUiDisplay> _displays;
 
-    public AbstractUiElement(TSelfLayout layout, float globalZ, IEnumerable<IUiElement<TChildLayout>> children)
+    public AbstractUiElement(ILayout layout, float globalZ = 0, IEnumerable<IUiElement>? children = null)
     {
-        Layout = layout;
         GlobalZ = globalZ;
-        
-        _children = new ObservableList<IUiElement<TChildLayout>>(children.Count());
+        Layout = new ObservableValue<ILayout>(layout);
+
+        children ??= Array.Empty<IUiElement>();
+        _children = new ObservableList<IUiElement>(children.Count());
         children.ForEach(ch => _children.Add(ch));
         
         _displays = new ObservableList<IUiDisplay>();
-        _displays.AfterItemRemovedAsOwner(display => 
+        _displays.AfterItemAddedAsOwner((_, display) =>
         {
+            if (display.Meshes.Count > 0)
+                MeshesChanged = true;
+            display.Initialize();
+        });
+        _displays.AfterItemRemovedAsOwner((_, display) => 
+        {
+            if (display.Meshes.Count > 0)
+                MeshesChanged = true;
             display.UnsubscribeFromParent();
         });
         
         GlobalZ.ObserveAsOwner((oldValue, newValue) =>
         {
             var diff = newValue - oldValue;
-            foreach (var display in _displays)
+            foreach (var display in Displays)
             {
                 foreach (var mesh in display.Meshes)
                 {
@@ -79,40 +125,38 @@ public class AbstractUiElement<TSelfLayout, TChildLayout> : IUiElement<TSelfLayo
                 }
             }
         });
+        
         Layout.ObserveAsOwner((_, _) => ParentShouldUpdateMyRect = true);
+        _rect.ObserveAsOwner((_, _) => OnSelfRectChange());
+        LocalVisible.ObserveAsOwner((_, _) =>
+        {
+            if (Displays.Count > 0) 
+                MeshesChanged = true;
+        });
     }
 
-    public void UpdateGlobalRect(Rect newParentRect)
-    {
-        var globalAnchor = new Rect(
-            newParentRect.Min + newParentRect.Size * LocalAnchor.Val.Min,
-            newParentRect.Min + newParentRect.Size * LocalAnchor.Val.Max);
+    public void SetRectAsParent(Rect newRect) => _rect.Val = newRect;
 
-        _globalRect.Val = new Rect(
-            (globalAnchor.Min.X + Margin.Val.Left, globalAnchor.Min.Y + Margin.Val.Bottom), 
-            (globalAnchor.Max.X - Margin.Val.Right, globalAnchor.Max.Y - Margin.Val.Top));
+    /// <summary>
+    /// Should be used to update children
+    /// </summary>
+    private void OnSelfRectChange()
+    {
+        ParentShouldUpdateMyRect = false;
+        Layout.Val = Layout.Val.UpdateSelfLayoutAndChildrenRects(Rect.Val, Children);
     }
 
-    #region Hovering and Focusing
-
-    public virtual BeingHoveredAction UpdateBeingHovered(BasicInputHandler inputHandler)
-        => inputHandler.IsJustPressed(KeyCode.LeftMouseButton)
-            ? BeingHoveredAction.BecomeFocused
-            : BeingHoveredAction.DoNotBecomeFocused;
-
-    public virtual BeingFocusedAction UpdateBeingFocused(BasicInputHandler inputHandler) 
-        => IsHovered ? BeingFocusedAction.ContinueBeing : BeingFocusedAction.StopBeing;
-
-    public enum BeingHoveredAction
+    public void RecursiveUpdate(float deltaTime)
     {
-        BecomeFocused,
-        DoNotBecomeFocused
-    }
-    public enum BeingFocusedAction
-    {
-        ContinueBeing,
-        StopBeing
+        Children.ForEach(c => c.RecursiveUpdate(deltaTime));
     }
     
-    #endregion
+    public virtual IUiElement.BeingHoveredAction UpdateBeingHovered(BasicInputHandler inputHandler)
+        => inputHandler.IsJustPressed(KeyCode.LeftMouseButton)
+            ? IUiElement.BeingHoveredAction.BecomeFocused
+            : IUiElement.BeingHoveredAction.DoNotBecomeFocused;
+
+    public virtual IUiElement.BeingFocusedAction UpdateBeingFocused(BasicInputHandler inputHandler) 
+        => IsHovered ? IUiElement.BeingFocusedAction.ContinueBeing : IUiElement.BeingFocusedAction.StopBeing;
+    
 }

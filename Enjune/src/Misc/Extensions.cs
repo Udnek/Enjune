@@ -15,24 +15,13 @@ public static class Extensions
         [Pure]
         public Vector3 TransformPosition(Vector3 vector) => Vector3.TransformPosition(vector, matrix);
     }
-
-    extension<T>(IList<T> list)
+    
+    extension<T>(IEnumerable<T> enumerable)
     {
-        public void RemoveLastIfNotEmpty()
-        {
-            if (list.Count == 0) return;
-            list.RemoveAt(list.Count - 1);
-        }
-
-        public void ForEachIndexed(Action<int, T> action)
-        {
-            for (var i = 0; i < list.Count; i++) 
-                action(i, list[i]);
-        }
-
         public void ForEach(Action<T> action)
         {
-            foreach (var t in list) action(t); 
+            foreach (var t in enumerable) 
+                action(t); 
         }
     }
     
@@ -85,7 +74,8 @@ public static class Extensions
 
         public void ForEach(Action<T> action)
         {
-            foreach (var t in array) action(t);
+            foreach (var t in array) 
+                action(t);
         }
     }
 

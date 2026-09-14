@@ -98,6 +98,10 @@ public sealed partial class OpenGlApi
                 KeyCode.Enter => GlfwKey.Enter,
                 KeyCode.LeftCtrl => GlfwKey.LeftControl,
                 KeyCode.RightCtrl => GlfwKey.RightControl,
+                KeyCode.ArrowLeft => GlfwKey.Left,
+                KeyCode.ArrowRight => GlfwKey.Right,
+                KeyCode.ArrowDown => GlfwKey.Down,
+                KeyCode.ArrowUp => GlfwKey.Up,
                 _ => null
             };
         }

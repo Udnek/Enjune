@@ -21,6 +21,7 @@ namespace SceneMaker;
 public class App : AbstractDisposable, IApp
 {
     private static readonly Vector2i InitialWindowSize = (480*2, 360*2);
+    private static readonly string Title = "Scene Maker";
 
     #region Public
 
@@ -55,7 +56,7 @@ public class App : AbstractDisposable, IApp
         var assetManager = new AssetManager();
 
         // font
-        var font = assetManager.AddFont(AssemblyPath.Of(Enjune.Enjune.Assembly, "Fonts", "vt323.ttf"), 128, out var fontError);
+        var font = assetManager.AddFont(AssemblyPath.Of(Enjune.Enjune.Assembly, "Fonts", "vt323.ttf"), 64, out var fontError);
         if (font == null) return fontError;
 
         // models
@@ -69,7 +70,7 @@ public class App : AbstractDisposable, IApp
 
         // graphicApi
         {
-            var graphicApi = new OpenGlApi().Init(assets, InitialWindowSize, "Scene Maker", InputHandler, out var graphicError);
+            var graphicApi = new OpenGlApi().Init(assets, InitialWindowSize, $"{Title} ({InitialWindowSize.X}x{InitialWindowSize.Y})", InputHandler, out var graphicError);
             if (graphicApi == null) 
                 return graphicError;
             GraphicApi = graphicApi;
@@ -91,22 +92,22 @@ public class App : AbstractDisposable, IApp
         }
         
         // adding models
-        Query.For(World)
-            .With<ModelComponent>()
-            .Build().ForEach((Entity _, ref ModelComponent modelComponent) =>
+        new QueryBuilder(World)
+            .Retrieve<ModelComponent>()
+            .ForEach((_, ref modelComp) =>
             {
-                GraphicEngine.Objects[modelComponent.GraphicId] = new GraphicObject()
+                GraphicEngine.Objects[modelComp.GraphicId] = new GraphicObject()
                 {
-                    Model = GraphicApi.CreateStaticRenderable(modelComponent.Model.GetOr(Models.ErrorCube.GetOrThrow())),
-                    IsHidden = modelComponent.IsHidden,
-                    DropsShadow = modelComponent.DropsShadow
+                    Model = GraphicApi.CreateStaticRenderable(modelComp.Model.GetOr(Models.ErrorCube.GetOrThrow())),
+                    IsHidden = modelComp.IsHidden,
+                    DropsShadow = modelComp.DropsShadow
                 };
             });
         
         // adding lights
-        Query.For(World)
-            .With<SpotLightComponent>()
-            .Build().ForEach((Entity _, ref SpotLightComponent light) =>
+        new QueryBuilder(World)
+            .Retrieve<SpotLightComponent>()
+            .ForEach((_, ref light) =>
             {
                 GraphicEngine.SpotLights[light.GraphicId] = new SpotLight();
             });
@@ -130,7 +131,7 @@ public class App : AbstractDisposable, IApp
     public void MainCycle()
     {
         Utils.RunTargetFpsLoopWhile(
-            300, 
+            10, 
             () => !GraphicApi.ShouldStop(),
             GraphicCycle
             );
@@ -152,6 +153,11 @@ public class App : AbstractDisposable, IApp
         if (!UiManager.Ui.IsFocused)
         {
             WasdController.Update(deltaTime);
+        }
+
+        if (InputHandler.WindowSizeChanged)
+        {
+            GraphicApi.Title($"{Title} ({InputHandler.WindowSize.X}x{InputHandler.WindowSize.Y})");
         }
         
         // render

@@ -1,18 +1,23 @@
 using Enjune.Misc;
+using UiAddon.Element;
 
-namespace UiAddon.Display;
+namespace UiAddon.Display.Abstraction;
 
-public abstract class ColoredDisplay : UiDisplay
+public abstract class ColoredDisplay<TParent> : AbstractUiDisplay<TParent> where TParent : IUiElement
 {
-    public readonly ObservableValue<Color> Color;
+    public required ObservableValue<Color> Color { get; init; }
 
-    protected ColoredDisplay(float zOffset, Color color) : base(zOffset)
+    protected ColoredDisplay()
     {
-        Color = color;
-        Color.OnChange += (_, _) => UpdateColor();
     }
     
-    private void UpdateColor()
+    public override void Initialize()
+    {
+        Color.ObserveAsOwner((_, _) => OnColorChange());
+        base.Initialize();
+    }
+
+    private void OnColorChange()
     {
         for (var i = 0; i < Meshes.Count; i++) 
             Meshes[i] = Meshes[i].WithColor(Color);

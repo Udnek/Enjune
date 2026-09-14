@@ -21,7 +21,7 @@ public abstract class AbstractDisposable : IDisposable
     ~AbstractDisposable()
     {
         if (_disposed) return;
-        Logger.Warn(this, "dispose called only during finalizing; should call Dispose() manually");
+        Logger.Warn(this, $"dispose called only during finalizing; should call {nameof(Dispose)}() manually");
         Dispose();
     }
 }

@@ -9,8 +9,8 @@ public enum KeyCode
     Q, W, E, R, T, Y, U, I, O, P,      Backspace,
      A, S, D, F, G, H, J, K, L,        Enter,
       Z, X, C, V, B, N, M,
-    LeftShift,       RightShift,
-    LeftCtrl, Space, RightCtrl,
+    LeftShift,       RightShift,            ArrowUp,
+    LeftCtrl, Space, RightCtrl,  ArrowLeft, ArrowDown, ArrowRight,
     
     // mouse
     RightMouseButton,

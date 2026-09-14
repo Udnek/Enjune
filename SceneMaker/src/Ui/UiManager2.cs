@@ -13,7 +13,7 @@ using UiAddon.Layout;
 
 namespace SceneMaker.Ui;
 
-public class UiManager : AbstractDisposable
+public class UiManager2 : AbstractDisposable
 {
     [DoNotDisposeViaUtils("would cause cycle disposing")]
     private readonly App _app;
@@ -26,7 +26,7 @@ public class UiManager : AbstractDisposable
     private readonly KeyBinds.Bind _sizeChangeBind = new("ui_size_change", KeyCode.LeftCtrl, true);
     private readonly CompiledFont _font;
 
-    public UiManager(App app, CompiledFont font)
+    public UiManager2(App app, CompiledFont font)
     {
         _app = app;
         _font = font;
@@ -34,7 +34,7 @@ public class UiManager : AbstractDisposable
 
         _fps = new TextElement(
             ["FPS"],
-            new FlexBoxData()
+            new FlexBoxLayout()
             {
                 
             },
@@ -45,7 +45,7 @@ public class UiManager : AbstractDisposable
         
         _toggleVisibilityButton = new ButtonElement(
             () => ToggleMenu(!_isMenuOpened), 
-            new FlexBoxData()
+            new FlexBoxLayout()
             {
                 
             },
@@ -55,7 +55,7 @@ public class UiManager : AbstractDisposable
         theme.ApplyToButton(_toggleVisibilityButton, "");
         
         _inspectorComps = new AbstractUiElement(
-            new FlexBoxData()
+            new FlexBoxLayout()
             {
                 
             },
@@ -63,7 +63,7 @@ public class UiManager : AbstractDisposable
             []
             );
         _inspectorBackground = new AbstractUiElement(
-            new FlexBoxData()
+            new FlexBoxLayout()
             {
                 
             },

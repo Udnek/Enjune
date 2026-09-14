@@ -1,6 +1,7 @@
 using Enjune.Ecs;
 using Enjune.Ecs.EcsType;
 using Enjune.Ecs.System;
+using Enjune.Graphic.Modeling;
 using Enjune.Misc;
 using SceneMaker.Bridge;
 using SceneMaker.Ecs.Component;
@@ -9,31 +10,29 @@ namespace SceneMaker.Ecs.System;
 
 public class GraphicSyncSystem(GraphicEngine engine) : ISystem
 {
-    private Query _modelQuery = null!;
-    private Query _spotLightQuery = null!;
-    private Query _selectedInEditorQuery = null!;
+    private Query<ModelComponent, Transform> _modelQuery = null!;
+    private Query<SpotLightComponent, Transform> _spotLightQuery = null!;
+    private Query<ModelComponent> _selectedInEditorQuery = null!;
 
-    public void Initialize(World world)
+    public void OnInit(World world)
     {
-        _modelQuery = Query.For(world)
-            .With<ModelComponent>()
-            .With<Transform>().Build();
-        
-        _spotLightQuery = Query.For(world)
-            .With<SpotLightComponent>()
-            .With<Transform>().Build();
+        _modelQuery = new QueryBuilder(world)
+            .Retrieve<ModelComponent, Transform>();
 
-        _selectedInEditorQuery = Query.For(world)
-            .With<SelectedInEditor>()
-            .With<ModelComponent>().Build();
+        _spotLightQuery = new QueryBuilder(world)
+            .Retrieve<SpotLightComponent, Transform>();
+
+        _selectedInEditorQuery = new QueryBuilder(world)
+            .Including<SelectedInEditor>()
+            .Retrieve<ModelComponent>();
     }
 
-    public void Update()
+    public void OnUpdate()
     {
         #region Models
         {
             var graphicObjs = engine.Objects;
-            _modelQuery.ForEach((Entity _, ref ModelComponent model, ref Transform transform) =>
+            _modelQuery.ForEach((_, ref model, ref transform) =>
             {
                 var obj = graphicObjs[model.GraphicId];
 
@@ -49,7 +48,7 @@ public class GraphicSyncSystem(GraphicEngine engine) : ISystem
         #region SpotLights
         {
             var graphicSpotLights = engine.SpotLights;
-            _spotLightQuery.ForEach((Entity _, ref SpotLightComponent light, ref Transform transform) =>
+            _spotLightQuery.ForEach((_, ref light, ref transform) =>
             {
                 var graphicLight = graphicSpotLights[light.GraphicId];
 
@@ -74,7 +73,7 @@ public class GraphicSyncSystem(GraphicEngine engine) : ISystem
                 graphicObjects[key] = obj;
             }
             // highlighting
-            _selectedInEditorQuery.ForEach((Entity _, ref SelectedInEditor _, ref ModelComponent model) =>
+            _selectedInEditorQuery.ForEach((_, ref model) =>
             {
                 var obj = graphicObjects[model.GraphicId];
                 obj.IsHighlighted = true;

@@ -3,11 +3,12 @@ using UiAddon.Layout;
 
 namespace UiAddon.Element;
 
-public class extElement<TSelfLayout> : AnchorDirectoryElement<TSelfLayout> where TSelfLayout : ILayoutData
+public class TextElement : AbstractUiElement
 {
     public readonly ObservableList<string> TextLines;
     
-    public extElement(IEnumerable<string> textLines, TSelfLayout layout, float globalZ, IEnumerable<IUiElement<AnchorData>> children) : base(layout, globalZ, children)
+    public TextElement(IEnumerable<string> textLines, ILayout layout, float globalZ = 0, IEnumerable<IUiElement>? children = null) 
+        : base(layout, globalZ, children)
     {
         TextLines = new ObservableList<string>(textLines);
     }
