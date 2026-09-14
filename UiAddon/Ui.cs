@@ -29,7 +29,7 @@ public sealed class Ui : UiElement, IDisposable
     private readonly List<Model.Entry> _meshes = [];
     private bool _someMeshesChanged = false;
 
-    public Ui(IGraphicApi graphicApi, BasicInputHandler inputHandler, UiElement[] roots) : base(roots, Anchor.FullStretch, UiAddon.Margin.No, 0)
+    public Ui(IGraphicApi graphicApi, BasicInputHandler inputHandler, UiElement[] roots) : base(roots, [], Anchor.FullStretch, UiAddon.Margin.No, 0)
     {
         _inputHandler = inputHandler;
         UpdateAllRects();
@@ -107,13 +107,18 @@ public sealed class Ui : UiElement, IDisposable
             FocusedElement = null;
             return;
         }
-        
-        if (newFocus is not null) 
-            FocusedElement = newFocus;
 
-        var action = FocusedElement?.UpdateBeingFocused(_inputHandler) ?? BeingFocusedAction.StopBeing;
+        if (newFocus is null) 
+            return;
+        
+        FocusedElement = newFocus;
+        FocusedElement.IsFocused.Val = true;
+        var action = FocusedElement.UpdateBeingFocused(_inputHandler);
         if (action == BeingFocusedAction.StopBeing)
+        {
+            FocusedElement.IsFocused.Val = false;
             FocusedElement = null;
+        }
     }
 
     [Pure]

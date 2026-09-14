@@ -1,18 +1,16 @@
 using Enjune.Graphic.Key;
 using Enjune.KitStart;
+using UiAddon.Display;
 using UiAddon.Element;
 
 namespace UiAddon.Presets;
 
-public class UiBasicButton : UiRect
+public class ButtonElement : UiElement
 {
-    public UiBasicButton(UiElement[] children, Rect localAnchor, Margin margin, float globalZ, Color color, Action onClick) 
-        : base(children, localAnchor, margin, globalZ, color)
+    public ButtonElement(UiElement[] children, UiDisplay[] displays, Rect localAnchor, Margin margin, float globalZ, Action onClick) 
+        : base(children, displays, localAnchor, margin, globalZ)
     {
         OnClick = onClick;
-
-        IsHovered.OnChange += (_, hovered)
-            => Color.Val += new Vector4(0.4f, 0.4f, 0.4f, 0) * (hovered ? 1 : -1);
     }
 
     protected readonly Action OnClick;

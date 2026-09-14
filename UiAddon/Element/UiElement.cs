@@ -6,109 +6,81 @@ using Enjune.Graphic.Modeling;
 using Enjune.KitStart;
 using Enjune.Misc;
 using UiAddon.Display;
+using UiAddon.Layout;
 
 namespace UiAddon.Element;
 
+public interface IUiElement
+{
+    // main properties
+    public ILayoutData Layout { get; }
+    public ObservableValue<Rect> Rect { get; } // should only be modified via parent
+    
+    public ObservableValue<float> GlobalZ { get; }
+    public ObservableValue<bool> LocalVisible { get; } // self and children visibility
+    public ObservableValue<bool> IsHovered { get; }
+    public ObservableValue<bool> IsFocused { get; }
+    
+    IReadOnlyList<IUiElement> Children { get; }
+    public IList<IUiDisplay> Displays { get; }
+    bool ParentShouldUpdateMyRect { get; set; }
+}
+
+public interface IUiElement<TLayout> : IUiElement where TLayout : ILayoutData
+{
+    new ObservableValue<TLayout> Layout { get; }
+}
+
 [LogParams(logCallingMethod: true)]
-public abstract class UiElement
+public class AbstractUiElement<TSelfLayout, TChildLayout> : IUiElement<TSelfLayout> where TSelfLayout : ILayoutData where TChildLayout : ILayoutData
 {
     #region Public
-    public Rect GlobalRect => _globalRect;
+
+    ILayoutData IUiElement.Layout => Layout.Val;
+    public ObservableValue<TSelfLayout> Layout { get; set; }
+    public ObservableValue<Rect> Rect { get; } = new Rect((0, 0), (500, 500)); // initially set to notice bugs earlier
     
-    public readonly ObservableValue<float> GlobalZ;
-    public readonly ObservableValue<Rect> LocalAnchor;
-    public readonly ObservableValue<Margin> Margin;
-    public readonly ObservableValue<bool> LocalVisible = true; // self and children visibility
-    public readonly ObservableValue<bool> IsHovered = false;
+    public ObservableValue<float> GlobalZ { get; }
+    public ObservableValue<bool> LocalVisible { get; } = false;
+    public ObservableValue<bool> IsHovered { get; } = false;
+    public ObservableValue<bool> IsFocused { get; } = false;
     
-    public IList<UiElement> Children => _children;
-    public IList<UiDisplay> Displays => _displays;
+    public IReadOnlyList<IUiElement> Children => _children;
+    public IList<IUiDisplay> Displays => _displays;
+    public bool ParentShouldUpdateMyRect { get; set; }
+
     #endregion
     
-    private readonly ObservableValue<Rect> _globalRect = new Rect((0, 0), (500, 500));
-    private UiElement? _parent;
-    private readonly ObservableList<UiElement> _children;
-    private readonly ObservableList<UiDisplay> _displays = [];
+    private readonly ObservableList<IUiElement<TChildLayout>> _children;
+    private readonly ObservableList<IUiDisplay> _displays;
 
-    protected UiElement(UiElement[] children, Rect localAnchor, Margin margin, float globalZ)
+    public AbstractUiElement(TSelfLayout layout, float globalZ, IEnumerable<IUiElement<TChildLayout>> children)
     {
-        LocalAnchor = localAnchor;
-        Margin = margin;
+        Layout = layout;
         GlobalZ = globalZ;
-
-        #region Children
-        _children = new ObservableList<UiElement>(children.Length);
-        _children.AfterElementAdded += child =>
-        {
-            child._parent = this;
-            OnMeshesChanged();
-        };
-        _children.AfterElementRemoved += child =>
-        {
-            child._parent = null;
-            OnMeshesChanged();
-        };
+        
+        _children = new ObservableList<IUiElement<TChildLayout>>(children.Count());
         children.ForEach(ch => _children.Add(ch));
-        #endregion
         
-        #region Displayes
-
-        _displays.AfterElementAdded += display =>
+        _displays = new ObservableList<IUiDisplay>();
+        _displays.AfterItemRemovedAsOwner(display => 
         {
-            display.Parent = this;
-            OnMeshesChanged();
-        };
-        _displays.AfterElementRemoved += display => 
-        {
-            display.Parent = null;
-            OnMeshesChanged();
-        };
+            display.UnsubscribeFromParent();
+        });
         
-        #endregion
-        
-        GlobalZ.OnChange += (oldValue, newValue) =>
+        GlobalZ.ObserveAsOwner((oldValue, newValue) =>
         {
             var diff = newValue - oldValue;
-            foreach (var display in Displays)
+            foreach (var display in _displays)
             {
                 foreach (var mesh in display.Meshes)
                 {
                     mesh.Mesh.Offset((0, 0, diff));
                 }
             }
-        };
-        LocalAnchor.OnChange += (_, _) =>
-        {
-            if (_parent is null)
-                Logger.Warn(this, "can not update rect cause parent is null");
-            else 
-                UpdateGlobalRect(_parent._globalRect);
-        };
-        Margin.OnChange += (_, _) =>
-        {
-            if (_parent is null)
-                Logger.Warn(this, "can not update rect cause parent is null");
-            else 
-                UpdateGlobalRect(_parent._globalRect);
-        };
-        LocalVisible.OnChange += (_, _) => OnMeshesChanged();
-
-
-        _globalRect.OnChange += (_, newRect) => _children.ForEach(ch => ch.UpdateGlobalRect(newRect));
-        _globalRect.OnChange += (oldR, newR) => Displays.ForEach(d => d.UpdateMeshes(oldR, newR));
+        });
+        Layout.ObserveAsOwner((_, _) => ParentShouldUpdateMyRect = true);
     }
-    
-    private void NotifyParentAboutMeshChanges()
-    {
-        if (_parent is null)
-        {
-            Logger.Warn(this, $"can not notify cause {nameof(_parent)} is null");
-            return;
-        }
-        _parent.OnMeshesChanged();
-    }
-
-    public virtual void OnMeshesChanged() => NotifyParentAboutMeshChanges(); // pass it up
 
     public void UpdateGlobalRect(Rect newParentRect)
     {
@@ -128,7 +100,7 @@ public abstract class UiElement
             ? BeingHoveredAction.BecomeFocused
             : BeingHoveredAction.DoNotBecomeFocused;
 
-    public virtual BeingFocusedAction UpdateBeingFocused(BasicInputHandler inputHandler)
+    public virtual BeingFocusedAction UpdateBeingFocused(BasicInputHandler inputHandler) 
         => IsHovered ? BeingFocusedAction.ContinueBeing : BeingFocusedAction.StopBeing;
 
     public enum BeingHoveredAction
@@ -142,15 +114,5 @@ public abstract class UiElement
         StopBeing
     }
     
-    #endregion
-
-    #region Debug
-
-    // debug purpose
-    protected void AddDebugArrowsToMeshes()
-    {
-
-    }
-
     #endregion
 }
