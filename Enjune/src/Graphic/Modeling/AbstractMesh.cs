@@ -24,10 +24,24 @@ public abstract class AbstractMesh<TPerVertex>
             Vertices[i] += offset;
     }
 
-    public void Multiply(Vector3 vector)
+    public void Multiply(Vector3 factor)
     {
         for (int i = 0; i < Vertices.Length; i++) 
-            Vertices[i] *= vector;
+            Vertices[i] *= factor;
+    }
+
+    public (Vector3 Min, Vector3 Max) Bounds()
+    {
+        if (Vertices.Length == 0)
+            return (Vector3.Zero, Vector3.Zero);
+        var min = Vertices[0];
+        var max = Vertices[1];
+        for (int i = 1; i < Vertices.Length; i++)
+        {
+            max = Vector3.ComponentMax(max, Vertices[i]);
+            min = Vector3.ComponentMin(min, Vertices[i]);
+        }
+        return (min, max);
     }
 }
 

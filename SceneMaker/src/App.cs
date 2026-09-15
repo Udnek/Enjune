@@ -56,7 +56,7 @@ public class App : AbstractDisposable, IApp
         var assetManager = new AssetManager();
 
         // font
-        var font = assetManager.AddFont(AssemblyPath.Of(Enjune.Enjune.Assembly, "Fonts", "vt323.ttf"), 64, out var fontError);
+        var font = assetManager.AddFont(AssemblyPath.Of(Enjune.Enjune.Assembly, "Fonts", "vt323.ttf"), 32, out var fontError);
         if (font == null) return fontError;
 
         // models
@@ -131,7 +131,7 @@ public class App : AbstractDisposable, IApp
     public void MainCycle()
     {
         Utils.RunTargetFpsLoopWhile(
-            10, 
+            200, 
             () => !GraphicApi.ShouldStop(),
             GraphicCycle
             );

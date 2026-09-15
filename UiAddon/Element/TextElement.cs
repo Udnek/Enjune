@@ -5,11 +5,11 @@ namespace UiAddon.Element;
 
 public class TextElement : AbstractUiElement
 {
-    public readonly ObservableList<string> TextLines;
+    public readonly ObservableValue<string> Text;
     
-    public TextElement(IEnumerable<string> textLines, ILayout layout, float globalZ = 0, IEnumerable<IUiElement>? children = null) 
+    public TextElement(string text, ILayout layout, float globalZ = 0, IEnumerable<IUiElement>? children = null) 
         : base(layout, globalZ, children)
     {
-        TextLines = new ObservableList<string>(textLines);
+        Text = text;
     }
 }

@@ -58,9 +58,9 @@ public static class Extensions
         public string SafeSubstringFromTo(int from, int to)
         {
             if (str.Length == 0) return string.Empty;
-            from = Math.Clamp(from, 0, str.Length - 1);
+            from = Math.Clamp(from, 0, str.Length);
             to = Math.Clamp(to, 0, str.Length);
-            if (from == to) return "";
+            if (from == to) return string.Empty;
             if (from > to) 
                 (from, to) = (to, from);
             return str[from..to];

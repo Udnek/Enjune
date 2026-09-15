@@ -19,7 +19,7 @@ public class FixedSizeTextDisplay : StaticTextDisplay
     protected override void RegenerateMeshes()
     {
         Meshes.Clear();
-        CreateMeshes(Parent.TextLines, Font, TextHeight, Align, m => Meshes.Add(m.Mesh));
+        CreateMeshes(Parent.Text.Val.Split('\n'), Font, TextHeight, Align, m => Meshes.Add(m.Mesh));
     }
 
 

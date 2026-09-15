@@ -33,7 +33,7 @@ public class UiManager2 : AbstractDisposable
         var theme = new Theme(font);
 
         _fps = new TextElement(
-            ["FPS"],
+            "FPS",
             new FlexBoxLayout()
             {
                 
@@ -213,7 +213,7 @@ public class UiManager2 : AbstractDisposable
         if (_fps.LocalVisible && _fpsStopWatch.ElapsedMilliseconds > 1000 || _rememberUiFocused.Changed)
         {
             _fpsStopWatch.Restart();
-            _fps.TextLines[0] = $"fps: {1f / deltaTime:0.00}; mouseUpdates: {inputHandler.MouseUpdates}; uiFocused: {Ui.FocusedElement};";
+            _fps.Text.Val = $"fps: {1f / deltaTime:0.00}; mouseUpdates: {inputHandler.MouseUpdates}; uiFocused: {Ui.FocusedElement};";
         }
         
     }

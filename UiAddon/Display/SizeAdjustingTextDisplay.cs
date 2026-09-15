@@ -20,11 +20,11 @@ public class SizeAdjustingTextDisplay : StaticTextDisplay
     protected override void RegenerateMeshes()
     {
         Meshes.Clear();
-        CreateMeshes(Parent.TextLines, Font, _textHeight, Align, m => Meshes.Add(m.Mesh));
+        CreateMeshes(Parent.Text.Val.Split('\n'), Font, _textHeight, Align, m => Meshes.Add(m.Mesh));
     }
 
     protected override void OnRectChange(Rect oldRect, Rect newRect)
     {
-        _textHeight.Val = newRect.Height / Parent.TextLines.Count;
+        _textHeight.Val = newRect.Height / Parent.Text.Val.Count('\n');
     }
 }

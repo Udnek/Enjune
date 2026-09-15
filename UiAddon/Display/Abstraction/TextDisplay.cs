@@ -6,45 +6,72 @@ using UiAddon.Layout;
 
 namespace UiAddon.Display.Abstraction;
 
-public abstract class TextDisplay<TParent> : ColoredDisplay<TParent> where TParent : TextElement
+public abstract class TextDisplay<TParent> : ColoredDisplay<TParent> where TParent : IUiElement
 {
-    public override void Initialize()
-    {
-        SubscribeToParent(Parent.TextLines, (_, _) => RegenerateMeshes(), (_, _) => RegenerateMeshes());
-        base.Initialize();
-    }
-
     protected abstract void RegenerateMeshes();
 
-    protected void CreateMeshes(IList<string> textLines, CompiledFont font, float height, Alignment alignment, Action<(Model.Entry Mesh, int line, int CharIndex)> action)
+    /// <summary>
+    /// returns lines' y baseline
+    /// </summary>
+    /// <param name="lineIndex"></param>
+    /// <param name="totalLines"></param>
+    /// <param name="lineText"></param>
+    /// <param name="font"></param>
+    /// <param name="height"></param>
+    /// <param name="alignment"></param>
+    /// <param name="action"></param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentOutOfRangeException"></exception>
+    protected float CreateMeshes(
+        int lineIndex,
+        int totalLines,
+        string lineText,
+        CompiledFont font,
+        float height,
+        Alignment alignment,
+        Action<(Model.Entry Mesh, int CharIndex)> action)
     {
         var perMeshData = new Model.PerMesh(font.Material, Color.Val);
         var rect = Parent.Rect.Val;
-        float initialYOffset;
+        float yOffset;
         switch (alignment)
         {
             case Alignment.Top:
-                initialYOffset = rect.Max.Y - height;
+                yOffset = rect.Max.Y - height;
                 break;
             case Alignment.Center:
                 var center = rect.Min.Y + rect.Size.Y/2;
-                var textSize = textLines.Count * height;
-                initialYOffset = center - textSize/2;
+                var textSize = totalLines * height;
+                yOffset = center - textSize/2;
                 break;
             case Alignment.Bottom:
-                initialYOffset = rect.Min.Y;
+                yOffset = rect.Min.Y;
                 break;
             default:
                 throw new ArgumentOutOfRangeException();
         }
-        for (var lineIdx = textLines.Count - 1; lineIdx >= 0; lineIdx--)
+        font.GenerateMeshes(lineText, height, mesh =>
         {
-            var line = textLines[lineIdx];
-            font.GenerateMeshes(line, height, mesh =>
-            {
-                mesh.Mesh.Offset((rect.Min.X, initialYOffset + lineIdx * -height, Z));
-                action((new Model.Entry(mesh.Mesh, perMeshData), lineIdx, mesh.CharIdx));
-            });
+            mesh.Mesh.Offset((rect.Min.X, yOffset + lineIndex * -height, Z));
+            action((new Model.Entry(mesh.Mesh, perMeshData), mesh.CharIdx));
+        });
+        return yOffset + lineIndex * -height;
+    }
+
+    protected void CreateMeshes(
+        IList<string> textLines,
+        CompiledFont font,
+        float height,
+        Alignment alignment,
+        Action<(Model.Entry Mesh, int line, int CharIndex)> action)
+    {
+        for (var i = textLines.Count - 1; i >= 0; i--)
+        {
+            CreateMeshes(i, textLines.Count, textLines[i], font, height, alignment, 
+                m =>
+                {
+                    action((m.Mesh, i, m.CharIndex));
+                });
         }
     }
     

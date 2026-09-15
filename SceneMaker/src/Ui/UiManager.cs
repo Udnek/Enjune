@@ -32,14 +32,23 @@ public class UiManager : AbstractDisposable
         [
             
             new EditableTextElement(
-                ["Line 0", "Line 1", "Line 2"],
+                "Line0\nLine1\nLine2",
                 font,
                 40,
                 new FlexBoxLayout()
                 {
                     
                 }
-                )
+                ),
+            new EditableTextElement(
+                "Line0\nLine1\nLine2",
+                font,
+                40,
+                new FlexBoxLayout()
+                {
+                    
+                }
+            ),
         ]);
         
         foreach (var root in Ui.Roots)

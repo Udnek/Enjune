@@ -24,7 +24,7 @@ public readonly record struct FlexBoxLayout() : ILayout
     public DimensionBehaviour CrossMode { get; init; } = DimensionBehaviour.Grow;
 
     public float MainMax { get; init; } = float.PositiveInfinity;
-    public float MainMin { get; init; } = 0;
+    public float MainMin { get; init; } = 50;
     public float CrossMax { get; init; } = float.PositiveInfinity;
 
     public float CrossMin { get; init; } = 50;
@@ -117,6 +117,7 @@ public readonly record struct FlexBoxLayout() : ILayout
         #region Resizing
 
         Vector2 spaceAvailable = ToMainCross(selfRect.Size.X, selfRect.Size.Y) - spaceTaken;
+        Dictionary<IUiElement, Vector2> childToFinalSize;
         
         // main
 

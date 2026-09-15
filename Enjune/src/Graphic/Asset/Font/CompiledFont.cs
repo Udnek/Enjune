@@ -1,3 +1,4 @@
+using System.Diagnostics.Contracts;
 using Enjune.Graphic.Modeling;
 
 namespace Enjune.Graphic.Asset.Font;
@@ -35,6 +36,7 @@ public class CompiledFont
     /// <param name="line"></param>
     /// <param name="textHeight"></param>
     /// <returns></returns>
+    [Pure]
     public (float width, float minY, float maxY) EstimateLineSize(string line, float textHeight)
     {
         float width = 0;
@@ -54,9 +56,10 @@ public class CompiledFont
         return (width*sizeMul, minY*sizeMul, maxY*sizeMul);
     }
 
-    public (float width, float minY, float maxY) EstimateTextSize(Span<string> lines, float textHeight, float lineSpacing)
+    [Pure]
+    public (float width, float minY, float maxY) EstimateTextSize(string[] lines, float textHeight, float lineSpacing)
     {
-        if (lines.IsEmpty) 
+        if (lines.Length == 0) 
             return (0, 0, 0);
         if (lines.Length == 1)
             return EstimateLineSize(lines[0], textHeight);

@@ -24,7 +24,7 @@ public class Mesh : AbstractMesh<Mesh.PerVertex>
     
     // STATIC
     
-      public static Mesh CreateWithNormals(
+    public static Mesh CreateWithNormals(
         Position[] vertices, TexturePos[] texPos, int[] indexes)
     {
         var normals = GenerateSmoothNormals(vertices, indexes);
@@ -72,6 +72,12 @@ public class Mesh : AbstractMesh<Mesh.PerVertex>
         return CreateWithNormals([bl, br, tr, tl],
             [tex.BotLeft, tex.BotRight, tex.TopRight, tex.TopLeft],
             [0, 1, 2, 0, 2, 3]);
+    }
+
+    public static Mesh Quad(Position bl, float width, float height, TextureQuad tex)
+    {
+        return Quad(bl, bl + (width, 0, 0), bl + (width, height, 0), bl + (0, height, 0), 
+            TextureQuad.Full);
     }
 
 

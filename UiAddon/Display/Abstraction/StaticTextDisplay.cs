@@ -14,6 +14,7 @@ public abstract class StaticTextDisplay : TextDisplay<TextElement>
     {
         Font.ObserveAsOwner((_, _) => RegenerateMeshes());
         Align.ObserveAsOwner((_, _) => RegenerateMeshes());
+        SubscribeToParent(Parent.Text, (_, _) => RegenerateMeshes());
         base.Initialize();
     }
 

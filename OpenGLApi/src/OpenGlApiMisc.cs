@@ -102,6 +102,17 @@ public sealed partial class OpenGlApi
                 KeyCode.ArrowRight => GlfwKey.Right,
                 KeyCode.ArrowDown => GlfwKey.Down,
                 KeyCode.ArrowUp => GlfwKey.Up,
+                KeyCode._0 => GlfwKey.D0,
+                KeyCode._1 => GlfwKey.D1,
+                KeyCode._2 => GlfwKey.D2,
+                KeyCode._3 => GlfwKey.D3,
+                KeyCode._4 => GlfwKey.D4,
+                KeyCode._5 => GlfwKey.D5,
+                KeyCode._6 => GlfwKey.D6,
+                KeyCode._7 => GlfwKey.D7,
+                KeyCode._8 => GlfwKey.D8,
+                KeyCode._9 => GlfwKey.D9,
+                KeyCode.Tab => GlfwKey.Tab,
                 _ => null
             };
         }
