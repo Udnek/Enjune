@@ -46,6 +46,8 @@ public class EditableTextElement : AbstractUiElement
         });
         Font.ObserveAsOwner((_, _) => UpdateDesiredSize());
         TextHeight.ObserveAsOwner((_, _) => UpdateDesiredSize());
+        
+        UpdateDesiredSize();
     }
 
     protected void UpdateDesiredSize()

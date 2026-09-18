@@ -133,6 +133,8 @@ public class AbstractUiElement : IUiElement
             if (Displays.Count > 0) 
                 MeshesChanged = true;
         });
+
+        ParentShouldUpdateMyRect = true;
     }
 
     public void SetRectAsParent(Rect newRect) => _rect.Val = newRect;
