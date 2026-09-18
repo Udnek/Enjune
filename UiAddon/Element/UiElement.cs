@@ -87,7 +87,7 @@ public class AbstractUiElement : IUiElement
 
     #endregion
     
-    private ObservableValue<Rect> _rect { get; } = new Rect((0, 0), (500, 500)); // initially set to notice bugs earlier
+    private readonly ObservableValue<Rect> _rect= new Rect((0, 0), (500, 500)); // initially set to notice bugs earlier
     private readonly ObservableList<IUiElement> _children;
     private readonly ObservableList<IUiDisplay> _displays;
 
@@ -137,14 +137,17 @@ public class AbstractUiElement : IUiElement
         ParentShouldUpdateMyRect = true;
     }
 
-    public void SetRectAsParent(Rect newRect) => _rect.Val = newRect;
+    public void SetRectAsParent(Rect newRect)
+    {
+        ParentShouldUpdateMyRect = false;
+        _rect.Val = newRect;
+    }
 
     /// <summary>
     /// Should be used to update children
     /// </summary>
     private void OnSelfRectChange()
     {
-        ParentShouldUpdateMyRect = false;
         Layout.Val = Layout.Val.UpdateSelfLayoutAndChildrenRects(Rect.Val, Children);
     }
 

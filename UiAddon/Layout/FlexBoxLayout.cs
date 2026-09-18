@@ -61,20 +61,20 @@ public readonly record struct FlexBoxLayout() : ILayout
             max += (Padding.Right, Padding.Top);
         }
 
-        var desiredSize = newLayout.DesiredSizeXy;
+        var desiredSizeXy = newLayout.DesiredSizeXy;
         var (xMode, yMode) = ToXy(MainMode, CrossMode);
         if (xMode == DimensionBehaviour.Fit) 
-            desiredSize.X = max.X - min.X;
+            desiredSizeXy.X = max.X - min.X;
         else if (xMode == DimensionBehaviour.Grow)
-            desiredSize.X = selfRect.Width;
+            desiredSizeXy.X = selfRect.Width;
         
         if (yMode == DimensionBehaviour.Fit) 
-            desiredSize.Y = max.Y - min.Y;
+            desiredSizeXy.Y = max.Y - min.Y;
         else if (xMode == DimensionBehaviour.Grow)
-            desiredSize.Y = selfRect.Height;
+            desiredSizeXy.Y = selfRect.Height;
         
         
-        newLayout = newLayout with { DesiredSizeXy = desiredSize};
+        //newLayout = newLayout with { DesiredSizeXy = desiredSizeXy};
         
         return newLayout;
     }
@@ -228,6 +228,8 @@ public readonly record struct FlexBoxLayout() : ILayout
         List<(IUiElement Child, FlexBoxLayout ChildLayout)> centering = []; // TODO
         List<(IUiElement Child, FlexBoxLayout ChildLayout)> ending = [];
         
+        
+        Logger.Highlight(this, "--------------------");
         foreach (var (child, childLayout) in ValidChildren(allChildren))
         {
             if (childLayout.SelfAlign == Alignment.Center)
@@ -243,6 +245,7 @@ public readonly record struct FlexBoxLayout() : ILayout
 
             // auto 
             startOffset = ProceedRectChange(child, startOffset, mainMul);
+            Logger.Highlight(this, $"{child}: {childLayout.DesiredSizeXy}");
         }
         
         // end

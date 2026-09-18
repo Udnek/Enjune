@@ -31,14 +31,24 @@ public class UiManager : AbstractDisposable
         Ui = new UiAddon.Ui(_app.GraphicApi, _app.InputHandler, 
         [
             
-            new EditableTextElement(
-                "Line0\nLine1\nLine2",
-                font,
-                40,
+            new AbstractUiElement(
                 new FlexBoxLayout()
                 {
-                    
-                }
+                    Padding = Margin.Inside(10)
+                },
+                0,
+                [
+                    new EditableTextElement(
+                        "Line0\nLine1\nLine2",
+                        font,
+                        40,
+                        new FlexBoxLayout()
+                        {
+                            
+                        },
+                        1
+                    )
+                ]
                 ),
             new EditableTextElement(
                 "Line0\nLine1\nLine2",
@@ -53,10 +63,10 @@ public class UiManager : AbstractDisposable
         
         foreach (var root in Ui.Roots)
         {
-            ApplyBack(root);
+            ApplyTheme(root);
         }
 
-        void ApplyBack(IUiElement element)
+        void ApplyTheme(IUiElement element)
         {
             if (element is EditableTextElement editableTextElement)
                 theme.ApplyToEditableText(editableTextElement);
@@ -64,7 +74,7 @@ public class UiManager : AbstractDisposable
                 theme.ApplyToTextSign(textElement);
             else
                 theme.ApplyBackground(element);
-            element.Children.ForEach(ApplyBack);
+            element.Children.ForEach(ApplyTheme);
         }
     }
 

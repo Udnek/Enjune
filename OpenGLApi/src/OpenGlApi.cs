@@ -172,6 +172,7 @@ public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicAp
         
         // enable features
         GL.Enable(EnableCap.DepthTest);
+        GL.Disable(EnableCap.DepthTest);
         GL.Enable(EnableCap.Blend);
         GL.Enable(EnableCap.CullFace);
         GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);

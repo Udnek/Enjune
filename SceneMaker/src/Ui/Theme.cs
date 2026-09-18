@@ -44,7 +44,7 @@ public class Theme(CompiledFont font) : IUiTheme
         element.Displays.Add(new RectDisplay
         {
             Parent = element,
-            Color = Colors.Green
+            Color = Colors.Green with {W = 0.5f}
         });
         element.Displays.Add(new EditableTextDisplay()
         {
