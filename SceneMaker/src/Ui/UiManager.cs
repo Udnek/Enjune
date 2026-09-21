@@ -34,7 +34,8 @@ public class UiManager : AbstractDisposable
             new AbstractUiElement(
                 new FlexBoxLayout()
                 {
-                    Padding = Margin.Inside(10)
+                    Padding = Margin.Inside(10),
+                    MainMode = FlexBoxLayout.DimensionBehaviour.Fit
                 },
                 0,
                 [

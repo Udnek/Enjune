@@ -61,20 +61,19 @@ public readonly record struct FlexBoxLayout() : ILayout
             max += (Padding.Right, Padding.Top);
         }
 
-        var desiredSizeXy = newLayout.DesiredSizeXy;
         var (xMode, yMode) = ToXy(MainMode, CrossMode);
-        if (xMode == DimensionBehaviour.Fit) 
-            desiredSizeXy.X = max.X - min.X;
-        else if (xMode == DimensionBehaviour.Grow)
-            desiredSizeXy.X = selfRect.Width;
+        if (xMode == DimensionBehaviour.Fit || yMode == DimensionBehaviour.Fit)
+        {
+            var desiredSizeXy = newLayout.DesiredSizeXy;
         
-        if (yMode == DimensionBehaviour.Fit) 
-            desiredSizeXy.Y = max.Y - min.Y;
-        else if (xMode == DimensionBehaviour.Grow)
-            desiredSizeXy.Y = selfRect.Height;
-        
-        
-        //newLayout = newLayout with { DesiredSizeXy = desiredSizeXy};
+            if (xMode == DimensionBehaviour.Fit) 
+                desiredSizeXy.X = max.X - min.X;
+            
+            if (yMode == DimensionBehaviour.Fit) 
+                desiredSizeXy.Y = max.Y - min.Y;
+            
+            newLayout = newLayout with { DesiredSizeXy = desiredSizeXy};
+        }
         
         return newLayout;
     }
