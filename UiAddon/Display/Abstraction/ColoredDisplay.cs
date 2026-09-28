@@ -20,6 +20,6 @@ public abstract class ColoredDisplay<TParent> : AbstractUiDisplay<TParent> where
     private void OnColorChange()
     {
         for (var i = 0; i < Meshes.Count; i++) 
-            Meshes[i] = Meshes[i].WithColor(Color);
+            Meshes[i] = Meshes[i] with {Color = Color};
     }
 }

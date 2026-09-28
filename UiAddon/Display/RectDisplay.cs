@@ -14,12 +14,13 @@ public class RectDisplay() : ColoredDisplay<IUiElement>
         Meshes.Clear();
         var min = new Vector3(rect.Min.X, rect.Min.Y, Z);
         var max = new Vector3(rect.Max.X, rect.Max.Y, Z);
-        Meshes.Add(new Model.Entry(
-            Mesh.Quad(
+        Meshes.Add(new MeshInstance.Entry
+        {
+            Geometry = Mesh.Quad(
                 min, (max.X, min.Y, Z), 
                 max, (min.X, max.Y, Z),
-                TextureQuad.Full),
-            new Model.PerMesh(Color))
-        );
+                TextureQuad.Full, PrimitiveTopology.Triangle, false),
+            Color = Color
+        });
     }
 }

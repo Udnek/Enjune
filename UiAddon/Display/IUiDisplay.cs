@@ -11,7 +11,7 @@ public interface IUiDisplay : IDisposable
     /// <summary>
     /// Meshes for Ui to be collected
     /// </summary>
-    IList<Model.Entry> Meshes { get; }
+    IList<MeshInstance.Entry> Meshes { get; }
     
     /// <summary>
     /// UiElement calls when this display removed from it to avoid memory leaks with ObservableValue subscription

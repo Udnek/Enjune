@@ -16,14 +16,16 @@ namespace SceneMaker.Misc;
 
 public static class ResourceManager
 {
-    private static readonly ExternalPath Path = ExternalPath.Of("world.json");
-
-    private static Assembly Assembly => Program.Assembly;
+    private static readonly ExternalPath WorldPath = ExternalPath.Of("world.json");
     
     public static Error? LoadModels(AssetManager assetManager)
     {
         Models.Registry.Register(Models.ErrorCube,
-            new Model(Mesh.Cube(Position.Zero, 1f, TextureQuad.Full), new Model.PerMesh(assetManager.MissingMaterial)));
+            new StaticModel(MeshInstance.Of(new MeshInstance.Entry
+            {
+                Geometry = Mesh.Cube(Position.Zero, 1f, TextureQuad.Full),
+                Material = assetManager.MissingMaterial
+            })));
         
         var calaveraRawModel = new DotGlbReader()
             .Read(assetManager, AssemblyPath.Of(Enjune.Enjune.Assembly, "Models", "Calavera", "Calavera.glb"), out var error);
@@ -31,9 +33,11 @@ public static class ResourceManager
         Models.Registry.Register(Models.Calavera, calaveraRawModel);
         
         Models.Registry.Register(Models.WhiteCube,
-            new Model.Builder()
-                .Add(Mesh.Cube(Position.Zero, 0.5f, TextureQuad.Full), new Model.PerMesh(assetManager.WhiteMaterial))
-                .Build());
+            new StaticModel(MeshInstance.Of(new MeshInstance.Entry
+            {
+                Geometry = Mesh.Cube(Position.Zero, 0.5f, TextureQuad.Full),
+                Material = assetManager.WhiteMaterial
+            })));
 
         return null;
     }
@@ -42,20 +46,20 @@ public static class ResourceManager
     {
         Registries.Codec.Register(new Transform().Id(), Transform.Codec);
         Registries.Codec.Register(new SpotLightComponent().Id(), SpotLightComponent.Codec);
-        Registries.Codec.Register(new ModelComponent().Id(), ModelComponent.Codec);
+        Registries.Codec.Register(new StaticModelComponent().Id(), StaticModelComponent.Codec);
         Registries.Codec.Register(new SelectedInEditor().Id(), SelectedInEditor.Codec);
         
-        var json = Path.LoadText(out var error);
+        var json = WorldPath.LoadText(out var error);
         if (json == null)
         {
-            Logger.Info(typeof(ResourceManager), $"creating default world because can not load from {Path}: {error}");
+            Logger.Info(typeof(ResourceManager), $"creating default world because can not load from {WorldPath}: {error}");
             return CreateNewWorld();
         }
 
         var data = JsonSerde.Tight.Deserialize(json, out error);
         if (data == null)
         {
-            Logger.Info(typeof(ResourceManager), $"creating default world because can not load from {Path}: {error}");
+            Logger.Info(typeof(ResourceManager), $"creating default world because can not load from {WorldPath}: {error}");
             return CreateNewWorld();
         }
 
@@ -68,14 +72,14 @@ public static class ResourceManager
 
         // calavera
         world.AddEntity(new Entity.Assembly()
-            .AddComponent(new ModelComponent(Models.Calavera))
+            .AddComponent(new StaticModelComponent(Models.Calavera))
             .AddComponent(new Transform())
         );
 
         // lights
         {
             world.AddEntity(new Entity.Assembly()
-                .AddComponent(new ModelComponent(Models.WhiteCube))
+                .AddComponent(new StaticModelComponent(Models.WhiteCube))
                 .AddComponent(new Transform()
                 {
                     Position = (0, 20, -25 / 2f),
@@ -90,7 +94,7 @@ public static class ResourceManager
             
             
             world.AddEntity(new Entity.Assembly()
-                .AddComponent(new ModelComponent(Models.WhiteCube))
+                .AddComponent(new StaticModelComponent(Models.WhiteCube))
                 .AddComponent(new Transform()
                 {
                     Position = (6, 4, 0),
@@ -112,7 +116,7 @@ public static class ResourceManager
             .AndThen(data => JsonSerde.Indent4.Serialize(data))
             .AndThen(json =>
             {
-                Path.Write(json, out var error);
+                WorldPath.Write(json, out var error);
                 return error;
             }).Error;
     }

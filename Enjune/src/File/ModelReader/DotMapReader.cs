@@ -9,7 +9,7 @@ namespace Enjune.File.ModelReader;
 
 public class DotMapReader : AbstractModelReader
 {
-    protected override Model? Read(out Error? error)
+    protected override StaticModel? Read(out Error? error)
     {
         var mapFormat = new QuakeMapFormat();
         MapFile? mapFile = null;
@@ -22,9 +22,9 @@ public class DotMapReader : AbstractModelReader
         return ProceedMap(mapFile);
     }
 
-    private Model ProceedMap(MapFile map)
+    private StaticModel ProceedMap(MapFile map)
     {
-        var builder = new Model.Builder();
+        var builder = new StaticModel.Builder();
         var solids = map.Worldspawn.Find(mo => mo is Solid).Cast<Solid>();
         
         foreach (var solid in solids)
@@ -44,10 +44,15 @@ public class DotMapReader : AbstractModelReader
                     texCoords[i] = (u, v);
                 }
                 var material = AssetManager.AddMaterialAndGetCompiled(RawMaterial.FromTexture(Path.ResolveRaw(face.TextureName)));
-                builder.Add(Mesh.NgonWithNormals(positions, texCoords), new Model.PerMesh(material));
+                builder.Add(
+                    new MeshInstance.Entry
+                    {
+                        Geometry = Mesh.Ngon(positions, texCoords, PrimitiveTopology.Triangle, true),
+                        Material = material
+                    });
             }
         }
 
-        return builder.Build();
+        return builder.Build(true);
     }
 }

@@ -8,13 +8,13 @@ namespace UiAddon.Display.Abstraction;
 [LogParams(logCallingMethod: true)]
 public abstract class AbstractUiDisplay<TParent> : AbstractDisposable, IUiDisplay where TParent : IUiElement
 {
-    public IList<Model.Entry> Meshes => _meshes;
+    public IList<MeshInstance.Entry> Meshes => _meshes;
     public required TParent Parent { get; init; }
     public float ZOffset = 0;
     
     protected float Z => Parent.GlobalZ + ZOffset;
     
-    private readonly ObservableList<Model.Entry> _meshes = [];
+    private readonly ObservableList<MeshInstance.Entry> _meshes = [];
     private readonly List<Unsubscriber> _unsubscribers = [];
 
     protected AbstractUiDisplay()

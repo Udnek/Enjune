@@ -2,6 +2,8 @@ namespace Enjune.Graphic.Api;
 
 public interface IShader
 {
+
+    public void Render(IRenderableMesh mesh);
     
     public interface IShadowMap : IShader
     {

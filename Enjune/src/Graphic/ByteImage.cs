@@ -8,13 +8,13 @@ public sealed class ByteImage
 {
     public readonly int Width;
     public readonly int Height;
-    public readonly ImType Type;
+    public readonly Kind Type;
     public readonly byte[] Data;
     
-    public static ByteImage Empty(int width, int height, ImType type) 
+    public static ByteImage Empty(int width, int height, Kind type) 
         => new(width, height, type, new byte[width * height * type.Depth]);
     
-    public ByteImage(int width, int height, ImType type, byte[] data)
+    public ByteImage(int width, int height, Kind type, byte[] data)
     {
         if (width * height * type.Depth != data.Length)
         {
@@ -42,7 +42,7 @@ public sealed class ByteImage
             newData[i+2] = b;
             newData[i+3] = Data[i/4];
         }
-        return new ByteImage(Width, Height, ImType.Rgba32, newData);
+        return new ByteImage(Width, Height, Kind.Rgba32, newData);
     }
     
     public override bool Equals(object? obj) 
@@ -51,14 +51,14 @@ public sealed class ByteImage
     public override int GetHashCode() 
         => HashCode.Combine(Width, Height, Type, SHA1.HashData(Data));
 
-    public readonly record struct ImType(int Depth, ColorComponents StbType)
+    public readonly record struct Kind(int Depth, ColorComponents StbType)
     {
-        public static readonly ImType Rgba32 = new(4, ColorComponents.RedGreenBlueAlpha);
-        public static readonly ImType Rgb24 = new(3, ColorComponents.RedGreenBlue);
-        public static readonly ImType GreyAlpha16 = new(2, ColorComponents.GreyAlpha);
-        public static readonly ImType Alpha8 = new(1, ColorComponents.Grey);
+        public static readonly Kind Rgba32 = new(4, ColorComponents.RedGreenBlueAlpha);
+        public static readonly Kind Rgb24 = new(3, ColorComponents.RedGreenBlue);
+        public static readonly Kind GreyAlpha16 = new(2, ColorComponents.GreyAlpha);
+        public static readonly Kind Alpha8 = new(1, ColorComponents.Grey);
 
-        public static ImType FromStb(ColorComponents comps)
+        public static Kind FromStb(ColorComponents comps)
         {
             return comps switch
             {
@@ -71,7 +71,7 @@ public sealed class ByteImage
             };
         }
         
-        public static ImType OfDepth(int depth)
+        public static Kind OfDepth(int depth)
         {
             return depth switch
             {

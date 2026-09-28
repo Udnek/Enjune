@@ -121,7 +121,7 @@ public class AbstractUiElement : IUiElement
             {
                 foreach (var mesh in display.Meshes)
                 {
-                    mesh.Mesh.Offset((0, 0, diff));
+                    mesh.Geometry.Move((0, 0, diff));
                 }
             }
         });

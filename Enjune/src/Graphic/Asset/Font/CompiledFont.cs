@@ -1,5 +1,6 @@
 using System.Diagnostics.Contracts;
 using Enjune.Graphic.Modeling;
+using Enjune.Misc;
 
 namespace Enjune.Graphic.Asset.Font;
 
@@ -102,7 +103,7 @@ public class CompiledFont
                     glyph.Texture.Value);
 
                 var y = -(glyph.Height - glyph.BearingY) * sizeMul;
-                mesh.Offset(((xOffset + glyph.BearingX) * sizeMul, y, 0f));
+                mesh.Move(((xOffset + glyph.BearingX) * sizeMul, y, 0f));
                 consumer((mesh, index));
             }
 
@@ -111,12 +112,19 @@ public class CompiledFont
         }
     }
 
-    public Model GenerateModel(string text, float height, Color color)
+    public StaticModel GenerateModel(string text, float height, Color color)
     {
         var meshes = new Mesh[text.Length];
         var i = 0;
         GenerateMeshes(text, height, mesh => meshes[i++] = mesh.Mesh);
 
-        return new Model(Mesh.Merge(meshes), new Model.PerMesh(Material, color));
+        var builder = new MeshInstance.Builder(PrimitiveTopology.Triangle, meshes.Length);
+        meshes.ForEach(m => builder.Add(new MeshInstance.Entry
+        {
+            Geometry = m,
+            Material = Material,
+            Color = color
+        }));
+        return new StaticModel(builder.Build(true));
     }
 }

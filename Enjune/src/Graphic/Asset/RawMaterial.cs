@@ -4,9 +4,9 @@ namespace Enjune.Graphic.Asset;
 
 public record RawMaterial
 {
-    public string Name;
-    public ResourcePath? TexturePath;
-    public ByteImage? LoadedTexture; // more prior
+    public string Name; // debug purpose
+    public ResourcePath? TexturePath; 
+    public ByteImage? LoadedTexture; // more prior over TexturePath
     public Color Color = (1,1,1,1);
 
     public RawMaterial(string name) => Name = name;

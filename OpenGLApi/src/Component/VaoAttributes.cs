@@ -16,7 +16,7 @@ public sealed class VaoAttributes
         _vbo = vbo;
     }
     
-    public VaoAttributes Add<TT>(VertexAttribPointerType pType, string name, int elements, bool perInstance = false) where TT : unmanaged
+    public VaoAttributes Add<T>(VertexAttribPointerType pType, string name, int elements, bool perInstance = false) where T : unmanaged
     {
         if (_compiled)
         {
@@ -25,7 +25,7 @@ public sealed class VaoAttributes
         }
         unsafe
         {
-            int size =  sizeof(TT) * elements;
+            int size =  sizeof(T) * elements;
             _attributes.Add(new Attribute(size, name, elements, pType, perInstance));
             return this;
         }

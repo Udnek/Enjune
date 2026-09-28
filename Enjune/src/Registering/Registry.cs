@@ -15,6 +15,11 @@ public sealed class WritableRegistry<T> : IRegistry<T> where T: notnull
     private readonly Identifier _id;
     private readonly Dictionary<Identifier, T> _idToValue = new(0);
     
+    /// <summary>
+    /// Creates registry and registers it in root registry
+    /// </summary>
+    /// <param name="registryId"></param>
+    /// <returns></returns>
     public static WritableRegistry<T> CreateAndRegister(Identifier registryId)
     {
         var registry = new WritableRegistry<T>(registryId);

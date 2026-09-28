@@ -19,13 +19,13 @@ public class EditorSystem : ISystem
     
     private readonly Dictionary<Mesh, Ax> _meshToAx = new(3);
     private World _world = null!;
-    private Query<ModelComponent, Transform> _allQuery = null!;
-    private Query<ModelComponent, Transform> _selectedQuery = null!;
+    private Query<StaticModelComponent, Transform> _allQuery = null!;
+    private Query<StaticModelComponent, Transform> _selectedQuery = null!;
     
     public Entity? SelectedEntity { get; private set; }
     private Ax? _selectedAx;
     private GraphicObject _axisObject;
-    private readonly Model _axisModel;
+    private readonly StaticModel _axisModel;
     private const float AxisSize = 2;
 
     public EditorSystem(App app)
@@ -35,16 +35,29 @@ public class EditorSystem : ISystem
         _selectSeveralBind = new KeyBinds.Bind("select_several", KeyCode.LeftShift);
 
         #region Constructing Axis Obj
+
         {
-            var x = new Mesh([Vector3.Zero, Vector3.UnitX], [default, default], [0, 1]);
-            var y = new Mesh([Vector3.Zero, Vector3.UnitY], [default, default], [0, 1]);
-            var z = new Mesh([Vector3.Zero, Vector3.UnitZ], [default, default], [0, 1]);
-            _axisModel = new Model.Builder()
-                .Add(x, new Model.PerMesh(new Color(1f, 0f, 0f, 1f)))
-                .Add(y, new Model.PerMesh(new Color(0f, 1f, 0f, 1f)))
-                .Add(z, new Model.PerMesh(new Color(0f, 0f, 1f, 1f)))
-                .Build(false);
-            _axisObject = new GraphicObject(app.GraphicApi.CreateStaticRenderable(_axisModel, IGraphicApi.Primitive.Line))
+            var x = Mesh.Ngon([Vector3.Zero, Vector3.UnitX], [default, default], PrimitiveTopology.Line, false);
+            var y = Mesh.Ngon([Vector3.Zero, Vector3.UnitY], [default, default], PrimitiveTopology.Line, false);
+            var z = Mesh.Ngon([Vector3.Zero, Vector3.UnitZ], [default, default], PrimitiveTopology.Line, false);
+            _axisModel = new StaticModel(
+                new MeshInstance.Builder(PrimitiveTopology.Line, 3)
+                    .Add(new MeshInstance.Entry
+                    {
+                        Geometry = x,
+                        Color = Colors.Red
+                    }).Add(new MeshInstance.Entry
+                    {
+                        Geometry = y,
+                        Color = Colors.Green
+                    }).Add(new MeshInstance.Entry
+                    {
+                        Geometry = z,
+                        Color = Colors.Blue
+                    })
+                    .Build(false)
+                );
+            _axisObject = new GraphicObject(_axisModel.CreateRenderable(app.GraphicApi))
             {
                 DropsShadow = false,
                 IsHidden = true
@@ -62,10 +75,10 @@ public class EditorSystem : ISystem
     {
         _world = world;
         _allQuery = new QueryBuilder(world)
-            .Retrieve<ModelComponent, Transform>();
+            .Retrieve<StaticModelComponent, Transform>();
         _selectedQuery = new QueryBuilder(world)
             .Including<SelectedInEditor>()
-            .Retrieve<ModelComponent, Transform>();
+            .Retrieve<StaticModelComponent, Transform>();
     }
 
     public void OnUpdate()

@@ -29,9 +29,14 @@ public abstract class TextDisplay<TParent> : ColoredDisplay<TParent> where TPare
         CompiledFont font,
         float height,
         Alignment alignment,
-        Action<(Model.Entry Mesh, int CharIndex)> action)
+        Action<(MeshInstance.Entry Mesh, int CharIndex)> action)
     {
-        var perMeshData = new Model.PerMesh(font.Material, Color.Val);
+        var meshEntry = new MeshInstance.Entry
+        {
+            Material = font.Material,
+            Color = Color.Val,
+            Geometry = null! // to be changed later 
+        };
         var rect = Parent.Rect.Val;
         float yOffset;
         switch (alignment)
@@ -50,10 +55,10 @@ public abstract class TextDisplay<TParent> : ColoredDisplay<TParent> where TPare
             default:
                 throw new ArgumentOutOfRangeException();
         }
-        font.GenerateMeshes(lineText, height, mesh =>
+        font.GenerateMeshes(lineText, height, meshAndIdx =>
         {
-            mesh.Mesh.Offset((rect.Min.X, yOffset + lineIndex * -height, Z));
-            action((new Model.Entry(mesh.Mesh, perMeshData), mesh.CharIdx));
+            meshAndIdx.Mesh.Move((rect.Min.X, yOffset + lineIndex * -height, Z));
+            action((meshEntry with {Geometry = meshAndIdx.Mesh}, meshAndIdx.CharIdx));
         });
         return yOffset + lineIndex * -height;
     }
@@ -63,7 +68,7 @@ public abstract class TextDisplay<TParent> : ColoredDisplay<TParent> where TPare
         CompiledFont font,
         float height,
         Alignment alignment,
-        Action<(Model.Entry Mesh, int line, int CharIndex)> action)
+        Action<(MeshInstance.Entry Mesh, int line, int CharIndex)> action)
     {
         for (var i = textLines.Count - 1; i >= 0; i--)
         {

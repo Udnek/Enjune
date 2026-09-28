@@ -63,7 +63,7 @@ public class AssetManager
         }
         
         // adding material
-        var atlas = new ByteImage(atlasSize, atlasSize, ByteImage.ImType.Alpha8, atlasBuffer.Data);
+        var atlas = new ByteImage(atlasSize, atlasSize, ByteImage.Kind.Alpha8, atlasBuffer.Data);
         atlas = atlas.Alpha8ToRgba32();
         var material = AddMaterialAndGetCompiled(RawMaterial.FromTexture(atlas, path.ToString()));
 
@@ -75,7 +75,7 @@ public class AssetManager
             TextureQuad? texture = null;
             if (charBounds.TryGetValue(ch, out var rectangle))
             {
-                texture = new TextureQuad(
+                texture = TextureQuad.FromCorners(
                     (
                         (float) rectangle.X /atlasSize,  
                         (float)(rectangle.Y + rectangle.Height) / atlasSize

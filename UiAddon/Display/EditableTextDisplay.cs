@@ -9,12 +9,11 @@ namespace UiAddon.Display;
 
 public class EditableTextDisplay : TextDisplay<EditableTextElement>
 {
-
     public ObservableValue<Color> CursorColor { get; init; } = new Color(1, 1, 1, 0.6f);
     public ObservableValue<Color> LineBackgroundColor { get; init; } = new Color(1, 1, 1, 0.1f);
 
-    private int? CursorMeshIndex = null;
-    private int? BackLineMeshIndex = null;
+    private int? _cursorMeshIndex = null;
+    private int? _backLineMeshIndex = null;
 
     public override void Initialize()
     {
@@ -24,13 +23,13 @@ public class EditableTextDisplay : TextDisplay<EditableTextElement>
         SubscribeToParent(Parent.ObservableCursorPosition, (_, _) => RegenerateMeshes());
         CursorColor.ObserveAsOwner((_, c) =>
         {
-            if (CursorMeshIndex is null) return;
-            Meshes[CursorMeshIndex.Value] = Meshes[CursorMeshIndex.Value].WithColor(c); 
+            if (_cursorMeshIndex is null) return;
+            Meshes[_cursorMeshIndex.Value] = Meshes[_cursorMeshIndex.Value] with {Color = c}; 
         });
         LineBackgroundColor.ObserveAsOwner((_, c) =>
         {
-            if (BackLineMeshIndex is null) return;
-            Meshes[BackLineMeshIndex.Value] = Meshes[BackLineMeshIndex.Value].WithColor(c); 
+            if (_backLineMeshIndex is null) return;
+            Meshes[_backLineMeshIndex.Value] = Meshes[_backLineMeshIndex.Value] with {Color = c}; 
         });
         base.Initialize();
     }
@@ -43,8 +42,8 @@ public class EditableTextDisplay : TextDisplay<EditableTextElement>
     protected override void RegenerateMeshes()
     {
         Meshes.Clear();
-        CursorMeshIndex = null;
-        BackLineMeshIndex = null;
+        _cursorMeshIndex = null;
+        _backLineMeshIndex = null;
 
         int cursorCharIdx = Parent.CursorPos - Parent.Text.FirstBefore(Parent.CursorPos, '\n')-1;
         int cursorLineIndex = Parent.Text.AsSpan().Slice(0, Parent.CursorPos).Count('\n');
@@ -59,22 +58,25 @@ public class EditableTextDisplay : TextDisplay<EditableTextElement>
             if (cursorLineIndex == lineIndex)
             {
                 // backline
-                Meshes.Add(new Model.Entry(
-                    Mesh.Quad((Parent.Rect.Val.Min.X, yBaseLine, Z-0.01f), Parent.Rect.Val.Width, 
-                    Parent.TextHeight, TextureQuad.Full),
-                    new Model.PerMesh(LineBackgroundColor)
-                ));
-                BackLineMeshIndex = Meshes.Count - 1; 
+                Meshes.Add(new MeshInstance.Entry
+                    {
+                       Geometry = Mesh.QuadXy((Parent.Rect.Val.Min.X, yBaseLine, Z-0.01f), Parent.Rect.Val.Width, 
+                            Parent.TextHeight, TextureQuad.Full, calculateNormals: false),
+                        Color = LineBackgroundColor
+                    }
+                );
+                _backLineMeshIndex = Meshes.Count - 1; 
 
                 // cursor
                 var (width, _, _) = Parent.Font.Val.EstimateLineSize(
                     line.SafeSubstringFromTo(0, cursorCharIdx), Parent.TextHeight);
-                Meshes.Add(new Model.Entry(
-                    Mesh.Quad((Parent.Rect.Val.Min.X + width, yBaseLine, Z), Parent.TextHeight/15, 
-                    Parent.TextHeight, TextureQuad.Full),
-                    new Model.PerMesh(CursorColor)
-                ));
-                CursorMeshIndex = Meshes.Count - 1; 
+                Meshes.Add(new MeshInstance.Entry
+                {
+                    Geometry = Mesh.QuadXy((Parent.Rect.Val.Min.X + width, yBaseLine, Z), Parent.TextHeight / 15,
+                        Parent.TextHeight, TextureQuad.Full, calculateNormals: false),
+                    Color = CursorColor
+                });
+                _cursorMeshIndex = Meshes.Count - 1; 
             }
         }
     }

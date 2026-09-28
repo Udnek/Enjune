@@ -6,12 +6,13 @@ namespace SceneMaker.Misc;
 
 public static class Models
 {
-    public static readonly WritableRegistry<Model> Registry = WritableRegistry<Model>.CreateAndRegister(Identifier.Of(Program.Assembly, "model"));
+    public static readonly WritableRegistry<StaticModel> Registry = WritableRegistry<StaticModel>
+        .CreateAndRegister(Identifier.Of(Program.Assembly, "model"));
 
-    public static readonly RegistryReference<Model> ErrorCube = Create(Program.Assembly, "error_cube");
-    public static readonly RegistryReference<Model> Calavera = Create(Program.Assembly, "calavera");
-    public static readonly RegistryReference<Model> WhiteCube = Create(Program.Assembly, "white_cube");
+    public static readonly RegistryReference<StaticModel> ErrorCube = Create("error_cube");
+    public static readonly RegistryReference<StaticModel> Calavera = Create("calavera");
+    public static readonly RegistryReference<StaticModel> WhiteCube = Create("white_cube");
     
-    private static RegistryReference<Model> Create(Assembly assembly, string name) 
-        => Registry.CreateReference(Identifier.Of(assembly, name));
+    private static RegistryReference<StaticModel> Create(string name) 
+        => Registry.CreateReference(Identifier.Of(Program.Assembly, name));
 }

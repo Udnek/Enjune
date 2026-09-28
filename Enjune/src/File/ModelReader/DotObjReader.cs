@@ -5,6 +5,9 @@ using Enjune.Misc;
 
 namespace Enjune.File.ModelReader;
 
+/// <summary>
+/// https://en.wikipedia.org/wiki/Wavefront_.obj_file
+/// </summary>
 public class DotObjReader : AbstractModelReader
 {
     private readonly List<Position> _loadedVertices = [];
@@ -13,9 +16,9 @@ public class DotObjReader : AbstractModelReader
     private RawMaterial? _selectedMaterial = null;
     private RawMaterial? _lastCreatedMaterial = null;  
     
-    private readonly Model.Builder _builder = new();
+    private readonly StaticModel.Builder _builder = new();
 
-    protected override Model? Read(out Error? error)
+    protected override StaticModel? Read(out Error? error)
     {
         var text = Path.LoadText(out error);
         if (text == null) return null;
@@ -30,11 +33,7 @@ public class DotObjReader : AbstractModelReader
             }
         }
 
-        if (!_builder.IsEmpty) return _builder.Build();
-        
-        error = "model is empty";
-        return null;
-
+        return _builder.Build(true);
     }
     
     private string? ProcessLine(string[] args)
@@ -200,7 +199,11 @@ public class DotObjReader : AbstractModelReader
         else
             material = AssetManager.MissingMaterial;
 
-        _builder.Add(Mesh.NgonWithNormals(verPoses, texPoses), new Model.PerMesh(material));
+        _builder.Add(new MeshInstance.Entry
+        {
+            Geometry = Mesh.Ngon(verPoses, texPoses, PrimitiveTopology.Triangle, true),
+            Material = material
+        });
         return null;
     }
 }

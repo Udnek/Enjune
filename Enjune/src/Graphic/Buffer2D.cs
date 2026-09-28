@@ -39,7 +39,7 @@ public class Buffer2D<T>
         }
         if (xOffset + other.Width > Width || yOffset + other.Height > Height)
         {
-            Logger.Warn(this, $"paste not in bounds: " +
+            Logger.Warn(this, $"paste is not in bounds: " +
                               $"must: {xOffset+other.Width} <= {Width} && {yOffset+other.Height} <= {Height}");
             return;
         }

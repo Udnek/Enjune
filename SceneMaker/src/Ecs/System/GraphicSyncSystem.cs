@@ -10,21 +10,21 @@ namespace SceneMaker.Ecs.System;
 
 public class GraphicSyncSystem(GraphicEngine engine) : ISystem
 {
-    private Query<ModelComponent, Transform> _modelQuery = null!;
+    private Query<StaticModelComponent, Transform> _modelQuery = null!;
     private Query<SpotLightComponent, Transform> _spotLightQuery = null!;
-    private Query<ModelComponent> _selectedInEditorQuery = null!;
+    private Query<StaticModelComponent> _selectedInEditorQuery = null!;
 
     public void OnInit(World world)
     {
         _modelQuery = new QueryBuilder(world)
-            .Retrieve<ModelComponent, Transform>();
+            .Retrieve<StaticModelComponent, Transform>();
 
         _spotLightQuery = new QueryBuilder(world)
             .Retrieve<SpotLightComponent, Transform>();
 
         _selectedInEditorQuery = new QueryBuilder(world)
             .Including<SelectedInEditor>()
-            .Retrieve<ModelComponent>();
+            .Retrieve<StaticModelComponent>();
     }
 
     public void OnUpdate()

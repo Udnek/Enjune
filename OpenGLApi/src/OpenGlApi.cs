@@ -77,6 +77,12 @@ public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicAp
         // error callback
         GLFW.SetErrorCallback((error, description) => Logger.Error(this, $"{error}: {description}"));
 
+        if (GLFW.PlatformSupported(Platform.X11))
+        {
+            Logger.Info(this, "X11 is supported");
+            GLFW.InitHint(InitHintPlatform.Platform, Platform.X11);
+        }
+        
         if (!GLFW.Init())
         {
             error = "unable to initialize GLFW";
@@ -95,6 +101,7 @@ public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicAp
         GLFW.WindowHint(WindowHintBool.TransparentFramebuffer, false);
         
         
+        
         // window creation
         unsafe
         {
@@ -107,8 +114,6 @@ public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicAp
                 return null;
             }
             GLFW.MakeContextCurrent(_window);
-            
-            // GLFW.SetWindowOpacity(_window, 0.5f);
             
             // callbacks
             
@@ -168,11 +173,11 @@ public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicAp
         // without that shit it won't work
         GL.LoadBindings(new GLFWBindingsContext());
         
+        Logger.Info(this, $"Platform: {GLFW.GetPlatform()}");
         Logger.Info(this, $"OpenGL version: {GL.GetString(StringName.Version)}");
         
         // enable features
         GL.Enable(EnableCap.DepthTest);
-        GL.Disable(EnableCap.DepthTest);
         GL.Enable(EnableCap.Blend);
         GL.Enable(EnableCap.CullFace);
         GL.BlendFunc(BlendingFactor.SrcAlpha, BlendingFactor.OneMinusSrcAlpha);

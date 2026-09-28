@@ -61,8 +61,8 @@ public abstract class ResourcePath
         using var stream = Read(out error);
         if (stream == null) return null;
         var imageResult = ImageResult.FromStream(stream);
-        ByteImage.ImType? type = ByteImage.ImType.FromStb(imageResult.Comp);
-        return new ByteImage(imageResult.Width, imageResult.Height, (ByteImage.ImType)type, imageResult.Data);
+        ByteImage.Kind? type = ByteImage.Kind.FromStb(imageResult.Comp);
+        return new ByteImage(imageResult.Width, imageResult.Height, (ByteImage.Kind)type, imageResult.Data);
     }
 
     public byte[]? LoadBytes(out Error? error)

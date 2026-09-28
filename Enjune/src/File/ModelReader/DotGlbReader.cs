@@ -11,7 +11,7 @@ namespace Enjune.File.ModelReader;
 
 public class DotGlbReader : AbstractModelReader
 {
-    protected override Model? Read(out Error? error)
+    protected override StaticModel? Read(out Error? error)
     {
         ModelRoot? gltfModel = null;
         Path.LoadStream(out error, stream =>
@@ -20,11 +20,30 @@ public class DotGlbReader : AbstractModelReader
         });
         if (gltfModel == null) return null;
 
-        var builder = new Model.Builder();
+        var builder = new StaticModel.Builder();
         foreach (var mesh in gltfModel.LogicalMeshes)
         {
+            
             foreach (var primitive in mesh.Primitives)
             {
+                var primitiveType = primitive.DrawPrimitiveType;
+                PrimitiveTopology? enjunePrimitive = primitiveType switch
+                {
+                    PrimitiveType.POINTS => PrimitiveTopology.Point,
+                    PrimitiveType.LINES => PrimitiveTopology.Line,
+                    PrimitiveType.LINE_LOOP => null,
+                    PrimitiveType.LINE_STRIP => PrimitiveTopology.LineStrip,
+                    PrimitiveType.TRIANGLES => PrimitiveTopology.Triangle,
+                    PrimitiveType.TRIANGLE_STRIP => null,
+                    PrimitiveType.TRIANGLE_FAN => null,
+                    _ => throw new ArgumentOutOfRangeException()
+                };
+                if (enjunePrimitive is null)
+                {
+                    Logger.Warn(this, $"{primitiveType} is not supported; skipping mesh");
+                    continue;
+                }
+                
                 var poses = primitive.GetVertexAccessor("POSITION").AsVector3Array().Select(v => v.ToTk()).ToArray();
                 var texPoses = primitive.GetVertexAccessor("TEXCOORD_0").AsVector2Array().Select(v => v.ToTk()).ToArray();
                 var indices = primitive.GetIndices().Select(ui =>
@@ -37,7 +56,11 @@ public class DotGlbReader : AbstractModelReader
 
                 var material = primitive.Material;
                 var compiledMat = GetMaterial(material);
-                builder.Add(Mesh.CreateWithNormals(poses, texPoses, indices), new Model.PerMesh(compiledMat));
+                builder.Add(new MeshInstance.Entry
+                {
+                    Geometry = Mesh.Create(poses, texPoses, indices, enjunePrimitive.Value, true),
+                    Material = compiledMat
+                });
             }
         }
 
@@ -60,7 +83,7 @@ public class DotGlbReader : AbstractModelReader
             if (rawImg is null) return null;
             using var stream = rawImg.Content.Open();
             var img = ImageResult.FromStream(stream);
-            return new ByteImage(img.Width, img.Height, ByteImage.ImType.FromStb(img.Comp), img.Data);
+            return new ByteImage(img.Width, img.Height, ByteImage.Kind.FromStb(img.Comp), img.Data);
         }
     }
 }

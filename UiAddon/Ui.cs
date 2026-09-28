@@ -36,16 +36,15 @@ public sealed class Ui : AbstractDisposable
     };
     private Matrix4 _projectionTransform;
     private readonly BasicInputHandler _inputHandler;
-    private readonly IRenderableModel.IDynamic _model;
-    private readonly List<Model.Entry> _meshes = [];
+    private readonly DynamicRenderableModel _model;
 
     public Ui(IGraphicApi graphicApi, BasicInputHandler inputHandler, IUiElement[] roots)
     {
         Roots = new List<IUiElement>(roots);
         _inputHandler = inputHandler;
+        _model = new DynamicRenderableModel(graphicApi);
         RecalculateRect();
         RecollectMeshes();
-        _model = graphicApi.CreateDynamicRenderable(CreateModel());
 
         PixelsPerUnit.ObserveAsOwner((_, _) => RecalculateRect());
     }
@@ -83,7 +82,7 @@ public sealed class Ui : AbstractDisposable
         if (recollectMeshes)
         {
             RecollectMeshes();
-            _model.Refit(CreateModel());
+            _model.Refit();
         }
     }
 
@@ -101,11 +100,11 @@ public sealed class Ui : AbstractDisposable
     
     private void RecollectMeshes()
     {
-        _meshes.Clear();
+        _model.Clear();
         RecursiveChildrenExplore(elem =>
         {
             if (!elem.LocalVisible) return false;
-            elem.Displays.ForEach(d => _meshes.AddRange(d.Meshes));
+            elem.Displays.ForEach(d => d.Meshes.ForEach(m => _model.Add(m)));
             return true;
         });
     }
@@ -164,10 +163,7 @@ public sealed class Ui : AbstractDisposable
         }
     }
     
-    // utils
-    
-    [Pure]
-    private Model CreateModel() => new(_meshes.ToArray());
+    // Misc
 
     private void RecursiveChildrenExplore(Func<IUiElement, bool> takeAndContinue)
     {

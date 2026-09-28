@@ -10,7 +10,7 @@ public abstract class AbstractBuffer<T> : GlDisposable where T : unmanaged
     public int Capacity { get; private set; }
     public readonly bool Final;
 
-    protected AbstractBuffer(BufferTarget target, int capacity, bool final, T[]? initialData = null)
+    protected AbstractBuffer(BufferTarget target, int capacity, bool final, ReadOnlySpan<T> initialData = default)
     {
         if (capacity <= 0)
         {
@@ -30,7 +30,8 @@ public abstract class AbstractBuffer<T> : GlDisposable where T : unmanaged
         else 
             GL.BufferData(_target, capacity*_elementSize, IntPtr.Zero, BufferUsageHint.DynamicDraw);
         
-        if (initialData != null) BindAndPush(initialData);
+        if (!initialData.IsEmpty) 
+            BindAndPush(initialData);
     }
 
     public void Reallocate(int newCapacity)
@@ -53,10 +54,16 @@ public abstract class AbstractBuffer<T> : GlDisposable where T : unmanaged
     
     public void Bind() => GL.BindBuffer(_target, Handle);
 
-    public void BindAndPush(T[] array)
+    public void BindAndPush(ReadOnlySpan<T> span)
     {
         Bind();
-        GL.BufferSubData(_target, 0, array.Length*_elementSize, array);
+        unsafe
+        {
+            fixed (T* pointer = span)
+            {
+                GL.BufferSubData(_target, 0, span.Length*_elementSize, (IntPtr)pointer);
+            }
+        }
     }
 
     protected override void DisposeGlData() => GL.DeleteBuffer(Handle);

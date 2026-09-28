@@ -10,6 +10,7 @@ using Enjune.KitStart;
 using Enjune.Misc;
 using OpenGLApi;
 using OpenTK.Mathematics;
+using OpenTK.Windowing.GraphicsLibraryFramework;
 using SceneMaker.Bridge;
 using SceneMaker.Ecs.Component;
 using SceneMaker.Ecs.System;
@@ -93,12 +94,12 @@ public class App : AbstractDisposable, IApp
         
         // adding models
         new QueryBuilder(World)
-            .Retrieve<ModelComponent>()
+            .Retrieve<StaticModelComponent>()
             .ForEach((_, ref modelComp) =>
             {
                 GraphicEngine.Objects[modelComp.GraphicId] = new GraphicObject()
                 {
-                    Model = GraphicApi.CreateStaticRenderable(modelComp.Model.GetOr(Models.ErrorCube.GetOrThrow())),
+                    Model = modelComp.Model.GetOr(Models.ErrorCube.GetOrThrow()).CreateRenderable(GraphicApi),
                     IsHidden = modelComp.IsHidden,
                     DropsShadow = modelComp.DropsShadow
                 };

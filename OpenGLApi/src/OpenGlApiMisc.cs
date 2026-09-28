@@ -1,8 +1,9 @@
 using Enjune.File;
 using Enjune.Graphic.Api;
 using Enjune.Graphic.Key;
+using Enjune.Graphic.Modeling;
 using Enjune.Misc;
-using OpenGLApi.Model;
+using OpenGLApi.Mesh;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using ErrorCode = OpenTK.Graphics.OpenGL4.ErrorCode;
@@ -163,15 +164,14 @@ public sealed partial class OpenGlApi
         }
     }
 
-    public static PrimitiveType ToGl(IGraphicApi.Primitive type)
+    public static PrimitiveType ToGl(PrimitiveTopology type)
     {
         return type switch
         {
-            IGraphicApi.Primitive.Triangle => PrimitiveType.Triangles,
-            IGraphicApi.Primitive.LineStrip => PrimitiveType.LineStrip,
-            IGraphicApi.Primitive.LineLoop => PrimitiveType.LineLoop,
-            IGraphicApi.Primitive.Line => PrimitiveType.Lines,
-            IGraphicApi.Primitive.Point => PrimitiveType.Points,
+            PrimitiveTopology.Triangle => PrimitiveType.Triangles,
+            PrimitiveTopology.LineStrip => PrimitiveType.LineStrip,
+            PrimitiveTopology.Line => PrimitiveType.Lines,
+            PrimitiveTopology.Point => PrimitiveType.Points,
             _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
         };
     }
@@ -226,17 +226,17 @@ public sealed partial class OpenGlApi
         }
     }
 
-    public IRenderableModel CreateStaticRenderable(Enjune.Graphic.Modeling.Model model, IGraphicApi.Primitive primitive = IGraphicApi.Primitive.Triangle)
+    public IRenderableMesh CreateStaticRenderable(MeshInstance mesh)
     {
-        var materialModel = new GlModel(_materialShader, PerPrimitiveSsboBinding, true, _assets.WhiteMaterial.Id);
-        materialModel.Refit(model, primitive);
+        var materialModel = new GlMesh(_materialShader, PerPrimitiveSsboBinding, true, _assets.WhiteMaterial.Id);
+        materialModel.Refit(mesh);
         return materialModel;
     }
 
-    public IRenderableModel.IDynamic CreateDynamicRenderable(Enjune.Graphic.Modeling.Model model, IGraphicApi.Primitive primitive = IGraphicApi.Primitive.Triangle)
+    public IRenderableMesh.IDynamic CreateDynamicRenderable(MeshInstance mesh)
     {
-        var materialModel = new GlModel(_materialShader, PerPrimitiveSsboBinding, false, _assets.WhiteMaterial.Id);
-        materialModel.Refit(model, primitive);
+        var materialModel = new GlMesh(_materialShader, PerPrimitiveSsboBinding, false, _assets.WhiteMaterial.Id);
+        materialModel.Refit(mesh);
         return materialModel;
     }
 

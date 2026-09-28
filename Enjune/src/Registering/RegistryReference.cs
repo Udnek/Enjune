@@ -50,11 +50,9 @@ public sealed record RegistryReference<T> where T : notnull
                 error = "could not get item previously; cached as null";
                 return default;
             }
-            else
-            {
-                error = null;
-                return _value;      
-            }
+
+            error = null;
+            return _value;
         }
 
         _value = default;

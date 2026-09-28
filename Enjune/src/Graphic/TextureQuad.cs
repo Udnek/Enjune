@@ -1,18 +1,25 @@
 namespace Enjune.Graphic;
 
 public readonly record struct TextureQuad(
-    TexturePos BotLeft, 
-    TexturePos BotRight, 
-    TexturePos TopRight, 
-    TexturePos TopLeft)
+    TexturePos TopLeft,
+    TexturePos TopRight,
+    TexturePos BotLeft,
+    TexturePos BotRight)
 {
-    public TextureQuad(TexturePos botLeft, TexturePos topRight) : this(
-        botLeft,
-        new TexturePos(topRight.X, botLeft.Y),
-        topRight,
-        new TexturePos(botLeft.X, topRight.Y)){}
+    public static TextureQuad FromCorners(TexturePos firstCorner, TexturePos secondCorner)
+    {
+        var min = Vector2.ComponentMin(firstCorner, secondCorner);
+        var max = Vector2.ComponentMax(firstCorner, secondCorner);
+        return new TextureQuad
+        {
+            TopLeft = (min.X, max.Y),
+            TopRight = max,
+            BotLeft = min,
+            BotRight = (max.X, min.Y)
+        };
+    }
 
-    public static readonly TextureQuad Full = new((0, 0), (1, 1));
+    public static readonly TextureQuad Full = FromCorners((0, 0), (1, 1));
     
     public TexturePos this[int index] =>
         index switch
