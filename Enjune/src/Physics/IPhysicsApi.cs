@@ -8,5 +8,5 @@ namespace Enjune.Physics;
 
 public interface IPhysicsApi
 {
-    void RegisterSystems(World world);
+    abstract void RegisterSystems(World world);
 }

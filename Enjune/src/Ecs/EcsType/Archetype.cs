@@ -7,7 +7,7 @@ namespace Enjune.Ecs.EcsType;
 [LogParams(logCallingMethod: true, method: LogParamsAttribute.Method.ToString)]
 public sealed class Archetype
 {
-    public int Rows { get; private set; } = 0;
+    public int Count { get; private set; } = 0;
     public readonly Signature Signature;
     private readonly Dictionary<Type, IColumn> _columns = new();
     private Entity[] _rowToEntity;
@@ -64,9 +64,9 @@ public sealed class Archetype
     {
         Logger.Info(this, $"Acquired {entity} as an assembly");
         
-        EnsureCapacity(Rows + 1);
+        EnsureCapacity(Count + 1);
 
-        int row = Rows;
+        int row = Count;
         _entityToRow[entity] = row;
         _rowToEntity[row] = entity;
         
@@ -80,16 +80,16 @@ public sealed class Archetype
             }
         }
 
-        Rows++;
+        Count++;
     }
 
     internal void AddEntity(Entity entity, IEnumerable<IComponent> components)
     {
         Logger.Info(this, $"Acquired {entity} as a stream of components");
 
-        EnsureCapacity(Rows + 1);
+        EnsureCapacity(Count + 1);
 
-        int row = Rows;
+        int row = Count;
         _entityToRow[entity] = row;
         _rowToEntity[row] = entity;
 
@@ -107,7 +107,7 @@ public sealed class Archetype
             }
         }
 
-        Rows++;
+        Count++;
     }
 
     internal void RemoveEntity(Entity entity)
@@ -116,7 +116,7 @@ public sealed class Archetype
             Logger.Info(this, $"{entity} is not in {Signature} archetype.");
         Logger.Info(this, $"Removing {entity}");
 
-        var lastRow = Rows - 1;
+        var lastRow = Count - 1;
 
         if (entityRow != lastRow)
         {
@@ -134,7 +134,7 @@ public sealed class Archetype
         }
 
         _entityToRow.Remove(entity);
-        Rows--;
+        Count--;
     }
     
     private (Entity, List<IComponent>) GetSnapshot(Entity entity)
@@ -149,7 +149,7 @@ public sealed class Archetype
     
     internal IEnumerable<(Entity, List<IComponent>)> GetAllEntitySnapshots()
     {
-        for (int row = 0; row < Rows; row++)
+        for (int row = 0; row < Count; row++)
         {
             yield return GetSnapshot(_rowToEntity[row]);
         }

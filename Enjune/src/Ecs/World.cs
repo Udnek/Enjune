@@ -70,6 +70,15 @@ public sealed class World
         CacheVersion++;
     }
 
+    public World()
+    {
+        Logger.Info(this, "Registering managers");
+
+        ArchetypeManager = new ArchetypeManager(this);
+        SystemManager = new SystemManager(this);
+    }
+
+    [Obsolete("Use World() and then AddSystem instead of using a collection")]
     public World(IEnumerable<ISystem> systems)
     {
         Logger.Info(this, "Registering managers");
@@ -110,7 +119,7 @@ public sealed class World
 
     public int GetComponentId(Type component)
     {
-        return (int)ComponentManager.GetIdByType(component);
+        return ComponentManager.GetIdByType(component);
     }
 
     // Don't use in hot loops
