@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Enjune.Attribute;
 using Enjune.Misc;
 using OpenTK.Mathematics;
@@ -8,6 +9,13 @@ namespace Minecraft2.Misc;
 public class Chunk
 {
     public static readonly Vector3i Size = (32, 64, 32);
+
+    static Chunk()
+    {
+        Trace.Assert(Size.X % 2 == 0, "Size.X % 2 == 0");
+        Trace.Assert(Size.Y % 2 == 0, "Size.Y % 2 == 0");
+        Trace.Assert(Size.Z % 2 == 0, "Size.Z % 2 == 0");
+    }
     
     private readonly bool[] _data = new bool[Size.X * Size.Y * Size.Z];
     public bool IsDirty = false;

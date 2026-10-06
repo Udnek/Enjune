@@ -1,6 +1,7 @@
 using Enjune.Ecs;
 using Enjune.Ecs.EcsType;
 using Enjune.Ecs.System;
+using Enjune.Misc;
 using Minecraft2.Ecs.Component;
 using Minecraft2.Misc;
 using OpenTK.Mathematics;
@@ -23,7 +24,7 @@ public class ChunkLoadSystem : ISystem
                     for (int blockZ = 0; blockZ < Chunk.Size.Z; blockZ++)
                     {
                         var y = noise.GetNoise(chunkX*Chunk.Size.X +blockX, chunkZ*Chunk.Size.Z +blockZ);
-                        var height = (int) Math.Clamp(y , 0, Chunk.Size.Y);
+                        var height = (int) Math.Clamp(y*Chunk.Size.Y , 0, Chunk.Size.Y);
                         for (int i = 0; i < height; i++)
                         {
                             chunk[new(blockX, i, blockZ)] = true;
@@ -32,6 +33,7 @@ public class ChunkLoadSystem : ISystem
                 }
 
                 //chunk.IsDirty = true;
+                Logger.Highlight(this, $"{chunk} created; isDirty: {chunk.IsDirty}");
                 world.AddEntity(new Entity.Assembly()
                     .AddComponent(new ChunkComponent{Chunk = chunk}));
             }

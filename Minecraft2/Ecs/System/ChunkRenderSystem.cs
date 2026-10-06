@@ -59,7 +59,7 @@ public class ChunkRenderSyncSystem : ISystem
                     if (chunk[new Vector3i(x, y, z)] == false) 
                         continue;
                     // bottom
-                    if (chunk.SafeGet(new Vector3i(x, y-1, z), true) == false)
+                    if (chunk.SafeGet(new Vector3i(x, y-1, z), false) == false)
                         model.Add(new MeshInstance.Entry
                         {
                             Geometry = Mesh.Quad(
@@ -68,7 +68,7 @@ public class ChunkRenderSyncSystem : ISystem
                                 TextureQuad.Full, calculateNormals: false)
                         });
                     // top
-                    if (chunk.SafeGet(new Vector3i(x, y+1, z), true) == false)
+                    if (chunk.SafeGet(new Vector3i(x, y+1, z), false) == false)
                         model.Add(new MeshInstance.Entry
                         {
                             Geometry = Mesh.Quad(
@@ -77,7 +77,7 @@ public class ChunkRenderSyncSystem : ISystem
                                 TextureQuad.Full, calculateNormals: false)
                         });
                     // xy -z
-                    if (chunk.SafeGet(new Vector3i(x, y, z-1), true) == false)
+                    if (chunk.SafeGet(new Vector3i(x, y, z-1), false) == false)
                         model.Add(new MeshInstance.Entry
                         {
                             Geometry = Mesh.Quad(
@@ -86,38 +86,33 @@ public class ChunkRenderSyncSystem : ISystem
                                 TextureQuad.Full, calculateNormals: false)
                         });
                     // xy +z
-                    if (chunk.SafeGet(new Vector3i(x, y, z+1), true) == false)
+                    if (chunk.SafeGet(new Vector3i(x, y, z+1), false) == false)
                         model.Add(new MeshInstance.Entry
                         {
                             Geometry = Mesh.Quad(
-                                (x, y, z+1), (x, y+1, z+1), 
-                                (x+1, y+1, z+1), (x+1, y, z+1), 
+                                (x, y, z+1), (x+1, y, z+1), 
+                                (x+1, y+1, z+1), (x, y+1, z+1), 
                                 TextureQuad.Full, calculateNormals: false)
                         });
                     // yz -x
-                    if (chunk.SafeGet(new Vector3i(x-1, y, z), true) == false)
+                    if (chunk.SafeGet(new Vector3i(x-1, y, z), false) == false)
                         model.Add(new MeshInstance.Entry
                         {
                             Geometry = Mesh.Quad(
-                                (x, y, z), (x, y+1, z), 
-                                (x, y+1, z+1), (x, y, z+1), 
+                                (x, y, z), (x, y, z+1), 
+                                (x, y+1, z+1), (x, y+1, z), 
                                 TextureQuad.Full, calculateNormals: false)
                         });
                     
                     // yz +x
-                    if (chunk.SafeGet(new Vector3i(x-1, y, z), true) == false)
+                    if (chunk.SafeGet(new Vector3i(x+1, y, z), false) == false)
                         model.Add(new MeshInstance.Entry
                         {
                             Geometry = Mesh.Quad(
-                                (x+1, y, z), (x+1, y, z+1), 
-                                (x+1, y+1, z+1), (x+1, y+1, z), 
+                                (x+1, y, z), (x+1, y+1, z), 
+                                (x+1, y+1, z+1), (x+1, y, z+1), 
                                 TextureQuad.Full, calculateNormals: false)
                         });
-
-                    // model.Add(new MeshInstance.Entry
-                    // {
-                    //     Geometry = Mesh.Cube(new Position(x, y, z), 1, TextureQuad.Full)
-                    // });
                 }
             }
         }
