@@ -62,7 +62,8 @@ public sealed class Mesh
     public static Mesh Empty(PrimitiveTopology topology) => new([], [], [], topology);
 
     public static Mesh Create(
-        Position[] vertices, TexturePos[] texPos, int[] indexes, PrimitiveTopology topology = PrimitiveTopology.Triangle, bool calculateNormals = true)
+        Position[] vertices, TexturePos[] texPos, int[] indexes, 
+        PrimitiveTopology topology = PrimitiveTopology.Triangle, bool calculateNormals = true)
     {
         // normals only works with triangles
         if (calculateNormals && topology == PrimitiveTopology.Triangle)
@@ -78,25 +79,42 @@ public sealed class Mesh
             indexes,
             topology);
     }
-
-    public static Mesh Cuboid(
+    
+    // all must be counter-clock-wise
+    public static Mesh Hexahedron(
         Position b1, Position b2, Position b3, Position b4,
         Position t1, Position t2, Position t3, Position t4,
-        TextureQuad texture, PrimitiveTopology topology, bool calculateNormals)
+        TextureQuad texture, 
+        PrimitiveTopology topology = PrimitiveTopology.Triangle, bool calculateNormals = true)
     {
         return Merge(
-            Quad(b1, b2, b3, b4, texture, topology, calculateNormals), // bot
-            Quad(t4, t3, t2, t1, texture, topology, calculateNormals), // top
-            Quad(t1, t2, b2, b1, texture, topology, calculateNormals), // front
-            Quad(t2, t3, b3, b2, texture, topology, calculateNormals), // right
-            Quad(t3, t4, b4, b3, texture, topology, calculateNormals), // back
-            Quad(t4, t1, b1, b4, texture, topology, calculateNormals)); // left
+            Quad(b1, b4, b3, b2, texture, topology, calculateNormals), // bottom (−Y)
+            Quad(t1, t2, t3, t4, texture, topology, calculateNormals), // top    (+Y)
+            Quad(b1, b2, t2, t1, texture, topology, calculateNormals), // front  (+Z)
+            Quad(b2, b3, t3, t2, texture, topology, calculateNormals), // right  (+X)
+            Quad(b3, b4, t4, t3, texture, topology, calculateNormals), // back   (−Z)
+            Quad(b4, b1, t1, t4, texture, topology, calculateNormals)); // left  (−X)
     }
 
-    public static Mesh Cube(Position center, float size, TextureQuad texture, PrimitiveTopology topology = PrimitiveTopology.Triangle, bool calculateNormals = true)
+    public static Mesh Cuboid(
+        Position corner1, Position corner2,
+        TextureQuad texture, PrimitiveTopology topology = PrimitiveTopology.Triangle, bool calculateNormals = true)
+    {
+        var min = Vector3.ComponentMin(corner1, corner2);
+        var max = Vector3.ComponentMax(corner1, corner2);
+        var (x, y, z) = max - min;
+        return Hexahedron(
+            min, min + (0, 0, z), min + (x, 0, z), min + (x, 0, 0),
+            min+(0, y, 0), min + (0, y, z), min + (x, y, z), min + (x, y, 0),
+            texture, topology, calculateNormals
+        );
+    }
+
+    public static Mesh Cube(Position center, float size, TextureQuad texture, 
+        PrimitiveTopology topology = PrimitiveTopology.Triangle, bool calculateNormals = true)
     {
         var hs = size / 2;
-        return Cuboid(
+        return Hexahedron(
             // bottom
             center + (-hs, -hs, -hs), //-x -z
             center + (+hs, -hs, -hs), //+x -z
@@ -111,7 +129,7 @@ public sealed class Mesh
             texture, topology, calculateNormals
         );
     }
-
+    
     public static Mesh Quad(Position bl, Position br, Position tr, Position tl,
         TextureQuad tex, PrimitiveTopology topology = PrimitiveTopology.Triangle, bool calculateNormals = true)
     {

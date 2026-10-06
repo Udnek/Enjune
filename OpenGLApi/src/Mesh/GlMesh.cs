@@ -49,6 +49,9 @@ public class GlMesh : GlDisposable, IRenderableMesh.IDynamic
 
     private void Refit(ReadOnlySpan<VertexData> vboBuf, ReadOnlySpan<int> eboBuf, ReadOnlySpan<PerPrimitiveData> ssboBuf)
     {
+        if (eboBuf.IsEmpty) // model is empty
+            return;
+        
         if (_vao == null)
         {
             _vao = new Vao();

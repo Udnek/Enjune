@@ -8,18 +8,18 @@ public class FlyingPlayerController
     private readonly IGraphicApi _graphicApi;
     private readonly BasicInputHandler _inputHandler;
     private readonly Wasd _wasd;
-    private readonly float _sensitivity;
+    public float Sensitivity = 0.2f;
+    public float Speed = 8;
 
     public Position Position = new(0f, 0f, 5f);
     private float _pitch = 0f;
     private float _yaw = 0f;
     
-    public FlyingPlayerController(IGraphicApi graphicApi, BasicInputHandler inputHandler, Wasd wasd, float sensitivity)
+    public FlyingPlayerController(IGraphicApi graphicApi, BasicInputHandler inputHandler, Wasd wasd)
     {
         _graphicApi = graphicApi;
         _inputHandler = inputHandler;
         _wasd = wasd;
-        _sensitivity = sensitivity;
     }
 
     public Matrix4 View => Matrix4.LookAt(Position, Position + Direction, Vector3.UnitY);
@@ -43,8 +43,8 @@ public class FlyingPlayerController
     {
         if (_graphicApi.GetCursorMode() == IGraphicApi.CursorMode.Centered)
         {
-            _yaw += _sensitivity * _inputHandler.DeltaCursorPosition.X;
-            _pitch += _sensitivity * _inputHandler.DeltaCursorPosition.Y;
+            _yaw += Sensitivity * _inputHandler.DeltaCursorPosition.X;
+            _pitch += Sensitivity * _inputHandler.DeltaCursorPosition.Y;
             _yaw %= 360;
             _pitch = Math.Clamp(_pitch, -89f, 89f);
         }
@@ -71,6 +71,6 @@ public class FlyingPlayerController
         else if (_inputHandler.IsPressed(_wasd.Downward))
             move += new Vector3(0f, -1f, 0f);
         
-        Position += move * 8f * deltaTime;
+        Position += move * Speed * deltaTime;
     }
 }

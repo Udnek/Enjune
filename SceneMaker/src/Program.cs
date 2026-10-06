@@ -12,7 +12,7 @@ internal class Program
 
     static Program()
     {
-        Logger.RegisterNamespaceToDomain(typeof(Program).Assembly, "", new Logger.Domain("SceneMaker", ConsoleColor.DarkRed));
+        Logger.RegisterNamespaceToDomain(Assembly, "", new Logger.Domain("SceneMaker", ConsoleColor.DarkRed));
     }
     
     private static void Main(string[] args)

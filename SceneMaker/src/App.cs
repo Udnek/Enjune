@@ -12,6 +12,7 @@ using OpenGLApi;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using SceneMaker.Bridge;
+using SceneMaker.Ecs;
 using SceneMaker.Ecs.Component;
 using SceneMaker.Ecs.System;
 using SceneMaker.Misc;
@@ -80,6 +81,8 @@ public class App : AbstractDisposable, IApp
         GraphicApi.SetClearColor(new Color(0.2f, 0.2f, 0.2f, 0f));
         GraphicApi.SetCursorMode(IGraphicApi.CursorMode.Centered);
         
+        Components.Boot();
+        
         // world load
         {
             var result = ResourceManager.LoadOrCreateWorld();
@@ -115,7 +118,7 @@ public class App : AbstractDisposable, IApp
         
         // controllers
         {
-            WasdController = new FlyingPlayerController(GraphicApi, InputHandler, _wasd, 0.2f);
+            WasdController = new FlyingPlayerController(GraphicApi, InputHandler, _wasd);
         }
 
         UiManager = new UiManager(this, font);

@@ -44,11 +44,6 @@ public static class ResourceManager
     
     public static ResultOrError<World> LoadOrCreateWorld()
     {
-        Registries.Codec.Register(new Transform().Id(), Transform.Codec);
-        Registries.Codec.Register(new SpotLightComponent().Id(), SpotLightComponent.Codec);
-        Registries.Codec.Register(new StaticModelComponent().Id(), StaticModelComponent.Codec);
-        Registries.Codec.Register(new SelectedInEditor().Id(), SelectedInEditor.Codec);
-        
         var json = WorldPath.LoadText(out var error);
         if (json == null)
         {

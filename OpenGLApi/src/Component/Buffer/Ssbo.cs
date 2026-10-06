@@ -106,12 +106,15 @@ public class SsboArray<T> : AbstractBuffer<T> where T : unmanaged
 
 public static class SsboUtils
 {
+    private static readonly HashSet<Type> CheckedTypes = new();
     public static Error? CheckStd430<T>(bool isArray, int previousStructSize) where T : unmanaged
     {
-        // TODO ADD CACHING FOR CHECKED TYPES
         var type = typeof(T);
+        if (!CheckedTypes.Add(type))
+            return null;
+
         Logger.Info(typeof(SsboUtils),"-----------------------------------------");
-        Logger.Info(typeof(SsboUtils),$"checking for correct struct '{type.Name}' alignment:");
+        Logger.Info(typeof(SsboUtils),$"Checking for correct struct '{type.Name}' alignment:");
 
         if (!type.IsPrimitive)
         {

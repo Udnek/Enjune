@@ -43,7 +43,7 @@ public static class Utils
         var objType = obj.GetType();
         var fields = objType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
         var disposedAtLestOne = false;
-        Logger.Info(typeof(Utils), $"{tab}- stared disposing {objType.Name}:");
+        Logger.Info(typeof(Utils), $"{tab}- Stared disposing {objType.Name}:");
         List<(FieldInfo Field, IDisposable Value, string Reason)> disposeAtLast = [];
         foreach (var field in fields)
         {
@@ -52,7 +52,7 @@ public static class Utils
             var doNotSerialize = (DoNotDisposeViaUtilsAttribute?) field.GetCustomAttribute(typeof(DoNotDisposeViaUtilsAttribute));
             if (doNotSerialize is not null)
             {
-                Logger.Highlight(typeof(Utils), $"  {tab}do not disposing {objType.Name}.{field.Name}: {doNotSerialize.Reason}");
+                Logger.Info(typeof(Utils), $"  {tab}Do not disposing {objType.Name}.{field.Name}: {doNotSerialize.Reason}");
                 continue;
             }
             var isDisposeAtLast = (DisposeAtLastAttribute?) field.GetCustomAttribute(typeof(DisposeAtLastAttribute));
@@ -66,14 +66,14 @@ public static class Utils
 
         foreach (var (field, value, reason) in disposeAtLast)
         {
-            Logger.Highlight(typeof(Utils), $"  {tab}disposing {objType.Name}.{field.Name} at last: {reason}");
+            Logger.Highlight(typeof(Utils), $"  {tab}Disposing {objType.Name}.{field.Name} at last: {reason}");
             Dispose(field, value);
         }
         
         if (!disposedAtLestOne)
-            Logger.Warn(typeof(Utils), $"  {tab}Nothing disposed in {objType.Name}. Something might be wrong");
+            Logger.Warn(typeof(Utils), $"  {tab}Nothing disposed in {objType.Name}; something might be wrong");
         
-        Logger.Info(typeof(Utils), $"{tab}- finished disposing {objType.Name}");
+        Logger.Info(typeof(Utils), $"{tab}- Finished disposing {objType.Name}");
         
         _disposeDepth--;
         return;

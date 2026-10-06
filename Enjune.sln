@@ -19,6 +19,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Standoff2", "Standoff2\Stan
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Generators", "Generators\Generators.csproj", "{6FC3A188-9175-4261-9E7B-F04EBEFB7DDC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Minecraft2", "Minecraft2\Minecraft2.csproj", "{78AD87A3-3CFD-4CC4-BAC5-DB635C10374D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -57,6 +59,10 @@ Global
 		{6FC3A188-9175-4261-9E7B-F04EBEFB7DDC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6FC3A188-9175-4261-9E7B-F04EBEFB7DDC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6FC3A188-9175-4261-9E7B-F04EBEFB7DDC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{78AD87A3-3CFD-4CC4-BAC5-DB635C10374D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{78AD87A3-3CFD-4CC4-BAC5-DB635C10374D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{78AD87A3-3CFD-4CC4-BAC5-DB635C10374D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{78AD87A3-3CFD-4CC4-BAC5-DB635C10374D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
