@@ -99,7 +99,7 @@ public class App : AbstractDisposable, IApp
         
         // world load
         {
-            World = new World([]);
+            World = new World();
             ChunkWorld = new ChunkWorld(World);
             PlayerEntity = World.AddEntity(new Entity.Assembly()
                 .AddComponent(new ChunkLoader{Radius = 1})
@@ -133,7 +133,9 @@ public class App : AbstractDisposable, IApp
         });
         
         // world
+        Logger.Highlight(this, "---------------------------------");
         World.Update();
+        Logger.Highlight(this, "---------------------------------");
         
         // window
         if (InputHandler.WindowSizeChanged)

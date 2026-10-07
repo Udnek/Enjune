@@ -23,7 +23,7 @@ public class ChunkLoadSystem : AppSystem
     public override void OnUpdate()
     {
         var chunkWorld = App.ChunkWorld;
-        _query.ForEach((_, ref transform, ref loader) =>
+        _query.ForEach((entity, ref transform, ref loader) =>
         {
             var radius = loader.Radius;
             var center = Chunk.ToChunkPos(transform.Position);
@@ -31,6 +31,7 @@ public class ChunkLoadSystem : AppSystem
             {
                 for (int z = -radius; z <= radius; z++)
                 {
+                    Logger.Highlight(this, $"Marking for loaded: {entity} {center + (x, 0, z)}");
                     chunkWorld.Load(center + (x, 0, z), out var wasAlreadyLoaded);
                 }
             }

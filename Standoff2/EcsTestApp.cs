@@ -18,7 +18,7 @@ public class EcsTestApp : AbstractDisposable, IApp
             new GravitySystem()
         ];
 
-        _world = new World(systems);
+        _world = new World();
         
         return null;
     }

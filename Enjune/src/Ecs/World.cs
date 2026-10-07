@@ -15,7 +15,7 @@ public sealed class World
     public static readonly ICodec<World> WithoutSystemsCodec = new SimpleCodec<World>(
         world =>
         {
-            var allEntities = world.GetAllEntities();
+            var allEntities = world.GetAllEntities().ToList();
             List<DataObject> encodedEntities = new(allEntities.Count);
             foreach (var (entity, components) in allEntities)
             {

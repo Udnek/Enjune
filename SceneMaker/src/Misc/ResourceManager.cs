@@ -63,7 +63,7 @@ public static class ResourceManager
     
     private static ResultOrError<World> CreateNewWorld()
     {
-        var world = new World([]);
+        var world = new World();
 
         // calavera
         world.AddEntity(new Entity.Assembly()

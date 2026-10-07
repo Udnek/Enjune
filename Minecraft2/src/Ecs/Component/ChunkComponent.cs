@@ -5,10 +5,10 @@ using OpenTK.Mathematics;
 
 namespace Minecraft2.Ecs.Component;
 
-public struct ChunkComponent : IComponent
+public struct ChunkComponent() : IComponent
 {
     public required Chunk Chunk;
-    public bool ToBeUnloaded;
+    public bool ToBeUnloaded = false;
     public required Vector3i Pos;
 
     public Identifier Id() => Identifier.Of(Program.Assembly, "chunk");
