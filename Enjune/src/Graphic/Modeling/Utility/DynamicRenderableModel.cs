@@ -13,7 +13,7 @@ namespace Enjune.Graphic.Modeling;
 ///     - Call refit
 ///     - Render
 /// </summary>
-public class DynamicRenderableModel : AbstractDisposable, IRenderableModel
+public class DynamicRenderableModel : IRenderableModel
 {
     private readonly IGraphicApi _graphicApi;
     private Dictionary<PrimitiveTopology, MeshInstance.Builder> _meshes = new();
@@ -59,10 +59,5 @@ public class DynamicRenderableModel : AbstractDisposable, IRenderableModel
     {
         foreach (var (_, renderableMesh) in _renderableMeshes) 
             shader.Render(renderableMesh);
-    }
-
-    protected override void DisposeData()
-    {
-        _renderableMeshes.ForEach(kv => kv.Value.Dispose());
     }
 }

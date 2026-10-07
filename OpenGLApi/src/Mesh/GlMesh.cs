@@ -94,10 +94,10 @@ public class GlMesh : GlDisposable, IRenderableMesh.IDynamic
         }
         
         // initializing
-        var primitives = mesh.CommonTopology.PrimitivesAmountFromIndexes(indexes);
+        var totalPrimitives = mesh.CommonTopology.PrimitivesAmountFromIndexes(indexes);
         List<VertexData> vboBuf = new(vertices);
         List<int> eboBuf = new(indexes);
-        List<PerPrimitiveData> ssboBuf = new(primitives);
+        List<PerPrimitiveData> ssboBuf = new(totalPrimitives);
         
         // filling
         int indexOffset = 0;
@@ -106,7 +106,8 @@ public class GlMesh : GlDisposable, IRenderableMesh.IDynamic
             var geometry = entry.Geometry;
             // ssbo
             var perPrimitive = new PerPrimitiveData(entry.Material?.Id ?? _whiteMaterialId, entry.Color);
-            for (int i = 0; i < mesh.CommonTopology.PrimitivesAmountFromIndexes(geometry.Indexes.Length); i++)
+            var entryPrimitives = mesh.CommonTopology.PrimitivesAmountFromIndexes(geometry.Indexes.Length);
+            for (int i = 0; i < entryPrimitives; i++)
             {
                 ssboBuf.Add(perPrimitive);   
             }

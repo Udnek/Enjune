@@ -4,7 +4,7 @@ using Minecraft2.Misc;
 
 namespace Minecraft2.Ecs.Component;
 
-public struct ChunkComponent : IComponent
+public struct ChunkComponent() : IComponent
 {
     public required Chunk Chunk;
     

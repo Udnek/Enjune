@@ -4,7 +4,7 @@ using Enjune.Misc;
 
 namespace Enjune.Graphic.Modeling;
 
-public class StaticRenderableModel : AbstractDisposable, IRenderableModel
+public class StaticRenderableModel : IRenderableModel
 {
     private readonly IRenderableMesh[] _meshes;
 
@@ -19,10 +19,5 @@ public class StaticRenderableModel : AbstractDisposable, IRenderableModel
         {
             shader.Render(mesh);
         }
-    }
-
-    protected override void DisposeData()
-    {
-        _meshes.ForEach(m => m.Dispose());
     }
 }

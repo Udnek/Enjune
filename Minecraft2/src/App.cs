@@ -30,14 +30,19 @@ public class App : AbstractDisposable, IApp
     public IGraphicApi GraphicApi { get; private set; } = null!;
     public readonly GraphicEngine GraphicEngine;
     public readonly BasicInputHandler InputHandler;
-    public FlyingPlayerController WasdController { get; private set; } = null!;
+    public FlyingPlayerController FlyingController { get; private set; } = null!;
     public readonly KeyBinds Binds;
     public World World { get; private set; } = null!;
+    public CompiledMaterial DirtMaterial;
+    public readonly ChunkWorld ChunkWorld = new();
+    public Entity PlayerEntity { get; private set; }
 
     #endregion
     
     private readonly Wasd _wasd;
     private readonly KeyBinds.Bind _dumbTexturesBind;
+    private readonly KeyBinds.Bind _freeCursorBind;
+    private readonly KeyBinds.Bind _lockCursorBind;
 
     public App()
     {
@@ -47,6 +52,9 @@ public class App : AbstractDisposable, IApp
         InputHandler = new BasicInputHandler(InitialWindowSize, 0.5f);
         _dumbTexturesBind = Binds.AddBind(new KeyBinds.Bind("dumb_textures", KeyCode.F2));
 
+        _freeCursorBind = Binds.AddBind(new KeyBinds.Bind("free_cursor", KeyCode.Escape));
+        _lockCursorBind = Binds.AddBind(new KeyBinds.Bind("lock_cursor", KeyCode.RightMouseButton));
+        
         GraphicEngine = new GraphicEngine(this);
     }
 
@@ -55,9 +63,9 @@ public class App : AbstractDisposable, IApp
         // components
         Components.Boot();
         
+        // assets
         var assetManager = new AssetManager();
-
-        // compile assets
+        DirtMaterial = assetManager.AddMaterialAndGetCompiled(RawMaterial.FromTexture(AssemblyPath.Of(Program.Assembly, "Dirt.png")));
         var assets = assetManager.Compile();
 
         // graphicApi
@@ -78,17 +86,20 @@ public class App : AbstractDisposable, IApp
         }
         
         // controllers
+        FlyingController = new FlyingPlayerController(GraphicApi, InputHandler, _wasd)
         {
-            WasdController = new FlyingPlayerController(GraphicApi, InputHandler, _wasd)
-            {
-                Sensitivity =  0.2f,
-                Speed = 30
-            };
-        }
+            Sensitivity =  0.2f,
+            Speed = 30
+        };
+        
         
         // world load
         {
             World = new World([]);
+            PlayerEntity = World.AddEntity(new Entity.Assembly()
+                .AddComponent(new ChunkLoader{Radius = 3})
+                .AddComponent(new Transform()));
+
             Systems.AddTo(World, this);
         }
         
@@ -108,16 +119,28 @@ public class App : AbstractDisposable, IApp
     {
         InputHandler.PrepareAtFrameStart();
         
+        // wasd
+        FlyingController.Update(deltaTime);
+        World.ModifyEntityComponent<Transform>(PlayerEntity, transform =>
+        {
+            transform.Position = FlyingController.Position;
+            return transform;
+        });
+        
         // world
         World.Update();
         
-        // wasd
-        WasdController.Update(deltaTime);
-
+        // window
         if (InputHandler.WindowSizeChanged)
         {
             GraphicApi.Title($"{Title} ({InputHandler.WindowSize.X}x{InputHandler.WindowSize.Y})");
         }
+        
+        // input
+        if (InputHandler.IsPressed(_freeCursorBind))
+            GraphicApi.SetCursorMode(IGraphicApi.CursorMode.Normal);
+        else if (InputHandler.IsPressed(_lockCursorBind))
+            GraphicApi.SetCursorMode(IGraphicApi.CursorMode.Centered);
         
         // render
         GraphicEngine.Update();
@@ -125,7 +148,6 @@ public class App : AbstractDisposable, IApp
         // keyboard input
         if (InputHandler.IsPressed(_dumbTexturesBind)) 
             GraphicApi.DumpTextures(ExternalPath.Of("."));
-        
         
         // post frame
         GraphicApi.UpdateScreen();
@@ -135,9 +157,6 @@ public class App : AbstractDisposable, IApp
 
     protected override void DisposeData()
     {
-        foreach (var o in GraphicEngine.Objects.Values) 
-            o.Model.Dispose();
-        
         Utils.DisposeAllFields(this);
     }
 }

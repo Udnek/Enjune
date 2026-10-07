@@ -2,7 +2,7 @@ using Enjune.Graphic.Api;
 
 namespace Enjune.Graphic.Modeling.Utility;
 
-public interface IRenderableModel : IDisposable
+public interface IRenderableModel
 {
     public void Render(IShader shader);
 }

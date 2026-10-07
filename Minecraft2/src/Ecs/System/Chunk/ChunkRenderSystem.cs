@@ -13,31 +13,25 @@ using OpenTK.Mathematics;
 
 namespace Minecraft2.Ecs.System;
 
-public class ChunkRenderSyncSystem : ISystem
+public class ChunkRenderSystem : AppSystem
 {
     private Query<GraphicLinkComponent, ChunkComponent> _query = null!;
-    private readonly GraphicEngine _graphicEngine;
 
-    public ChunkRenderSyncSystem(App app)
-    {
-        _graphicEngine = app.GraphicEngine;
-    }
-
-    public void OnInit(World world)
+    public override void OnInit(World world)
     {
         _query = new QueryBuilder(world)
             .Retrieve<GraphicLinkComponent, ChunkComponent>();
     }
 
-    public void OnUpdate()
+    public override void OnUpdate()
     {
         _query.ForEach((_, ref graphicLink, ref chunkComp) =>
         {
             var chunk = chunkComp.Chunk;
             if (!chunk.IsDirty) return;
+            
             // mesh generation
-
-            var model = _graphicEngine.Objects[graphicLink.GraphicId].Model;
+            var model = App.GraphicEngine.Objects[graphicLink.GraphicId].Model;
             if (model is DynamicRenderableModel dynamicRenderable)
                 RegenerateModel(chunk, dynamicRenderable);
             else
@@ -49,6 +43,7 @@ public class ChunkRenderSyncSystem : ISystem
 
     private void RegenerateModel(Chunk chunk, DynamicRenderableModel model)
     {
+        var material = App.DirtMaterial;
         var renderBegin = Stopwatch.StartNew();
         for (int x = 0; x < Chunk.Size.X; x++)
         {
@@ -56,48 +51,57 @@ public class ChunkRenderSyncSystem : ISystem
             {
                 for (int z = 0; z < Chunk.Size.Z; z++)
                 {
-                    if (chunk[new Vector3i(x, y, z)] == false) 
+                    const bool air = false;
+                    const bool outOfBounds = air;
+                    
+                    if (chunk[new Vector3i(x, y, z)] == air) 
                         continue;
+
                     // bottom
-                    if (chunk.SafeGet(new Vector3i(x, y-1, z), false) == false)
+                    if (chunk.SafeGet(new Vector3i(x, y-1, z), outOfBounds) == air)
                         model.Add(new MeshInstance.Entry
                         {
+                            Material = material,
                             Geometry = Mesh.Quad(
                                 (x, y, z), (x+1, y, z), 
                                 (x+1, y, z+1), (x, y, z+1), 
                                 TextureQuad.Full, calculateNormals: false)
                         });
                     // top
-                    if (chunk.SafeGet(new Vector3i(x, y+1, z), false) == false)
+                    if (chunk.SafeGet(new Vector3i(x, y+1, z), outOfBounds) == air)
                         model.Add(new MeshInstance.Entry
                         {
+                            Material = material,
                             Geometry = Mesh.Quad(
                                 (x, y+1, z), (x, y+1, z+1), 
                                 (x+1, y+1, z+1), (x+1, y+1, z), 
                                 TextureQuad.Full, calculateNormals: false)
                         });
                     // xy -z
-                    if (chunk.SafeGet(new Vector3i(x, y, z-1), false) == false)
+                    if (chunk.SafeGet(new Vector3i(x, y, z-1), outOfBounds) == air)
                         model.Add(new MeshInstance.Entry
                         {
+                            Material = material,
                             Geometry = Mesh.Quad(
                                 (x, y, z), (x, y+1, z), 
                                 (x+1, y+1, z), (x+1, y, z), 
                                 TextureQuad.Full, calculateNormals: false)
                         });
                     // xy +z
-                    if (chunk.SafeGet(new Vector3i(x, y, z+1), false) == false)
+                    if (chunk.SafeGet(new Vector3i(x, y, z+1), outOfBounds) == air)
                         model.Add(new MeshInstance.Entry
                         {
+                            Material = material,
                             Geometry = Mesh.Quad(
                                 (x, y, z+1), (x+1, y, z+1), 
                                 (x+1, y+1, z+1), (x, y+1, z+1), 
                                 TextureQuad.Full, calculateNormals: false)
                         });
                     // yz -x
-                    if (chunk.SafeGet(new Vector3i(x-1, y, z), false) == false)
+                    if (chunk.SafeGet(new Vector3i(x-1, y, z), outOfBounds) == air)
                         model.Add(new MeshInstance.Entry
                         {
+                            Material = material,
                             Geometry = Mesh.Quad(
                                 (x, y, z), (x, y, z+1), 
                                 (x, y+1, z+1), (x, y+1, z), 
@@ -105,9 +109,10 @@ public class ChunkRenderSyncSystem : ISystem
                         });
                     
                     // yz +x
-                    if (chunk.SafeGet(new Vector3i(x+1, y, z), false) == false)
+                    if (chunk.SafeGet(new Vector3i(x+1, y, z), outOfBounds) == air)
                         model.Add(new MeshInstance.Entry
                         {
+                            Material = material,
                             Geometry = Mesh.Quad(
                                 (x+1, y, z), (x+1, y+1, z), 
                                 (x+1, y+1, z+1), (x+1, y, z+1), 

@@ -11,5 +11,14 @@
       <ProjectReference Include="..\Enjune\Enjune.csproj" />
       <ProjectReference Include="..\OpenGLApi\OpenGLApi.csproj" />
     </ItemGroup>
+    
+	<ItemGroup>
+	  <EmbeddedResource Include="Resources\**\*" />
+    </ItemGroup>
+    
+	<ItemGroup>
+	  <Folder Include="Resources\" />
+	</ItemGroup>
+
 
 </Project>

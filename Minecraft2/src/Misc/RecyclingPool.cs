@@ -23,7 +23,7 @@ public class RecyclingPool<T>
     /// <param name="item"></param>
     public void Recycle(T item)
     {
-        Logger.Info(this, $"Item recycled; size {Stack.Count} -> {Stack.Count+1}");
+        Logger.Highlight(this, $"Item recycled; size {Stack.Count} -> {Stack.Count+1}");
         Stack.Push(item);
     }
 
@@ -35,11 +35,11 @@ public class RecyclingPool<T>
     {
         if (Stack.TryPop(out var result))
         {
-            Logger.Info(this, $"Item taken; size {Stack.Count+1} -> {Stack.Count}");
+            Logger.Highlight(this, $"Item taken; size {Stack.Count+1} -> {Stack.Count}");
             return result;
         }
 
-        Logger.Info(this, "Stack is empty; new item created");
+        Logger.Highlight(this, "Stack is empty; new item created");
         return _fabric();
     }
 }

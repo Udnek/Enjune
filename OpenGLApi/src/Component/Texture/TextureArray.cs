@@ -17,7 +17,8 @@ public sealed class TextureArray : AbstractTexture
     private readonly SizedInternalFormat _internalFormat;
     private readonly PixelFormat _pixelFormat;
 
-    private TextureArray(TextureUnit unit, Vector2i size, int layers, SizedInternalFormat internalFormat, PixelFormat pixelFormat) : base(TextureTarget.Texture2DArray, unit)
+    private TextureArray(TextureUnit unit, Vector2i size, int layers, SizedInternalFormat internalFormat, PixelFormat pixelFormat) 
+        : base(TextureTarget.Texture2DArray, unit)
     {
         _size = size;
         _layers = layers;
@@ -80,6 +81,7 @@ public sealed class TextureArray : AbstractTexture
             (PixelFormat) pixelFormat, PixelType.UnsignedByte, image.Data);
     }
 
+    // TODO FIX DUMPING
     public override Error? Dump(ExternalPath dir, string namePrefix)
     {
         dir = dir.ThisDirectory();

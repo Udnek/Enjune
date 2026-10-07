@@ -5,7 +5,7 @@ namespace Enjune.Graphic.Api;
 /// <summary>
 /// Should be rendered in shader
 /// </summary>
-public interface IRenderableMesh : IDisposable // TODO should it even be disposable?
+public interface IRenderableMesh
 {
     /// <summary>
     /// Can be refit to reuse memory

@@ -4,7 +4,7 @@ using StbImageSharp;
 
 namespace Enjune.Graphic;
 
-public sealed class ByteImage
+public sealed class ByteImage : IEquatable<ByteImage>
 {
     public readonly int Width;
     public readonly int Height;
@@ -44,7 +44,10 @@ public sealed class ByteImage
         }
         return new ByteImage(Width, Height, Kind.Rgba32, newData);
     }
-    
+
+    public bool Equals(ByteImage? other) 
+        => other?.GetHashCode() == GetHashCode();
+
     public override bool Equals(object? obj) 
         => (obj as ByteImage)?.GetHashCode() == GetHashCode();
 

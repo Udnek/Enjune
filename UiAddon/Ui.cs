@@ -9,7 +9,7 @@ using UiAddon.Layout;
 
 namespace UiAddon;
 
-public sealed class Ui : AbstractDisposable
+public sealed class Ui
 {
     static Ui()
     {
@@ -177,6 +177,4 @@ public sealed class Ui : AbstractDisposable
             element.Children.ForEach(Explore);
         }
     }
-
-    protected override void DisposeData() => _model.Dispose();
 }

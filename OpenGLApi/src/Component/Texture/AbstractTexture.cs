@@ -7,12 +7,6 @@ public abstract class AbstractTexture : GlDisposable
     protected int Handle;
     protected readonly TextureTarget Target;
     protected readonly TextureUnit Unit;
-
-    // public static int? PixelFormatToDepth(PixelFormat pixelFormat)
-    // {
-    //     return pixelFormat switch {}
-    // }
-    
     
     public AbstractTexture(TextureTarget target, TextureUnit unit)
     {

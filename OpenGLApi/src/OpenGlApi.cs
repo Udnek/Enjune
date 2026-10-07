@@ -7,6 +7,7 @@ using OpenGLApi.Component;
 using OpenGLApi.Component.Buffer;
 using OpenGLApi.Component.Texture;
 using OpenGLApi.Data;
+using OpenGLApi.Mesh;
 using OpenGLApi.Pack;
 using OpenGLApi.Shader;
 using OpenTK.Mathematics;
@@ -58,6 +59,9 @@ public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicAp
     private GLFWCallbacks.FramebufferSizeCallback _windowSizeChangeCallback = null!;
     private DebugProc _debugProc = null!;
     private GLFWCallbacks.ScrollCallback _scrollCallback = null!;
+    
+    // disposable meshes
+    private readonly List<GlMesh> _meshesToDispose = [];
 
     public IGraphicApi? Init(CompiledAssets assets, Vector2i windowSize, string title, IUserInputHandler inputHandler,
         out Error? error)
@@ -99,8 +103,6 @@ public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicAp
         GLFW.WindowHint(WindowHintBool.OpenGLForwardCompat, true);
         
         GLFW.WindowHint(WindowHintBool.TransparentFramebuffer, false);
-        
-        
         
         // window creation
         unsafe
@@ -185,6 +187,9 @@ public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicAp
         GL.CullFace(TriangleFace.Back);
         GL.FrontFace(FrontFaceDirection.Ccw);
         
+        // red pixel texture fix when 2x2
+        GL.PixelStore(PixelStoreParameter.UnpackAlignment, 1);
+        
         // debug
         GL.Enable(EnableCap.DebugOutput);
         _debugProc = (source, type, id, severity, length, messagePointer, param) =>
@@ -217,8 +222,8 @@ public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicAp
         {
             // loading materials
             _materialSsbo = new SsboArray<MaterialData>(MaterialsSsboBinding, _assets.Materials.Length, true);
-            MaterialData ToData(CompiledMaterial mat) => new(mat.Raw.Color, mat.TextureId);
-            _materialSsbo.BindAndPush(_assets.Materials.Map(ToData).ToArray());
+   
+            _materialSsbo.BindAndPush(_assets.Materials.Map(mat => new MaterialData(mat.Raw.Color, mat.TextureId)));
         }
         _screenVao = new Vao();
         _screenVbo = new Vbo<(Vector2 position, Vector2 texCoord)>(6, true);
@@ -327,6 +332,10 @@ public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicAp
 
     protected override void DisposeGlData()
     {
+        foreach (var glMesh in _meshesToDispose)
+        {
+            glMesh.Dispose();
+        }
         Utils.DisposeAllFields(this);
         
         unsafe

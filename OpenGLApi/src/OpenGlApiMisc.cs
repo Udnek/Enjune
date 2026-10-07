@@ -228,16 +228,18 @@ public sealed partial class OpenGlApi
 
     public IRenderableMesh CreateStaticRenderable(MeshInstance mesh)
     {
-        var materialModel = new GlMesh(_materialShader, PerPrimitiveSsboBinding, true, _assets.WhiteMaterial.Id);
-        materialModel.Refit(mesh);
-        return materialModel;
+        var glMesh = new GlMesh(_materialShader, PerPrimitiveSsboBinding, true, _assets.WhiteMaterial.Id);
+        glMesh.Refit(mesh);
+        _meshesToDispose.Add(glMesh);
+        return glMesh;
     }
 
     public IRenderableMesh.IDynamic CreateDynamicRenderable(MeshInstance mesh)
     {
-        var materialModel = new GlMesh(_materialShader, PerPrimitiveSsboBinding, false, _assets.WhiteMaterial.Id);
-        materialModel.Refit(mesh);
-        return materialModel;
+        var glMesh = new GlMesh(_materialShader, PerPrimitiveSsboBinding, false, _assets.WhiteMaterial.Id);
+        glMesh.Refit(mesh);
+        _meshesToDispose.Add(glMesh);
+        return glMesh;
     }
 
     public bool ShouldStop()

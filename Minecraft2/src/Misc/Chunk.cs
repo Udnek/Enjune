@@ -12,13 +12,14 @@ public class Chunk
 
     static Chunk()
     {
-        Trace.Assert(Size.X % 2 == 0, "Size.X % 2 == 0");
-        Trace.Assert(Size.Y % 2 == 0, "Size.Y % 2 == 0");
-        Trace.Assert(Size.Z % 2 == 0, "Size.Z % 2 == 0");
+        Trace.Assert(Size.X % 2 == 0);
+        Trace.Assert(Size.Y % 2 == 0);
+        Trace.Assert(Size.Z % 2 == 0);
     }
     
     private readonly bool[] _data = new bool[Size.X * Size.Y * Size.Z];
     public bool IsDirty = false;
+    public bool MarkedUnloaded = false;
     public readonly Vector3i Position;
 
     public Chunk(Vector3i pos)
@@ -26,14 +27,17 @@ public class Chunk
         Position = pos;
     }
 
+    public static Vector3i ToChunkPos(Vector3 pos) => 
+        new((int) pos.X / Size.X, (int) pos.Y / Size.Y, (int) pos.Z / Size.Z);
+
     private static int ToIndex(Vector3i pos) => pos.X + (Size.X * pos.Z) + (Size.X * Size.Z * pos.Y);
 
     public bool SafeGet(Vector3i pos, bool whenOutOfBounds)
     {
-        var index = ToIndex(pos);
-        if (0 <= index && index < _data.Length) 
-            return _data[index];
-        return whenOutOfBounds;
+        if (pos.X < 0 || Size.X <= pos.X ||
+            pos.Y < 0 || Size.Y <= pos.Y || 
+            pos.Z < 0 || Size.Z <= pos.Z) return whenOutOfBounds;
+        return this[pos];
     }
     
     public bool this[Vector3i pos]

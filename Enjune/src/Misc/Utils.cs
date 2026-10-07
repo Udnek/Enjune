@@ -35,6 +35,10 @@ public static class Utils
     }
     
     private static int _disposeDepth = 0;
+    /// <summary>
+    /// Disposes all IDisposable object's fields
+    /// </summary>
+    /// <param name="obj"></param>
     public static void DisposeAllFields(object obj)
     {
         var tab = new string(' ', _disposeDepth*2);
@@ -85,6 +89,5 @@ public static class Utils
             Logger.Info(typeof(Utils),$"  {tab}{objType.Name}.{field.Name} disposed");
         }
     }
-    
 }
 

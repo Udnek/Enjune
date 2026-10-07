@@ -179,9 +179,6 @@ public class App : AbstractDisposable, IApp
 
     protected override void DisposeData()
     {
-        foreach (var o in GraphicEngine.Objects.Values) 
-            o.Model.Dispose();
-        
         Utils.DisposeAllFields(this);
     }
 }

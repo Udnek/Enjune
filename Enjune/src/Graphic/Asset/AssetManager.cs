@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using Enjune.File;
 using Enjune.Graphic.Asset.Font;
 using Enjune.Misc;
@@ -10,9 +11,8 @@ namespace Enjune.Graphic.Asset;
 
 public class AssetManager
 {
-    private readonly Dictionary<RawMaterial, CompiledMaterial> _materials = [];
-    
-    private readonly List<(ByteImage image, bool shouldFlip)> _textures = [];
+    private readonly List<(RawMaterial Raw, CompiledMaterial Compiled)> _materials = [];
+    private readonly List<(ByteImage Image, bool ShouldFlip)> _textures = [];
     private readonly HashSet<ResourcePath> _invalidPaths = [];
 
     public readonly CompiledMaterial MissingMaterial;
@@ -20,8 +20,8 @@ public class AssetManager
     
     public AssetManager()
     {
-        MissingMaterial = AddMaterialAndGetCompiled(RawMaterial.FromTexture(AssemblyPath.Of(Enjune.Assembly,"MissingTexture.png")));
-        WhiteMaterial = AddMaterialAndGetCompiled(RawMaterial.FromTexture(AssemblyPath.Of(Enjune.Assembly,"WhitePixel.png")));
+        MissingMaterial = ForceAddAndGetCompiled(AssemblyPath.Of(Enjune.Assembly, "MissingTexture.png"));
+        WhiteMaterial = ForceAddAndGetCompiled(AssemblyPath.Of(Enjune.Assembly, "WhitePixel.png"));
     }
 
     public CompiledFont? AddFont(ResourcePath path, uint height, out Error? error)
@@ -100,19 +100,38 @@ public class AssetManager
         error = null;
         return new CompiledFont(glyphs, material, height);
     }
+
+    /// <summary>
+    /// Only internal use for Missing and White materials
+    /// </summary>
+    /// <param name="texturePath"></param>
+    /// <returns></returns>
+    private CompiledMaterial ForceAddAndGetCompiled(ResourcePath texturePath)
+    {
+        var tex = texturePath.LoadImage(out var error);
+        if (tex == null)
+        {
+            error = $"Can not load image {texturePath}: {error}";
+            Logger.Error(this, error);
+            throw new Exception(error);
+        }
+        var matId = _materials.Count;
+        var texId = _textures.Count;
+        var rawMaterial = RawMaterial.FromTexture(texturePath);
+        var compiledMaterial = new CompiledMaterial(rawMaterial, matId, texId);
+        _textures.Add((tex, true));
+        _materials.Add((rawMaterial, compiledMaterial));
+        Logger.Info(this, $"Added material {compiledMaterial}");
+        return compiledMaterial;
+    }
     
     public CompiledMaterial AddMaterialAndGetCompiled(RawMaterial rawMaterial)
     {
-        // same material already exists
-        if (_materials.TryGetValue(rawMaterial, out var material)) 
-            return material;
-
-        
         var texId = WhiteMaterial.TextureId; // default
         var texturePath = rawMaterial.TexturePath;
         if (rawMaterial.LoadedTexture != null)
         {
-            var foundTex = _textures.FindIndex(t => Equals(t.image, rawMaterial.LoadedTexture));
+            var foundTex = _textures.FindIndex(t => Equals(t.Image, rawMaterial.LoadedTexture));
             // texture already present
             if (foundTex != -1) 
                 texId = foundTex;
@@ -125,12 +144,12 @@ public class AssetManager
         }
         else if (texturePath != null)
         {
-            var matWithSameTexture = _materials.FirstOrDefault(
-                p => Equals(texturePath, p.Key.TexturePath)).Value;
+            var matWithSameTexture = _materials
+                .FirstOrDefault(p => Equals(texturePath, p.Raw.TexturePath));
             // texture already exists
             if (matWithSameTexture != default)
             {
-                texId = matWithSameTexture.TextureId;
+                texId = matWithSameTexture.Compiled.TextureId;
             }
             // check if it has already been added to invalid
             else if (_invalidPaths.Contains(texturePath))
@@ -144,7 +163,7 @@ public class AssetManager
                 if (loadedTexture == null)
                 {
                     _invalidPaths.Add(texturePath);
-                    Logger.Error(this, $"can not load new texture {texturePath}: {error}");
+                    Logger.Error(this, $"Can not load new texture {texturePath}: {error}");
                     return MissingMaterial;
                 }
                 // adding
@@ -156,8 +175,8 @@ public class AssetManager
         // add new
         MatId matId = _materials.Count;
         var compiledMaterial = new CompiledMaterial(rawMaterial, matId, texId);
-        _materials.Add(rawMaterial, compiledMaterial);
-        Logger.Info(this, $"added material {compiledMaterial};");
+        _materials.Add((rawMaterial, compiledMaterial));
+        Logger.Info(this, $"Added material {compiledMaterial}");
         return compiledMaterial;
     }
     
@@ -166,14 +185,13 @@ public class AssetManager
         Logger.Info(this, $"compiling {_textures.Count} textures and {_materials.Count} materials");
 
         // choosing max size
-        var targetSize = _textures.Max(img => img.image.Width);
+        var targetSize = _textures.Max(img => img.Image.Width);
         Logger.Info(this, $"target texture size: {targetSize}");
 
         // resizing
         List<ByteImage> resizedImages = new();
-        foreach (var rawImageTuple in _textures)
+        foreach (var (rawImage, shouldFlip) in _textures)
         {
-            var rawImage = rawImageTuple.image;
             ByteImage byteImage = ByteImage.Empty(targetSize, targetSize, rawImage.Type);
             switch (rawImage.Type.Depth)
             {
@@ -182,7 +200,7 @@ public class AssetManager
                     using var image = Image.LoadPixelData<L8>(rawImage.Data, rawImage.Width, rawImage.Height);
                     image.Mutate(c =>
                     {
-                        if (rawImageTuple.shouldFlip) c.Flip(FlipMode.Vertical);
+                        if (shouldFlip) c.Flip(FlipMode.Vertical);
                         c.Resize(targetSize, targetSize, KnownResamplers.Box, false);
                     });
                     image.CopyPixelDataTo(byteImage.Data);
@@ -193,7 +211,7 @@ public class AssetManager
                     using var image = Image.LoadPixelData<Rgb24>(rawImage.Data, rawImage.Width, rawImage.Height);
                     image.Mutate(c =>
                     {
-                        if (rawImageTuple.shouldFlip) c.Flip(FlipMode.Vertical);
+                        if (shouldFlip) c.Flip(FlipMode.Vertical);
                         c.Resize(targetSize, targetSize, KnownResamplers.Box, false);
                     });
                     image.CopyPixelDataTo(byteImage.Data);
@@ -204,26 +222,24 @@ public class AssetManager
                     using var image = Image.LoadPixelData<Rgba32>(rawImage.Data, rawImage.Width, rawImage.Height);
                     image.Mutate(c =>
                     {
-                        if (rawImageTuple.shouldFlip) c.Flip(FlipMode.Vertical);
+                        if (shouldFlip) c.Flip(FlipMode.Vertical);
                         c.Resize(targetSize, targetSize, KnownResamplers.Box, false);
                     });
                     image.CopyPixelDataTo(byteImage.Data);
                     break;
                 }   
                 default:
-                    Logger.Error(this, $"unsupported texture depth: {rawImage.Type.Depth}");
+                    Logger.Error(this, $"Unsupported texture depth: {rawImage.Type.Depth}");
                     break;
             }
             resizedImages.Add(byteImage);
         }
 
-        Logger.Info(this, "done compiling");
+        Logger.Info(this, "Done compiling");
         return new CompiledAssets(
             WhiteMaterial,
             MissingMaterial,
-            targetSize, resizedImages, 
-            _materials
-                .OrderBy(e => e.Value.Id)
-                .Select(e => e.Value).ToArray());
+            targetSize, resizedImages,
+            _materials.Select(t => t.Compiled).ToArray());
     }
 }
