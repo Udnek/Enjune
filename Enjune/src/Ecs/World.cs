@@ -117,13 +117,13 @@ public sealed class World
         InvalidateCache();
     }
 
-    public int GetComponentId(Type component)
+    private int GetComponentId(Type component)
     {
         return ComponentManager.GetIdByType(component);
     }
 
     // Don't use in hot loops
-    public bool AddEntityComponent(Entity entity, IComponent component)
+    public bool AddEntityComponent<TComponent>(Entity entity, TComponent component) where TComponent : struct, IComponent
     {
         if (!_entities.Contains(entity)) 
         { 
@@ -131,11 +131,11 @@ public sealed class World
             return false; 
         }
         Archetype currentArchetype = ArchetypeManager.GetArchetypeByEntity(entity);
-        Signature targetSignature = currentArchetype.Signature.Set(GetComponentId(component.GetType()));
+        Signature targetSignature = currentArchetype.Signature.Set(GetComponentId(typeof(TComponent)));
 
         if (targetSignature.Equals(currentArchetype.Signature)) 
         {
-            Logger.Error(this, $"{entity} already has {component.GetType()}. Use {nameof(ModifyEntityComponent)}");
+            Logger.Error(this, $"{entity} already has {typeof(TComponent)}. Use {nameof(ModifyEntityComponent)}");
             return false;
         }
 
