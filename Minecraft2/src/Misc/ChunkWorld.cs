@@ -26,15 +26,15 @@ public class ChunkWorld
     /// <returns></returns>
     public Entity Load(Vector3i pos, out bool wasAlreadyLoaded)
     {
-        if (_loadedChunks.TryGetValue(pos, out var loadedChunk))
+        if (_loadedChunks.TryGetValue(pos, out var alreadyLoaded))
         {
-            _ecsWorld.ModifyEntityComponent<ChunkComponent>(loadedChunk, c => c with { ToBeUnloaded = false });
+            Logger.Highlight(this, $"Marking toBeLoaded: {pos} {alreadyLoaded}");
+            _ecsWorld.ModifyEntityComponent<ChunkComponent>(alreadyLoaded, c => c with { ToBeUnloaded = false });
             wasAlreadyLoaded = true;
-            return loadedChunk;
+            return alreadyLoaded;
         }
 
         wasAlreadyLoaded = false;
-        Logger.Highlight(this, $"Loading {pos}");
         var entity = _ecsWorld.AddEntity(new Entity.Assembly()
             .AddComponent(new ChunkComponent
             {
@@ -42,6 +42,7 @@ public class ChunkWorld
                 Pos = pos
             }));
         _loadedChunks[pos] = entity;
+        Logger.Highlight(this, $"Loading fresh {pos} {entity}");
         return entity;
     }
 
@@ -53,7 +54,7 @@ public class ChunkWorld
             for (int blockZ = 0; blockZ < Chunk.Size.Z; blockZ++)
             {
                 var y = _noise.GetNoise(chunkPos.X*Chunk.Size.X +blockX, chunkPos.Y*Chunk.Size.Z +blockZ);
-                var height = (int) Math.Clamp(y*Chunk.Size.Y , 0, Chunk.Size.Y);
+                var height = (int) Math.Clamp((y+1)/2*Chunk.Size.Y , 0, Chunk.Size.Y);
                 for (int i = 0; i < height; i++)
                 {
                     chunk[new(blockX, i, blockZ)] = true;
@@ -69,7 +70,7 @@ public class ChunkWorld
         if (_loadedChunks.Remove(pos, out var chunk))
         {
             _ecsWorld.RemoveEntityComponent<ChunkComponent>(chunk);
-            Logger.Highlight(this, $"Unloading {pos}");
+            Logger.Highlight(this, $"Unloading {pos} {chunk}");
         }
         else
             Logger.Highlight(this, $"Trying to unloaded {pos}, but already unloaded");

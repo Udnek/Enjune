@@ -187,7 +187,6 @@ public sealed class World
 
         Archetype archetype = ArchetypeManager.GetArchetypeByEntity(entity);
         archetype.ModifyComponent(entity, modifier);
-        InvalidateCache();
         return true;
     }
 

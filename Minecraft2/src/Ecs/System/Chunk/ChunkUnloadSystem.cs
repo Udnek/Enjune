@@ -23,8 +23,9 @@ public class ChunkUnloadSystem : AppSystem
         var chunkWorld = App.ChunkWorld;
         _query.ForEach((entity, ref chunkComp) =>
         {
-            Logger.Highlight(this, $"{entity} {chunkComp.Pos} toBeUnloaded: {chunkComp.ToBeUnloaded}");
             if (!chunkComp.ToBeUnloaded) return;
+            Logger.Highlight(this, $"{entity}: {chunkComp}");
+            Logger.Highlight(this, $"{entity}: {_world.GetEntityComponents(entity).ContentToString()}");
             chunkWorld.Unload(chunkComp.Pos);
             _world.AddEntityComponent(entity, new ToBeRemovedRequest());
         });

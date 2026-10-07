@@ -5,7 +5,7 @@ using OpenTK.Mathematics;
 
 namespace Minecraft2.Ecs.Component;
 
-public struct ChunkComponent() : IComponent
+public record struct ChunkComponent() : IComponent
 {
     public required Chunk Chunk;
     public bool ToBeUnloaded = false;

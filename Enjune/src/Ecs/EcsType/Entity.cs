@@ -10,8 +10,8 @@ public readonly record struct Entity
     public Entity(uint id) => _id = id;
     public Entity(int id) => _id = (uint)id;
     
-    public override string ToString() => $"Entity {_id}";
-    
+    public override string ToString() => _id == 0 ? "Entity null" : $"Entity {_id}";
+
     public sealed class Assembly()
     {
         private readonly Dictionary<Type, IComponent> _components = new();

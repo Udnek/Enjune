@@ -31,8 +31,9 @@ public class ChunkLoadSystem : AppSystem
             {
                 for (int z = -radius; z <= radius; z++)
                 {
-                    Logger.Highlight(this, $"Marking for loaded: {entity} {center + (x, 0, z)}");
-                    chunkWorld.Load(center + (x, 0, z), out var wasAlreadyLoaded);
+                    Logger.Highlight(this, $"Player {entity} loading {center + (x, 0, z)}");
+                    var chunk = chunkWorld.Load(center + (x, 0, z), out var wasAlreadyLoaded);
+                    Logger.Highlight(this, _world.GetEntityComponents(chunk).ContentToString());
                 }
             }
         });

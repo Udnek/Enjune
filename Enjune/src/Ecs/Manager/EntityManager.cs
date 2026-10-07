@@ -5,7 +5,7 @@ namespace Enjune.Ecs.Manager;
 
 public sealed class EntityManager
 {
-    private int _counter = 0;
+    private int _counter = 1;
     
     public EntityManager()
     {
