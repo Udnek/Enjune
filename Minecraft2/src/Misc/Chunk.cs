@@ -19,7 +19,6 @@ public class Chunk
     
     private readonly bool[] _data = new bool[Size.X * Size.Y * Size.Z];
     public bool IsDirty = false;
-    public bool MarkedUnloaded = false;
     public readonly Vector3i Position;
 
     public Chunk(Vector3i pos)

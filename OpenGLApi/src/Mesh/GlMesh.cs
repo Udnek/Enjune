@@ -45,7 +45,11 @@ public class GlMesh : GlDisposable, IRenderableMesh.IDynamic
         GL.DrawElements(CurrentTopology, _currentEboLen, DrawElementsType.UnsignedInt, 0);
     }
 
-    protected override void DisposeGlData() => Utils.DisposeAllFields(this);
+    protected override void DisposeGlData()
+    {
+        if (_vao is null) return; // nothing to dispose
+        Utils.DisposeAllFields(this);
+    }
 
     private void Refit(ReadOnlySpan<VertexData> vboBuf, ReadOnlySpan<int> eboBuf, ReadOnlySpan<PerPrimitiveData> ssboBuf)
     {

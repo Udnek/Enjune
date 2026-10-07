@@ -7,6 +7,7 @@ using Enjune.File;
 using Enjune.Graphic.Api;
 using Enjune.Graphic.Asset;
 using Enjune.Graphic.Key;
+using Enjune.Graphic.Modeling;
 using Enjune.KitStart;
 using Enjune.Misc;
 using Minecraft2.Bridge;
@@ -34,8 +35,9 @@ public class App : AbstractDisposable, IApp
     public readonly KeyBinds Binds;
     public World World { get; private set; } = null!;
     public CompiledMaterial DirtMaterial;
-    public readonly ChunkWorld ChunkWorld = new();
+    public ChunkWorld ChunkWorld { get; private set; }
     public Entity PlayerEntity { get; private set; }
+    public RecyclingPool<DynamicRenderableModel> ChunkModelPool { get; private set; } = null!;
 
     #endregion
     
@@ -83,6 +85,8 @@ public class App : AbstractDisposable, IApp
             GraphicApi.SetVsync(false);
             GraphicApi.SetClearColor(new Vector4(0.2f, 0.2f, 0.2f, 0f));
             GraphicApi.SetCursorMode(IGraphicApi.CursorMode.Centered);
+            
+            ChunkModelPool = new RecyclingPool<DynamicRenderableModel>(() => new DynamicRenderableModel(GraphicApi));
         }
         
         // controllers
@@ -96,8 +100,9 @@ public class App : AbstractDisposable, IApp
         // world load
         {
             World = new World([]);
+            ChunkWorld = new ChunkWorld(World);
             PlayerEntity = World.AddEntity(new Entity.Assembly()
-                .AddComponent(new ChunkLoader{Radius = 3})
+                .AddComponent(new ChunkLoader{Radius = 1})
                 .AddComponent(new Transform()));
 
             Systems.AddTo(World, this);
@@ -109,7 +114,7 @@ public class App : AbstractDisposable, IApp
     public void MainCycle()
     {
         Utils.RunTargetFpsLoopWhile(
-            200, 
+            10, 
             () => !GraphicApi.ShouldStop(),
             GraphicCycle
             );

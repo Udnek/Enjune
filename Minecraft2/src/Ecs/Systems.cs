@@ -7,13 +7,16 @@ public static class Systems
 {
     public static void AddTo(World world, App app)
     {
-        // loading, unloading and marking for removal
+        // marking all for unloading
         world.AddSystem(new ChunkUnloadMarkerSystem {App = app});
+        // loading and unmarking
         world.AddSystem(new ChunkLoadSystem {App = app});
-        world.AddSystem(new ChunkRequestRemoveSystem {App = app});
+        // unloading marked
+        world.AddSystem(new ChunkUnloadSystem {App = app});
         
-        // adding and removing models
-        world.AddSystem(new ChunkManageModelSystem {App = app});
+        // removing and adding models
+        world.AddSystem(new ChunkRemoveModelSystem {App = app});
+        world.AddSystem(new ChunkAddModelSystem {App = app});
         
         // rendering
         world.AddSystem(new ChunkRenderSystem {App = app});

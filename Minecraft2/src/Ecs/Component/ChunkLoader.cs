@@ -10,7 +10,6 @@ public struct ChunkLoader() : IComponent
         .ForEmptyConstructor(() => new ChunkLoader())
         .ForField("radius", i => i.Radius, (ref i, v) => i.Radius = v, Codecs.Int).Build();
     
-    
     public int Radius = 8;
 
     public Identifier Id() => Identifier.Of(Program.Assembly, "chunk_loader");

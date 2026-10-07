@@ -1,13 +1,14 @@
 using Enjune.Ecs;
 using Enjune.Ecs.EcsType;
+using Enjune.Misc;
 using Minecraft2.Ecs.Component;
 
 namespace Minecraft2.Ecs.System;
 
 public class EntityRemoveSystem : AppSystem
 {
-    private Query<ToBeRemovedRequest> _query;
-    private World _world;
+    private Query<ToBeRemovedRequest> _query = null!;
+    private World _world = null!;
 
     public override void OnInit(World world)
     {
@@ -22,6 +23,7 @@ public class EntityRemoveSystem : AppSystem
     {
         _query.ForEach((entity, ref _) =>
         {
+            Logger.Highlight(this, $"Removed {entity}");
             _world.RemoveEntity(entity);
         });
     }

@@ -10,8 +10,8 @@ namespace Minecraft2.Ecs.System;
 
 public class ChunkLoadSystem : AppSystem
 {
-    private Query<Transform, ChunkLoader> _query;
-    private World _world;
+    private Query<Transform, ChunkLoader> _query = null!;
+    private World _world = null!;
 
     public override void OnInit(World world)
     {
@@ -25,16 +25,13 @@ public class ChunkLoadSystem : AppSystem
         var chunkWorld = App.ChunkWorld;
         _query.ForEach((_, ref transform, ref loader) =>
         {
-            var rad = loader.Radius;
+            var radius = loader.Radius;
             var center = Chunk.ToChunkPos(transform.Position);
-            for (int x = -rad; x <= rad; x++)
+            for (int x = -radius; x <= radius; x++)
             {
-                for (int z = -rad; z <= rad; z++)
+                for (int z = -radius; z <= radius; z++)
                 {
-                    var chunk = chunkWorld.Load(center + (x, 0, z), out var wasAlreadyLoaded);
-                    if (wasAlreadyLoaded) continue;
-                    _world.AddEntity(new Entity.Assembly()
-                        .AddComponent(new ChunkComponent { Chunk = chunk }));
+                    chunkWorld.Load(center + (x, 0, z), out var wasAlreadyLoaded);
                 }
             }
         });

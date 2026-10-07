@@ -18,7 +18,7 @@ public class ChunkUnloadMarkerSystem : AppSystem
     {
         _query.ForEach((_, ref chunkComp) =>
         {
-            chunkComp.Chunk.MarkedUnloaded = true;
+            chunkComp.ToBeUnloaded = true;
         });
     }
 }

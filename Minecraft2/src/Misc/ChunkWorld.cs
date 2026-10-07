@@ -1,32 +1,48 @@
+using Enjune.Ecs;
+using Enjune.Ecs.EcsType;
 using Enjune.Misc;
+using Minecraft2.Ecs.Component;
 using OpenTK.Mathematics;
 
 namespace Minecraft2.Misc;
 
 public class ChunkWorld
 {
-    private readonly Dictionary<Vector3i, Chunk> _loadedChunks = [];
+    private readonly Dictionary<Vector3i, Entity> _loadedChunks = [];
     private readonly FastNoiseLite _noise = new();
+    private readonly World _ecsWorld;
 
-    public ChunkWorld()
+    public ChunkWorld(World ecsWorld)
     {
+        _ecsWorld = ecsWorld;
         _noise.SetNoiseType(FastNoiseLite.NoiseType.OpenSimplex2);
     }
-    
-    public Chunk Load(Vector3i pos, out bool wasAlreadyLoaded)
+
+    /// <summary>
+    /// Loads new chunk and adds to ecs world or just returns already loaded
+    /// </summary>
+    /// <param name="pos"></param>
+    /// <param name="wasAlreadyLoaded"></param>
+    /// <returns></returns>
+    public Entity Load(Vector3i pos, out bool wasAlreadyLoaded)
     {
         if (_loadedChunks.TryGetValue(pos, out var loadedChunk))
         {
-            loadedChunk.MarkedUnloaded = false;
+            _ecsWorld.ModifyEntityComponent<ChunkComponent>(loadedChunk, c => c with { ToBeUnloaded = false });
             wasAlreadyLoaded = true;
             return loadedChunk;
         }
 
         wasAlreadyLoaded = false;
         Logger.Highlight(this, $"Loading {pos}");
-        var chunk = GenerateChunk(pos);
-        _loadedChunks[pos] = chunk;
-        return chunk;
+        var entity = _ecsWorld.AddEntity(new Entity.Assembly()
+            .AddComponent(new ChunkComponent
+            {
+                Chunk = GenerateChunk(pos),
+                Pos = pos
+            }));
+        _loadedChunks[pos] = entity;
+        return entity;
     }
 
     private Chunk GenerateChunk(Vector3i chunkPos)
@@ -52,7 +68,7 @@ public class ChunkWorld
     {
         if (_loadedChunks.Remove(pos, out var chunk))
         {
-            chunk.MarkedUnloaded = true;
+            _ecsWorld.RemoveEntityComponent<ChunkComponent>(chunk);
             Logger.Highlight(this, $"Unloading {pos}");
         }
         else
