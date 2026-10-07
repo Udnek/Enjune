@@ -15,7 +15,7 @@ public sealed class World
     public static readonly ICodec<World> WithoutSystemsCodec = new SimpleCodec<World>(
         world =>
         {
-            var allEntities = world.GetAllEntities().ToList();
+            var allEntities = world.GetAllEntities();
             List<DataObject> encodedEntities = new(allEntities.Count);
             foreach (var (entity, components) in allEntities)
             {
@@ -35,22 +35,18 @@ public sealed class World
                 return new Error($"can not decode: {castErr}");
 
             List<Entity.Assembly> entities = [];
-            HashSet<Type> componentTypes = [];
             foreach (var compsData in array.Val)
             {
                 var result = IComponent.ArrayCodec.Decode(compsData);
                 if (result.Error != null)
                     return new Error($"can not decode components: {result.Error}");
                 var assembly = new Entity.Assembly();
-                foreach (var comp in result.GetOrThrow())
-                {
+                foreach (var comp in result.GetOrThrow()) 
                     assembly.AddComponent(comp);
-                    componentTypes.Add(comp.GetType());
-                }
                 entities.Add(assembly);
             }
 
-            var world = new World([]);
+            var world = new World();
             foreach (var assembly in entities) 
                 world.AddEntity(assembly);
             return ResultOrError.Success(world);
@@ -65,19 +61,16 @@ public sealed class World
     // it increments when a new archetype gets created, but does not
     // increment when archetype's entity container changes
     internal int CacheVersion { get; private set; } = 0;
-    private List<Entity> _entities = [];
-
-    public World(IEnumerable<ISystem> systems)
+    private readonly List<Entity> _entities = [];
+    
+    public World()
     {
         Logger.Info(this, "Registering managers");
 
         ArchetypeManager = new ArchetypeManager(this);
         SystemManager = new SystemManager(this);
-        
-        foreach (ISystem system in systems) 
-            SystemManager.RegisterSystem(system);
     }
-
+    
     private void InvalidateCache()
     {
         Logger.Info(this, "Invalidated cache");
@@ -111,8 +104,9 @@ public sealed class World
         _entities.Remove(entity);
         InvalidateCache();
     }
-    
-    public bool AddEntityComponent(Entity entity, IComponent component)
+
+    // Don't use in hot loops
+    public bool AddEntityComponent<TComponent>(Entity entity, TComponent component) where TComponent : struct, IComponent
     {
         if (!_entities.Contains(entity)) 
         { 
@@ -120,11 +114,11 @@ public sealed class World
             return false; 
         }
         Archetype currentArchetype = ArchetypeManager.GetArchetypeByEntity(entity);
-        Signature targetSignature = currentArchetype.Signature.Set(GetComponentId(component.GetType()));
+        Signature targetSignature = currentArchetype.Signature.Set(GetComponentId(typeof(TComponent)));
 
         if (targetSignature.Equals(currentArchetype.Signature)) 
         {
-            Logger.Error(this, $"Tried to add component {component} that already exists");
+            Logger.Error(this, $"{entity} already has {typeof(TComponent)}. Use {nameof(ModifyEntityComponent)}");
             return false;
         }
 
@@ -133,7 +127,7 @@ public sealed class World
         ArchetypeManager.MoveEntity(entity, currentArchetype, targetArchetype);
         targetArchetype.SetComponent(entity, component);
 
-        Logger.Info(this,  $"Added component {component} successfully");
+        Logger.Info(this, $"Added {typeof(TComponent)} to {entity}");
         InvalidateCache();
         return true;
     }
@@ -151,7 +145,7 @@ public sealed class World
 
         if (targetSignature.Equals(currentArchetype.Signature)) 
         { 
-            Logger.Error(this, $"Trying to remove a component {typeof(TComponent)} that doesn't exist");
+            Logger.Error(this, $"{entity} doesn't have {typeof(TComponent)}");
             return false;
         }
 
@@ -159,7 +153,7 @@ public sealed class World
 
         ArchetypeManager.MoveEntity(entity, currentArchetype, targetArchetype);
 
-        Logger.Info(this, $"{nameof(AddEntityComponent)}: Removed component successfully");
+        Logger.Info(this,$"Removed {typeof(TComponent)} from {entity} successfully");
         InvalidateCache();
         return true;
     }
@@ -179,7 +173,7 @@ public sealed class World
         }
 
         Archetype archetype = ArchetypeManager.GetArchetypeByEntity(entity);
-        return archetype.GetComponentCopy<TComponent>(entity);
+        return archetype.GetComponent<TComponent>(entity);
     }
 
     // Don't use in hot loops
