@@ -10,8 +10,8 @@ public sealed class ArchetypeManager(World world)
     private readonly Dictionary<Signature, Archetype> _signatureToArchetype = new();
     private readonly Dictionary<Entity, Archetype> _entityToArchetype = new();
     private readonly World _world = world;
-    
-    public void EnsureArchetypeExistence(Signature signature)
+
+    private void EnsureArchetypeExistence(Signature signature)
     {
         if (_signatureToArchetype.ContainsKey(signature)) return;
         _signatureToArchetype[signature] = new Archetype(signature, _world);

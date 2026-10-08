@@ -65,11 +65,11 @@ namespace Generators.Ecs
             sb.AppendLine(@"    private readonly World _world = world;");
             sb.AppendLine(@"    private readonly Signature _include = include;");
             sb.AppendLine(@"    private readonly Signature _exclude = exclude;");
-            sb.AppendLine($"    private static List<{cacheType}> _cache = [];");
-            sb.AppendLine(@"    private static int _cacheVersion = -1;");
+            sb.AppendLine($"    private readonly List<{cacheType}> _cache = [];");
+            sb.AppendLine(@"    private int _cacheVersion = -1;");
 
             // GetCache method
-            sb.AppendLine($"    internal List<{cacheType}> GetCache(World world, Signature include, Signature exclude)");
+            sb.AppendLine($"    private List<{cacheType}> GetCache(World world, Signature include, Signature exclude)");
             sb.AppendLine(@"    {");
             sb.AppendLine(@"        if (world.CacheVersion == _cacheVersion) return _cache;");
             sb.AppendLine(@"        _cache.Clear();");

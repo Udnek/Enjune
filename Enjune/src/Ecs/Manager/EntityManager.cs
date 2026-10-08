@@ -5,6 +5,7 @@ namespace Enjune.Ecs.Manager;
 
 public sealed class EntityManager
 {
+    // skipping 0 cause it is Entity null
     private int _counter = 1;
     
     public EntityManager()

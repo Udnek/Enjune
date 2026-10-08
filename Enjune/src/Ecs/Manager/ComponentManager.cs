@@ -21,7 +21,7 @@ public sealed class ComponentManager
         }
     }
 
-    public void RegisterComponentType(Type componentType)
+    private void RegisterComponentType(Type componentType)
     {
         if (!typeof(IComponent).IsAssignableFrom(componentType))
         {
@@ -42,12 +42,12 @@ public sealed class ComponentManager
         _idToType[id] = componentType;
     }
 
-    public List<Type> DeconstructSignature(Signature signature)
+    internal List<Type> DeconstructSignature(Signature signature)
     {
         List<Type> result = new();
         foreach (var componentType in _idToType.Values)
         {
-            if (signature.IsSet((int) _typeToId[componentType])) 
+            if (signature.IsSet(_typeToId[componentType])) 
                 result.Add(componentType); 
         }
         return result;

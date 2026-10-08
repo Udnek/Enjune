@@ -26,6 +26,7 @@ public sealed class Archetype
         for (var i = 0; i < nComponents; i++) 
             RegisterColumn(types[i]);
     }
+    
     private void RegisterColumn(Type compType)
     {
         Type columnType = typeof(Column<>).MakeGenericType(compType);
@@ -33,18 +34,6 @@ public sealed class Archetype
         _columns[compType] = columnInstance ??
                              throw new InvalidOperationException($"Failed to instantiate {Logger.GetTypeName(columnType)}");
     }
-
-    #region Public Api
-
-    public Entity GetEntityByRow(int row) => _rowToEntity[row];
-
-    public Span<T> GetComponents<T>() where T : struct, IComponent
-    {
-        Column<T> column = (Column<T>)_columns[typeof(T)];
-        return column.GetSpan();
-    }
-
-    #endregion
 
     private void EnsureCapacity(int targetCapacity)
     {
@@ -59,7 +48,6 @@ public sealed class Archetype
         _capacity = newCapacity;
     }
     
-    // TODO: Avoid using Collection<IComponent> because of boxing
     internal void AddEntity(Entity.Assembly entityAssembly, Entity entity)
     {
         Logger.Info(this, $"Acquired {entity} as an assembly");
