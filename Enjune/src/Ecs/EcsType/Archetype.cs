@@ -122,15 +122,21 @@ public sealed class Archetype
         {
             var lastId = _rowToEntity[lastRow];
 
-            foreach (IColumn column in _columns.Values) 
+            foreach (IColumn column in _columns.Values)
             {
                 column.SwapElements(lastRow, entityRow);
-                column.Count--; 
+                column.Count--;
             }
-                
 
             _entityToRow[lastId] = entityRow;
             _rowToEntity[entityRow] = lastId;
+        }
+        else
+        {
+            foreach (IColumn column in _columns.Values)
+            {
+                column.Count--;
+            }
         }
 
         _entityToRow.Remove(entity);
