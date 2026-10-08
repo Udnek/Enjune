@@ -173,6 +173,12 @@ public sealed class World
         }
 
         Archetype archetype = ArchetypeManager.GetArchetypeByEntity(entity);
+        if (!archetype.Signature.IsSet(GetComponentId(typeof(TComponent))))
+        {
+            Logger.Info(this, $"{entity} doesn't have {typeof(TComponent)}");
+            return null;
+        }
+
         return archetype.GetComponent<TComponent>(entity);
     }
 
