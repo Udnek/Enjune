@@ -60,7 +60,8 @@ public sealed class World
     // This cache version marks broad archetype structure version:
     // it increments when a new archetype gets created, but does not
     // increment when archetype's entity container changes
-    internal int CacheVersion { get; private set; } = 0;
+    private int _cacheVersion = 0;
+    internal int CacheVersion { get => ++_cacheVersion; private set => _cacheVersion = value; }
     private readonly List<Entity> _entities = [];
     
     public World()
