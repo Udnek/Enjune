@@ -16,11 +16,11 @@ public sealed class Column<T>(int capacity = EcsConstants.InitialColumnCapacity)
 {
     private T[] _data = new T[capacity];
     
-    internal ref T this[int i] => ref _data[i];
-
-    // TODO probably change to this
-    // [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    // public ref T Get(int i) => ref _data[i];
+    internal ref T this[int i]
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => ref _data[i];
+    }
     
     public int Count { get; set; }
 
