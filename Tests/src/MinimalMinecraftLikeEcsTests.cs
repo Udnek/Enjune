@@ -25,6 +25,42 @@ public class MinimalMinecraftLikeEcsTests
     }
 
     [Fact]
+    public void Query_ShouldReturnSameMatches_RegardlessOfComponentOrder()
+    {
+        var world = new World();
+
+        var entity = world.AddEntity(new Entity.Assembly().AddComponent(new ChunkData(11)));
+        var other = world.AddEntity(new Entity.Assembly().AddComponent(new ChunkData(22)));
+
+        var firstQuery = new QueryBuilder(world)
+            .Retrieve<ChunkData, GraphicLink>();
+        var secondQuery = new QueryBuilder(world)
+            .Retrieve<GraphicLink, ChunkData>();
+
+        world.AddEntityComponent(entity, new GraphicLink(Guid.Parse("11111111-1111-1111-1111-111111111111"))).Should().BeTrue();
+        world.AddEntityComponent(other, new GraphicLink(Guid.Parse("22222222-2222-2222-2222-222222222222"))).Should().BeTrue();
+
+        var orderedByChunkThenLink = new List<(Entity Entity, int ChunkId, Guid GraphicId)>();
+        firstQuery.ForEach((entityId, ref chunk, ref link) =>
+        {
+            orderedByChunkThenLink.Add((entityId, chunk.ChunkId, link.GraphicIdValue));
+        });
+
+        var orderedByLinkThenChunk = new List<(Entity Entity, int ChunkId, Guid GraphicId)>();
+        secondQuery.ForEach((entityId, ref link, ref chunk) =>
+        {
+            orderedByLinkThenChunk.Add((entityId, chunk.ChunkId, link.GraphicIdValue));
+        });
+
+        orderedByChunkThenLink.Should().HaveCount(2);
+        orderedByLinkThenChunk.Should().HaveCount(2);
+
+        orderedByChunkThenLink.Should().BeEquivalentTo(orderedByLinkThenChunk);
+        orderedByChunkThenLink.Select(x => x.Entity).Should().BeEquivalentTo(new[] { entity, other });
+        orderedByChunkThenLink.Select(x => x.ChunkId).Should().BeEquivalentTo(new[] { 11, 22 });
+    }
+
+    [Fact]
     public void World_ShouldRepeatMinecraftLikeChunkLifecycle_AcrossFrames()
     {
         var world = new World();
