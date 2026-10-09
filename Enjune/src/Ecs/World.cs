@@ -101,23 +101,17 @@ public sealed class World
     /// Locks the world, deferring certain actions that would
     /// invalidate cache until the world is unlocked. 
     /// </summary>
-    internal void Lock()
-    {
-        Logger.Info(this, $"Locking, locks: {_locks} -> {_locks+1}");
-        _locks += 1;
-    }
+    internal void Lock() => _locks += 1;
 
     /// <summary>
     /// Unlocks the world, executing all deferred actions and invalidating world cache
     /// </summary>
     internal void Unlock()
     {
-        Logger.Info(this, $"Unlocking, locks: {_locks} -> {_locks-1}");
         _locks -= 1;
         if (IsLocked) 
             return;
         
-        Logger.Info(this, "Purging deferred commands");
         foreach (var entity in _entityRemoveQueue) 
             RemoveEntity(entity);
         _entityRemoveQueue.Clear();
