@@ -14,7 +14,7 @@ public interface IColumn
 
 public sealed class Column<TComponent>(int capacity = EcsConstants.InitialColumnCapacity) : IColumn where TComponent : struct, IComponent
 {
-    public TComponent[] _data = new TComponent[capacity];
+    private TComponent[] _data = new TComponent[capacity];
     
     internal ref TComponent this[int i]
     {
@@ -28,7 +28,9 @@ public sealed class Column<TComponent>(int capacity = EcsConstants.InitialColumn
     
     public void SwapElements(int rowFrom, int rowTo)
     {
-        (_data[rowFrom], _data[rowTo]) = (_data[rowTo], _data[rowFrom]);
+        var temp = _data[rowFrom];
+        _data[rowFrom] = _data[rowTo];
+        _data[rowTo] = temp;
     }
 
     public IComponent GetValue(int row) => _data[row];
