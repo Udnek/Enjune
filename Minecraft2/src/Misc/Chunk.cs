@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using Enjune.Attribute;
 using Enjune.Misc;
 using OpenTK.Mathematics;
@@ -19,18 +20,15 @@ public class Chunk
     
     private readonly bool[] _data = new bool[Size.X * Size.Y * Size.Z];
     public bool IsDirty = false;
-    public readonly Vector3i Position;
 
-    public Chunk(Vector3i pos)
-    {
-        Position = pos;
-    }
-
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector3i ToChunkPos(Vector3 pos) => 
         new((int) pos.X / Size.X, (int) pos.Y / Size.Y, (int) pos.Z / Size.Z);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int ToIndex(Vector3i pos) => pos.X + (Size.X * pos.Z) + (Size.X * Size.Z * pos.Y);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool SafeGet(Vector3i pos, bool whenOutOfBounds)
     {
         if (pos.X < 0 || Size.X <= pos.X ||
@@ -41,13 +39,13 @@ public class Chunk
     
     public bool this[Vector3i pos]
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => _data[ToIndex(pos)];
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         set
         {
             IsDirty = true;
             _data[ToIndex(pos)] = value;
         }
     }
-    
-    public override string ToString() => $"{nameof(Chunk)}[{Position}]";
 }

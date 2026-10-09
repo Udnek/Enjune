@@ -2,10 +2,9 @@ using Enjune.Ecs;
 using Enjune.Ecs.EcsType;
 using Enjune.Graphic.Modeling;
 using Enjune.Misc;
-using Minecraft2.Bridge;
 using Minecraft2.Ecs.Component;
 
-namespace Minecraft2.Ecs.System;
+namespace Minecraft2.Ecs.System.Chunk;
 
 public class ChunkRemoveModelSystem : AppSystem
 {
@@ -32,6 +31,7 @@ public class ChunkRemoveModelSystem : AppSystem
                 Logger.Warn(this, $"{entity} has {graphicLink} but doesn't appear in {App.GraphicEngine}");
 
             _world.RemoveEntityComponent<GraphicLinkComponent>(entity);
+            Logger.Highlight(this, $"Unassigned {graphicLink.GraphicId} from {chunkComp}");
         });
     }
 }

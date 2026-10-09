@@ -133,9 +133,9 @@ public class App : AbstractDisposable, IApp
         });
         
         // world
-        Logger.Highlight(this, "---------------------------------");
+        //Logger.Highlight(this, "---------------------------------");
         World.Update();
-        Logger.Highlight(this, "---------------------------------");
+        //Logger.Highlight(this, "---------------------------------");
         
         // window
         if (InputHandler.WindowSizeChanged)
