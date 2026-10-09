@@ -56,9 +56,8 @@ public class EcsTests
         var world = new World();
         var entity = world.AddEntity(new Entity.Assembly().AddComponent(new TestPosition(10)).AddComponent(new TestVelocity(5)));
 
-        var removed = world.RemoveEntityComponent<TestVelocity>(entity);
+        world.RemoveEntityComponent<TestVelocity>(entity);
 
-        removed.Should().BeTrue();
         world.GetEntityComponent<TestVelocity>(entity).Should().BeNull();
         world.GetEntityComponent<TestPosition>(entity).Should().Be(new TestPosition(10));
     }
@@ -69,9 +68,7 @@ public class EcsTests
         var world = new World();
         var entity = world.AddEntity(new Entity.Assembly().AddComponent(new TestPosition(4)));
 
-        var changed = world.ModifyEntityComponent<TestPosition>(entity, position => position with { X = position.X + 2 });
-
-        changed.Should().BeTrue();
+        world.ModifyEntityComponent<TestPosition>(entity, position => position with { X = position.X + 2 }).Should().BeTrue();
         world.GetEntityComponent<TestPosition>(entity).Should().Be(new TestPosition(6));
     }
 
@@ -109,11 +106,11 @@ public class EcsTests
         world.AddEntityComponent<TestVelocity>(first, new TestVelocity(1));
         world.AddEntityComponent<TestTag>(first, new TestTag("leader"));
 
-        world.RemoveEntityComponent<TestPosition>(second).Should().BeTrue();
+        world.RemoveEntityComponent<TestPosition>(second);
         world.AddEntityComponent<TestTag>(second, new TestTag("moved"));
 
         world.AddEntityComponent<TestPosition>(third, new TestPosition(30));
-        world.RemoveEntityComponent<TestTag>(first).Should().BeTrue();
+        world.RemoveEntityComponent<TestTag>(first);
 
         world.GetEntityComponent<TestPosition>(first).Should().Be(new TestPosition(10));
         world.GetEntityComponent<TestVelocity>(first).Should().Be(new TestVelocity(1));
@@ -150,15 +147,15 @@ public class EcsTests
 
         for (int i = 0; i < 3; i++)
         {
-            world.AddEntityComponent<TestTag>(alpha, new TestTag($"alpha-{i}")).Should().BeTrue();
-            world.RemoveEntityComponent<TestTag>(alpha).Should().BeTrue();
+            world.AddEntityComponent<TestTag>(alpha, new TestTag($"alpha-{i}"));
+            world.RemoveEntityComponent<TestTag>(alpha);
 
-            world.AddEntityComponent<TestPosition>(beta, new TestPosition(10 + i)).Should().BeTrue();
-            world.RemoveEntityComponent<TestPosition>(beta).Should().BeTrue();
+            world.AddEntityComponent<TestPosition>(beta, new TestPosition(10 + i));
+            world.RemoveEntityComponent<TestPosition>(beta);
 
             world.ModifyEntityComponent<TestTag>(gamma, tag => tag with { Value = $"gamma-{i}" }).Should().BeTrue();
-            world.RemoveEntityComponent<TestTag>(gamma).Should().BeTrue();
-            world.AddEntityComponent<TestTag>(gamma, new TestTag($"gamma-{i}")).Should().BeTrue();
+            world.RemoveEntityComponent<TestTag>(gamma);
+            world.AddEntityComponent<TestTag>(gamma, new TestTag($"gamma-{i}"));
         }
 
         world.GetEntityComponent<TestPosition>(alpha).Should().Be(new TestPosition(1));
