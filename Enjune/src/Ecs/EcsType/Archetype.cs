@@ -191,7 +191,6 @@ public sealed class Archetype
 
     internal Column<TComponent> GetColumn<TComponent>() where TComponent : struct, IComponent
     {
-        Logger.Error(this, $"\n------------------------------\nRetrieving a column of type {typeof(TComponent)} with {_columns[typeof(TComponent)].Count} elements\n------------------------------\n");
         return (Column<TComponent>)_columns[typeof(TComponent)];
     }
 
