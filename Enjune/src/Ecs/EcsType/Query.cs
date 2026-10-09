@@ -26,6 +26,7 @@ public class Query(World world, Signature include, Signature exclude)
     
     public void ForEach(ForEachDelegate action)
     {
+        _world.Lock();
         var cache = GetCache(_world, _include, _exclude);
         foreach (var (entities, count) in cache)
         {
@@ -34,6 +35,7 @@ public class Query(World world, Signature include, Signature exclude)
                 action(entities[i]);
             }
         }
+        _world.Unlock();
     }
 }
 

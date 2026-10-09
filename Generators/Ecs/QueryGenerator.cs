@@ -84,14 +84,17 @@ namespace Generators.Ecs
             // ForEach method
             sb.AppendLine($"    public void ForEach(ForEachDelegate<{typeParamList}> action)");
             sb.AppendLine(@"    {");
+            sb.AppendLine(@"        _world.Lock();");
             sb.AppendLine(@"        var cache = GetCache(_world, _include, _exclude);");
             sb.AppendLine($"        foreach (var {deconstructPattern} in cache)");
             sb.AppendLine(@"        {");
-            sb.AppendLine(@"            for (int i = 0; i < col1.Count; i++)");
+            sb.AppendLine(@"            int count = col1.Count;");
+            sb.AppendLine(@"            for (int i = 0; i < count; i++)");
             sb.AppendLine(@"            {");
             sb.AppendLine($"                action({actionArgs});");
             sb.AppendLine(@"            }");
             sb.AppendLine(@"        }");
+            sb.AppendLine(@"        _world.Unlock();");
             sb.AppendLine(@"    }");
 
             sb.AppendLine(@"}");
