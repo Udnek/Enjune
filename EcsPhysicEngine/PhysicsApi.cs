@@ -7,7 +7,7 @@ using System.Text;
 
 namespace EcsPhysicsEngine;
 
-public class PhysicsApi : IPhysicsApi
+public class PhysicsApi
 {
     public static void RegisterSystems(World world)
     {

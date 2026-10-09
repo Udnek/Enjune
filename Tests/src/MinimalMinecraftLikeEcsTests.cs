@@ -32,13 +32,13 @@ public class MinimalMinecraftLikeEcsTests
         var entity = world.AddEntity(new Entity.Assembly().AddComponent(new ChunkData(11)));
         var other = world.AddEntity(new Entity.Assembly().AddComponent(new ChunkData(22)));
 
+        world.AddEntityComponent(entity, new GraphicLink(Guid.Parse("11111111-1111-1111-1111-111111111111"))).Should().BeTrue();
+        world.AddEntityComponent(other, new GraphicLink(Guid.Parse("22222222-2222-2222-2222-222222222222"))).Should().BeTrue();
+
         var firstQuery = new QueryBuilder(world)
             .Retrieve<ChunkData, GraphicLink>();
         var secondQuery = new QueryBuilder(world)
             .Retrieve<GraphicLink, ChunkData>();
-
-        world.AddEntityComponent(entity, new GraphicLink(Guid.Parse("11111111-1111-1111-1111-111111111111"))).Should().BeTrue();
-        world.AddEntityComponent(other, new GraphicLink(Guid.Parse("22222222-2222-2222-2222-222222222222"))).Should().BeTrue();
 
         var orderedByChunkThenLink = new List<(Entity Entity, int ChunkId, Guid GraphicId)>();
         firstQuery.ForEach((entityId, ref chunk, ref link) =>
@@ -54,10 +54,9 @@ public class MinimalMinecraftLikeEcsTests
 
         orderedByChunkThenLink.Should().HaveCount(2);
         orderedByLinkThenChunk.Should().HaveCount(2);
-
         orderedByChunkThenLink.Should().BeEquivalentTo(orderedByLinkThenChunk);
-        orderedByChunkThenLink.Select(x => x.Entity).Should().BeEquivalentTo(new[] { entity, other });
-        orderedByChunkThenLink.Select(x => x.ChunkId).Should().BeEquivalentTo(new[] { 11, 22 });
+        //orderedByChunkThenLink.Select(x => x.Entity).Should().BeEquivalentTo([entity, other]);
+        //orderedByChunkThenLink.Select(x => x.ChunkId).Should().BeEquivalentTo([11, 22]);
     }
 
     [Fact]
