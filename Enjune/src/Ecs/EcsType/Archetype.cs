@@ -132,7 +132,6 @@ public sealed class Archetype
         if (entityRow != lastRow)
         {
             var lastEntity = _rowToEntity[lastRow];
-
             foreach (IColumn column in _columns.Values)
             {
                 column.SwapElements(lastRow, entityRow);

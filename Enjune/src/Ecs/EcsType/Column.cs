@@ -12,11 +12,11 @@ public interface IColumn
     IComponent GetValue(int row);
 }
 
-public sealed class Column<T>(int capacity = EcsConstants.InitialColumnCapacity) : IColumn where T : struct, IComponent
+public sealed class Column<TComponent>(int capacity = EcsConstants.InitialColumnCapacity) : IColumn where TComponent : struct, IComponent
 {
-    private T[] _data = new T[capacity];
+    public TComponent[] _data = new TComponent[capacity];
     
-    internal ref T this[int i]
+    internal ref TComponent this[int i]
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => ref _data[i];
@@ -24,9 +24,12 @@ public sealed class Column<T>(int capacity = EcsConstants.InitialColumnCapacity)
     
     public int Count { get; set; }
 
-    public void SetValue(int row, IComponent value) => _data[row] = (T)value;
+    public void SetValue(int row, IComponent value) => _data[row] = (TComponent)value;
     
-    public void SwapElements(int rowFrom, int rowTo) => _data[rowFrom] = _data[rowTo];
+    public void SwapElements(int rowFrom, int rowTo)
+    {
+        (_data[rowFrom], _data[rowTo]) = (_data[rowTo], _data[rowFrom]);
+    }
 
     public IComponent GetValue(int row) => _data[row];
 
