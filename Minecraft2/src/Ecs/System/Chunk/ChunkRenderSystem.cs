@@ -11,12 +11,12 @@ namespace Minecraft2.Ecs.System.Chunk;
 
 public class ChunkRenderSystem : AppSystem
 {
-    private Query<GraphicLinkComponent, ChunkComponent> _query = null!;
+    private Query<ChunkComponent, GraphicLinkComponent> _query = null!;
 
     public override void OnInit(World world)
     {
         _query = new QueryBuilder(world)
-            .Retrieve<GraphicLinkComponent, ChunkComponent>();
+            .Retrieve<ChunkComponent, GraphicLinkComponent>();
     }
 
     public override void OnUpdate()
