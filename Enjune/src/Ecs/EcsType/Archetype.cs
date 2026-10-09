@@ -1,5 +1,7 @@
 using Enjune.Attribute;
 using Enjune.Misc;
+using System.ComponentModel;
+using System.Data.Common;
 using IComponent = Enjune.Ecs.Component.IComponent;
 
 namespace Enjune.Ecs.EcsType;
@@ -35,6 +37,13 @@ public sealed class Archetype
                              throw new InvalidOperationException($"Failed to instantiate {Logger.GetTypeName(columnType)}");
     }
 
+    /// <summary>
+    /// Ensures that archetype's storage has enough capacity<br/>
+    /// to fit <c>targetCapacity</c> elements.<br/>
+    /// Does nothing if there is already enough space.<br/>
+    /// Resizes storages if there is not
+    /// </summary>
+    /// <param name="targetCapacity"></param>
     private void EnsureCapacity(int targetCapacity)
     {
         if (targetCapacity <= _capacity) return;
@@ -48,16 +57,21 @@ public sealed class Archetype
         _capacity = newCapacity;
     }
     
+    /// <summary>
+    /// Adds an entity by reading components from an assembly.<br/>
+    /// Doesn't check if entity signature matches the archetype signature,<br/>
+    /// since this operation is outsourced to public API<br/>
+    /// </summary>
+    /// <param name="entityAssembly"></param>
+    /// <param name="entity"></param>
     internal void AddEntity(Entity.Assembly entityAssembly, Entity entity)
     {
         Logger.Info(this, $"Acquired {entity} as an assembly");
-        
         EnsureCapacity(Count + 1);
 
         int row = Count;
         _entityToRow[entity] = row;
         _rowToEntity[row] = entity;
-        
         foreach (IComponent component in entityAssembly.GetComponents())
         {
             if (_columns.ContainsKey(component.GetType()))
@@ -71,6 +85,12 @@ public sealed class Archetype
         Count++;
     }
 
+    /// <summary>
+    /// Adds an entity by consuming a stream of components.<br/>
+    /// Omits components that don't match archetype's signature
+    /// </summary>
+    /// <param name="entity"></param>
+    /// <param name="components"></param>
     internal void AddEntity(Entity entity, IEnumerable<IComponent> components)
     {
         Logger.Info(this, $"Acquired {entity} as a stream of components");
@@ -87,14 +107,17 @@ public sealed class Archetype
             {
                 var column = _columns[component.GetType()];
                 column.SetValue(row, component);
-                column.Count++;
             }
             else
             {
                 Logger.Info(this, $"Omitting a component that does not belong to archetype {Signature}");
             }
         }
-
+        // Ineffective?
+        foreach (IColumn column in _columns.Values)
+        {
+            column.Count++;
+        }
         Count++;
     }
 
@@ -108,16 +131,15 @@ public sealed class Archetype
 
         if (entityRow != lastRow)
         {
-            var lastId = _rowToEntity[lastRow];
-
+            var lastEntity = _rowToEntity[lastRow];
             foreach (IColumn column in _columns.Values)
             {
                 column.SwapElements(lastRow, entityRow);
                 column.Count--;
             }
 
-            _entityToRow[lastId] = entityRow;
-            _rowToEntity[entityRow] = lastId;
+            _entityToRow[lastEntity] = entityRow;
+            _rowToEntity[entityRow] = lastEntity;
         }
         else
         {

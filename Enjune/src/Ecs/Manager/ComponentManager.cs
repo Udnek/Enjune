@@ -45,10 +45,10 @@ public sealed class ComponentManager
     internal List<Type> DeconstructSignature(Signature signature)
     {
         List<Type> result = new();
-        foreach (var componentType in _idToType.Values)
+        foreach (var (id, type) in _idToType)
         {
-            if (signature.IsSet(_typeToId[componentType])) 
-                result.Add(componentType); 
+            if (signature.IsSet(id)) 
+                result.Add(type); 
         }
         return result;
     }
