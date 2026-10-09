@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Enjune.Attribute;
 using Enjune.Data;
 using Enjune.Data.Codec;
@@ -66,11 +67,18 @@ public sealed class World
     internal int CacheVersion { get; private set; }
     private readonly List<Entity> _entities = [];
 
+    #region Locking To Prevent Strcture Change During Query Iteration
+
     // TODO: Huge placeholder, need to come up with something better
-    private List<Entity> _entityRemoveQueue = [];
-    private List<(Entity, Type)> _componentRemoveQueue = [];
-    private List<(Entity, IComponent, Type)> _componentAddQueue = [];
-    private bool _locked = false;
+    private readonly List<Entity> _entityRemoveQueue = [];
+    private readonly List<(Entity, Type)> _componentRemoveQueue = [];
+    private readonly List<(Entity, IComponent, Type)> _componentAddQueue = [];
+    private int _locks = 0;
+    private bool IsLocked => _locks > 0;
+
+    #endregion
+    
+
     
     public World()
     {
@@ -95,8 +103,8 @@ public sealed class World
     /// </summary>
     internal void Lock()
     {
-        Logger.Info(this, "Locked");
-        _locked = true;
+        Logger.Info(this, $"Locking, locks: {_locks} -> {_locks+1}");
+        _locks += 1;
     }
 
     /// <summary>
@@ -104,25 +112,22 @@ public sealed class World
     /// </summary>
     internal void Unlock()
     {
-        Logger.Info(this, "Unlocked");
-        if (!_locked) return;
-        Logger.Info(this, "Purging commands");
-        _locked = false;
-        InvalidateCache();
-        foreach (var entity in _entityRemoveQueue)
-        {
+        Logger.Info(this, $"Unlocking, locks: {_locks} -> {_locks-1}");
+        _locks -= 1;
+        if (IsLocked) 
+            return;
+        
+        Logger.Info(this, "Purging deferred commands");
+        foreach (var entity in _entityRemoveQueue) 
             RemoveEntity(entity);
-        }
         _entityRemoveQueue.Clear();
-        foreach (var (entity, componentType) in _componentRemoveQueue)
-        {
+        
+        foreach (var (entity, componentType) in _componentRemoveQueue) 
             RemoveEntityComponent(entity, componentType);
-        }
         _componentRemoveQueue.Clear();
-        foreach (var (entity, component, componentType) in _componentAddQueue)
-        {
+        
+        foreach (var (entity, component, componentType) in _componentAddQueue) 
             AddEntityComponent(entity, component, componentType);
-        }
         _componentAddQueue.Clear();
     }
 
@@ -133,17 +138,31 @@ public sealed class World
 
     #region Public Api
 
+    /// <summary>
+    /// Adds system to the end of update order
+    /// </summary>
+    /// <param name="system"></param>
     public void AddSystem(ISystem system) => SystemManager.RegisterSystem(system);
 
+    /// <summary>
+    /// Updates all systems in order they were added
+    /// </summary>
     public void Update() => SystemManager.UpdateAll();
 
     #region Entity Interactions
+    
+    /// <summary>
+    /// Adds fresh entity with new id
+    /// </summary>
+    /// <param name="assembly"></param>
+    /// <returns></returns>
     public Entity AddEntity(Entity.Assembly assembly)
     {
         Entity entity = EntityManager.CreateEntity();
         ArchetypeManager.AddEntity(assembly, entity);
         _entities.Add(entity);
         InvalidateCache();
+        Logger.Info(this, $"Added {entity}");
         return entity;
     }
 
@@ -155,14 +174,18 @@ public sealed class World
     /// <param name="entity">Entity.</param>
     public void RemoveEntity(Entity entity)
     {
-        if (_locked)
+        if (IsLocked)
         {
-            Logger.Warn(this, $"Deferred removal of {entity}");
+            Logger.Info(this, $"Deferred removal of {entity}");
             _entityRemoveQueue.Add(entity);
             return;
         }
         ArchetypeManager.RemoveEntity(entity);
         _entities.Remove(entity);
+        
+        InvalidateCache();
+        
+        Logger.Info(this, $"Removed {entity}");
     }
 
     // TODO: Cringe ass idk son im crine
@@ -174,18 +197,20 @@ public sealed class World
     /// <param name="entity">Entity.</param>
     /// <param name="component">The component to add.</param>
     /// <param name="componentType">The component type.</param>
-    public void AddEntityComponent(Entity entity, IComponent component, Type componentType)
+    private void AddEntityComponent(Entity entity, IComponent component, Type componentType)
     {
-        if (_locked)
-        {
-            _componentAddQueue.Add((entity, component, componentType));
-            return;
-        }
         if (!_entities.Contains(entity))
         {
             Logger.Error(this, $"{entity} doesn't exist");
             return;
         }
+        if (IsLocked)
+        {
+            Logger.Info(this, $"Deferred addition of {component} to {entity}");
+            _componentAddQueue.Add((entity, component, componentType));
+            return;
+        }
+        
         Archetype currentArchetype = ArchetypeManager.GetArchetypeByEntity(entity);
         Signature targetSignature = currentArchetype.Signature.Set(GetComponentId(componentType));
 
@@ -199,12 +224,19 @@ public sealed class World
 
         ArchetypeManager.MoveEntity(entity, currentArchetype, targetArchetype);
         targetArchetype.SetComponent(entity, component);
+        
+        InvalidateCache();
 
         Logger.Info(this, $"Added {componentType} to {entity}");
-        return;
     }
-    /// <typeparam name="TComponent">The component type.</typeparam>
-    /// <inheritdoc cref="AddEntityComponent(Entity, IComponent, Type)"/>
+    
+    /// <summary>
+    /// Attempts to add a component from an entity.<br/>
+    /// Errors if an entity already has such component.<br/>
+    /// If the world is locked, defers operation until it's unlocked.
+    /// </summary>
+    /// <param name="entity">Entity.</param>
+    /// <param name="component">The component to add.</param>
     public void AddEntityComponent<TComponent>(Entity entity, TComponent component) where TComponent : struct, IComponent
     {
         AddEntityComponent(entity, component, typeof(TComponent));
@@ -219,18 +251,18 @@ public sealed class World
     /// <param name="componentType">The component type to remove.</param>
     public void RemoveEntityComponent(Entity entity, Type componentType)
     {
-        // TODO: Move removal execution into a separate method to avoid an unnecessary check?
-        if (_locked)
-        {
-            Logger.Warn(this, $"Deferred removal of {componentType} from {entity}");
-            _componentRemoveQueue.Add((entity, componentType));
-            return;
-        }
         if (!_entities.Contains(entity))
         {
             Logger.Error(this, $"{entity} doesn't exist");
             return;
         }
+        if (IsLocked)
+        {
+            Logger.Warn(this, $"Deferred removal of {componentType} from {entity}");
+            _componentRemoveQueue.Add((entity, componentType));
+            return;
+        }
+
         Archetype currentArchetype = ArchetypeManager.GetArchetypeByEntity(entity);
         Signature targetSignature = currentArchetype.Signature.Unset(GetComponentId(componentType));
 
@@ -244,8 +276,11 @@ public sealed class World
 
         ArchetypeManager.MoveEntity(entity, currentArchetype, targetArchetype);
 
-        Logger.Info(this, $"Removed {componentType} from {entity} successfully");
+        InvalidateCache();
+        
+        Logger.Info(this, $"Removed {componentType} from {entity}");
     }
+    
     /// <typeparam name="TComponent">The component type to remove.</typeparam>
     /// <inheritdoc cref="RemoveEntityComponent(Entity, Type)"/>
     public void RemoveEntityComponent<TComponent>(Entity entity) where TComponent : struct, IComponent
