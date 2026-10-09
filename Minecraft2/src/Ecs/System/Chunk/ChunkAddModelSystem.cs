@@ -22,6 +22,9 @@ public class ChunkAddModelSystem : AppSystem
     public override void OnUpdate()
     {
         var graphicObjects = App.GraphicEngine.Objects;
+
+        int c = 0;
+        _query.ForEach((_, ref _) => c+=1);
         
         _query.ForEach((entity, ref chunkComp) =>
         {
