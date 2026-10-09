@@ -2,7 +2,7 @@ using Enjune.Ecs;
 using Enjune.Ecs.EcsType;
 using Minecraft2.Ecs.Component;
 
-namespace Minecraft2.Ecs.System;
+namespace Minecraft2.Ecs.System.Chunk;
 
 public class ChunkUnloadMarkerSystem : AppSystem
 {

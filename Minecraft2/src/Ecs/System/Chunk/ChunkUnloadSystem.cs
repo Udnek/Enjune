@@ -1,9 +1,8 @@
 using Enjune.Ecs;
 using Enjune.Ecs.EcsType;
-using Enjune.Misc;
 using Minecraft2.Ecs.Component;
 
-namespace Minecraft2.Ecs.System;
+namespace Minecraft2.Ecs.System.Chunk;
 
 public class ChunkUnloadSystem : AppSystem
 {
@@ -24,8 +23,6 @@ public class ChunkUnloadSystem : AppSystem
         _query.ForEach((entity, ref chunkComp) =>
         {
             if (!chunkComp.ToBeUnloaded) return;
-            Logger.Highlight(this, $"{entity}: {chunkComp}");
-            Logger.Highlight(this, $"{entity}: {_world.GetEntityComponents(entity).ContentToString()}");
             chunkWorld.Unload(chunkComp.Pos);
             _world.AddEntityComponent(entity, new ToBeRemovedRequest());
         });

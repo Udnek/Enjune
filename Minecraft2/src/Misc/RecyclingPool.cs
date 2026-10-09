@@ -39,7 +39,7 @@ public class RecyclingPool<T>
             return result;
         }
 
-        Logger.Highlight(this, "Stack is empty; new item created");
+        Logger.Highlight(this, "Pool is empty; new item created");
         return _fabric();
     }
 }

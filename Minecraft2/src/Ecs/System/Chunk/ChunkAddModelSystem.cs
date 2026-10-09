@@ -1,14 +1,10 @@
 using Enjune.Ecs;
 using Enjune.Ecs.EcsType;
-using Enjune.Ecs.System;
-using Enjune.Graphic.Modeling;
 using Enjune.Misc;
 using Minecraft2.Bridge;
 using Minecraft2.Ecs.Component;
-using Minecraft2.Misc;
-using OpenTK.Mathematics;
 
-namespace Minecraft2.Ecs.System;
+namespace Minecraft2.Ecs.System.Chunk;
 
 public class ChunkAddModelSystem : AppSystem
 {
@@ -31,19 +27,19 @@ public class ChunkAddModelSystem : AppSystem
         {
             if (chunkComp.ToBeUnloaded) return;
             
-            var chunk = chunkComp.Chunk;
             var graphicLink = new GraphicLinkComponent();
             _world.AddEntityComponent(entity, graphicLink);
             var graphicObject = new GraphicObject
             {
                 Model = App.ChunkModelPool.Take(),
                 TransformMatrix = MathUtils.CreateModelTransform(
-                    chunk.Position * Chunk.Size,
+                    chunkComp.Pos * Misc.Chunk.Size,
                     Quaternion.Identity,
                     Vector3.One)
             };
 
             graphicObjects[graphicLink.GraphicId] = graphicObject;
+            Logger.Highlight(this, $"Assigned {graphicLink.GraphicId} to {chunkComp}");
         });
     }
 }

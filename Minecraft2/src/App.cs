@@ -114,7 +114,7 @@ public class App : AbstractDisposable, IApp
     public void MainCycle()
     {
         Utils.RunTargetFpsLoopWhile(
-            10, 
+            200, 
             () => !GraphicApi.ShouldStop(),
             GraphicCycle
             );
@@ -133,9 +133,9 @@ public class App : AbstractDisposable, IApp
         });
         
         // world
-        Logger.Highlight(this, "---------------------------------");
+        //Logger.Highlight(this, "---------------------------------");
         World.Update();
-        Logger.Highlight(this, "---------------------------------");
+        //Logger.Highlight(this, "---------------------------------");
         
         // window
         if (InputHandler.WindowSizeChanged)

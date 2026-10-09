@@ -1,31 +1,27 @@
 using System.Diagnostics;
 using Enjune.Ecs;
 using Enjune.Ecs.EcsType;
-using Enjune.Ecs.System;
 using Enjune.Graphic;
-using Enjune.Graphic.Api;
 using Enjune.Graphic.Modeling;
 using Enjune.Misc;
-using Minecraft2.Bridge;
 using Minecraft2.Ecs.Component;
-using Minecraft2.Misc;
 using OpenTK.Mathematics;
 
-namespace Minecraft2.Ecs.System;
+namespace Minecraft2.Ecs.System.Chunk;
 
 public class ChunkRenderSystem : AppSystem
 {
-    private Query<GraphicLinkComponent, ChunkComponent> _query = null!;
+    private Query<ChunkComponent, GraphicLinkComponent> _query = null!;
 
     public override void OnInit(World world)
     {
         _query = new QueryBuilder(world)
-            .Retrieve<GraphicLinkComponent, ChunkComponent>();
+            .Retrieve<ChunkComponent, GraphicLinkComponent>();
     }
 
     public override void OnUpdate()
     {
-        _query.ForEach((_, ref graphicLink, ref chunkComp) =>
+        _query.ForEach((_, ref chunkComp, ref graphicLink) =>
         {
             var chunk = chunkComp.Chunk;
             if (!chunk.IsDirty) return;
@@ -35,21 +31,21 @@ public class ChunkRenderSystem : AppSystem
             if (model is DynamicRenderableModel dynamicRenderable)
                 RegenerateModel(chunk, dynamicRenderable);
             else
-                Logger.Warn(this, $"Can not update model: model for {chunk} is not dynamic");
-
+                Logger.Warn(this, $"Can not update model: model for {chunkComp} is not dynamic");
+        
             chunk.IsDirty = false;
         });
     }
 
-    private void RegenerateModel(Chunk chunk, DynamicRenderableModel model)
+    private void RegenerateModel(Misc.Chunk chunk, DynamicRenderableModel model)
     {
         var material = App.DirtMaterial;
         var renderBegin = Stopwatch.StartNew();
-        for (int x = 0; x < Chunk.Size.X; x++)
+        for (int x = 0; x < Misc.Chunk.Size.X; x++)
         {
-            for (int y = 0; y < Chunk.Size.Y; y++)
+            for (int y = 0; y < Misc.Chunk.Size.Y; y++)
             {
-                for (int z = 0; z < Chunk.Size.Z; z++)
+                for (int z = 0; z < Misc.Chunk.Size.Z; z++)
                 {
                     const bool air = false;
                     const bool outOfBounds = air;
@@ -124,7 +120,7 @@ public class ChunkRenderSystem : AppSystem
         
         model.Add(new MeshInstance.Entry
         {
-            Geometry = Mesh.Cuboid(Position.Zero, Chunk.Size, TextureQuad.Full, PrimitiveTopology.LineStrip),
+            Geometry = Mesh.Cuboid(Position.Zero, Misc.Chunk.Size, TextureQuad.Full, PrimitiveTopology.LineStrip),
             Color = new Color(0, 1, 0, 0.5f)
         });
         
