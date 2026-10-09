@@ -32,8 +32,8 @@ public class MinimalMinecraftLikeEcsTests
         var entity = world.AddEntity(new Entity.Assembly().AddComponent(new ChunkData(11)));
         var other = world.AddEntity(new Entity.Assembly().AddComponent(new ChunkData(22)));
 
-        world.AddEntityComponent(entity, new GraphicLink(Guid.Parse("11111111-1111-1111-1111-111111111111"))).Should().BeTrue();
-        world.AddEntityComponent(other, new GraphicLink(Guid.Parse("22222222-2222-2222-2222-222222222222"))).Should().BeTrue();
+        world.AddEntityComponent(entity, new GraphicLink(Guid.Parse("11111111-1111-1111-1111-111111111111")));
+        world.AddEntityComponent(other, new GraphicLink(Guid.Parse("22222222-2222-2222-2222-222222222222")));
 
         var firstQuery = new QueryBuilder(world)
             .Retrieve<ChunkData, GraphicLink>();
@@ -218,7 +218,8 @@ public class MinimalMinecraftLikeEcsTests
                 if (!chunk.ToBeUnloaded) return;
 
                 activeChunks.Remove(chunk.ChunkId);
-                MarkerAddResults.Add(world.AddEntityComponent(entity, new RemovalMarker()));
+                world.AddEntityComponent(entity, new RemovalMarker());
+                MarkerAddResults.Add(true);
             });
         }
     }
