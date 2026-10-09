@@ -54,9 +54,10 @@ public class MinimalMinecraftLikeEcsTests
 
         orderedByChunkThenLink.Should().HaveCount(2);
         orderedByLinkThenChunk.Should().HaveCount(2);
-        orderedByChunkThenLink.Should().BeEquivalentTo(orderedByLinkThenChunk);
-        //orderedByChunkThenLink.Select(x => x.Entity).Should().BeEquivalentTo([entity, other]);
-        //orderedByChunkThenLink.Select(x => x.ChunkId).Should().BeEquivalentTo([11, 22]);
+        orderedByChunkThenLink.Select(x => x.Entity.ToString()).Should().BeEquivalentTo([entity.ToString(), other.ToString()]);
+        orderedByChunkThenLink.Select(x => x.ChunkId).Should().BeEquivalentTo([11, 22]);
+        orderedByLinkThenChunk.Select(x => x.Entity.ToString()).Should().BeEquivalentTo([entity.ToString(), other.ToString()]);
+        orderedByLinkThenChunk.Select(x => x.ChunkId).Should().BeEquivalentTo([11, 22]);
     }
 
     [Fact]
