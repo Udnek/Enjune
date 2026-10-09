@@ -41,11 +41,5 @@ public class ChunkAddModelSystem : AppSystem
             graphicObjects[graphicLink.GraphicId] = graphicObject;
             Logger.Highlight(this, $"Assigned {graphicLink.GraphicId} to {chunkComp}");
         });
-
-
-        foreach (var (entity, components) in _world.GetAllEntities())
-        {
-            Logger.Highlight(this, $"{entity}, {components.Select(c => c.GetType()).ContentToString()}");
-        }
     }
 }

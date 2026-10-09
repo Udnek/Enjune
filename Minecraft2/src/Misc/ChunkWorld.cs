@@ -52,8 +52,10 @@ public class ChunkWorld
         {
             for (int blockZ = 0; blockZ < Chunk.Size.Z; blockZ++)
             {
-                var y = _noise.GetNoise(chunkPos.X*Chunk.Size.X +blockX, chunkPos.Y*Chunk.Size.Z +blockZ);
-                var height = (int) Math.Clamp((y+1f)/2f*Chunk.Size.Y, 0, Chunk.Size.Y);
+                var y = _noise.GetNoise(chunkPos.X*Chunk.Size.X +blockX, chunkPos.Y*Chunk.Size.Z +blockZ); // [-1; 1]
+                y = (y + 1f) / 2f; // [0; 1]
+                int height = Math.Clamp((int)(y * Chunk.Size.Y), 0, Chunk.Size.Y);
+                height = Math.Max(height, 1);
                 for (int i = 0; i < height; i++)
                 {
                     chunk[new(blockX, i, blockZ)] = true;

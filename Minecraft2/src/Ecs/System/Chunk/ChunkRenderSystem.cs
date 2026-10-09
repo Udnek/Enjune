@@ -21,25 +21,20 @@ public class ChunkRenderSystem : AppSystem
 
     public override void OnUpdate()
     {
-        int c = 0;
-        _query.ForEach((_, ref _, ref _) => c += 1);
-        Logger.Highlight(this, $"Renderable chunks: {c}");
-        // _query.ForEach((_, ref graphicLink, ref chunkComp) =>
-        // {
-        //     var chunk = chunkComp.Chunk;
-        //     Logger.Highlight(this, $"Rendering {chunk}");
-        //     if (!chunk.IsDirty) return;
-        //     
-        //     
-        //     // mesh generation
-        //     var model = App.GraphicEngine.Objects[graphicLink.GraphicId].Model;
-        //     if (model is DynamicRenderableModel dynamicRenderable)
-        //         RegenerateModel(chunk, dynamicRenderable);
-        //     else
-        //         Logger.Warn(this, $"Can not update model: model for {chunk} is not dynamic");
-        //
-        //     chunk.IsDirty = false;
-        // });
+        _query.ForEach((_, ref chunkComp, ref graphicLink) =>
+        {
+            var chunk = chunkComp.Chunk;
+            if (!chunk.IsDirty) return;
+            
+            // mesh generation
+            var model = App.GraphicEngine.Objects[graphicLink.GraphicId].Model;
+            if (model is DynamicRenderableModel dynamicRenderable)
+                RegenerateModel(chunk, dynamicRenderable);
+            else
+                Logger.Warn(this, $"Can not update model: model for {chunkComp} is not dynamic");
+        
+            chunk.IsDirty = false;
+        });
     }
 
     private void RegenerateModel(Misc.Chunk chunk, DynamicRenderableModel model)

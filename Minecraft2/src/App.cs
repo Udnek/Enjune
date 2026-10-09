@@ -114,7 +114,7 @@ public class App : AbstractDisposable, IApp
     public void MainCycle()
     {
         Utils.RunTargetFpsLoopWhile(
-            10, 
+            200, 
             () => !GraphicApi.ShouldStop(),
             GraphicCycle
             );
