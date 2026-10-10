@@ -252,7 +252,6 @@ public sealed class World
         }
         if (IsLocked)
         {
-            Logger.Warn(this, $"Deferred removal of {componentType} from {entity}");
             _componentRemoveQueue.Add((entity, componentType));
             return;
         }
