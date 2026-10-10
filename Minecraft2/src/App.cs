@@ -35,11 +35,11 @@ public class App : AbstractDisposable, IApp
     public readonly KeyBinds Binds;
     public World World { get; private set; } = null!;
     public CompiledMaterial DirtMaterial;
-    public ChunkWorld ChunkWorld { get; private set; }
+    public ChunkWorld ChunkWorld { get; private set; } = null!;
     public Entity PlayerEntity { get; private set; }
     public RecyclingPool<DynamicRenderableModel> ChunkModelPool { get; private set; } = null!;
     public readonly BaseTerrainGenerator TerrainGenerator = new BaseTerrainGenerator();
-    public readonly ChunkMeshGenerator ChunkMeshGenerator = new ChunkMeshGenerator();
+    public readonly ChunkMeshGenerator ChunkMeshGenerator;
     
     #endregion
     
@@ -51,6 +51,7 @@ public class App : AbstractDisposable, IApp
     public App()
     {
         Binds = KeyBinds.CreateEmpty();
+        ChunkMeshGenerator = new ChunkMeshGenerator(this);
         _wasd = Wasd.AddTo(Binds);
         
         InputHandler = new BasicInputHandler(InitialWindowSize, 0.5f);
@@ -103,9 +104,9 @@ public class App : AbstractDisposable, IApp
         // world load
         {
             World = new World();
-            ChunkWorld = new ChunkWorld(World);
+            ChunkWorld = new ChunkWorld(this);
             PlayerEntity = World.AddEntity(new Entity.Assembly()
-                .AddComponent(new ChunkLoader{Radius = 3})
+                .AddComponent(new ChunkLoader{Radius = 8})
                 .AddComponent(new Transform()));
 
             Systems.AddTo(World, this);

@@ -9,71 +9,74 @@ namespace Minecraft2.Misc;
 public class ChunkWorld
 {
     private readonly Dictionary<ChunkPos, Entity> _loadedChunks = [];
-    private readonly FastNoiseLite.FastNoiseLite _noise = new();
-    private readonly World _ecsWorld;
+    private readonly HashSet<ChunkPos> _queuedForGeneration = [];
+    private readonly App _app;
 
-    public ChunkWorld(World ecsWorld)
-    {
-        _ecsWorld = ecsWorld;
-        _noise.SetNoiseType(FastNoiseLite.FastNoiseLite.NoiseType.OpenSimplex2);
-    }
+    public ChunkWorld(App app) => _app = app;
 
     /// <summary>
     /// Loads new chunk and adds to ecs world or just returns already loaded
     /// </summary>
     /// <param name="pos"></param>
-    /// <param name="wasAlreadyLoaded"></param>
     /// <returns></returns>
-    public Entity Load(ChunkPos pos, out bool wasAlreadyLoaded)
+    public void Load(ChunkPos pos)
     {
+        // already loaded
         if (_loadedChunks.TryGetValue(pos, out var alreadyLoaded))
         {
-            _ecsWorld.ModifyEntityComponent<ChunkComponent>(alreadyLoaded, c => c with { ToBeUnloaded = false });
-            wasAlreadyLoaded = true;
-            return alreadyLoaded;
+            _app.World.ModifyEntityComponent<ChunkComponent>(alreadyLoaded, c => c with { ToBeUnloaded = false });
+            return;
         }
-
-        wasAlreadyLoaded = false;
-        var entity = _ecsWorld.AddEntity(new Entity.Assembly()
-            .AddComponent(new ChunkComponent
-            {
-                Chunk = GenerateChunk(pos),
-                Pos = pos
-            }));
-        _loadedChunks[pos] = entity;
-        Logger.Highlight(this, $"Loading fresh {pos} {entity}");
-        return entity;
-    }
-
-    private Chunk GenerateChunk(ChunkPos chunkPos)
-    {
-        var chunk = new Chunk();
-        for (int blockX = 0; blockX < Chunk.Size.X; blockX++)
+        
+        // already queued
+        if (_queuedForGeneration.Contains(pos))
         {
-            for (int blockZ = 0; blockZ < Chunk.Size.Z; blockZ++)
-            {
-                var y = _noise.GetNoise(chunkPos.X*Chunk.Size.X +blockX, chunkPos.Z*Chunk.Size.Z +blockZ); // [-1; 1]
-                y = (y + 1f) / 2f; // [0; 1]
-                int height = Math.Clamp((int)(y * Chunk.Size.Y), 0, Chunk.Size.Y);
-                height = Math.Max(height, 1);
-                for (int i = 0; i < height; i++)
-                {
-                    chunk[new(blockX, i, blockZ)] = true;
-                }
-            }
+            Logger.Highlight(this, $"{pos} already queued for generation");
+            return;
         }
 
-        return chunk;
+        _queuedForGeneration.Add(pos);
+        _app.TerrainGenerator.Enqueue(pos);
     }
 
     public void Unload(ChunkPos pos)
     {
         if (_loadedChunks.Remove(pos, out var chunk))
         {
-            _ecsWorld.RemoveEntityComponent<ChunkComponent>(chunk);
+            _app.World.RemoveEntityComponent<ChunkComponent>(chunk);
             Logger.Highlight(this, $"Unloading {pos} {chunk}");
+        }
+        else if (_queuedForGeneration.Remove(pos))
+        {
+            _app.TerrainGenerator.CancelJob(pos);
+            Logger.Highlight(this, $"Dequeuing generation of {pos}");
         }
         else
             Logger.Highlight(this, $"Trying to unloaded {pos}, but already unloaded");
+    }
+
+    /// <summary>
+    /// Tries to pull all generated chunks from TerrainGenerator
+    /// </summary>
+    public void PullLoading()
+    {
+        while (_app.TerrainGenerator.TryDequeue(out var res))
+        {
+            var (pos, chunk) = res;
+            if (!_queuedForGeneration.Remove(pos))
+            {
+                Logger.Warn(this, $"Got chunk that was not queued: {pos}");
+                return;
+            }
+            
+            var entity = _app.World.AddEntity(new Entity.Assembly()
+                .AddComponent(new ChunkComponent
+                {
+                    Chunk = chunk,
+                    Pos = pos
+                }));
+            _loadedChunks[pos] = entity;
+            Logger.Highlight(this, $"Successfully loaded {pos}");
+        }
     }
 }

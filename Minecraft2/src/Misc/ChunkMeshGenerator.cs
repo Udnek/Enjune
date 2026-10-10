@@ -5,15 +5,15 @@ using Enjune.Misc;
 
 namespace Minecraft2.Misc;
 
-public class ChunkMeshGenerator(App app) : ConcurrentWorker<(Chunk Chunk, DynamicRenderableModel Model), bool>
+public class ChunkMeshGenerator(App app) : ConcurrentWorker<(Chunk Chunk, DynamicRenderableModel Model), Nothing>
 {
-    protected override bool Work((Chunk Chunk, DynamicRenderableModel Model) job)
+    protected override Nothing Work((Chunk Chunk, DynamicRenderableModel Model) job)
     {
         var (chunk, model) = job;
         model.Clear();
         var material = app.DirtMaterial;
         Color sideColor = System.Drawing.Color.FromArgb(255, 150, 150, 150).ToTk();
-        var renderBegin = Stopwatch.StartNew();
+        var renderTimer = Stopwatch.StartNew();
         for (int x = 0; x < Chunk.Size.X; x++)
         {
             for (int y = 0; y < Chunk.Size.Y; y++)
@@ -97,13 +97,12 @@ public class ChunkMeshGenerator(App app) : ConcurrentWorker<(Chunk Chunk, Dynami
         
         model.Add(new MeshInstance.Entry
         {
-            Geometry = Mesh.Cuboid(Position.Zero, Chunk.Size, TextureQuad.Full, PrimitiveTopology.LineStrip),
+            Geometry = Mesh.Cuboid(Position.Zero, Chunk.Size, TextureQuad.Full, PrimitiveTopology.Line),
             Color = new Color(0, 1, 0, 0.5f)
         });
         
-        model.Refit();
-        
-        renderBegin.Stop();
-        Logger.Highlight(this, $"Generated mesh for {chunk} in {renderBegin.ElapsedMilliseconds} ms");
+        renderTimer.Stop();
+        Logger.Highlight(this, $"Generated mesh in {renderTimer.ElapsedMilliseconds} ms");
+        return Nothing.Instance;
     }
 }

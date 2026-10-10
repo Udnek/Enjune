@@ -28,9 +28,11 @@ public class ChunkLoadSystem : AppSystem
             {
                 for (int z = -radius; z <= radius; z++)
                 {
-                    chunkWorld.Load(center + (x, 0, z), out var _);
+                    chunkWorld.Load(center + (x, 0, z));
                 }
             }
         });
+        // pulling from generator
+        chunkWorld.PullLoading();
     }
 }

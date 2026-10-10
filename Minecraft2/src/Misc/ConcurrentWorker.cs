@@ -6,9 +6,10 @@ using Enjune.Misc;
 namespace Minecraft2.Misc;
 
 [LogParams(logCallingMethod: true)]
-public abstract class ConcurrentWorker<TIn, TOut> : AbstractDisposable
+public abstract class ConcurrentWorker<TIn, TOut> : AbstractDisposable where TIn : notnull
 {
     private readonly BlockingCollection<TIn> _jobs = new(new ConcurrentQueue<TIn>());
+    private readonly ConcurrentDictionary<TIn, Nothing> _cancelledJobs = [];
     private readonly ConcurrentQueue<(TIn, TOut)> _done = [];
     private Thread? _workingThread;
     private CancellationTokenSource? _cancelWork;
@@ -37,6 +38,8 @@ public abstract class ConcurrentWorker<TIn, TOut> : AbstractDisposable
                 {
                     try
                     {
+                        if (_cancelledJobs.TryRemove(job, out _)) // job was canceled
+                            continue;
                         var res = Work(job);
                         _done.Enqueue((job, res));
                     }
@@ -72,7 +75,7 @@ public abstract class ConcurrentWorker<TIn, TOut> : AbstractDisposable
         _cancelWork.Dispose();
         _cancelWork = null;
         
-        
+        _cancelledJobs.Clear();
     }
 
     /// <summary>
@@ -90,11 +93,17 @@ public abstract class ConcurrentWorker<TIn, TOut> : AbstractDisposable
     }
 
     /// <summary>
+    /// Cancels queued job 
+    /// </summary>
+    /// <param name="input"></param>
+    public void CancelJob(TIn input) => _cancelledJobs.TryAdd(input, Nothing.Instance);
+
+    /// <summary>
     /// Tries to deque done works if any
     /// </summary>
     /// <param name="result"></param>
     /// <returns></returns>
-    public bool TryTake(out (TIn input, TOut output) result)
+    public bool TryDequeue(out (TIn job, TOut done) result)
         => _done.TryDequeue(out result);
     
     #endregion

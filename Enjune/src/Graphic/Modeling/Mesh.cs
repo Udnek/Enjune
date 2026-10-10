@@ -133,9 +133,9 @@ public sealed class Mesh
     public static Mesh Quad(Position bl, Position br, Position tr, Position tl,
         TextureQuad tex, PrimitiveTopology topology = PrimitiveTopology.Triangle, bool calculateNormals = true)
     {
-        return Create([bl, br, tr, tl],
+        return Ngon([bl, br, tr, tl], 
             [tex.BotLeft, tex.BotRight, tex.TopRight, tex.TopLeft],
-            [0, 1, 2, 0, 2, 3], topology, calculateNormals);
+            topology, calculateNormals);
     }
 
     public static Mesh QuadXy(Position bl, float width, float height, 
@@ -160,7 +160,7 @@ public sealed class Mesh
 
         if (topology == PrimitiveTopology.Triangle)
         {
-            List<int> indexes = new(poses.Length * 3);
+            List<int> indexes = new((poses.Length - 2) * 3);
             for (var i = 1; i < poses.Length - 1; i++)
             {
                 // fan-like
@@ -168,7 +168,7 @@ public sealed class Mesh
                 indexes.Add(i);
                 indexes.Add(i + 1);
             }
-
+            
             return Create(poses, texPoses, indexes.ToArray(), topology, calculateNormals); 
         }
         
