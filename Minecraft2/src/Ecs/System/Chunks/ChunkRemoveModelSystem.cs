@@ -32,7 +32,6 @@ public class ChunkRemoveModelSystem : AppSystem
                 Logger.Warn(this, $"{entity} has {graphicLink} but doesn't appear in {App.GraphicEngine}");
 
             _world.RemoveEntityComponent<GraphicLinkComponent>(entity);
-            Logger.Highlight(this, $"Unassigned {graphicLink.GraphicId} from {chunkComp.Pos}");
         });
     }
 }

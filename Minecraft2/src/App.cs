@@ -106,7 +106,7 @@ public class App : AbstractDisposable, IApp
             World = new World();
             ChunkWorld = new ChunkWorld(this);
             PlayerEntity = World.AddEntity(new Entity.Assembly()
-                .AddComponent(new ChunkLoader{Radius = 8})
+                .AddComponent(new ChunkLoader{Radius = 16})
                 .AddComponent(new Transform()));
 
             Systems.AddTo(World, this);

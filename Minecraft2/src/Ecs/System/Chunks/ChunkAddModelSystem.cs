@@ -43,7 +43,6 @@ public class ChunkAddModelSystem : AppSystem
             };
 
             graphicObjects[graphicLink.GraphicId] = graphicObject;
-            Logger.Highlight(this, $"Assigned {graphicLink.GraphicId} to {chunkComp.Pos}");
         });
     }
 }

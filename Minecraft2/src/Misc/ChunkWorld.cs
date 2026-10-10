@@ -31,7 +31,7 @@ public class ChunkWorld
         // already queued
         if (_queuedForGeneration.Contains(pos))
         {
-            Logger.Highlight(this, $"{pos} already queued for generation");
+            Logger.Info(this, $"{pos} already queued for generation");
             return;
         }
 
@@ -44,15 +44,15 @@ public class ChunkWorld
         if (_loadedChunks.Remove(pos, out var chunk))
         {
             _app.World.RemoveEntityComponent<ChunkComponent>(chunk);
-            Logger.Highlight(this, $"Unloading {pos} {chunk}");
+            Logger.Info(this, $"Unloading {pos} {chunk}");
         }
         else if (_queuedForGeneration.Remove(pos))
         {
             _app.TerrainGenerator.CancelJob(pos);
-            Logger.Highlight(this, $"Dequeuing generation of {pos}");
+            Logger.Info(this, $"Dequeuing generation of {pos}");
         }
         else
-            Logger.Highlight(this, $"Trying to unloaded {pos}, but already unloaded");
+            Logger.Info(this, $"Trying to unloaded {pos}, but already unloaded");
     }
 
     /// <summary>
@@ -76,7 +76,6 @@ public class ChunkWorld
                     Pos = pos
                 }));
             _loadedChunks[pos] = entity;
-            Logger.Highlight(this, $"Successfully loaded {pos}");
         }
     }
 }
