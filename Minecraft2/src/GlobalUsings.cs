@@ -11,7 +11,7 @@ global using Position = OpenTK.Mathematics.Vector3;
 global using Color = OpenTK.Mathematics.Vector4;
 global using TexturePos = OpenTK.Mathematics.Vector2;
 global using Normal = OpenTK.Mathematics.Vector3;
-
+global using ChunkPos = OpenTK.Mathematics.Vector3i;
 
 global using Nanoseconds = long;
 global using Fps = float;

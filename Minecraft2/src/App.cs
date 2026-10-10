@@ -23,7 +23,7 @@ namespace Minecraft2;
 public class App : AbstractDisposable, IApp
 {
     private static readonly Vector2i InitialWindowSize = (480*2, 360*2);
-    private static readonly string Title = "Minecraft2";
+    private const string Title = "Minecraft2";
 
     #region Public
 
@@ -38,7 +38,9 @@ public class App : AbstractDisposable, IApp
     public ChunkWorld ChunkWorld { get; private set; }
     public Entity PlayerEntity { get; private set; }
     public RecyclingPool<DynamicRenderableModel> ChunkModelPool { get; private set; } = null!;
-
+    public readonly BaseTerrainGenerator TerrainGenerator = new BaseTerrainGenerator();
+    public readonly ChunkMeshGenerator ChunkMeshGenerator = new ChunkMeshGenerator();
+    
     #endregion
     
     private readonly Wasd _wasd;
@@ -83,7 +85,7 @@ public class App : AbstractDisposable, IApp
             GraphicApi = graphicApi;
             
             GraphicApi.SetVsync(false);
-            GraphicApi.SetClearColor(new Vector4(0.2f, 0.2f, 0.2f, 0f));
+            GraphicApi.SetClearColor(new Vector4(135, 206, 235f, 255f)/255f);
             GraphicApi.SetCursorMode(IGraphicApi.CursorMode.Centered);
             
             ChunkModelPool = new RecyclingPool<DynamicRenderableModel>(() => new DynamicRenderableModel(GraphicApi));
@@ -109,6 +111,10 @@ public class App : AbstractDisposable, IApp
             Systems.AddTo(World, this);
         }
         
+        // starting workers
+        TerrainGenerator.Start("TerrainGenerator");
+        ChunkMeshGenerator.Start("MeshGenerator");
+        
         return null;
     }
 
@@ -119,6 +125,9 @@ public class App : AbstractDisposable, IApp
             () => !GraphicApi.ShouldStop(),
             GraphicCycle
             );
+        
+        TerrainGenerator.Stop();
+        ChunkMeshGenerator.Stop();
     }
 
     private void GraphicCycle(float deltaTime)

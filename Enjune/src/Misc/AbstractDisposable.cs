@@ -10,7 +10,7 @@ public abstract class AbstractDisposable : IDisposable
     {
         if (_disposed)
         {
-            Logger.Warn(this, "trying to dispose several times");
+            Logger.Warn(this, "Trying to dispose several times");
             return;
         }
         DisposeData();
@@ -21,7 +21,7 @@ public abstract class AbstractDisposable : IDisposable
     ~AbstractDisposable()
     {
         if (_disposed) return;
-        Logger.Warn(this, $"dispose called only during finalizing; should call {nameof(Dispose)}() manually");
+        Logger.Warn(this, $"Dispose called only during finalizing; should call {nameof(Dispose)}() manually");
         Dispose();
     }
 }

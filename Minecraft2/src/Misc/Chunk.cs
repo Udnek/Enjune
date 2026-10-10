@@ -6,10 +6,9 @@ using OpenTK.Mathematics;
 
 namespace Minecraft2.Misc;
 
-[LogParams(method: LogParamsAttribute.Method.ToString)]
 public class Chunk
 {
-    public static readonly Vector3i Size = (32, 64, 32);
+    public static readonly ChunkPos Size = (32, 64, 32);
 
     static Chunk()
     {
@@ -22,16 +21,16 @@ public class Chunk
     public bool IsDirty = false;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Vector3i ToChunkPos(Vector3 pos) => 
+    public static ChunkPos ToChunkPos(Vector3 pos) => 
         new((int) Math.Floor(pos.X / Size.X), 
             (int) Math.Floor(pos.Y / Size.Y), 
             (int) Math.Floor(pos.Z / Size.Z));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static int ToIndex(Vector3i pos) => pos.X + (Size.X * pos.Z) + (Size.X * Size.Z * pos.Y);
+    private static int ToIndex(ChunkPos pos) => pos.X + (Size.X * pos.Z) + (Size.X * Size.Z * pos.Y);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool SafeGet(Vector3i pos, bool whenOutOfBounds)
+    public bool SafeGet(ChunkPos pos, bool whenOutOfBounds)
     {
         if (pos.X < 0 || Size.X <= pos.X ||
             pos.Y < 0 || Size.Y <= pos.Y || 
@@ -39,7 +38,7 @@ public class Chunk
         return this[pos];
     }
     
-    public bool this[Vector3i pos]
+    public bool this[ChunkPos pos]
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => _data[ToIndex(pos)];

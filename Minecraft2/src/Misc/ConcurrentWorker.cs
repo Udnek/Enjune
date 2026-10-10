@@ -15,6 +15,10 @@ public abstract class ConcurrentWorker<TIn, TOut> : AbstractDisposable
 
     #region Public Api
     
+    /// <summary>
+    /// Starts worker in separate thread
+    /// </summary>
+    /// <param name="threadName"></param>
     public void Start(string threadName)
     {
         if (_workingThread is not null)
@@ -48,6 +52,7 @@ public abstract class ConcurrentWorker<TIn, TOut> : AbstractDisposable
         _workingThread.Name = threadName;
         _workingThread.IsBackground = true;
         _workingThread.Start();
+        Logger.Info(this, $"Thread {_workingThread.Name} started");
     }
 
     public void Stop()
@@ -61,12 +66,19 @@ public abstract class ConcurrentWorker<TIn, TOut> : AbstractDisposable
         _cancelWork!.Cancel();
         
         _workingThread.Join();
+        Logger.Info(this, $"Thread {_workingThread.Name} stopped");
         _workingThread = null;
         
         _cancelWork.Dispose();
         _cancelWork = null;
+        
+        
     }
 
+    /// <summary>
+    /// Add new job for worker in FIFO order
+    /// </summary>
+    /// <param name="input"></param>
     public void Enqueue(TIn input)
     {
         if (_workingThread is null)
@@ -77,6 +89,11 @@ public abstract class ConcurrentWorker<TIn, TOut> : AbstractDisposable
         _jobs.Add(input);
     }
 
+    /// <summary>
+    /// Tries to deque done works if any
+    /// </summary>
+    /// <param name="result"></param>
+    /// <returns></returns>
     public bool TryTake(out (TIn input, TOut output) result)
         => _done.TryDequeue(out result);
     

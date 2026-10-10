@@ -1,49 +1,18 @@
 using System.Diagnostics;
-using Enjune.Ecs;
-using Enjune.Ecs.EcsType;
 using Enjune.Graphic;
 using Enjune.Graphic.Modeling;
 using Enjune.Misc;
-using Minecraft2.Ecs.Component;
-using Minecraft2.Ecs.System.Misc;
-using Minecraft2.Misc;
-using OpenTK.Mathematics;
 
-namespace Minecraft2.Ecs.System.Chunks;
+namespace Minecraft2.Misc;
 
-public class ChunkRenderSystem : AppSystem
+public class ChunkMeshGenerator(App app) : ConcurrentWorker<(Chunk Chunk, DynamicRenderableModel Model), bool>
 {
-    private Query<ChunkComponent, GraphicLinkComponent> _query = null!;
-
-    public override void OnInit(World world)
+    protected override bool Work((Chunk Chunk, DynamicRenderableModel Model) job)
     {
-        _query = new QueryBuilder(world)
-            .Retrieve<ChunkComponent, GraphicLinkComponent>();
-    }
-
-    public override void OnUpdate()
-    {
-        _query.ForEach((_, ref chunkComp, ref graphicLink) =>
-        {
-            var chunk = chunkComp.Chunk;
-            if (!chunk.IsDirty) return;
-            
-            // mesh generation
-            var model = App.GraphicEngine.Objects[graphicLink.GraphicId].Model;
-            if (model is DynamicRenderableModel dynamicRenderable)
-                RegenerateModel(chunk, dynamicRenderable);
-            else
-                Logger.Warn(this, $"Can not update model: model for {chunkComp} is not dynamic");
-        
-            chunk.IsDirty = false;
-        });
-    }
-
-    private void RegenerateModel(Chunk chunk, DynamicRenderableModel model)
-    {
+        var (chunk, model) = job;
         model.Clear();
-        var material = App.DirtMaterial;
-        Color sideColor = global::System.Drawing.Color.FromArgb(255, 150, 150, 150).ToTk();
+        var material = app.DirtMaterial;
+        Color sideColor = System.Drawing.Color.FromArgb(255, 150, 150, 150).ToTk();
         var renderBegin = Stopwatch.StartNew();
         for (int x = 0; x < Chunk.Size.X; x++)
         {

@@ -8,7 +8,7 @@ namespace Minecraft2.Misc;
 
 public class ChunkWorld
 {
-    private readonly Dictionary<Vector3i, Entity> _loadedChunks = [];
+    private readonly Dictionary<ChunkPos, Entity> _loadedChunks = [];
     private readonly FastNoiseLite.FastNoiseLite _noise = new();
     private readonly World _ecsWorld;
 
@@ -24,7 +24,7 @@ public class ChunkWorld
     /// <param name="pos"></param>
     /// <param name="wasAlreadyLoaded"></param>
     /// <returns></returns>
-    public Entity Load(Vector3i pos, out bool wasAlreadyLoaded)
+    public Entity Load(ChunkPos pos, out bool wasAlreadyLoaded)
     {
         if (_loadedChunks.TryGetValue(pos, out var alreadyLoaded))
         {
@@ -45,7 +45,7 @@ public class ChunkWorld
         return entity;
     }
 
-    private Chunk GenerateChunk(Vector3i chunkPos)
+    private Chunk GenerateChunk(ChunkPos chunkPos)
     {
         var chunk = new Chunk();
         for (int blockX = 0; blockX < Chunk.Size.X; blockX++)
@@ -66,7 +66,7 @@ public class ChunkWorld
         return chunk;
     }
 
-    public void Unload(Vector3i pos)
+    public void Unload(ChunkPos pos)
     {
         if (_loadedChunks.Remove(pos, out var chunk))
         {
