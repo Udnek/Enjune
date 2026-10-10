@@ -3,8 +3,9 @@ using Enjune.Ecs.EcsType;
 using Enjune.Misc;
 using Minecraft2.Bridge;
 using Minecraft2.Ecs.Component;
+using Minecraft2.Ecs.System.Misc;
 
-namespace Minecraft2.Ecs.System.Chunk;
+namespace Minecraft2.Ecs.System.Chunks;
 
 public class ChunkAddModelSystem : AppSystem
 {
@@ -36,13 +37,13 @@ public class ChunkAddModelSystem : AppSystem
             {
                 Model = App.ChunkModelPool.Take(),
                 TransformMatrix = MathUtils.CreateModelTransform(
-                    chunkComp.Pos * Misc.Chunk.Size,
+                    chunkComp.Pos * Minecraft2.Misc.Chunk.Size,
                     Quaternion.Identity,
                     Vector3.One)
             };
 
             graphicObjects[graphicLink.GraphicId] = graphicObject;
-            Logger.Highlight(this, $"Assigned {graphicLink.GraphicId} to {chunkComp}");
+            Logger.Highlight(this, $"Assigned {graphicLink.GraphicId} to {chunkComp.Pos}");
         });
     }
 }

@@ -1,6 +1,6 @@
 using Enjune.Ecs;
 using Minecraft2.Ecs.System;
-using Minecraft2.Ecs.System.Chunk;
+using Minecraft2.Ecs.System.Chunks;
 
 namespace Minecraft2.Ecs;
 
@@ -12,11 +12,13 @@ public static class Systems
         world.AddSystem(new ChunkUnloadMarkerSystem {App = app});
         // loading and unmarking
         world.AddSystem(new ChunkLoadSystem {App = app});
+        
+        // removing models from marked
+        world.AddSystem(new ChunkRemoveModelSystem {App = app});
         // unloading marked
         world.AddSystem(new ChunkUnloadSystem {App = app});
         
-        // removing and adding models
-        world.AddSystem(new ChunkRemoveModelSystem {App = app});
+        // adding models to loaded
         world.AddSystem(new ChunkAddModelSystem {App = app});
         
         // rendering

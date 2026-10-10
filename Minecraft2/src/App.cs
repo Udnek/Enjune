@@ -93,7 +93,8 @@ public class App : AbstractDisposable, IApp
         FlyingController = new FlyingPlayerController(GraphicApi, InputHandler, _wasd)
         {
             Sensitivity =  0.2f,
-            Speed = 30
+            Speed = 30,
+            Position = (0, 30, 0)
         };
         
         
@@ -102,7 +103,7 @@ public class App : AbstractDisposable, IApp
             World = new World();
             ChunkWorld = new ChunkWorld(World);
             PlayerEntity = World.AddEntity(new Entity.Assembly()
-                .AddComponent(new ChunkLoader{Radius = 1})
+                .AddComponent(new ChunkLoader{Radius = 3})
                 .AddComponent(new Transform()));
 
             Systems.AddTo(World, this);

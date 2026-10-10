@@ -1,7 +1,7 @@
 using Enjune.Ecs;
 using Enjune.Ecs.System;
 
-namespace Minecraft2.Ecs.System;
+namespace Minecraft2.Ecs.System.Misc;
 
 public abstract class AppSystem : ISystem
 {

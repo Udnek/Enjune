@@ -9,13 +9,13 @@ namespace Minecraft2.Misc;
 public class ChunkWorld
 {
     private readonly Dictionary<Vector3i, Entity> _loadedChunks = [];
-    private readonly FastNoiseLite _noise = new();
+    private readonly FastNoiseLite.FastNoiseLite _noise = new();
     private readonly World _ecsWorld;
 
     public ChunkWorld(World ecsWorld)
     {
         _ecsWorld = ecsWorld;
-        _noise.SetNoiseType(FastNoiseLite.NoiseType.OpenSimplex2);
+        _noise.SetNoiseType(FastNoiseLite.FastNoiseLite.NoiseType.OpenSimplex2);
     }
 
     /// <summary>
@@ -52,7 +52,7 @@ public class ChunkWorld
         {
             for (int blockZ = 0; blockZ < Chunk.Size.Z; blockZ++)
             {
-                var y = _noise.GetNoise(chunkPos.X*Chunk.Size.X +blockX, chunkPos.Y*Chunk.Size.Z +blockZ); // [-1; 1]
+                var y = _noise.GetNoise(chunkPos.X*Chunk.Size.X +blockX, chunkPos.Z*Chunk.Size.Z +blockZ); // [-1; 1]
                 y = (y + 1f) / 2f; // [0; 1]
                 int height = Math.Clamp((int)(y * Chunk.Size.Y), 0, Chunk.Size.Y);
                 height = Math.Max(height, 1);

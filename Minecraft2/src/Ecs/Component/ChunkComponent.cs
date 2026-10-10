@@ -7,9 +7,9 @@ namespace Minecraft2.Ecs.Component;
 
 public record struct ChunkComponent() : IComponent
 {
-    public required Chunk Chunk;
+    public required Chunk Chunk { get; init; }
     public bool ToBeUnloaded = false;
-    public required Vector3i Pos;
+    public required Vector3i Pos { get; init; }
 
     public Identifier Id() => Identifier.Of(Program.Assembly, "chunk");
 }

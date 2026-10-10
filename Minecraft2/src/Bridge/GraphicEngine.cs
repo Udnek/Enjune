@@ -21,7 +21,7 @@ public class GraphicEngine
     {
         _app = app;
         Projection = Matrix4.CreatePerspectiveFieldOfView(
-            MathF.PI / 2, (float) _app.InputHandler.WindowSize.X / _app.InputHandler.WindowSize.Y, 0.1f, 100f);
+            MathF.PI / 2, (float) _app.InputHandler.WindowSize.X / _app.InputHandler.WindowSize.Y, 0.1f, 1000f);
     }
 
     public void Update()
@@ -35,7 +35,7 @@ public class GraphicEngine
         {
             _app.GraphicApi.SetRenderSize(inputHandler.WindowSize);
             Projection = Matrix4.CreatePerspectiveFieldOfView(
-                MathF.PI / 2, (float) inputHandler.WindowSize.X / inputHandler.WindowSize.Y, 0.1f, 100f);
+                MathF.PI / 2, (float) inputHandler.WindowSize.X / inputHandler.WindowSize.Y, 0.1f, 1000f);
         }
         
         // render

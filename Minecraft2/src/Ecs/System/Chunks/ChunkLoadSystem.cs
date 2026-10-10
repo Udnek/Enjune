@@ -1,8 +1,9 @@
 using Enjune.Ecs;
 using Enjune.Ecs.EcsType;
 using Minecraft2.Ecs.Component;
+using Minecraft2.Ecs.System.Misc;
 
-namespace Minecraft2.Ecs.System.Chunk;
+namespace Minecraft2.Ecs.System.Chunks;
 
 public class ChunkLoadSystem : AppSystem
 {
@@ -22,7 +23,7 @@ public class ChunkLoadSystem : AppSystem
         _query.ForEach((_, ref transform, ref loader) =>
         {
             var radius = loader.Radius;
-            var center = Misc.Chunk.ToChunkPos(transform.Position) with{Y = 0};
+            var center = Minecraft2.Misc.Chunk.ToChunkPos(transform.Position) with{Y = 0};
             for (int x = -radius; x <= radius; x++)
             {
                 for (int z = -radius; z <= radius; z++)

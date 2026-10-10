@@ -5,9 +5,11 @@ using Enjune.Graphic;
 using Enjune.Graphic.Modeling;
 using Enjune.Misc;
 using Minecraft2.Ecs.Component;
+using Minecraft2.Ecs.System.Misc;
+using Minecraft2.Misc;
 using OpenTK.Mathematics;
 
-namespace Minecraft2.Ecs.System.Chunk;
+namespace Minecraft2.Ecs.System.Chunks;
 
 public class ChunkRenderSystem : AppSystem
 {
@@ -37,15 +39,17 @@ public class ChunkRenderSystem : AppSystem
         });
     }
 
-    private void RegenerateModel(Misc.Chunk chunk, DynamicRenderableModel model)
+    private void RegenerateModel(Chunk chunk, DynamicRenderableModel model)
     {
+        model.Clear();
         var material = App.DirtMaterial;
+        Color sideColor = global::System.Drawing.Color.FromArgb(255, 150, 150, 150).ToTk();
         var renderBegin = Stopwatch.StartNew();
-        for (int x = 0; x < Misc.Chunk.Size.X; x++)
+        for (int x = 0; x < Chunk.Size.X; x++)
         {
-            for (int y = 0; y < Misc.Chunk.Size.Y; y++)
+            for (int y = 0; y < Chunk.Size.Y; y++)
             {
-                for (int z = 0; z < Misc.Chunk.Size.Z; z++)
+                for (int z = 0; z < Chunk.Size.Z; z++)
                 {
                     const bool air = false;
                     const bool outOfBounds = air;
@@ -77,6 +81,7 @@ public class ChunkRenderSystem : AppSystem
                     if (chunk.SafeGet(new Vector3i(x, y, z-1), outOfBounds) == air)
                         model.Add(new MeshInstance.Entry
                         {
+                            Color = sideColor,
                             Material = material,
                             Geometry = Mesh.Quad(
                                 (x, y, z), (x, y+1, z), 
@@ -87,6 +92,7 @@ public class ChunkRenderSystem : AppSystem
                     if (chunk.SafeGet(new Vector3i(x, y, z+1), outOfBounds) == air)
                         model.Add(new MeshInstance.Entry
                         {
+                            Color = sideColor,
                             Material = material,
                             Geometry = Mesh.Quad(
                                 (x, y, z+1), (x+1, y, z+1), 
@@ -97,6 +103,7 @@ public class ChunkRenderSystem : AppSystem
                     if (chunk.SafeGet(new Vector3i(x-1, y, z), outOfBounds) == air)
                         model.Add(new MeshInstance.Entry
                         {
+                            Color = sideColor,
                             Material = material,
                             Geometry = Mesh.Quad(
                                 (x, y, z), (x, y, z+1), 
@@ -108,6 +115,7 @@ public class ChunkRenderSystem : AppSystem
                     if (chunk.SafeGet(new Vector3i(x+1, y, z), outOfBounds) == air)
                         model.Add(new MeshInstance.Entry
                         {
+                            Color = sideColor,
                             Material = material,
                             Geometry = Mesh.Quad(
                                 (x+1, y, z), (x+1, y+1, z), 
@@ -120,7 +128,7 @@ public class ChunkRenderSystem : AppSystem
         
         model.Add(new MeshInstance.Entry
         {
-            Geometry = Mesh.Cuboid(Position.Zero, Misc.Chunk.Size, TextureQuad.Full, PrimitiveTopology.LineStrip),
+            Geometry = Mesh.Cuboid(Position.Zero, Chunk.Size, TextureQuad.Full, PrimitiveTopology.LineStrip),
             Color = new Color(0, 1, 0, 0.5f)
         });
         

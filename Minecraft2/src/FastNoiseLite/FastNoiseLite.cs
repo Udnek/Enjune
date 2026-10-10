@@ -52,6 +52,8 @@ using System.Runtime.CompilerServices;
 using FNLfloat = System.Single;
 //using FNLfloat = System.Double;
 
+namespace Minecraft2.FastNoiseLite;
+
 public class FastNoiseLite
 {
     private const short INLINE = 256; // MethodImplOptions.AggressiveInlining;

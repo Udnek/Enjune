@@ -23,7 +23,9 @@ public class Chunk
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Vector3i ToChunkPos(Vector3 pos) => 
-        new((int) pos.X / Size.X, (int) pos.Y / Size.Y, (int) pos.Z / Size.Z);
+        new((int) Math.Floor(pos.X / Size.X), 
+            (int) Math.Floor(pos.Y / Size.Y), 
+            (int) Math.Floor(pos.Z / Size.Z));
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static int ToIndex(Vector3i pos) => pos.X + (Size.X * pos.Z) + (Size.X * Size.Z * pos.Y);
