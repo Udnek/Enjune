@@ -7,15 +7,27 @@ namespace Enjune.Graphic.Api;
 
 public interface IGraphicApi : IDisposable
 {
-    public IRenderableMesh CreateStaticRenderable(MeshInstance mesh);
-    public IRenderableMesh.IDynamic CreateDynamicRenderable(MeshInstance mesh);
     
-    void SetLights(IEnumerable<SpotLight> lights);
+    public ResultOrError<IRenderableMesh<TPerVert, TPerPrim>> 
+        CreateRenderable<TPerVert, TPerPrim>(Mesh<TPerVert, TPerPrim> mesh) where TPerVert : unmanaged where TPerPrim : unmanaged;
     
+    public ResultOrError<IRenderableMesh<TPerVert, TPerPrim>.IDynamic> 
+        CreateDynamicRenderable<TPerVert, TPerPrim>(Mesh<TPerVert, TPerPrim>? mesh = null) where TPerVert : unmanaged where TPerPrim : unmanaged;
+    
+    public ResultOrError<IShader<TPerVert, TPerPrim>>
+        CreateShader<TPerVert, TPerPrim>(string vertexCode, string fragmentCode) where TPerVert : unmanaged where TPerPrim : unmanaged;
+    
+    // ubo
+    public ResultOrError<IUniform<T>> 
+        CreateUniform<T>(string name) where T : unmanaged;
+    
+    // ssbo
+    public ResultOrError<IUniformArray<T>> 
+        CreateUniformArray<T>(string name) where T : unmanaged;
+
     // general pipeliner
     bool ShouldStop(); // should stop application
     void ClearRenderBuffer(bool color = true, bool depth = true);
-    void UseShader<T>(Consumer<T> consumer) where T : IShader;
     void UpdateScreen();
     void UpdateEvents(); // such as keyboard, mouse, etc
     // general pipeline end

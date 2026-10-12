@@ -81,33 +81,33 @@ public sealed class TextureArray : AbstractTexture
             (PixelFormat) pixelFormat, PixelType.UnsignedByte, image.Data);
     }
 
-    // TODO FIX DUMPING
-    public override Error? Dump(ExternalPath dir, string namePrefix)
-    {
-        dir = dir.ThisDirectory();
-        Logger.Info(this, $"dumping '{namePrefix}' textures into {dir}");
-        int layerSize = _size.X * _size.Y * 4;
-        byte[] data = new byte[layerSize * _layers];
-
-        GL.GetTextureImage(Handle, 0, _pixelFormat, PixelType.UnsignedByte, data.Length, data);
-
-        for (TexId layer = 0; layer < _layers; layer++)
-        {
-            byte[] layerData = new byte[layerSize];
-            Array.Copy(data, layer * layerSize, layerData, 0, layerSize);
-            
-            try
-            {
-                using var image = Image.LoadPixelData<Rgba32>(layerData, _size.X, _size.Y);
-                //image.Mutate(c => c.Flip(FlipMode.Horizontal));
-                image.Save(dir.ResolveRaw($"{namePrefix}_layer_{layer}.png").ToString(), new PngEncoder());
-            }
-            catch (Exception e)
-            {
-                return $"can not dump texture {layer}: {e.Message}";
-            }
-        }
-        Logger.Info(this, "done dumping");
-        return null;
-    }
+    // // TODO FIX DUMPING
+    // public override Error? Dump(ExternalPath dir, string namePrefix)
+    // {
+    //     dir = dir.ThisDirectory();
+    //     Logger.Info(this, $"dumping '{namePrefix}' textures into {dir}");
+    //     int layerSize = _size.X * _size.Y * 4;
+    //     byte[] data = new byte[layerSize * _layers];
+    //
+    //     GL.GetTextureImage(Handle, 0, _pixelFormat, PixelType.UnsignedByte, data.Length, data);
+    //
+    //     for (TexId layer = 0; layer < _layers; layer++)
+    //     {
+    //         byte[] layerData = new byte[layerSize];
+    //         Array.Copy(data, layer * layerSize, layerData, 0, layerSize);
+    //         
+    //         try
+    //         {
+    //             using var image = Image.LoadPixelData<Rgba32>(layerData, _size.X, _size.Y);
+    //             //image.Mutate(c => c.Flip(FlipMode.Horizontal));
+    //             image.Save(dir.ResolveRaw($"{namePrefix}_layer_{layer}.png").ToString(), new PngEncoder());
+    //         }
+    //         catch (Exception e)
+    //         {
+    //             return $"can not dump texture {layer}: {e.Message}";
+    //         }
+    //     }
+    //     Logger.Info(this, "done dumping");
+    //     return null;
+    // }
 }

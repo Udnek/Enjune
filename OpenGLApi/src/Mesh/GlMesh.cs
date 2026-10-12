@@ -9,40 +9,38 @@ using OpenGLApi.Shader;
 
 namespace OpenGLApi.Mesh;
 
-public class GlMesh : GlDisposable, IRenderableMesh.IDynamic
+public interface IGlMesh : IDisposable;
+
+public class GlMesh<TPerVert, TPerPrim> : GlDisposable, IRenderableMesh<TPerVert, TPerPrim>.IDynamic, IGlMesh where TPerVert : unmanaged where TPerPrim : unmanaged
 {
-    [DoNotDisposeViaUtils($"should be disposed in {nameof(OpenGlApi)}")]
-    private readonly MaterialShader _shader;
-    private readonly int _ssboBinding;
     private readonly bool _final;
     private readonly MatId _whiteMaterialId; // fallback, if it is unspecified in model
-
+    private readonly VaoVboDevice<TPerVert> _vaoVboDevice;
+    
     private Vao? _vao;
-    private Vbo<VertexData> _vbo = null!;
-    private SsboArray<PerPrimitiveData> _ssbo = null!;
+    private Vbo<TPerVert> _vbo = null!;
+    private Ssbo<TPerPrim> _ssbo = null!;
     private Ebo _ebo = null!;
-    private int _currentEboLen;
 
     public PrimitiveType CurrentTopology { get; private set; }
 
-    public GlMesh(MaterialShader shader, int ssboBinding, bool final, MatId whiteMaterialId)
+    public GlMesh(VaoVboDevice<TPerVert> vaoVboDevice, bool final, MatId whiteMaterialId)
     {
-        _shader = shader;
-        _ssboBinding = ssboBinding;
+        _vaoVboDevice = vaoVboDevice;
         _final = final;
         _whiteMaterialId = whiteMaterialId;
     }
     
     public void Render()
     {
-        if (_vao == null || _currentEboLen == 0)
+        if (_vao == null || _ebo.Count == 0)
             return;
         
         _vao.Bind();
         _vbo.Bind();
         _ebo.Bind();
         _ssbo.Bind();
-        GL.DrawElements(CurrentTopology, _currentEboLen, DrawElementsType.UnsignedInt, 0);
+        GL.DrawElements(CurrentTopology, _ebo.Count, DrawElementsType.UnsignedInt, 0);
     }
 
     protected override void DisposeGlData()
@@ -51,23 +49,18 @@ public class GlMesh : GlDisposable, IRenderableMesh.IDynamic
         Utils.DisposeAllFields(this);
     }
 
-    private void Refit(ReadOnlySpan<VertexData> vboBuf, ReadOnlySpan<int> eboBuf, ReadOnlySpan<PerPrimitiveData> ssboBuf)
+    private void Refit(ReadOnlySpan<TPerVert> vboBuf, ReadOnlySpan<int> eboBuf, ReadOnlySpan<TPerPrim> ssboBuf)
     {
         if (eboBuf.IsEmpty) // model is empty
             return;
         
-        if (_vao == null)
+        if (_vao == null) // nothing initialized yet
         {
-            _vao = new Vao();
-            _vbo = new Vbo<VertexData>(vboBuf.Length, _final);
+            _vaoVboDevice.Create(_final, vboBuf.Length,
+                out _vbo, 
+                out _vao);
             _ebo = new Ebo(eboBuf.Length, _final);
-            _ssbo = new SsboArray<PerPrimitiveData>(_ssboBinding, ssboBuf.Length,  _final);
-        
-            new VaoAttributes(_vao, _vbo)
-                .Add<float>(VertexAttribPointerType.Float, "aPos", 3)
-                .Add<float>(VertexAttribPointerType.Float, "aTexPos", 2)
-                .Add<float>(VertexAttribPointerType.Float, "aNorm", 3)
-                .Compile(_shader);
+            _ssbo = new Ssbo<TPerPrim>(Bindings.PerPrimitiveSsbo, ssboBuf.Length,  _final);
         }
         else
         {
@@ -78,9 +71,9 @@ public class GlMesh : GlDisposable, IRenderableMesh.IDynamic
 
             static int CalcCap(int current, int model) => (int)Math.Max(current * capacityIncreasement, model);
         }
+        
         _vbo.BindAndPush(vboBuf);
         _ebo.BindAndPush(eboBuf);
-        _currentEboLen = eboBuf.Length;
         _ssbo.BindAndPush(ssboBuf);
     }
     

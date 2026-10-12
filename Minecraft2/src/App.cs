@@ -26,8 +26,7 @@ public class App : AbstractDisposable, IApp
     private const string Title = "Minecraft2";
 
     #region Public
-
-    [DisposeAtLast("other objects may cause segfault when disposing //TODO fix")] // TODO probably dispose all GlModels in GlApi itself?
+    
     public IGraphicApi GraphicApi { get; private set; } = null!;
     public readonly GraphicEngine GraphicEngine;
     public readonly BasicInputHandler InputHandler;

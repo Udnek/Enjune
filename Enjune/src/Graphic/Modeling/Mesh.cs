@@ -8,23 +8,21 @@ namespace Enjune.Graphic.Modeling;
 /// Only geometry
 /// </summary>
 [LogParams(logCallingMethod: true)]
-public sealed class Mesh
+public sealed class Mesh<TPerVert, TPerPrim>
 {
     public readonly PrimitiveTopology Topology;
-    public readonly Position[] Vertices;
+    public readonly TPerVert[] Vertices;
+    public readonly TPerPrim[] PerPrimitives;
     public readonly int[] Indexes;
-    public readonly PerVertex[] PerVertexData;
     
-    public record struct PerVertex(Vector2 TexPos, Vector3 Normal);
-    
-    public Mesh(Position[] vertices, PerVertex[] perVertexData, int[] indexes, PrimitiveTopology topology)
+    public Mesh(TPerVert[] vertices, TPerPrim[] perPrims, int[] indexes, PrimitiveTopology topology)
     {
-        if (!IsValid(topology, vertices, perVertexData, indexes, out var error)) 
+        if (!IsValid(topology, vertices, perPrims, indexes, out var error)) 
             Logger.Error(this, "constructing invalid mesh: " + error);
 
         Topology = topology;
         Vertices = vertices;
-        PerVertexData = perVertexData;
+        PerPrimitives = perPrims;
         Indexes = indexes;
     }
     
@@ -264,23 +262,18 @@ public sealed class Mesh
     
     public static bool IsValid(
         PrimitiveTopology topology,
-        Position[] vertices,
-        PerVertex[] perVertexData,
+        TPerVert[] vertices,
+        TPerPrim[] perPrims,
         int[] indexes,
         out Error? error)
     {
-        if (topology.PrimitivesAmountFromIndexes(indexes.Length) <= 0)
+        var expectedPrimLen = topology.PrimitivesAmountFromIndexes(indexes.Length);
+        if (expectedPrimLen != perPrims.Length)
         {
-            error = "primitives amount is 0";
+            error = $"according to {topology} expected amount of primitives is {expectedPrimLen}, but got {perPrims.Length}";
             return false;
         }
-
-        if (vertices.Length != perVertexData.Length)
-        {
-            error = $"vertices and {nameof(perVertexData)} sizes aren't equal: {vertices.Length} != {perVertexData.Length}";
-            return false;
-        }
-
+        
         var min = indexes.Min();
         if (min != 0)
         {

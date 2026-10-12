@@ -1,0 +1,31 @@
+namespace OpenGLApi.Component.Buffer;
+
+public class Ubo<T> : GlDisposable where T : unmanaged
+{
+    private const BufferTarget Target = BufferTarget.UniformBuffer;
+    private readonly int _handle;
+    private readonly int _binding;
+    private readonly int _byteSize;
+
+    public Ubo(int binding)
+    {
+        _handle = GL.GenBuffer();
+        _binding = binding;
+        unsafe { _byteSize = sizeof(T); }
+        GL.BufferStorage(Target, _byteSize, IntPtr.Zero, BufferStorageFlags.DynamicStorageBit);
+    }
+
+    public void BindAndPush(T val)
+    {
+        Bind();
+        GL.BufferSubData(Target, 0, _byteSize, ref val);
+    }
+    
+    public void Bind()
+    {
+        GL.BindBuffer(Target, _handle);
+        GL.BindBufferBase(BufferRangeTarget.UniformBuffer, _binding, _handle);
+    }
+    
+    protected override void DisposeGlData() => GL.DeleteBuffer(_handle);
+}

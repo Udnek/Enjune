@@ -19,7 +19,7 @@ public sealed class Fbo : GlDisposable
     {
         var status = GL.CheckFramebufferStatus(FramebufferTarget.Framebuffer);
         if (status != FramebufferErrorCode.FramebufferComplete) 
-            Logger.Error(this, $"framebuffer failed: {Enum.GetName(status)}");
+            Logger.Error(this, $"Framebuffer failed: {Enum.GetName(status)}");
     }
 
     public void SetEmptyColorBuffer()

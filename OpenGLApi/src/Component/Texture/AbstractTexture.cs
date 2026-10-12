@@ -16,8 +16,6 @@ public abstract class AbstractTexture : GlDisposable
         BindTo(Unit);
     }
     
-    public abstract Error? Dump(ExternalPath dir, string namePrefix);
-    
     public int GetUnitId()
     {
         const int offset = -(int) TextureUnit.Texture0;
