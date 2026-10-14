@@ -14,7 +14,7 @@ public sealed class Ssbo<T> : AbstractBuffer<T> where T : unmanaged
         : base(BufferTarget.ShaderStorageBuffer, capacity, fixedSize)
     {
         _binding = binding;
-        SsboUtils.CheckStd430<T>(true, 0)?.Log(this);
+        Std.Std430.Check<T>()?.Log(this);
         Bind();
     }
     

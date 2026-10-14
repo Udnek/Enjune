@@ -4,115 +4,220 @@ using Enjune.Misc;
 
 namespace Enjune.Graphic.Modeling;
 
+public interface IPositionedVertex
+{
+    public Position Position { get; set; }
+}
+
+public interface ITexturedVertex
+{
+    public TexturePos Uv { get; set; }
+}
+
+
 /// <summary>
 /// Only geometry
 /// </summary>
 [LogParams(logCallingMethod: true)]
-public sealed class Mesh<TPerVert, TPerPrim>
+public sealed class Mesh<TPerVert, TPerPrim> where TPerVert : struct where TPerPrim : struct
 {
     public readonly PrimitiveTopology Topology;
-    public readonly TPerVert[] Vertices;
-    public readonly TPerPrim[] PerPrimitives;
-    public readonly int[] Indexes;
-    
-    public Mesh(TPerVert[] vertices, TPerPrim[] perPrims, int[] indexes, PrimitiveTopology topology)
-    {
-        if (!IsValid(topology, vertices, perPrims, indexes, out var error)) 
-            Logger.Error(this, "constructing invalid mesh: " + error);
+    public readonly List<TPerVert> Vertices;
+    public readonly List<TPerPrim> PerPrimitives;
+    public readonly List<int> Indexes;
 
+    public Mesh(int verCap, int perPrimCap, int indCap, PrimitiveTopology topology)
+    {
         Topology = topology;
-        Vertices = vertices;
-        PerPrimitives = perPrims;
-        Indexes = indexes;
+        Vertices = new List<TPerVert>(verCap);
+        PerPrimitives = new List<TPerPrim>(perPrimCap);
+        Indexes = new List<int>(indCap);
+    }
+
+    public void TrimExcess()
+    {
+        Vertices.TrimExcess();
+        PerPrimitives.TrimExcess();
+        Indexes.TrimExcess();
     }
     
-    public void Move(Position offset)
+    public void AddNgon(TPerPrim perPrim, params ReadOnlySpan<TPerVert> newVerts)
     {
-        for (var i = 0; i < Vertices.Length; i++) 
-            Vertices[i] += offset;
-    }
-
-    public void Scale(Vector3 factor)
-    {
-        for (int i = 0; i < Vertices.Length; i++) 
-            Vertices[i] *= factor;
-    }
-
-    public (Vector3 Min, Vector3 Max) Bounds()
-    {
-        if (Vertices.Length == 0)
-            return (Vector3.Zero, Vector3.Zero);
+        var oldIndexes = Indexes.Count;
+        var firstNew = Vertices.Count;
+        // adding new vertices
+        Vertices.AddRange(newVerts);
+        var lastNew = Vertices.Count-1;
         
-        var min = Vertices[0];
-        var max = Vertices[0];
-        for (var i = 1; i < Vertices.Length; i++)
+        if (Topology == PrimitiveTopology.Triangle)
         {
-            var vertex = Vertices[i];
-            max = Vector3.ComponentMax(max, vertex);
-            min = Vector3.ComponentMin(min, vertex);
+            for (var i = firstNew + 1; i < lastNew; i++)
+            {
+                // fan-like
+                Indexes.Add(firstNew);
+                Indexes.Add(i);
+                Indexes.Add(i + 1);
+            }
+        }
+        else if (Topology == PrimitiveTopology.Line)
+        {
+            for (var i = firstNew; i < lastNew; i++)
+            {
+                Indexes.Add(i);
+                Indexes.Add(i+1);
+            }
+            // loping last -> first
+            Indexes.Add(lastNew);
+            Indexes.Add(firstNew);
+        }
+        else if (Topology == PrimitiveTopology.LineStrip)
+        {
+            for (var i = firstNew; i <= lastNew; i++)
+            {
+                Indexes.Add(i);
+            }
+            // loping to firstNew
+            Indexes.Add(firstNew);
+        }
+        else if (Topology == PrimitiveTopology.Point)
+        {
+            for (int i = firstNew; i <= lastNew; i++) 
+                Indexes.Add(i);
+        }
+        else
+        {
+            throw new ArgumentException($"unknown topology: {Topology}");
         }
 
-        return (min, max);
+        var newPrimitives = Topology.PrimitivesAmountFromIndexes(Indexes.Count - oldIndexes);
+        for (int _ = 0; _ < newPrimitives; _++) 
+            PerPrimitives.Add(perPrim);
+    }
+
+    [Pure]
+    public Mesh<TPerVertNew, TPerPrimNew> Convert<TPerVertNew, TPerPrimNew>(
+        Func<TPerVert, TPerVertNew> vertexConvert,
+        Func<TPerPrim, TPerPrimNew> primitiveConvert) where TPerVertNew : struct where TPerPrimNew : struct
+    {
+        var newMesh = new Mesh<TPerVertNew, TPerPrimNew>(
+            Vertices.Count, 
+            PerPrimitives.Count, 
+            Indexes.Count,
+            Topology);
+
+        // converting vertices
+        for (var i = 0; i < Vertices.Count; i++) 
+            newMesh.Vertices[i] = vertexConvert(Vertices[i]);
+        
+        // converting primitives
+        for (var i = 0; i < PerPrimitives.Count; i++) 
+            newMesh.PerPrimitives[i] = primitiveConvert(PerPrimitives[i]);
+        
+        // coping indexes
+        newMesh.Indexes.AddRange(Indexes);
+        
+        return newMesh;
     }
     
-    // STATIC
-
-    public static Mesh Empty(PrimitiveTopology topology) => new([], [], [], topology);
-
-    public static Mesh Create(
-        Position[] vertices, TexturePos[] texPos, int[] indexes, 
-        PrimitiveTopology topology = PrimitiveTopology.Triangle, bool calculateNormals = true)
+    public Error? IsValid()
     {
-        // normals only works with triangles
-        if (calculateNormals && topology == PrimitiveTopology.Triangle)
+        var expectedPrimLen = Topology.PrimitivesAmountFromIndexes(Indexes.Count);
+        if (expectedPrimLen != PerPrimitives.Count)
         {
-            var normals = GenerateSmoothNormals(vertices, indexes);
-            return new Mesh(vertices, 
-                texPos.Select((tc, i) => new PerVertex(tc, normals[i])).ToArray(), 
-                indexes,
-                topology);
+            return $"according to {Topology} expected amount of primitives is {expectedPrimLen}, but got {PerPrimitives.Count}";
         }
-        return new Mesh(vertices, 
-            texPos.Select(tc => new PerVertex(tc, Vector3.UnitX)).ToArray(), 
-            indexes,
-            topology);
+        
+        var min = Indexes.Min();
+        if (min != 0)
+        {
+            return $"index must be > 0, but got: {min}";
+        }
+
+        var max = Indexes.Max();
+        if (max >= Vertices.Count)
+        {
+            return  $"index must be < lenght of vertices ({Vertices.Count}), but got: {max}";
+        }
+
+        for (int i = 0; i < Vertices.Count; i++)
+        {
+            if (Indexes.Contains(i)) continue;
+            return $"unused vertex at: {i}";
+        }
+        
+        return null;
+    }
+}
+
+public static class Mesh
+{
+    public static void AddTriangle<TPerVert, TPerPrim>(
+        this Mesh<TPerVert, TPerPrim> mesh,
+        TPerVert vertexExample, TPerPrim perPrim,
+        Position bl, Position br, Position tr,
+        TextureQuad texture) where TPerVert : struct, IPositionedVertex, ITexturedVertex where TPerPrim : struct
+    {
+        mesh.AddNgon(perPrim, 
+            vertexExample with {Position = bl, Uv = texture.BotLeft},
+            vertexExample with {Position = br, Uv = texture.BotRight},
+            vertexExample with {Position = tr, Uv = texture.TopRight}
+        );
+    }
+    
+    public static void AddQuad<TPerVert, TPerPrim>(
+        this Mesh<TPerVert, TPerPrim> mesh,
+        TPerVert vertexExample, TPerPrim perPrim,
+        Position bl, Position br, Position tr, Position tl,
+        TextureQuad texture) where TPerVert : struct, IPositionedVertex, ITexturedVertex where TPerPrim : struct
+    {
+        mesh.AddNgon(perPrim, 
+            vertexExample with {Position = bl, Uv = texture.BotLeft},
+            vertexExample with {Position = br, Uv = texture.BotRight},
+            vertexExample with {Position = tr, Uv = texture.TopRight},
+            vertexExample with {Position = tl, Uv = texture.TopLeft}
+        );
     }
     
     // all must be counter-clock-wise
-    public static Mesh Hexahedron(
+    public static void AddHexahedron<TPerVert, TPerPrim>(
+        this Mesh<TPerVert, TPerPrim> mesh,
+        TPerVert vertexExample, TPerPrim perPrim,
         Position b1, Position b2, Position b3, Position b4,
         Position t1, Position t2, Position t3, Position t4,
-        TextureQuad texture, 
-        PrimitiveTopology topology = PrimitiveTopology.Triangle, bool calculateNormals = true)
+        TextureQuad texture) where TPerVert : struct, IPositionedVertex, ITexturedVertex where TPerPrim : struct
     {
-        return Merge(
-            Quad(b1, b4, b3, b2, texture, topology, calculateNormals), // bottom (−Y)
-            Quad(t1, t2, t3, t4, texture, topology, calculateNormals), // top    (+Y)
-            Quad(b1, b2, t2, t1, texture, topology, calculateNormals), // front  (+Z)
-            Quad(b2, b3, t3, t2, texture, topology, calculateNormals), // right  (+X)
-            Quad(b3, b4, t4, t3, texture, topology, calculateNormals), // back   (−Z)
-            Quad(b4, b1, t1, t4, texture, topology, calculateNormals)); // left  (−X)
+        mesh.AddQuad(vertexExample, perPrim, b1, b4, b3, b2, texture); // bottom (−Y)
+        mesh.AddQuad(vertexExample, perPrim, t1, t2, t3, t4, texture); // top    (+Y)
+        mesh.AddQuad(vertexExample, perPrim, b1, b2, t2, t1, texture); // front  (+Z)
+        mesh.AddQuad(vertexExample, perPrim, b2, b3, t3, t2, texture); // right  (+X)
+        mesh.AddQuad(vertexExample, perPrim, b3, b4, t4, t3, texture); // back   (−Z)
+        mesh.AddQuad(vertexExample, perPrim, b4, b1, t1, t4, texture); // left   (−X)
     }
 
-    public static Mesh Cuboid(
+    public static void AddCuboid<TPerVert, TPerPrim>(
+        this Mesh<TPerVert, TPerPrim> mesh,
+        TPerVert vertexExample, TPerPrim perPrim,
         Position corner1, Position corner2,
-        TextureQuad texture, PrimitiveTopology topology = PrimitiveTopology.Triangle, bool calculateNormals = true)
+        TextureQuad texture) where TPerVert : struct, IPositionedVertex, ITexturedVertex where TPerPrim : struct
     {
         var min = Vector3.ComponentMin(corner1, corner2);
         var max = Vector3.ComponentMax(corner1, corner2);
         var (x, y, z) = max - min;
-        return Hexahedron(
+        mesh.AddHexahedron(vertexExample, perPrim,
             min, min + (0, 0, z), min + (x, 0, z), min + (x, 0, 0),
             min+(0, y, 0), min + (0, y, z), min + (x, y, z), min + (x, y, 0),
-            texture, topology, calculateNormals
-        );
+            texture);
     }
 
-    public static Mesh Cube(Position center, float size, TextureQuad texture, 
-        PrimitiveTopology topology = PrimitiveTopology.Triangle, bool calculateNormals = true)
+    public static void AddCube<TPerVert, TPerPrim>(
+        this Mesh<TPerVert, TPerPrim> mesh,
+        TPerVert vertexExample, TPerPrim perPrim,
+        Position center, float size, 
+        TextureQuad texture) where TPerVert : struct, IPositionedVertex, ITexturedVertex where TPerPrim : struct
     {
         var hs = size / 2;
-        return Hexahedron(
+        mesh.AddHexahedron(
+            vertexExample, perPrim,
             // bottom
             center + (-hs, -hs, -hs), //-x -z
             center + (+hs, -hs, -hs), //+x -z
@@ -124,178 +229,46 @@ public sealed class Mesh<TPerVert, TPerPrim>
             center + (+hs, +hs, +hs), //+x +z
             center + (-hs, +hs, +hs), //-x +z
 
-            texture, topology, calculateNormals
-        );
+            texture);
     }
     
-    public static Mesh Quad(Position bl, Position br, Position tr, Position tl,
-        TextureQuad tex, PrimitiveTopology topology = PrimitiveTopology.Triangle, bool calculateNormals = true)
+    public static void AddQuadXy<TPerVert, TPerPrim>(
+        this Mesh<TPerVert, TPerPrim> mesh,
+        TPerVert vertexExample, TPerPrim perPrim,
+        Position bl, float width, float height, 
+        TextureQuad texture) where TPerVert : struct, IPositionedVertex, ITexturedVertex where TPerPrim : struct
     {
-        return Ngon([bl, br, tr, tl], 
-            [tex.BotLeft, tex.BotRight, tex.TopRight, tex.TopLeft],
-            topology, calculateNormals);
-    }
-
-    public static Mesh QuadXy(Position bl, float width, float height, 
-        TextureQuad tex, PrimitiveTopology topology = PrimitiveTopology.Triangle, bool calculateNormals = true)
-    {
-        return Quad(bl, bl + (width, 0, 0), bl + (width, height, 0), bl + (0, height, 0), 
-            TextureQuad.Full, topology, calculateNormals);
+        mesh.AddQuad(
+            vertexExample, perPrim,
+            bl, bl + (width, 0, 0), bl + (width, height, 0), bl + (0, height, 0), 
+            texture);
     }
     
-    public static Mesh Triangle(Position bl, Position br, Position tr,
-        TextureQuad tex, PrimitiveTopology topology = PrimitiveTopology.Triangle, bool calculateNormals = true)
+    public static (Vector3 Min, Vector3 Max) Bounds<TPerVert, TPerPrim>(this Mesh<TPerVert, TPerPrim> mesh) where TPerVert : struct, IPositionedVertex where TPerPrim : struct
     {
-        return Ngon([bl, br, tr], [tex.BotLeft, tex.BotRight, tex.TopRight], topology, calculateNormals);
-    }
-    
-    public static Mesh Ngon(Position[] poses, TexturePos[] texPoses, 
-        PrimitiveTopology topology = PrimitiveTopology.Triangle, bool calculateNormals = true)
-    {
-        if (texPoses.Length != poses.Length)
-            throw new ArgumentException(
-                $"{nameof(poses)} and {nameof(texPoses)} must have the same length: {poses.Length} != {texPoses.Length}");
-
-        if (topology == PrimitiveTopology.Triangle)
-        {
-            List<int> indexes = new((poses.Length - 2) * 3);
-            for (var i = 1; i < poses.Length - 1; i++)
-            {
-                // fan-like
-                indexes.Add(0);
-                indexes.Add(i);
-                indexes.Add(i + 1);
-            }
-            
-            return Create(poses, texPoses, indexes.ToArray(), topology, calculateNormals); 
-        }
+        var vertices = mesh.Vertices;
+        if (vertices.Count == 0)
+            return (Vector3.Zero, Vector3.Zero);
         
-        if (topology == PrimitiveTopology.Line)
+        var min = vertices[0].Position;
+        var max = vertices[0].Position;
+        for (var i = 1; i < vertices.Count; i++)
         {
-            List<int> indexes = new(poses.Length * 2);
-            for (var i = 0; i < poses.Length; i++)
-            {
-                indexes.Add(i);
-                indexes.Add((i + 1) % poses.Length);
-            }
-
-            return Create(poses, texPoses, indexes.ToArray(), topology, calculateNormals); 
+            var vertex = vertices[i];
+            max = Vector3.ComponentMax(max, vertex.Position);
+            min = Vector3.ComponentMin(min, vertex.Position);
         }
-        
-        if (topology == PrimitiveTopology.LineStrip)
-        {
-            List<int> indexes = new(poses.Length+1);
-            for (var i = 0; i <= poses.Length; i++)
-            {
-                indexes.Add(i % poses.Length);
-            }
-            return Create(poses, texPoses, indexes.ToArray(), topology, calculateNormals); 
-        }
-
-        if (topology == PrimitiveTopology.Point)
-        {
-            return Create(poses, texPoses, Enumerable.Range(0, poses.Length-1).ToArray(), topology, calculateNormals); 
-        }
-
-        throw new ArgumentException($"unknown topology: {topology}");
-    }   
-
-    public static Vector3[] GenerateSmoothNormals(Position[] vertices, int[] indexes)
-    {
-        if (vertices.Length <= 2)
-        {
-            Logger.Error(typeof(Mesh), "trying to generate smooth normals for < 3 vertices");
-            return Enumerable.Repeat(Vector3.UnitX, vertices.Length).ToArray();
-        }
-
-        if (indexes.Length % 3 != 0)
-        {
-            Logger.Error(typeof(Mesh), "trying to generate smooth normals for indexes length % 3 != 0");
-            return Enumerable.Repeat(Vector3.UnitX, vertices.Length).ToArray();
-        }
-
-        Vector3[] normals = new Vector3[vertices.Length];
-        for (int iIndex = 0; iIndex < indexes.Length; iIndex += 3)
-        {
-            var v0Idx = indexes[iIndex];
-            var v1Idx = indexes[iIndex + 1];
-            var v2Idx = indexes[iIndex + 2];
-
-            // we do not normalize, cause final norm will be impacted by square of triangle
-            var norm = MathUtils.PlaneNormNotNormalized(
-                vertices[v0Idx], vertices[v1Idx], vertices[v2Idx]);
-            normals[v0Idx] += norm;
-            normals[v1Idx] += norm;
-            normals[v2Idx] += norm;
-        }
-
-        for (var i = 0; i < normals.Length; i++)
-            normals[i] = normals[i].Normalized();
-
-        return normals;
-    }
-
-    public static Mesh Merge(params Mesh[] meshes)
-    {
-        if (meshes.Length == 0) 
-            return Empty(PrimitiveTopology.Triangle);
-        var sameTopology = meshes.All(m => m.Topology == meshes[0].Topology);
-        if (!sameTopology)
-        {
-            Logger.Error(typeof(Mesh), "Can not merge meshes: topologies are different");
-            return Empty(meshes[0].Topology);
-        }
-
-        int offset = 0;
-        var indexes = new List<int>();
-        foreach (var mesh in meshes)
-        {
-            foreach (var index in mesh.Indexes)
-                indexes.Add(offset + index);
-            offset += mesh.Vertices.Length;
-        }
-
-        var perVertexData = meshes.SelectMany(mesh => mesh.PerVertexData).ToArray();
-        var vertices = meshes.SelectMany(mesh => mesh.Vertices).ToArray();
-        return new Mesh(vertices, perVertexData, indexes.ToArray(), meshes[0].Topology);
+    
+        return (min, max);
     }
     
-    public static bool IsValid(
-        PrimitiveTopology topology,
-        TPerVert[] vertices,
-        TPerPrim[] perPrims,
-        int[] indexes,
-        out Error? error)
+    public static void Move<TPerVert, TPerPrim>(this Mesh<TPerVert, TPerPrim> mesh, Position offset) where TPerVert : struct, IPositionedVertex where TPerPrim : struct
     {
-        var expectedPrimLen = topology.PrimitivesAmountFromIndexes(indexes.Length);
-        if (expectedPrimLen != perPrims.Length)
+        for (var i = 0; i < mesh.Indexes.Count; i++)
         {
-            error = $"according to {topology} expected amount of primitives is {expectedPrimLen}, but got {perPrims.Length}";
-            return false;
+            var vertex = mesh.Vertices[i];
+            vertex.Position += offset;
+            mesh.Vertices[i] = vertex;
         }
-        
-        var min = indexes.Min();
-        if (min != 0)
-        {
-            error = $"index must be > 0, but got: {min}";
-            return false;
-        }
-
-        var max = indexes.Max();
-        if (max >= vertices.Length)
-        {
-            error = $"index must be < lenght of vertices ({vertices.Length}), but got: {max}";
-            return false;
-        }
-
-        for (int i = 0; i < vertices.Length; i++)
-        {
-            if (indexes.Contains(i)) continue;
-            error = $"unused vertex at: {i}";
-            return false;
-        }
-
-        error = null;
-        return true;
     }
 }

@@ -12,7 +12,7 @@ public interface IGlMeshDevice;
 
 public readonly record struct VaoAttribute(
     string InShaderName,
-    ValuePrimitive Type,
+    ShaderValuePrimitive Type,
     int Offset,
     int TotalByteSize,
     VertexAttribPointerType PointerType,
@@ -80,8 +80,8 @@ public static class VaoVboDevice
         #region Field Processing
 
         var fields = type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-        List<VaoAttribute> vaoAttributes = new List<VaoAttribute>(fields.Length);
-        HashSet<string> names = [];
+        var vaoAttributes = new List<VaoAttribute>(fields.Length);
+        var names = new HashSet<string>(fields.Length);
         int offset = 0;
         int loc = 0;
         foreach (var field in fields)
@@ -104,9 +104,9 @@ public static class VaoVboDevice
                 Type = fieldAttr.Type,
                 Offset = offset,
                 TotalByteSize = realSize,
-                PointerType = fieldAttr.Type == ValuePrimitive.Int ? VertexAttribPointerType.Int : VertexAttribPointerType.Float,
+                PointerType = fieldAttr.Type == ShaderValuePrimitive.Int ? VertexAttribPointerType.Int : VertexAttribPointerType.Float,
                 Location = loc,
-                IsInt = fieldAttr.Type == ValuePrimitive.Int
+                IsInt = fieldAttr.Type == ShaderValuePrimitive.Int
             });
             
             loc += 1;

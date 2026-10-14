@@ -2,44 +2,39 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using Enjune.Graphic.Api.Data;
 using Enjune.Misc;
+using OpenGLApi.Component;
 
 namespace OpenGLApi.Mesh;
 
-public class StructDesc<T> where T : unmanaged
-{
-    
-}
+public readonly record struct FieldDesc(
+    string InShaderName,
+    ShaderValuePrimitive Type
+);
 
-public static class SsboDesc
+public static class StructDesc
 {
-    private static readonly Dictionary<Type, object> Devices = [];
+    private static readonly Dictionary<Type, List<FieldDesc>> Descriptions = [];
 
-    public static ResultOrError<StructDesc<T>> Get<T>() where T : unmanaged
+    public static ResultOrError<List<FieldDesc>> Get<T>(Std std) where T : unmanaged
     {
-        if (Devices.TryGetValue(typeof(T), out var device))
-            return ResultOrError.Success((StructDesc<T>)device);
-
-        Logger.Info(typeof(SsboDesc),
-            $"Staring generation of desc for {Logger.GetTypeName<T>()}");
-
-        var type = typeof(T);
-        if (type.IsPrimitive)
-            return new Error($"can not use primitive {Logger.GetTypeName(type)}");
-
-        var layout = type.GetCustomAttribute<StructLayoutAttribute>();
-        if (layout is null)
-            return new Error($"struct must has {Logger.GetTypeName(type)}");
+        var stdErr = std.Check<T>();
+        if (stdErr is not null) return stdErr.Value;
         
-        if (layout.Pack != 1)
-            return new Error($"pack must be 1, got {layout.Pack}");
+        if (Descriptions.TryGetValue(typeof(T), out var desc))
+            return ResultOrError.Success(desc);
 
+        Logger.Info(typeof(StructDesc),
+            $"Staring generation description for {Logger.GetTypeName<T>()}");
+        
         #region Field Processing
 
-        var fields = type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-        List<VaoAttribute> vaoAttributes = new List<VaoAttribute>(fields.Length);
-        HashSet<string> names = [];
-        int offset = 0;
-        int loc = 0;
+        var fields = typeof(T)
+            .GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+            // ordering by offset, cause GetFields order is not guaranteed;
+            .OrderBy(fi => fi.GetCustomAttribute<FieldOffsetAttribute>()!.Value).ToArray();
+
+        List<FieldDesc> descs = new List<FieldDesc>(fields.Length);
+        HashSet<string> names = new HashSet<string>(fields.Length);
         foreach (var field in fields)
         {
             var fieldAttr = field.GetCustomAttribute<GraphicFieldAttribute>();
@@ -54,29 +49,18 @@ public static class SsboDesc
             if (expectedSize != realSize)
                 return new Error($"Mismatch of sizes: specified {expectedSize}, but field is {realSize}");
             
-            vaoAttributes.Add(new VaoAttribute
+            descs.Add(new FieldDesc
             {
                 InShaderName = fieldAttr.InShaderName,
-                Type = fieldAttr.Type,
-                Offset = offset,
-                TotalByteSize = realSize,
-                PointerType = fieldAttr.Type == ValuePrimitive.Int ? VertexAttribPointerType.Int : VertexAttribPointerType.Float,
-                Location = loc,
-                IsInt = fieldAttr.Type == ValuePrimitive.Int
+                Type = fieldAttr.Type
             });
-            
-            loc += 1;
-            offset += realSize;
         }
 
         #endregion
-
-        var vaoVboDevice = new VaoVboDevice<T>
-        {
-            VaoAttributes = vaoAttributes,
-            Stride = offset // actually represents full struct size
-        };
-        Devices[type] = vaoVboDevice;
-        return ResultOrError.Success(vaoVboDevice);
+        
+        Descriptions[typeof(T)] = descs;
+        Logger.Info(typeof(StructDesc), "Done");
+        
+        return ResultOrError.Success(descs);
     }
 }

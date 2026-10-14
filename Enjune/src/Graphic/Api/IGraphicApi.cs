@@ -13,9 +13,38 @@ public interface IGraphicApi : IDisposable
     
     public ResultOrError<IRenderableMesh<TPerVert, TPerPrim>.IDynamic> 
         CreateDynamicRenderable<TPerVert, TPerPrim>(Mesh<TPerVert, TPerPrim>? mesh = null) where TPerVert : unmanaged where TPerPrim : unmanaged;
-    
-    public ResultOrError<IShader<TPerVert, TPerPrim>>
-        CreateShader<TPerVert, TPerPrim>(string vertexCode, string fragmentCode) where TPerVert : unmanaged where TPerPrim : unmanaged;
+
+    /// <summary>
+    /// Creates shader.
+    /// Vertex shader must looks like:
+    /// """
+    /// void process(Input input, Varyings varyings){
+    ///     input.vertex // returns TPerVert
+    ///     input.perPrim // returns TPerPrim for current primitive
+    /// 
+    ///     uniformName.fieldName // access to uniform
+    ///     uniformArrayName[i].fieldName // access to uniformArray
+    /// 
+    ///     varyings.color // access to varyings
+    /// }
+    /// """
+    /// Fragment shader:
+    /// """
+    /// vec4 process(Varyings varyings){
+    ///     ...
+    /// 
+    ///     return color // func must return vec4 color of pixel
+    /// }
+    /// """
+    /// </summary>
+    /// <param name="vertexCode"></param>
+    /// <param name="fragmentCode"></param>
+    /// <typeparam name="TPerVert"></typeparam>
+    /// <typeparam name="TPerPrim"></typeparam>
+    /// <typeparam name="TVaryings"></typeparam>
+    /// <returns></returns>
+    public ResultOrError<IShader<TPerVert, TPerPrim, TVaryings>>
+        CreateShader<TPerVert, TPerPrim, TVaryings>(string vertexCode, string fragmentCode) where TPerVert : unmanaged where TPerPrim : unmanaged;
     
     // ubo
     public ResultOrError<IUniform<T>> 

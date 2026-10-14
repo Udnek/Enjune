@@ -18,17 +18,13 @@ public class App : AbstractDisposable, IApp
 {
     private static readonly Vector2i InitialWindowSize = (480*2, 360*2);
     private const string Title = "Example";
-
-    #region Public
     
     public IGraphicApi GraphicApi { get; private set; } = null!;
     public readonly BasicInputHandler InputHandler;
     public FlyingPlayerController FlyingController { get; private set; } = null!;
     public readonly KeyBinds Binds;
-    
-    #endregion
-    
     private readonly Wasd _wasd;
+    public IUniform<CameraUniform> CameraUniform { get; set; }
     
     public App()
     {
@@ -60,6 +56,22 @@ public class App : AbstractDisposable, IApp
             GraphicApi.SetVsync(false);
             GraphicApi.SetClearColor(new Vector4(50, 50, 50, 255f)/255f);
             GraphicApi.SetCursorMode(IGraphicApi.CursorMode.Centered);
+
+            var shaderOrError = GraphicApi.CreateShader<PerVertex, PerPrimitive, Varyings>(
+                """
+                
+                """,
+                """
+                
+                """
+                );
+            if (shaderOrError.Error is not null)
+                return shaderOrError.Error;
+
+            var uniformOrError = GraphicApi.CreateUniform<CameraUniform>("camera");
+            if (uniformOrError.Error is not null)
+                return uniformOrError.Error;
+            CameraUniform = uniformOrError.GetOrThrow();
         }
         
         // controllers
@@ -93,6 +105,9 @@ public class App : AbstractDisposable, IApp
         {
             GraphicApi.Title($"{Title} ({InputHandler.WindowSize.X}x{InputHandler.WindowSize.Y})");
         }
+        
+        // render
+        
         
         // post frame
         GraphicApi.UpdateScreen();

@@ -23,7 +23,7 @@ public static class ResourceManager
         Models.Registry.Register(Models.ErrorCube,
             new StaticModel(MeshInstance.Of(new MeshInstance.Entry
             {
-                Geometry = Mesh.Cube(Position.Zero, 1f, TextureQuad.Full),
+                Geometry = Mesh.AddCube(Position.Zero, 1f, TextureQuad.Full),
                 Material = assetManager.MissingMaterial
             })));
         
@@ -35,7 +35,7 @@ public static class ResourceManager
         Models.Registry.Register(Models.WhiteCube,
             new StaticModel(MeshInstance.Of(new MeshInstance.Entry
             {
-                Geometry = Mesh.Cube(Position.Zero, 0.5f, TextureQuad.Full),
+                Geometry = Mesh.AddCube(Position.Zero, 0.5f, TextureQuad.Full),
                 Material = assetManager.WhiteMaterial
             })));
 

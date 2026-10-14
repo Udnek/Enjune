@@ -56,26 +56,95 @@ public abstract class ShaderProgram : GlDisposable
         return shader;
     }
 
-    public static string GenerateShader(ShaderType shaderType, ReadOnlySpan<VaoAttribute> attributes)
+    public static string GenerateShader(
+        ShaderType shaderType,
+        ReadOnlySpan<VaoAttribute> attributes,
+        ReadOnlySpan<BufferDesc> ssbos,
+        ReadOnlySpan<BufferDesc> ubos,
+        BufferDesc varyings)
     {
         var builder = new StringBuilder();
+        // header
         builder.Append("#version 430 core");
-        foreach (var attr in attributes)
+
+        if (shaderType == ShaderType.VertexShader)
         {
-            // layout(location = 0) in vec3 pos;
-            builder.Append($"layout(location = {attr.Location}) in {ToGlName(attr.Type)} {attr.InShaderName};");
+            // attributes
+            foreach (var attr in attributes)
+            {
+                // layout(location = 0) in vec3 pos;
+                builder.Append($"layout(location = {attr.Location}) in {ToGlName(attr.Type)} {attr.InShaderName};");
+            }
+            // varyings out
+            for (var i = 0; i < varyings.StructFields.Count; i++)
+            {
+                var varying = varyings.StructFields[i];
+                // layout(location = 0) out vec4 color;
+                builder.Append($"layout(location = {i}) out {ToGlName(varying.Type)} {varying.InShaderName};");
+            }
+        } else if (shaderType == ShaderType.FragmentShader)
+        {
+            // varyings in
+            for (var i = 0; i < varyings.StructFields.Count; i++)
+            {
+                var varying = varyings.StructFields[i];
+                // layout(location = 0) in vec4 color;
+                builder.Append($"layout(location = {i}) in {ToGlName(varying.Type)} {varying.InShaderName};");
+            }
         }
+        
+        // ssbos
+        const string structPostfix = "_struct";
+        const string bufferPostfix = "_buff";
+        foreach (var ssbo in ssbos)
+        {
+            // struct PerPrim_struct {
+            builder.Append($"struct {ssbo.InShaderName}{structPostfix} {{");
+            foreach (var field in ssbo.StructFields)
+            {
+                //      int matId;
+                builder.Append($"   {ToGlName(field.Type)} {field.InShaderName};");
+            }
+            // };
+            builder.Append("};");
+            
+            // layout(std430, binding = 0) readonly buffer PerPrim_buff {
+            builder.Append($"layout(std430, binding = {ssbo.Binding}) readonly buffer {ssbo.InShaderName}{bufferPostfix} {{");
+            //     PerPrim_struct PerPrim[];
+            builder.Append($"    {ssbo.InShaderName}{structPostfix} {ssbo.InShaderName}[];");
+            // };
+            builder.Append("};");
+        }
+        
+        // ubo
+        foreach (var ubo in ubos)
+        {
+            // layout(std140, binding = 0) uniform CameraUniforms {
+            builder.Append($"layout(std140, binding = {ubo.Binding}) uniform {ubo.InShaderName} {{");
+            foreach (var field in ubo.StructFields)
+            {
+                //     mat4 View;
+                builder.Append($"    {ToGlName(field.Type)} {field.InShaderName};");
+            }
+            // };
+            builder.Append("};");
+        }
+        
+        
+        
+        return builder.
     }
 
-    private static string ToGlName(ValuePrimitive primitive)
+    private static string ToGlName(ShaderValuePrimitive primitive)
     {
         return primitive switch {
-            ValuePrimitive.Int => "int",
-            ValuePrimitive.Float => "float",
-            ValuePrimitive.Vector3F => "vec3",
-            ValuePrimitive.Vector4F => "vec4",
-            ValuePrimitive.Matrix3F => "mat3",
-            ValuePrimitive.Matrix4F => "mat4",
+            ShaderValuePrimitive.Int => "int",
+            ShaderValuePrimitive.Float => "float",
+            ShaderValuePrimitive.Vector2F => "vec2",
+            ShaderValuePrimitive.Vector3F => "vec3",
+            ShaderValuePrimitive.Vector4F => "vec4",
+            ShaderValuePrimitive.Matrix3F => "mat3",
+            ShaderValuePrimitive.Matrix4F => "mat4",
             _ => throw new ArgumentOutOfRangeException(nameof(primitive), primitive, null)
         };
     }

@@ -3,10 +3,10 @@ namespace Enjune.Graphic.Api.Data;
 [AttributeUsage(AttributeTargets.Field)]
 public class GraphicFieldAttribute : System.Attribute
 {
-    public readonly ValuePrimitive Type;
+    public readonly ShaderValuePrimitive Type;
     public readonly string InShaderName;
 
-    public GraphicFieldAttribute(ValuePrimitive type, string inShaderName)
+    public GraphicFieldAttribute(ShaderValuePrimitive type, string inShaderName)
     {
         Type = type;
         InShaderName = inShaderName;
