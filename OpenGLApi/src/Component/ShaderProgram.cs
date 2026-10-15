@@ -82,7 +82,8 @@ public abstract class ShaderProgram : GlDisposable
                 // layout(location = 0) out vec4 color;
                 builder.Append($"layout(location = {i}) out {ToGlName(varying.Type)} {varying.InShaderName};");
             }
-        } else if (shaderType == ShaderType.FragmentShader)
+        } 
+        else if (shaderType == ShaderType.FragmentShader)
         {
             // varyings in
             for (var i = 0; i < varyings.StructFields.Count; i++)
@@ -129,25 +130,9 @@ public abstract class ShaderProgram : GlDisposable
             // };
             builder.Append("};");
         }
-        
-        
-        
-        return builder.
     }
 
-    private static string ToGlName(ShaderValuePrimitive primitive)
-    {
-        return primitive switch {
-            ShaderValuePrimitive.Int => "int",
-            ShaderValuePrimitive.Float => "float",
-            ShaderValuePrimitive.Vector2F => "vec2",
-            ShaderValuePrimitive.Vector3F => "vec3",
-            ShaderValuePrimitive.Vector4F => "vec4",
-            ShaderValuePrimitive.Matrix3F => "mat3",
-            ShaderValuePrimitive.Matrix4F => "mat4",
-            _ => throw new ArgumentOutOfRangeException(nameof(primitive), primitive, null)
-        };
-    }
+
     
     public void Bind() => GL.UseProgram(_program);
     public static void Unbind() => GL.UseProgram(0);

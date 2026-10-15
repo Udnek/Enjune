@@ -18,7 +18,7 @@ public interface IGraphicApi : IDisposable
     /// Creates shader.
     /// Vertex shader must looks like:
     /// """
-    /// void process(Input input, Varyings varyings){
+    /// void process(Input input, out Varyings varyings){
     ///     input.vertex // returns TPerVert
     ///     input.perPrim // returns TPerPrim for current primitive
     /// 
