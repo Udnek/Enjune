@@ -1,6 +1,7 @@
 using Enjune.Data.Codec;
 using Enjune.Graphic.Asset;
 using Enjune.Graphic.Modeling;
+using Enjune.Graphic.Modeling.Utility;
 
 namespace Enjune.File.ModelReader;
 
@@ -16,12 +17,12 @@ public abstract class AbstractModelReader
     protected AssetManager AssetManager = null!;
     protected ResourcePath Path = null!;
 
-    public StaticModel? Read(AssetManager assetManager, ResourcePath path, out Error? error)
+    public StaticModel<BasicVertex, MaterialPerPrimitive>? Read(AssetManager assetManager, ResourcePath path, out Error? error)
     {
         AssetManager = assetManager;
         Path = path;
         return Read(out error);
     }
 
-    protected abstract StaticModel? Read(out Error? error);
+    protected abstract StaticModel<BasicVertex, MaterialPerPrimitive>? Read(out Error? error);
 }

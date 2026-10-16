@@ -14,7 +14,7 @@ public class GraphicFieldAttribute : System.Attribute
             throw new Exception($"Vertex attribute name must contain only letters, digits and underscores, got {inShaderName}");
     }
 
-    private static bool IsValidName(string name)
+    public static bool IsValidName(string name)
     {
         if (string.IsNullOrEmpty(name)) 
             return false;

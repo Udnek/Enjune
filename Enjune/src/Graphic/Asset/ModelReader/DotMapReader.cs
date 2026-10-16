@@ -1,5 +1,6 @@
 using Enjune.Graphic.Asset;
 using Enjune.Graphic.Modeling;
+using Enjune.Graphic.Modeling.Utility;
 using Enjune.Misc;
 using Sledge.Formats.Map.Formats;
 using Sledge.Formats.Map.Objects;
@@ -9,7 +10,7 @@ namespace Enjune.File.ModelReader;
 
 public class DotMapReader : AbstractModelReader
 {
-    protected override StaticModel? Read(out Error? error)
+    protected override StaticModel<BasicVertex, MaterialPerPrimitive>? Read(out Error? error)
     {
         var mapFormat = new QuakeMapFormat();
         MapFile? mapFile = null;
@@ -22,9 +23,9 @@ public class DotMapReader : AbstractModelReader
         return ProceedMap(mapFile);
     }
 
-    private StaticModel ProceedMap(MapFile map)
+    private StaticModel<BasicVertex, MaterialPerPrimitive> ProceedMap(MapFile map)
     {
-        var builder = new StaticModel.Builder();
+        var builder = new StaticModel<BasicVertex, MaterialPerPrimitive>.Builder();
         var solids = map.Worldspawn.Find(mo => mo is Solid).Cast<Solid>();
         
         foreach (var solid in solids)
@@ -43,16 +44,24 @@ public class DotMapReader : AbstractModelReader
                     Logger.Info(this, $"u: {u}; v: {v}");
                     texCoords[i] = (u, v);
                 }
-                var material = AssetManager.AddMaterialAndGetCompiled(RawMaterial.FromTexture(Path.ResolveRaw(face.TextureName)));
-                builder.Add(
-                    new MeshInstance.Entry
+                var basicVertices = new BasicVertex[positions.Length];
+                for (var i = 0; i < positions.Length; i++)
+                {
+                    basicVertices[i] = new BasicVertex
                     {
-                        Geometry = Mesh.Ngon(positions, texCoords, PrimitiveTopology.Triangle, true),
-                        Material = material
-                    });
+                        Position = positions[0],
+                        Uv = texCoords[0]
+                    };
+                }
+                
+                var material = AssetManager.AddMaterialAndGetCompiled(RawMaterial.FromTexture(Path.ResolveRaw(face.TextureName)));
+                builder.Add(PrimitiveTopology.Triangle, m =>
+                {
+                    m.AddNgon(new MaterialPerPrimitive(material.Id), basicVertices);
+                });
             }
         }
 
-        return builder.Build(true);
+        return builder.Build();
     }
 }

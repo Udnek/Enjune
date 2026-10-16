@@ -1,6 +1,8 @@
+using Enjune.Graphic.Api;
+
 namespace OpenGLApi.Component.Buffer;
 
-public class Ubo<T> : GlDisposable where T : unmanaged
+public class Ubo<T> : GlDisposable, IGlBuffer, IUniform<T> where T : unmanaged
 {
     private const BufferTarget Target = BufferTarget.UniformBuffer;
     private readonly int _handle;
@@ -12,9 +14,11 @@ public class Ubo<T> : GlDisposable where T : unmanaged
         _handle = GL.GenBuffer();
         _binding = binding;
         unsafe { _byteSize = sizeof(T); }
+        Bind();
         GL.BufferStorage(Target, _byteSize, IntPtr.Zero, BufferStorageFlags.DynamicStorageBit);
+        OpenGlApi.CheckGlError(this);
     }
-
+    
     public void BindAndPush(T val)
     {
         Bind();
@@ -23,9 +27,11 @@ public class Ubo<T> : GlDisposable where T : unmanaged
     
     public void Bind()
     {
-        GL.BindBuffer(Target, _handle);
+        DynamicBindings.BindBuffer(Target, _handle);
         GL.BindBufferBase(BufferRangeTarget.UniformBuffer, _binding, _handle);
     }
     
     protected override void DisposeGlData() => GL.DeleteBuffer(_handle);
+    
+    public void Set(T value) => BindAndPush(value);
 }

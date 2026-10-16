@@ -1,8 +1,10 @@
+using System.Diagnostics;
 using Enjune;
 using Enjune.Attribute;
 using Enjune.Ecs;
 using Enjune.Ecs.EcsType;
 using Enjune.File;
+using Enjune.Graphic;
 using Enjune.Graphic.Api;
 using Enjune.Graphic.Asset;
 using Enjune.Graphic.Key;
@@ -25,6 +27,8 @@ public class App : AbstractDisposable, IApp
     public readonly KeyBinds Binds;
     private readonly Wasd _wasd;
     public IUniform<CameraUniform> CameraUniform { get; set; }
+    public IUniform<TimeUniform> TimeUniform { get; set; }
+    public IShader<PerVertex, PerPrimitive> Shader { get; set; }
     
     public App()
     {
@@ -57,62 +61,110 @@ public class App : AbstractDisposable, IApp
             GraphicApi.SetClearColor(new Vector4(50, 50, 50, 255f)/255f);
             GraphicApi.SetCursorMode(IGraphicApi.CursorMode.Centered);
 
-            var shaderOrError = GraphicApi.CreateShader<PerVertex, PerPrimitive, Varyings>(
-                """
-                
-                """,
-                """
-                
-                """
-                );
-            if (shaderOrError.Error is not null)
-                return shaderOrError.Error;
-
             var uniformOrError = GraphicApi.CreateUniform<CameraUniform>("camera");
             if (uniformOrError.Error is not null)
                 return uniformOrError.Error;
             CameraUniform = uniformOrError.GetOrThrow();
+            
+            var timeOrError = GraphicApi.CreateUniform<TimeUniform>("time");
+            if (timeOrError.Error is not null)
+                return timeOrError.Error;
+            TimeUniform = timeOrError.GetOrThrow();
+            
+            var shaderOrError = GraphicApi.CreateShader<PerVertex, PerPrimitive, Varyings>(
+                """
+                vec4 process(Input input, out Varyings varyings) {
+                    varyings.color = input.color;
+                    return camera.proj * camera.view * vec4(input.pos, 1);
+                }
+                """,
+                """
+                vec4 process(Varyings varyings, PerPrimitive perPrim) {
+                    return varyings.color * perPrim.color * (sin(time.sec)+1)/2.0;
+                }
+                """
+                );
+            if (shaderOrError.Error is not null)
+                return shaderOrError.Error;
+            Shader = shaderOrError.GetOrThrow();
         }
         
         // controllers
         FlyingController = new FlyingPlayerController(GraphicApi, InputHandler, _wasd)
         {
             Sensitivity = 0.2f,
-            Speed = 1
+            Speed = 3
         };
         
         return null;
     }
 
+
+
     public void MainCycle()
     {
+        var mesh = new Mesh<PerVertex, PerPrimitive>(PrimitiveTopology.Triangle);
+        mesh.AddTriangle(
+            new PerVertex(), 
+            new PerPrimitive(),
+            (0, 0, 0.5f), (10, 0, 0.5f), (10, 10, 0.5f), TextureQuad.Full);
+        mesh.AddTriangle(
+            new PerVertex(), 
+            new PerPrimitive(){Color = new Vector4(1, 1, 0, 1f)},
+            (0, 0, 0.5f), (10, 10, 0.5f), (0, 10, 0.5f), TextureQuad.Full);
+        mesh.AddNgon(
+            new PerPrimitive(){Color = (0f, 1, 1, 1)},
+            new PerVertex(){Position = (0, 10, 0.5f), Color = (1, 0, 0, 1)},
+            new PerVertex(){Position = (10, 10, 0.5f), Color = (0, 1, 0, 1)},
+            new PerVertex(){Position = (5, 15, 0.5f), Color = (0, 0, 1, 1)}
+            );
+        mesh.Scale(new Vector3(0.5f));
+        
+        var meshOrrErr = GraphicApi.CreateRenderable(mesh);
+        if (meshOrrErr.Error is not null)
+        {
+            Logger.Error(this, meshOrrErr.Error);
+            return;
+        }
+
+        var renderableMesh = meshOrrErr.GetOrThrow();
+
+        var stopwatch = Stopwatch.StartNew();
+
         Utils.RunTargetFpsLoopWhile(
             200, 
             () => !GraphicApi.ShouldStop(),
-            GraphicCycle
-            );
-    }
-
-    private void GraphicCycle(float deltaTime)
-    {
-        InputHandler.PrepareAtFrameStart();
+            dt =>
+            {
+                InputHandler.PrepareAtFrameStart();
+                
+                // wasd
+                FlyingController.Update(dt);
         
-        // wasd
-        FlyingController.Update(deltaTime);
+                // window
+                if (InputHandler.WindowSizeChanged)
+                {
+                    GraphicApi.Title($"{Title} ({InputHandler.WindowSize.X}x{InputHandler.WindowSize.Y})");
+                }
+                
+                // updating uniforms
+                CameraUniform.Set(new CameraUniform()
+                {
+                    Projection = Matrix4.CreatePerspectiveFieldOfView(
+                        MathF.PI / 2, (float) InputHandler.WindowSize.X / InputHandler.WindowSize.Y, 0.1f, 1000f),
+                    View = FlyingController.View
+                });
+                TimeUniform.Set(new TimeUniform(){Seconds = (float) stopwatch.Elapsed.TotalSeconds});
         
-        // window
-        if (InputHandler.WindowSizeChanged)
-        {
-            GraphicApi.Title($"{Title} ({InputHandler.WindowSize.X}x{InputHandler.WindowSize.Y})");
-        }
+                // render
+                Shader.Render(renderableMesh);
         
-        // render
-        
-        
-        // post frame
-        GraphicApi.UpdateScreen();
-        InputHandler.ClearForNextFrame();
-        GraphicApi.UpdateEvents();
+                // post frame
+                GraphicApi.UpdateScreen();
+                GraphicApi.ClearRenderBuffer();
+                InputHandler.ClearForNextFrame();
+                GraphicApi.UpdateEvents(); 
+            });
     }
 
     protected override void DisposeData()

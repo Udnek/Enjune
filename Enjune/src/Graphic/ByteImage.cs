@@ -18,7 +18,7 @@ public sealed class ByteImage : IEquatable<ByteImage>
     {
         if (width * height * type.Depth != data.Length)
         {
-            Logger.Warn(this, $"data length: {data.Length}; expected (w*h*d): {width * height * type.Depth}");
+            Logger.Warn(this, $"Data length: {data.Length}, expected (w*h*d): {width * height * type.Depth}");
             data = new byte[width * height*type.Depth];
         }
         Data = data;
@@ -31,7 +31,7 @@ public sealed class ByteImage : IEquatable<ByteImage>
     {
         if (Type.Depth != 1)
         {
-            Logger.Warn(this, $"conversion only supports 1d images, but got: {Type.Depth}");
+            Logger.Warn(this, $"Conversion only supports 1d images, but got: {Type.Depth}");
             return this;
         }
         byte[] newData = new byte[Width * Height * 4];

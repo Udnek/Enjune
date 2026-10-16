@@ -1,10 +1,9 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
+using Enjune.Attribute;
 using Enjune.Graphic.Api.Data;
 using Enjune.Misc;
-using OpenGLApi.Component;
 using OpenGLApi.Component.Buffer;
-using OpenGLApi.Data;
 
 namespace OpenGLApi.Mesh;
 
@@ -14,14 +13,14 @@ public readonly record struct VaoAttribute(
     string InShaderName,
     ShaderValuePrimitive Type,
     int Offset,
-    int TotalByteSize,
+    int ComponentCount,
     VertexAttribPointerType PointerType,
     int Location,
     bool IsInt);
 
 public class VaoVboDevice<TPerVert> : IGlMeshDevice where TPerVert : unmanaged
 {
-    public required IReadOnlyList<VaoAttribute> VaoAttributes { get; init; }
+    public required VaoAttribute[] VaoAttributes { get; init; }
     public required int Stride { get; init; }
 
     public void Create(bool isVboFixedSize, int vboSize, out Vbo<TPerVert> vbo, out Vao vao)
@@ -39,18 +38,19 @@ public class VaoVboDevice<TPerVert> : IGlMeshDevice where TPerVert : unmanaged
             if (attr.IsInt)
             {
                 GL.VertexAttribIPointer(
-                    attr.Location, attr.TotalByteSize,
+                    attr.Location, attr.ComponentCount,
                     (VertexAttribIntegerType) attr.PointerType,
                     Stride, attr.Offset);
             }
             else
             {
                 GL.VertexAttribPointer(
-                    attr.Location, attr.TotalByteSize,
+                    attr.Location, attr.ComponentCount,
                     attr.PointerType, false,
                     Stride, attr.Offset);
             }
-        }   
+            OpenGlApi.CheckGlError(this);
+        }
     }
 }
 
@@ -68,14 +68,17 @@ public static class VaoVboDevice
 
         var type = typeof(TPerVert);
         if (type.IsPrimitive)
-            return new Error($"can not use primitive {Logger.GetTypeName(type)}");
+            return new Error($"can not use primitive {Logger.GetTypeName<TPerVert>()}");
 
-        var layout = type.GetCustomAttribute<StructLayoutAttribute>();
+        var layout = type.StructLayoutAttribute;
         if (layout is null)
-            return new Error($"struct must has {Logger.GetTypeName(type)}");
+            return new Error($"struct {Logger.GetTypeName<TPerVert>()} must have {Logger.GetTypeName<StructLayoutAttribute>()}");
         
         if (layout.Pack != 1)
             return new Error($"pack must be 1, got {layout.Pack}");
+        
+        if (layout.Value != LayoutKind.Sequential)
+            return new Error($"layout must be {nameof(LayoutKind.Sequential)}, got {layout.Value}");
 
         #region Field Processing
 
@@ -103,7 +106,7 @@ public static class VaoVboDevice
                 InShaderName = fieldAttr.InShaderName,
                 Type = fieldAttr.Type,
                 Offset = offset,
-                TotalByteSize = realSize,
+                ComponentCount = fieldAttr.Type.ComponentCount(),
                 PointerType = fieldAttr.Type == ShaderValuePrimitive.Int ? VertexAttribPointerType.Int : VertexAttribPointerType.Float,
                 Location = loc,
                 IsInt = fieldAttr.Type == ShaderValuePrimitive.Int
@@ -117,10 +120,24 @@ public static class VaoVboDevice
 
         var vaoVboDevice = new VaoVboDevice<TPerVert>
         {
-            VaoAttributes = vaoAttributes,
+            VaoAttributes = vaoAttributes.ToArray(),
             Stride = offset // actually represents full struct size
         };
         Devices[type] = vaoVboDevice;
         return ResultOrError.Success(vaoVboDevice);
+    }
+
+    private static int ComponentCount(this ShaderValuePrimitive primitive)
+    {
+        return primitive switch {
+            ShaderValuePrimitive.Int => 1,
+            ShaderValuePrimitive.Float => 1,
+            ShaderValuePrimitive.Vector2F => 2,
+            ShaderValuePrimitive.Vector3F => 3,
+            ShaderValuePrimitive.Vector4F => 4,
+            ShaderValuePrimitive.Matrix3F => 3*3,
+            ShaderValuePrimitive.Matrix4F => 4*4,
+            _ => throw new ArgumentOutOfRangeException(nameof(primitive), primitive, null)
+        };
     }
 }

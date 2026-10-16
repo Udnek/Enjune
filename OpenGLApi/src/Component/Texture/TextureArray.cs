@@ -50,7 +50,7 @@ public sealed class TextureArray : AbstractTexture
         for (var layer = 0; layer < textures.Count; layer++)
         {
             texArr.Put(layer, textures[layer]);
-            OpenGlApi.CheckGlError();
+            OpenGlApi.CheckGlError(typeof(TextureArray));
         }
 
 

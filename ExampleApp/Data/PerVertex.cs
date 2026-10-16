@@ -1,14 +1,17 @@
 using System.Runtime.InteropServices;
 using Enjune.Graphic.Api.Data;
+using Enjune.Graphic.Modeling;
 using OpenTK.Mathematics;
 
 namespace ExampleApp;
 
-[StructLayout(LayoutKind.Explicit, Size = 12+16)]
-public struct PerVertex
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
+public struct PerVertex() : IPositionedVertex, ITexturedVertex
 {
-    [GraphicField(ShaderValuePrimitive.Vector3F, "pos")]
-    [FieldOffset(0)] public Vector3 Pos;
+    [field: GraphicField(ShaderValuePrimitive.Vector3F, "pos")]
+    public Vector3 Position { get; set; }
     [GraphicField(ShaderValuePrimitive.Vector4F, "color")]
-    [FieldOffset(12)] public Vector4 Color;
+    public Vector4 Color = Vector4.One;
+    [field: GraphicField(ShaderValuePrimitive.Vector2F, "uv")]
+    public Vector2 Uv { get; set; }
 }

@@ -28,18 +28,18 @@ public abstract class Std
     private Error? CheckNoCache<T>() where T : unmanaged
     {
         Logger.Info(this,
-            $"Staring validation for for {Logger.GetTypeName<T>()}");
+            $"Validating {Logger.GetTypeName<T>()}");
 
         var type = typeof(T);
         if (type.IsPrimitive)
             return $"can not use primitive {Logger.GetTypeName(type)}";
 
-        var layout = type.GetCustomAttribute<StructLayoutAttribute>();
+        var layout = type.StructLayoutAttribute;
         if (layout is null)
-            return $"struct must has {Logger.GetTypeName(type)}";
+            return $"struct must has {Logger.GetTypeName<StructLayoutAttribute>()}";
 
         if (layout.Value != LayoutKind.Explicit)
-            return $"layoutKind must be Explicit, got: {layout.Value}";
+            return $"layoutKind must be {nameof(LayoutKind.Explicit)}, got: {layout.Value}";
         
         if (layout.Size <= 0)
             return $"size must be positive, got {layout.Size}";

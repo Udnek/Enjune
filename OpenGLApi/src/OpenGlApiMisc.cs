@@ -20,17 +20,12 @@ public sealed partial class OpenGlApi
         Logger.RegisterNamespaceToDomain(typeof(OpenGlApi).Assembly, "", Logger.Domain.Graphics);
     }
     
-    public static Error? GetGlError()
+
+    public static void CheckGlError(object author)
     {
         var errorCode = GL.GetError();
-        if (errorCode == ErrorCode.NoError) return null;
-        return $"GL error: {Enum.GetName(errorCode)}";
-    }
-
-    public static void CheckGlError()
-    {
-        var error = GetGlError();
-        if (error != null) throw new Exception(error);
+        if (errorCode == ErrorCode.NoError) return;
+        Logger.Error(author, $"GL error: {Enum.GetName(errorCode)}");
     }
 
     private void InitKeyCodeMaps()
@@ -118,12 +113,37 @@ public sealed partial class OpenGlApi
             };
         }
     }
-    
+
+    public ResultOrError<IRenderableMesh<TPerVert, TPerPrim>> CreateRenderable<TPerVert, TPerPrim>(Mesh<TPerVert, TPerPrim> mesh) where TPerVert : unmanaged where TPerPrim : unmanaged
+    {
+        var deviceOrError = VaoVboDevice.Get<TPerVert>();
+        return deviceOrError.AndThen(IRenderableMesh<TPerVert, TPerPrim> (device) =>
+        {
+            var glMesh = new GlMesh<TPerVert, TPerPrim>(device, true);
+            _meshesToDispose.Add(glMesh);
+            glMesh.Refit(mesh);
+            return glMesh;
+        });
+    }
+
+    public ResultOrError<IRenderableMesh<TPerVert, TPerPrim>.IDynamic> CreateDynamicRenderable<TPerVert, TPerPrim>(Mesh<TPerVert, TPerPrim>? mesh = null) where TPerVert : unmanaged where TPerPrim : unmanaged
+    {
+        var deviceOrError = VaoVboDevice.Get<TPerVert>();
+        return deviceOrError.AndThen(IRenderableMesh<TPerVert, TPerPrim>.IDynamic (device) =>
+        {
+            var glMesh = new GlMesh<TPerVert, TPerPrim>(device, false);
+            _meshesToDispose.Add(glMesh);
+            if (mesh is not null) 
+                glMesh.Refit(mesh);
+            return glMesh;
+        });
+    }
+
     public void DumpTextures(ExternalPath path)
     {
-        _textureArray.Dump(path, "main")?.Log(this);
-        _screenPack.Texture.Dump(path, "screen")?.Log(this);
-        _shadowMapPack.Maps.Dump(path, "shadow_map")?.Log(this);
+        // _textureArray.Dump(path, "main")?.Log(this);
+        // _screenPack.Texture.Dump(path, "screen")?.Log(this);
+        // _shadowMapPack.Maps.Dump(path, "shadow_map")?.Log(this);
     }
 
     public void Title(string title)
@@ -143,7 +163,8 @@ public sealed partial class OpenGlApi
         }
     }
     
-    public void SetClearColor(Color color) => GL.ClearColor(color.X, color.Y, color.Z, color.W);
+    public void SetClearColor(Color color) 
+        => GL.ClearColor(color.X, color.Y, color.Z, color.W);
 
     public void SetDrawMode(IGraphicApi.DrawMode mode)
     {
@@ -224,22 +245,6 @@ public sealed partial class OpenGlApi
             GLFW.GetWindowSize(_window, out var width, out var height);
             return (width, height);
         }
-    }
-
-    public IRenderableMesh CreateStaticRenderable(MeshInstance mesh)
-    {
-        var glMesh = new GlMesh(_materialShader, PerPrimitiveSsboBinding, true, _assets.WhiteMaterial.Id);
-        glMesh.Refit(mesh);
-        _meshesToDispose.Add(glMesh);
-        return glMesh;
-    }
-
-    public IRenderableMesh.IDynamic CreateDynamicRenderable(MeshInstance mesh)
-    {
-        var glMesh = new GlMesh(_materialShader, PerPrimitiveSsboBinding, false, _assets.WhiteMaterial.Id);
-        glMesh.Refit(mesh);
-        _meshesToDispose.Add(glMesh);
-        return glMesh;
     }
 
     public bool ShouldStop()

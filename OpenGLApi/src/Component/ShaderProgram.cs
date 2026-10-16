@@ -1,21 +1,25 @@
 using System.Text;
+using Enjune.Attribute;
 using Enjune.File;
+using Enjune.Graphic.Api;
 using Enjune.Graphic.Api.Data;
 using Enjune.Misc;
 using OpenGLApi.Mesh;
 
 namespace OpenGLApi.Component;
 
-public abstract class ShaderProgram : GlDisposable
+public interface IGlShader : IDisposable;
+
+[LogParams(method: LogParamsAttribute.Method.ToString)]
+public sealed class ShaderProgram<TPerVert, TPerPrim> 
+    : GlDisposable, IGlShader, IShader<TPerVert, TPerPrim> where TPerVert : unmanaged where TPerPrim : unmanaged
 {
     private int _program;
-    private string _name = null!;
     private int _vertexShader;
     private int _fragmentShader;
 
-    public Error? Init(string name, string vertCode, string fragCode)
+    public Error? Init(string vertCode, string fragCode)
     {
-        _name = name;
         _program = GL.CreateProgram();
         
         _vertexShader = InitShader(ShaderType.VertexShader, vertCode, out var error);
@@ -48,6 +52,9 @@ public abstract class ShaderProgram : GlDisposable
         if (compileStatus != (int)All.True)
         {
             var infoLog = GL.GetShaderInfoLog(shader);
+            var lines = source.Split('\n');
+            for (var i = 0; i < lines.Length; i++) 
+                Logger.Error(this, $"[{i+1}] {lines[i]}");
             error = $"shader compilation failed ({type}): {infoLog}";
             return 0;
         }
@@ -56,86 +63,7 @@ public abstract class ShaderProgram : GlDisposable
         return shader;
     }
 
-    public static string GenerateShader(
-        ShaderType shaderType,
-        ReadOnlySpan<VaoAttribute> attributes,
-        ReadOnlySpan<BufferDesc> ssbos,
-        ReadOnlySpan<BufferDesc> ubos,
-        BufferDesc varyings)
-    {
-        var builder = new StringBuilder();
-        // header
-        builder.Append("#version 430 core");
-
-        if (shaderType == ShaderType.VertexShader)
-        {
-            // attributes
-            foreach (var attr in attributes)
-            {
-                // layout(location = 0) in vec3 pos;
-                builder.Append($"layout(location = {attr.Location}) in {ToGlName(attr.Type)} {attr.InShaderName};");
-            }
-            // varyings out
-            for (var i = 0; i < varyings.StructFields.Count; i++)
-            {
-                var varying = varyings.StructFields[i];
-                // layout(location = 0) out vec4 color;
-                builder.Append($"layout(location = {i}) out {ToGlName(varying.Type)} {varying.InShaderName};");
-            }
-        } 
-        else if (shaderType == ShaderType.FragmentShader)
-        {
-            // varyings in
-            for (var i = 0; i < varyings.StructFields.Count; i++)
-            {
-                var varying = varyings.StructFields[i];
-                // layout(location = 0) in vec4 color;
-                builder.Append($"layout(location = {i}) in {ToGlName(varying.Type)} {varying.InShaderName};");
-            }
-        }
-        
-        // ssbos
-        const string structPostfix = "_struct";
-        const string bufferPostfix = "_buff";
-        foreach (var ssbo in ssbos)
-        {
-            // struct PerPrim_struct {
-            builder.Append($"struct {ssbo.InShaderName}{structPostfix} {{");
-            foreach (var field in ssbo.StructFields)
-            {
-                //      int matId;
-                builder.Append($"   {ToGlName(field.Type)} {field.InShaderName};");
-            }
-            // };
-            builder.Append("};");
-            
-            // layout(std430, binding = 0) readonly buffer PerPrim_buff {
-            builder.Append($"layout(std430, binding = {ssbo.Binding}) readonly buffer {ssbo.InShaderName}{bufferPostfix} {{");
-            //     PerPrim_struct PerPrim[];
-            builder.Append($"    {ssbo.InShaderName}{structPostfix} {ssbo.InShaderName}[];");
-            // };
-            builder.Append("};");
-        }
-        
-        // ubo
-        foreach (var ubo in ubos)
-        {
-            // layout(std140, binding = 0) uniform CameraUniforms {
-            builder.Append($"layout(std140, binding = {ubo.Binding}) uniform {ubo.InShaderName} {{");
-            foreach (var field in ubo.StructFields)
-            {
-                //     mat4 View;
-                builder.Append($"    {ToGlName(field.Type)} {field.InShaderName};");
-            }
-            // };
-            builder.Append("};");
-        }
-    }
-
-
-    
-    public void Bind() => GL.UseProgram(_program);
-    public static void Unbind() => GL.UseProgram(0);
+    public void Bind() => DynamicBindings.BindShader(_program);
     
     protected override void DisposeGlData()
     {
@@ -143,4 +71,13 @@ public abstract class ShaderProgram : GlDisposable
         GL.DeleteShader(_vertexShader);
         GL.DeleteProgram(_program);
     }
+
+    public void Render(IRenderableMesh<TPerVert, TPerPrim> mesh)
+    {
+        Bind();
+        // delegating to model
+        ((GlMesh<TPerVert, TPerPrim>)mesh).Render();
+    }
+
+    public override string ToString() => "ShaderProgram";
 }

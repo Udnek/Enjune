@@ -1,41 +1,64 @@
 using System.Diagnostics.Contracts;
 using Enjune.Graphic.Api;
+using Enjune.Misc;
 
-namespace Enjune.Graphic.Modeling;
+namespace Enjune.Graphic.Modeling.Utility;
 
-public class StaticModel
+public class StaticModel<TPerVert, TPerPrim> where TPerVert : unmanaged where TPerPrim : unmanaged
 {
-    public ReadOnlySpan<MeshInstance> Meshes => _meshes.AsSpan();
-    private MeshInstance[] _meshes;
+    public ReadOnlySpan<Mesh<TPerVert, TPerPrim>> Meshes => _meshes.AsSpan();
+    private Mesh<TPerVert, TPerPrim>[] _meshes;
 
-    public StaticModel(params MeshInstance[] meshes) => _meshes = meshes;
+    public StaticModel(params Mesh<TPerVert, TPerPrim>[] meshes) => _meshes = meshes;
 
-    [Pure]
-    public StaticRenderableModel CreateRenderable(IGraphicApi graphicApi)
+    public ResultOrError<StaticRenderableModel<TPerVert, TPerPrim>> CreateRenderable(IGraphicApi graphicApi)
     {
-        var renderables = Array.ConvertAll(_meshes, graphicApi.CreateStaticRenderable);
-        return new StaticRenderableModel(renderables);
+        var renderables = new IRenderableMesh<TPerVert, TPerPrim>[_meshes.Length];
+        foreach (var mesh in _meshes)
+        {
+            var meshOrError = graphicApi.CreateRenderable(mesh);
+            if (meshOrError.Error is not null)
+                return meshOrError.Error.Value;
+        }
+        
+        return ResultOrError.Success(new StaticRenderableModel<TPerVert, TPerPrim>(renderables));
     }
 
     public sealed class Builder
     {
-         private readonly Dictionary<PrimitiveTopology, MeshInstance.Builder> _meshes = new();
-         
-         public Builder Add(MeshInstance.Entry mesh)
+         private readonly Dictionary<PrimitiveTopology, Mesh<TPerVert, TPerPrim>> _meshes = new();
+
+         /// <summary>
+         /// Returns mesh with appropriate topology to be modified
+         /// </summary>
+         /// <param name="topology"></param>
+         /// <param name="meshModifier"></param>
+         /// <returns></returns>
+         public Builder Add(PrimitiveTopology topology, Action<Mesh<TPerVert, TPerPrim>> meshModifier)
          {
-             var topology = mesh.Geometry.Topology;
-             if (_meshes.TryGetValue(topology, out var builder))
+             if (_meshes.TryGetValue(topology, out var mesh))
              {
-                 builder.Add(mesh);
+                 meshModifier(mesh);
                  return this;
              }
 
-             _meshes[topology] = new MeshInstance.Builder(topology).Add(mesh);
+             var newMesh = new Mesh<TPerVert, TPerPrim>(topology);
+             _meshes[topology] = newMesh;
+             meshModifier(newMesh);
              return this;
          }
 
          [Pure]
-         public StaticModel Build(bool mergeSimilar) 
-             => new(_meshes.Select(b => b.Value.Build(mergeSimilar)).ToArray());
+         public StaticModel<TPerVert, TPerPrim> Build()
+         {
+             return new StaticModel<TPerVert, TPerPrim>(_meshes.Values
+                 .Where(m => !m.IsEmpty())
+                 .Select(m => 
+                 {
+                     // optimizing memory usage
+                     m.TrimExcess();
+                     return m;
+                 }).ToArray());
+         }
     }
 }

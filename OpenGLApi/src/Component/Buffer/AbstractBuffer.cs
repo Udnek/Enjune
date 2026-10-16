@@ -2,7 +2,9 @@ using Enjune.Misc;
 
 namespace OpenGLApi.Component.Buffer;
 
-public abstract class AbstractBuffer<T> : GlDisposable where T : unmanaged
+public interface IGlBuffer : IDisposable;
+
+public abstract class AbstractBuffer<T> : GlDisposable, IGlBuffer where T : unmanaged
 {
     protected readonly int Handle;
     private readonly int _elementSize;
@@ -15,20 +17,28 @@ public abstract class AbstractBuffer<T> : GlDisposable where T : unmanaged
     {
         if (capacity <= 0)
         {
-            Logger.Error(this, $"capacity must be positive; got {capacity}");
-            throw new Exception($"capacity must be positive; got {capacity}");
+            Logger.Error(this, $"Capacity must be positive; got {capacity}");
+            throw new Exception($"Capacity must be positive; got {capacity}");
         }
 
         FixedSize = fixedSize;
         Capacity = capacity;
         _target = target;
         Handle = GL.GenBuffer();
+        OpenGlApi.CheckGlError(this);
         unsafe { _elementSize = sizeof(T); }
+        Initialize();
+    }
 
-        if (fixedSize) 
-            GL.BufferStorage(_target, capacity*_elementSize, IntPtr.Zero, BufferStorageFlags.DynamicStorageBit);
+    private void Initialize()
+    {
+        Bind();
+
+        if (FixedSize) 
+            GL.BufferStorage(_target, Capacity*_elementSize, IntPtr.Zero, BufferStorageFlags.DynamicStorageBit);
         else 
-            GL.BufferData(_target, capacity*_elementSize, IntPtr.Zero, BufferUsageHint.DynamicDraw);
+            GL.BufferData(_target, Capacity*_elementSize, IntPtr.Zero, BufferUsageHint.DynamicDraw);
+        OpenGlApi.CheckGlError(this);
     }
 
     public void Reallocate(int newCapacity)
@@ -45,12 +55,13 @@ public abstract class AbstractBuffer<T> : GlDisposable where T : unmanaged
         }
         Bind();
         GL.BufferData(_target, newCapacity*_elementSize, IntPtr.Zero, BufferUsageHint.DynamicDraw);
+        OpenGlApi.CheckGlError(this);
         Logger.Info(this, $"capacity changed: {Capacity} -> {newCapacity}");
         Capacity = newCapacity;
         Count = 0;
     }
-    
-    public virtual void Bind() => GL.BindBuffer(_target, Handle);
+
+    public virtual void Bind() => DynamicBindings.BindBuffer(_target, Handle);
 
     public void BindAndSetAt(int pos, T val)
     {
@@ -68,6 +79,7 @@ public abstract class AbstractBuffer<T> : GlDisposable where T : unmanaged
         }
         
         GL.BufferSubData(_target, pos * _elementSize, _elementSize, ref val);
+        OpenGlApi.CheckGlError(this);
     }
     
     public void BindAndPush(ReadOnlySpan<T> span)
@@ -88,6 +100,7 @@ public abstract class AbstractBuffer<T> : GlDisposable where T : unmanaged
                 GL.BufferSubData(_target, 0, span.Length*_elementSize, (IntPtr)pointer);
             }
         }
+        OpenGlApi.CheckGlError(this);
     }
 
     protected override void DisposeGlData() => GL.DeleteBuffer(Handle);

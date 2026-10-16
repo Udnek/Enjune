@@ -1,23 +1,19 @@
 using Enjune.Graphic.Api;
-using Enjune.Graphic.Modeling.Utility;
-using Enjune.Misc;
 
-namespace Enjune.Graphic.Modeling;
+namespace Enjune.Graphic.Modeling.Utility;
 
-public class StaticRenderableModel : IRenderableModel
+public class StaticRenderableModel<TPerVert, TPerPRim> : IRenderableModel<TPerVert, TPerPRim> where TPerVert : unmanaged where TPerPRim : unmanaged
 {
-    private readonly IRenderableMesh[] _meshes;
+    private readonly IRenderableMesh<TPerVert, TPerPRim>[] _meshes;
 
-    public StaticRenderableModel(params IRenderableMesh[] meshes)
+    public StaticRenderableModel(params IRenderableMesh<TPerVert, TPerPRim>[] meshes)
     {
         _meshes = meshes;
     }
-    
-    public void Render(IShader shader)
+
+    public void Render(IShader<TPerVert, TPerPRim> shader)
     {
-        foreach (var mesh in _meshes)
-        {
+        foreach (var mesh in _meshes) 
             shader.Render(mesh);
-        }
     }
 }

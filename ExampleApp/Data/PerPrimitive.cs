@@ -5,8 +5,8 @@ using OpenTK.Mathematics;
 namespace ExampleApp;
 
 [StructLayout(LayoutKind.Explicit, Size = 16)]
-public struct PerPrimitive
+public struct PerPrimitive()
 {
     [GraphicField(ShaderValuePrimitive.Vector4F, "color")]
-    [FieldOffset(0)] public Vector4 Color;
+    [FieldOffset(0)] public Vector4 Color = Vector4.One;
 }

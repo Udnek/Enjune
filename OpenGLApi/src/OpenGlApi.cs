@@ -6,10 +6,8 @@ using Enjune.Misc;
 using OpenGLApi.Component;
 using OpenGLApi.Component.Buffer;
 using OpenGLApi.Component.Texture;
-using OpenGLApi.Data;
 using OpenGLApi.Mesh;
 using OpenGLApi.Pack;
-using OpenGLApi.Shader;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 
@@ -18,20 +16,11 @@ namespace OpenGLApi;
 public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicApi
 {
     private const TextureUnit MainTexturesUnit = TextureUnit.Texture0;
-    private const TextureUnit ScreenTextureUnit = TextureUnit.Texture1;
     
     private unsafe Window* _window;
     
     private CompiledAssets _assets = null!;
     
-    // buffers
-    private Ssbo<MaterialData> _materialSsbo = null!;
-    private Vao _screenVao = null!;
-    private Vbo<(Vector2 position, Vector2 texCoord)> _screenVbo = null!;
-
-    private ScreenPack _screenPack = null!;
-    
-    private TextureArray _textureArray = null!;
     
     // storing it here so fucking GC won't erase it
     private GLFWCallbacks.KeyCallback _keyCallback = null!;
@@ -42,8 +31,14 @@ public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicAp
     private DebugProc _debugProc = null!;
     private GLFWCallbacks.ScrollCallback _scrollCallback = null!;
     
-    // disposable meshes
+    // for shader generation
+    private readonly Dictionary<Type, BufferDesc> _ssboDescs = [];
+    private readonly Dictionary<Type, BufferDesc> _uboDescs = [];
+    
+    // disposables
+    private readonly List<IGlBuffer> _bufferToDispose = [];
     private readonly List<IGlMesh> _meshesToDispose = [];
+    private readonly List<IGlShader> _shadersToDispose = [];
 
     public IGraphicApi? Init(CompiledAssets assets, Vector2i windowSize, string title, IUserInputHandler inputHandler,
         out Error? error)
@@ -65,7 +60,7 @@ public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicAp
 
         if (GLFW.PlatformSupported(Platform.X11))
         {
-            Logger.Info(this, "X11 is supported");
+            Logger.Info(this, "X11 is supported, switching to it");
             GLFW.InitHint(InitHintPlatform.Platform, Platform.X11);
         }
         
@@ -199,55 +194,88 @@ public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicAp
     private Error? InitComponents()
     {
         // loading comps
-        _textureArray = TextureArray.FromAssets(MainTexturesUnit, _assets);
-        
-        _screenVao = new Vao();
-        _screenVbo = new Vbo<(Vector2 position, Vector2 texCoord)>(6, true);
-        _screenPack = new ScreenPack(GetWindowSize(), ScreenTextureUnit);
-        _shadowMapPack = new ShadowMapPack(ShadowMapResolution, ShadowMapTextureUnit, MaxLights);
-        
-        _screenVbo.BindAndPush([
-            ((-1, -1), (0, 0)), ((1, -1), (1, 0)), ((1, 1), (1, 1)), // first triangle
-            ((-1, -1), (0, 0)), ((1, 1), (1, 1)), ((-1, 1), (0, 1)) // second
-        ]);
-        
-        
-        // enabling off-screen rendering
-        _screenPack.BindFbo();
-        
+        //_textureArray = TextureArray.FromAssets(MainTexturesUnit, _assets);
         return null;
     }
-    
+
+    public ResultOrError<IShader<TPerVert, TPerPrim>> CreateShader<TPerVert, TPerPrim, TVaryings>(string userVertexCode, string userFragmentCode) where TPerVert : unmanaged where TPerPrim : unmanaged where TVaryings : unmanaged
+    {
+        var vaoVboDeviceOrErr = VaoVboDevice.Get<TPerVert>();
+        if (vaoVboDeviceOrErr.Error is not null)
+            return vaoVboDeviceOrErr.Error.Value;
+        
+        var ssboDescOrErr = BufferDesc.Get<TPerPrim>(Bindings.PerPrimitiveSsbo, Std.Std430, "PerPrimitives", "PerPrimitive");
+        if (ssboDescOrErr.Error is not null)
+            return ssboDescOrErr.Error.Value;
+
+        _ssboDescs[typeof(TPerPrim)] = ssboDescOrErr.GetOrThrow();
+
+        var varyingsOrErr = StructDesc.Get<TVaryings>(null);
+        if (varyingsOrErr.Error is not null)
+            return varyingsOrErr.Error.Value;
+
+        var vert = ShaderGenerator.CreateVertex(
+            userVertexCode,
+            vaoVboDeviceOrErr.GetOrThrow().VaoAttributes,
+            _ssboDescs.Values.ToArray(),
+            _uboDescs.Values.ToArray(),
+            varyingsOrErr.GetOrThrow()
+        );
+        
+        var frag = ShaderGenerator.CreateFragment(
+            userFragmentCode,
+            _ssboDescs.Values.ToArray(),
+            _uboDescs.Values.ToArray(),
+            varyingsOrErr.GetOrThrow()
+        );
+        
+        // Logger.Highlight(this, "\n"+vert);
+        // Logger.Highlight(this, "-----------------");
+        // Logger.Highlight(this, "\n"+frag);
+
+        var shader = new ShaderProgram<TPerVert, TPerPrim>();
+        _shadersToDispose.Add(shader);
+        var shaderError = shader.Init(vert, frag);
+        if (shaderError != null)
+            return shaderError.Value;
+        
+        return ResultOrError.Success<IShader<TPerVert, TPerPrim>>(shader);
+    }
+
+    public ResultOrError<IUniform<T>> CreateUniform<T>(string name) where T : unmanaged
+    {
+        var descOrErr = BufferDesc.Get<T>(Bindings.TakeUbo(name), Std.Std140, name, null);
+        if (descOrErr.Error != null) 
+            return descOrErr.Error.Value;
+        var desc = descOrErr.GetOrThrow();
+        _uboDescs[typeof(T)] = desc;
+        var ubo = new Ubo<T>(Bindings.TakeUbo(name));
+        _bufferToDispose.Add(ubo);
+        return ResultOrError.Success<IUniform<T>>(ubo);
+    }
+
+    public ResultOrError<IUniformArray<T>> CreateUniformArray<T>(string name, int initialCapacity) where T : unmanaged
+    {
+        var descOrErr = BufferDesc.Get<T>(Bindings.TakeSsbo(name), Std.Std430, name, null);
+        if (descOrErr.Error != null) 
+            return descOrErr.Error.Value;
+        var desc = descOrErr.GetOrThrow();
+        _ssboDescs[typeof(T)] = desc;
+        var ssbo = new Ssbo<T>(Bindings.TakeSsbo(name), initialCapacity, false);
+        _bufferToDispose.Add(ssbo);
+        return ResultOrError.Success<IUniformArray<T>>(ssbo);
+    }
+
     public void SetRenderSize(Vector2i size)
     {
         Fbo.SizeOfDefault = size;
-        _screenPack.Resize(size);
+        //_screenPack.Resize(size);
     }
 
     public void UpdateScreen()
     {
         // rendering to window
-        _screenShader.Bind();
-        _screenShader.AfterBind();
-        _screenShader.Render();
         unsafe { GLFW.SwapBuffers(_window); }
-        _screenShader.BeforeUnbind();
-        ShaderProgram.Unbind();
-    }
-    
-    
-    public void UseShader<T>(Consumer<T> consumer) where T : IShader
-    {
-        if (_typeToShader.TryGetValue(typeof(T), out var shader))
-        {
-            shader.Bind();
-            shader.AfterBind();
-            consumer((T)(object)shader); // todo probably fuck around it?
-            shader.BeforeUnbind();
-            ShaderProgram.Unbind();
-        }
-        else
-            Logger.Error(this, $"shader isn't supported: {typeof(T)}");
     }
     
     public void ClearRenderBuffer(bool color = true, bool depth = true)
@@ -259,10 +287,10 @@ public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicAp
 
     protected override void DisposeGlData()
     {
-        foreach (var glMesh in _meshesToDispose)
-        {
-            glMesh.Dispose();
-        }
+        foreach (var glMesh in _meshesToDispose) glMesh.Dispose();
+        foreach (var glShader in _shadersToDispose) glShader.Dispose();
+        foreach (var glBuffer in _bufferToDispose) glBuffer.Dispose();
+        
         Utils.DisposeAllFields(this);
         
         unsafe

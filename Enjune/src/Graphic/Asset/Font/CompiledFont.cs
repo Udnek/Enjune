@@ -1,5 +1,7 @@
 using System.Diagnostics.Contracts;
+using Enjune.File.ModelReader;
 using Enjune.Graphic.Modeling;
+using Enjune.Graphic.Modeling.Utility;
 using Enjune.Misc;
 
 namespace Enjune.Graphic.Asset.Font;
@@ -80,7 +82,7 @@ public class CompiledFont
         return (width, minY, maxY);
     }
     
-    public void GenerateMeshes(string text, float textHeight, Action<(Mesh Mesh, int CharIdx)> consumer)
+    public void GenerateMeshes(string text, float textHeight, Action<(Mesh<BasicVertex, MaterialPerPrimitive> Mesh, int CharIdx)> consumer)
     {
         // we are calculating it cause font is already rendered in some size
         var sizeMul = textHeight / _initialFontHeight;
@@ -95,13 +97,15 @@ public class CompiledFont
             {
                 var width = glyph.Width * sizeMul;
                 var height = glyph.Height * sizeMul;
-                var mesh = Mesh.Quad(
-                    (0f, 0f, 0f),
+                var mesh = new Mesh<BasicVertex, MaterialPerPrimitive>(PrimitiveTopology.Triangle);
+                mesh.AddQuad(
+                    new BasicVertex(), new MaterialPerPrimitive(Material.Id),
+                    (0f, 0f, 0f), 
                     (width, 0, 0f),
                     (width, height, 0f),
-                    (0, height, 0f),
+                    (0, height, 0f), 
                     glyph.Texture.Value);
-
+                
                 var y = -(glyph.Height - glyph.BearingY) * sizeMul;
                 mesh.Move(((xOffset + glyph.BearingX) * sizeMul, y, 0f));
                 consumer((mesh, index));
@@ -112,19 +116,11 @@ public class CompiledFont
         }
     }
 
-    public StaticModel GenerateModel(string text, float height, Color color)
+    public StaticModel<BasicVertex, MaterialPerPrimitive> GenerateModel(string text, float height, Color color)
     {
-        var meshes = new Mesh[text.Length];
+        var meshes = new Mesh<BasicVertex, MaterialPerPrimitive>[text.Length];
         var i = 0;
         GenerateMeshes(text, height, mesh => meshes[i++] = mesh.Mesh);
-
-        var builder = new MeshInstance.Builder(PrimitiveTopology.Triangle, meshes.Length);
-        meshes.ForEach(m => builder.Add(new MeshInstance.Entry
-        {
-            Geometry = m,
-            Material = Material,
-            Color = color
-        }));
-        return new StaticModel(builder.Build(true));
+        return new(meshes);
     }
 }

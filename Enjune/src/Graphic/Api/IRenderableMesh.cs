@@ -12,6 +12,6 @@ public interface IRenderableMesh<TPerVert, TPerPrim> where TPerVert : unmanaged 
     /// </summary>
     public interface IDynamic : IRenderableMesh<TPerVert, TPerPrim>
     {
-        public void Refit(MeshInstance mesh);
+        public void Refit(Mesh<TPerVert, TPerPrim> mesh);
     }
 }

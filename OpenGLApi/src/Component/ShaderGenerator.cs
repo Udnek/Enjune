@@ -11,108 +11,110 @@ public static class ShaderGenerator
         foreach (var attr in attributes)
         {
             // layout(location = 0) in vec3 pos;
-            builder.Append($"layout(location = {attr.Location}) in {ToGlName(attr.Type)} {attr.InShaderName};");
+            builder.AppendLine($"layout(location = {attr.Location}) in {ToGlName(attr.Type)} {attr.InShaderName}_in;");
         }
-    }
-
-    private static void VertexInputStruct(StringBuilder builder, ReadOnlySpan<VaoAttribute> attributes)
-    {
-        // struct Input {
-        builder.Append("struct Input {");
-        foreach (var field in attributes)
-        {
-            //      vec4 color;
-            builder.Append($"   {ToGlName(field.Type)} {field.InShaderName};");
-        }
-        // };
-        builder.Append("};");
     }
     
-    private static void VaryingsOut(StringBuilder builder, BufferDesc varyings)
+    private static void VaryingsOut(StringBuilder builder, StructDesc varyings)
     {
-        for (var i = 0; i < varyings.StructFields.Count; i++)
+        for (var i = 0; i < varyings.Fields.Length; i++)
         {
-            var varying = varyings.StructFields[i];
+            var varying = varyings.Fields[i];
             // layout(location = 0) out vec4 color;
-            builder.Append($"layout(location = {i}) out {ToGlName(varying.Type)} {varying.InShaderName};");
+            builder.AppendLine($"layout(location = {i}) out {ToGlName(varying.Type)} {varying.InShaderName}_var;");
         }
     }
 
-    private static void VaryingsStruct(StringBuilder builder, BufferDesc varyings)
+    private static void VaryingsStruct(StringBuilder builder, StructDesc varyings)
     {
         // struct Varyings {
-        builder.Append($"struct {varyings.InShaderName} {{");
-        foreach (var field in varyings.StructFields)
+        builder.AppendLine("struct Varyings {");
+        foreach (var field in varyings.Fields)
         {
             //      vec4 color;
-            builder.Append($"   {ToGlName(field.Type)} {field.InShaderName};");
+            builder.AppendLine($"\t{ToGlName(field.Type)} {field.InShaderName};");
         }
         // };
-        builder.Append("};");
+        builder.AppendLine("};");
     }
 
-    private static void ProcessVertexCall(StringBuilder builder, BufferDesc varyings)
+    private static void FragmentInputStruct(StringBuilder builder, ReadOnlySpan<VaoAttribute> attributes)
     {
-        // Varyings varyings = {};
-        builder.Append($"{varyings.InShaderName} varyings = {{}};");
-        // calling user's process
-        builder.Append("process(input, varyings);");
-        
+        // struct Input {
+        builder.AppendLine("struct Input {");
+        foreach (var attr in attributes)
+        {
+            //      vec4 color;
+            builder.AppendLine($"\t{ToGlName(attr.Type)} {attr.InShaderName};");
+        }
+        // };
+        builder.AppendLine("};");
+    }
+    
+    private static void VertexMain(StringBuilder builder, StructDesc varyings, ReadOnlySpan<VaoAttribute> attributes)
+    {
+        builder.AppendLine("void main() {");
+        builder.AppendLine("\tInput input;");
+        foreach (var attr in attributes)
+        {
+            builder.AppendLine($"\tinput.{attr.InShaderName} = {attr.InShaderName}_in;");
+        }
+        builder.AppendLine("\tVaryings varyings;");
+        builder.AppendLine("\tgl_Position = process(input, varyings);");
         // decomposing result
-        foreach (var field in varyings.StructFields)
+        foreach (var field in varyings.Fields)
         {
             // color = varyings.color;
-            builder.Append($"{field.InShaderName} = varyings.{field.InShaderName};");
+            builder.AppendLine($"\t{field.InShaderName}_var = varyings.{field.InShaderName};");
         }
+        builder.AppendLine("}");
     }
     
-    private static void ProcessFragmentCall(StringBuilder builder, BufferDesc varyings)
+    private static void FragmentMain(StringBuilder builder, StructDesc varyings)
     {
-        // Varyings varyings = {};
-        builder.Append("Varyings varyings = {};");
+        builder.AppendLine("void main() {");
+        builder.AppendLine("\tVaryings varyings;");
         // composing result
-        foreach (var field in varyings.StructFields)
+        foreach (var field in varyings.Fields)
         {
             // varyings.color = color;
-            builder.Append($"varyings.{field.InShaderName} = {field.InShaderName};");
+            builder.AppendLine($"\tvaryings.{field.InShaderName} = {field.InShaderName}_in;");
         }
         // calling user's process
-        builder.Append("vec4 color = process(varyings);");
-        builder.Append("fragColor = color;");
+        builder.AppendLine("\tfragColor = process(varyings, PerPrimitives[gl_PrimitiveID]);");
+        builder.AppendLine("}");
     }
     
-    private static void VaryingsIn(StringBuilder builder, BufferDesc varyings)
+    private static void VaryingsIn(StringBuilder builder, StructDesc varyings)
     {
-        for (var i = 0; i < varyings.StructFields.Count; i++)
+        for (var i = 0; i < varyings.Fields.Length; i++)
         {
-            var varying = varyings.StructFields[i];
+            var varying = varyings.Fields[i];
             // layout(location = 0) in vec4 color;
-            builder.Append($"layout(location = {i}) in {ToGlName(varying.Type)} {varying.InShaderName};");
+            builder.AppendLine($"layout(location = {i}) in {ToGlName(varying.Type)} {varying.InShaderName}_in;");
         }
     }
 
     private static void Ssbos(StringBuilder builder, ReadOnlySpan<BufferDesc> ssbos)
     {
-        const string structPostfix = "_struct";
-        const string bufferPostfix = "_buff";
         foreach (var ssbo in ssbos)
         {
             // struct PerPrim_struct {
-            builder.Append($"struct {ssbo.InShaderName}{structPostfix} {{");
+            builder.AppendLine($"struct {ssbo.StructName} {{");
             foreach (var field in ssbo.StructFields)
             {
                 //      int matId;
-                builder.Append($"   {ToGlName(field.Type)} {field.InShaderName};");
+                builder.AppendLine($"\t{ToGlName(field.Type)} {field.InShaderName};");
             }
             // };
-            builder.Append("};");
+            builder.AppendLine("};");
             
             // layout(std430, binding = 0) readonly buffer PerPrim_buff {
-            builder.Append($"layout(std430, binding = {ssbo.Binding}) readonly buffer {ssbo.InShaderName}{bufferPostfix} {{");
+            builder.AppendLine($"layout(std430, binding = {ssbo.Binding}) readonly buffer {ssbo.StructName}_buff {{");
             //     PerPrim_struct PerPrim[];
-            builder.Append($"    {ssbo.InShaderName}{structPostfix} {ssbo.InShaderName}[];");
+            builder.AppendLine($"\t{ssbo.StructName} {ssbo.InShaderName}[];");
             // };
-            builder.Append("};");
+            builder.AppendLine("};");
         }
     }
 
@@ -120,89 +122,66 @@ public static class ShaderGenerator
     {
         foreach (var ubo in ubos)
         {
-            // layout(std140, binding = 0) uniform CameraUniforms {
-            builder.Append($"layout(std140, binding = {ubo.Binding}) uniform {ubo.InShaderName} {{");
+            // layout(std140, binding = 0) uniform camera_struct {
+            builder.AppendLine($"layout(std140, binding = {ubo.Binding}) uniform {ubo.StructName} {{");
             foreach (var field in ubo.StructFields)
             {
                 //     mat4 View;
-                builder.Append($"    {ToGlName(field.Type)} {field.InShaderName};");
+                builder.AppendLine($"    {ToGlName(field.Type)} {field.InShaderName};");
             }
-            // };
-            builder.Append("};");
+            // } camera;
+            builder.AppendLine($"}} {ubo.InShaderName};");
         }
     }
     
-    public static string CreateVertex(        
+    public static string CreateVertex(    
+        string userProcess,
         ReadOnlySpan<VaoAttribute> attributes,
         ReadOnlySpan<BufferDesc> ssbos,
         ReadOnlySpan<BufferDesc> ubos,
-        BufferDesc varyings)
+        StructDesc varyings)
     {
         var builder = new StringBuilder();
         // header
-        builder.Append("#version 430 core");
+        builder.AppendLine("#version 430 core");
         
         Ssbos(builder, ssbos);
         Ubos(builder, ubos);
         VaryingsStruct(builder, varyings);
+        FragmentInputStruct(builder, attributes);
         
         VertexIn(builder, attributes);
         VaryingsOut(builder, varyings);
+
+        // user's process
+        builder.AppendLine(userProcess);
         
-        ProcessVertexCall(builder, varyings);
+        VertexMain(builder, varyings, attributes);
         
         return builder.ToString();
     }
 
-    public static string CreateFragment(        
+    public static string CreateFragment(
+        string userProcess,
         ReadOnlySpan<BufferDesc> ssbos,
         ReadOnlySpan<BufferDesc> ubos,
-        BufferDesc varyings)
+        StructDesc varyings)
     {
         var builder = new StringBuilder();
         // header
-        builder.Append("#version 430 core");
+        builder.AppendLine("#version 430 core");
 
         Ssbos(builder, ssbos);
         Ubos(builder, ubos);
         VaryingsStruct(builder, varyings);
         
         VaryingsIn(builder, varyings);
-        builder.Append("out vec4 fragColor;");
+        builder.AppendLine("out vec4 fragColor;");
         
-        ProcessFragmentCall(builder, varyings);
-
-        return builder.ToString();
-    }
-    
-    public static string Create(
-        ShaderType shaderType,
-        ReadOnlySpan<VaoAttribute> attributes,
-        ReadOnlySpan<BufferDesc> ssbos,
-        ReadOnlySpan<BufferDesc> ubos,
-        BufferDesc varyings)
-    {
-        var builder = new StringBuilder();
+        // user's process
+        builder.AppendLine(userProcess);
         
-        // header
-        builder.Append("#version 430 core");
-
-        Ssbos(builder, ssbos);
-        Ubos(builder, ubos);
-        VaryingsStruct(builder, varyings);
-        
-        if (shaderType == ShaderType.VertexShader)
-        {
-            VertexIn(builder, attributes);
-            VaryingsOut(builder, varyings);
-        } 
-        else if (shaderType == ShaderType.FragmentShader)
-        {
-            VaryingsIn(builder, varyings);
-            // fragColor
-            builder.Append("out vec4 fragColor;");
-            ProcessFragmentCall(builder, varyings);
-        }
+        FragmentMain(builder, varyings);
 
         return builder.ToString();
     }

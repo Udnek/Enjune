@@ -19,13 +19,15 @@ public interface ITexturedVertex
 /// Only geometry
 /// </summary>
 [LogParams(logCallingMethod: true)]
-public sealed class Mesh<TPerVert, TPerPrim> where TPerVert : struct where TPerPrim : struct
+public sealed class Mesh<TPerVert, TPerPrim> where TPerVert : unmanaged where TPerPrim : unmanaged
 {
     public readonly PrimitiveTopology Topology;
     public readonly List<TPerVert> Vertices;
     public readonly List<TPerPrim> PerPrimitives;
     public readonly List<int> Indexes;
 
+    public Mesh(PrimitiveTopology topology) : this(4, 4, 4, topology) {}
+    
     public Mesh(int verCap, int perPrimCap, int indCap, PrimitiveTopology topology)
     {
         Topology = topology;
@@ -39,6 +41,24 @@ public sealed class Mesh<TPerVert, TPerPrim> where TPerVert : struct where TPerP
         Vertices.TrimExcess();
         PerPrimitives.TrimExcess();
         Indexes.TrimExcess();
+    }
+
+    public bool IsEmpty() => Indexes.Count == 0;
+
+    public void Clear()
+    {
+        Vertices.Clear();
+        PerPrimitives.Clear();
+        Indexes.Clear();
+    }
+
+    public void Add(ReadOnlySpan<TPerVert> vertices, ReadOnlySpan<int> indexes, TPerPrim perPrim)
+    {
+        Vertices.AddRange(vertices);
+        Indexes.AddRange(indexes);
+        var primitives = Topology.PrimitivesAmountFromIndexes(indexes.Length);
+        for (int _ = 0; _ < primitives; _++) 
+            PerPrimitives.AddRange(perPrim);
     }
     
     public void AddNgon(TPerPrim perPrim, params ReadOnlySpan<TPerVert> newVerts)
@@ -97,7 +117,7 @@ public sealed class Mesh<TPerVert, TPerPrim> where TPerVert : struct where TPerP
     [Pure]
     public Mesh<TPerVertNew, TPerPrimNew> Convert<TPerVertNew, TPerPrimNew>(
         Func<TPerVert, TPerVertNew> vertexConvert,
-        Func<TPerPrim, TPerPrimNew> primitiveConvert) where TPerVertNew : struct where TPerPrimNew : struct
+        Func<TPerPrim, TPerPrimNew> primitiveConvert) where TPerVertNew : unmanaged where TPerPrimNew : unmanaged
     {
         var newMesh = new Mesh<TPerVertNew, TPerPrimNew>(
             Vertices.Count, 
@@ -155,7 +175,7 @@ public static class Mesh
         this Mesh<TPerVert, TPerPrim> mesh,
         TPerVert vertexExample, TPerPrim perPrim,
         Position bl, Position br, Position tr,
-        TextureQuad texture) where TPerVert : struct, IPositionedVertex, ITexturedVertex where TPerPrim : struct
+        TextureQuad texture) where TPerVert : unmanaged, IPositionedVertex, ITexturedVertex where TPerPrim : unmanaged
     {
         mesh.AddNgon(perPrim, 
             vertexExample with {Position = bl, Uv = texture.BotLeft},
@@ -168,7 +188,7 @@ public static class Mesh
         this Mesh<TPerVert, TPerPrim> mesh,
         TPerVert vertexExample, TPerPrim perPrim,
         Position bl, Position br, Position tr, Position tl,
-        TextureQuad texture) where TPerVert : struct, IPositionedVertex, ITexturedVertex where TPerPrim : struct
+        TextureQuad texture) where TPerVert : unmanaged, IPositionedVertex, ITexturedVertex where TPerPrim : unmanaged
     {
         mesh.AddNgon(perPrim, 
             vertexExample with {Position = bl, Uv = texture.BotLeft},
@@ -184,7 +204,7 @@ public static class Mesh
         TPerVert vertexExample, TPerPrim perPrim,
         Position b1, Position b2, Position b3, Position b4,
         Position t1, Position t2, Position t3, Position t4,
-        TextureQuad texture) where TPerVert : struct, IPositionedVertex, ITexturedVertex where TPerPrim : struct
+        TextureQuad texture) where TPerVert : unmanaged, IPositionedVertex, ITexturedVertex where TPerPrim : unmanaged
     {
         mesh.AddQuad(vertexExample, perPrim, b1, b4, b3, b2, texture); // bottom (−Y)
         mesh.AddQuad(vertexExample, perPrim, t1, t2, t3, t4, texture); // top    (+Y)
@@ -198,7 +218,7 @@ public static class Mesh
         this Mesh<TPerVert, TPerPrim> mesh,
         TPerVert vertexExample, TPerPrim perPrim,
         Position corner1, Position corner2,
-        TextureQuad texture) where TPerVert : struct, IPositionedVertex, ITexturedVertex where TPerPrim : struct
+        TextureQuad texture) where TPerVert : unmanaged, IPositionedVertex, ITexturedVertex where TPerPrim : unmanaged
     {
         var min = Vector3.ComponentMin(corner1, corner2);
         var max = Vector3.ComponentMax(corner1, corner2);
@@ -213,7 +233,7 @@ public static class Mesh
         this Mesh<TPerVert, TPerPrim> mesh,
         TPerVert vertexExample, TPerPrim perPrim,
         Position center, float size, 
-        TextureQuad texture) where TPerVert : struct, IPositionedVertex, ITexturedVertex where TPerPrim : struct
+        TextureQuad texture) where TPerVert : unmanaged, IPositionedVertex, ITexturedVertex where TPerPrim : unmanaged
     {
         var hs = size / 2;
         mesh.AddHexahedron(
@@ -236,7 +256,7 @@ public static class Mesh
         this Mesh<TPerVert, TPerPrim> mesh,
         TPerVert vertexExample, TPerPrim perPrim,
         Position bl, float width, float height, 
-        TextureQuad texture) where TPerVert : struct, IPositionedVertex, ITexturedVertex where TPerPrim : struct
+        TextureQuad texture) where TPerVert : unmanaged, IPositionedVertex, ITexturedVertex where TPerPrim : unmanaged
     {
         mesh.AddQuad(
             vertexExample, perPrim,
@@ -244,7 +264,8 @@ public static class Mesh
             texture);
     }
     
-    public static (Vector3 Min, Vector3 Max) Bounds<TPerVert, TPerPrim>(this Mesh<TPerVert, TPerPrim> mesh) where TPerVert : struct, IPositionedVertex where TPerPrim : struct
+    public static (Vector3 Min, Vector3 Max) Bounds<TPerVert, TPerPrim>(
+        this Mesh<TPerVert, TPerPrim> mesh) where TPerVert : unmanaged, IPositionedVertex where TPerPrim : unmanaged
     {
         var vertices = mesh.Vertices;
         if (vertices.Count == 0)
@@ -262,12 +283,24 @@ public static class Mesh
         return (min, max);
     }
     
-    public static void Move<TPerVert, TPerPrim>(this Mesh<TPerVert, TPerPrim> mesh, Position offset) where TPerVert : struct, IPositionedVertex where TPerPrim : struct
+    public static void Move<TPerVert, TPerPrim>(
+        this Mesh<TPerVert, TPerPrim> mesh, Position offset) where TPerVert : unmanaged, IPositionedVertex where TPerPrim : unmanaged
     {
         for (var i = 0; i < mesh.Indexes.Count; i++)
         {
             var vertex = mesh.Vertices[i];
             vertex.Position += offset;
+            mesh.Vertices[i] = vertex;
+        }
+    }
+
+    public static void Scale<TPerVert, TPerPrim>(
+        this Mesh<TPerVert, TPerPrim> mesh, Vector3 factor) where TPerVert : unmanaged, IPositionedVertex where TPerPrim : unmanaged
+    {
+        for (var i = 0; i < mesh.Indexes.Count; i++)
+        {
+            var vertex = mesh.Vertices[i];
+            vertex.Position *= factor;
             mesh.Vertices[i] = vertex;
         }
     }

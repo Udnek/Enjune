@@ -1,6 +1,7 @@
 using Enjune.Graphic;
 using Enjune.Graphic.Asset;
 using Enjune.Graphic.Modeling;
+using Enjune.Graphic.Modeling.Utility;
 using Enjune.Misc;
 
 namespace Enjune.File.ModelReader;
@@ -16,9 +17,9 @@ public class DotObjReader : AbstractModelReader
     private RawMaterial? _selectedMaterial = null;
     private RawMaterial? _lastCreatedMaterial = null;  
     
-    private readonly StaticModel.Builder _builder = new();
+    private readonly StaticModel<BasicVertex, MaterialPerPrimitive>.Builder _builder = new();
 
-    protected override StaticModel? Read(out Error? error)
+    protected override StaticModel<BasicVertex, MaterialPerPrimitive>? Read(out Error? error)
     {
         var text = Path.LoadText(out error);
         if (text == null) return null;
@@ -33,7 +34,7 @@ public class DotObjReader : AbstractModelReader
             }
         }
 
-        return _builder.Build(true);
+        return _builder.Build();
     }
     
     private string? ProcessLine(string[] args)
@@ -199,10 +200,19 @@ public class DotObjReader : AbstractModelReader
         else
             material = AssetManager.MissingMaterial;
 
-        _builder.Add(new MeshInstance.Entry
+        var basicVertices = new BasicVertex[verPoses.Length];
+        for (var i = 0; i < verPoses.Length; i++)
         {
-            Geometry = Mesh.Ngon(verPoses, texPoses, PrimitiveTopology.Triangle, true),
-            Material = material
+            basicVertices[i] = new BasicVertex
+            {
+                Position = verPoses[0],
+                Uv = texPoses[0]
+            };
+        }
+        
+        _builder.Add(PrimitiveTopology.Triangle, m =>
+        {
+            m.AddNgon(new MaterialPerPrimitive(material.Id), basicVertices);
         });
         return null;
     }

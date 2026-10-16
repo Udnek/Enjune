@@ -6,25 +6,23 @@ using OpenGLApi.Component;
 
 namespace OpenGLApi.Mesh;
 
-public readonly record struct FieldDesc(
-    string InShaderName,
-    ShaderValuePrimitive Type
-);
-
-public static class StructDesc
+public readonly record struct StructDesc
 {
-    private static readonly Dictionary<Type, List<FieldDesc>> Descriptions = [];
+    public required FieldDesc[] Fields { get; init; }
 
-    public static ResultOrError<List<FieldDesc>> Get<T>(Std std) where T : unmanaged
+
+    private static readonly Dictionary<Type, StructDesc> Descriptions = [];
+
+    public static ResultOrError<StructDesc> Get<T>(Std? std) where T : unmanaged
     {
-        var stdErr = std.Check<T>();
+        var stdErr = std?.Check<T>();
         if (stdErr is not null) return stdErr.Value;
         
         if (Descriptions.TryGetValue(typeof(T), out var desc))
             return ResultOrError.Success(desc);
 
         Logger.Info(typeof(StructDesc),
-            $"Staring generation description for {Logger.GetTypeName<T>()}");
+            $"Staring description generation for {Logger.GetTypeName<T>()}");
         
         #region Field Processing
 
@@ -57,10 +55,14 @@ public static class StructDesc
         }
 
         #endregion
-        
-        Descriptions[typeof(T)] = descs;
+
+        var structDesc = new StructDesc
+        {
+            Fields = descs.ToArray()
+        };
+        Descriptions[typeof(T)] = structDesc;
         Logger.Info(typeof(StructDesc), "Done");
         
-        return ResultOrError.Success(descs);
+        return ResultOrError.Success(structDesc);
     }
 }

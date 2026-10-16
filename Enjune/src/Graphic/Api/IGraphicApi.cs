@@ -12,13 +12,13 @@ public interface IGraphicApi : IDisposable
         CreateRenderable<TPerVert, TPerPrim>(Mesh<TPerVert, TPerPrim> mesh) where TPerVert : unmanaged where TPerPrim : unmanaged;
     
     public ResultOrError<IRenderableMesh<TPerVert, TPerPrim>.IDynamic> 
-        CreateDynamicRenderable<TPerVert, TPerPrim>(Mesh<TPerVert, TPerPrim>? mesh = null) where TPerVert : unmanaged where TPerPrim : unmanaged;
+        CreateDynamicRenderable<TPerVert, TPerPrim>(Mesh<TPerVert, TPerPrim>? initialMesh = null) where TPerVert : unmanaged where TPerPrim : unmanaged;
 
     /// <summary>
     /// Creates shader.
     /// Vertex shader must looks like:
     /// """
-    /// void process(Input input, out Varyings varyings){
+    /// vec4 process(Input input, out Varyings varyings){
     ///     input.vertex // returns TPerVert
     ///     input.perPrim // returns TPerPrim for current primitive
     /// 
@@ -26,12 +26,14 @@ public interface IGraphicApi : IDisposable
     ///     uniformArrayName[i].fieldName // access to uniformArray
     /// 
     ///     varyings.color // access to varyings
+    ///
+    ///     return position;
     /// }
     /// """
     /// Fragment shader:
     /// """
-    /// vec4 process(Varyings varyings){
-    ///     ...
+    /// vec4 process(Varyings varyings, PerPrimitive perPrim){
+    ///     perPrim // information for current primitive
     /// 
     ///     return color // func must return vec4 color of pixel
     /// }
@@ -43,16 +45,29 @@ public interface IGraphicApi : IDisposable
     /// <typeparam name="TPerPrim"></typeparam>
     /// <typeparam name="TVaryings"></typeparam>
     /// <returns></returns>
-    public ResultOrError<IShader<TPerVert, TPerPrim, TVaryings>>
-        CreateShader<TPerVert, TPerPrim, TVaryings>(string vertexCode, string fragmentCode) where TPerVert : unmanaged where TPerPrim : unmanaged;
+    public ResultOrError<IShader<TPerVert, TPerPrim>>
+        CreateShader<TPerVert, TPerPrim, TVaryings>(string vertexCode, string fragmentCode) where TPerVert : unmanaged where TPerPrim : unmanaged where TVaryings : unmanaged;
     
-    // ubo
+    /// <summary>
+    /// Creates a uniform that can be accessed in any shader any time through it's name
+    /// Struct must be aligned to std140
+    /// </summary>
+    /// <param name="name"></param>
+    /// <typeparam name="T"></typeparam>
+    /// <returns></returns>
     public ResultOrError<IUniform<T>> 
         CreateUniform<T>(string name) where T : unmanaged;
-    
-    // ssbo
+
+    /// <summary>
+    /// Creates an array that can be accessed in any shader any time through it's name
+    /// Struct must be aligned to std430
+    /// </summary>
+    /// <param name="name"></param>
+    /// <param name="initialCapacity"></param>
+    /// <typeparam name="T"></typeparam>
+    /// <returns></returns>
     public ResultOrError<IUniformArray<T>> 
-        CreateUniformArray<T>(string name) where T : unmanaged;
+        CreateUniformArray<T>(string name, int initialCapacity) where T : unmanaged;
 
     // general pipeliner
     bool ShouldStop(); // should stop application

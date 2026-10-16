@@ -1,47 +1,50 @@
 using Enjune.Graphic.Api;
-using Enjune.Graphic.Modeling.Utility;
 using Enjune.Misc;
 
-namespace Enjune.Graphic.Modeling;
+namespace Enjune.Graphic.Modeling.Utility;
 
 /// <summary>
 /// Basically:
 /// - Create
 /// - while you need:
-///     - Clear builders
-///     - Add meshes
+///     - Clear
+///     - Modify meshes
 ///     - Call refit
 ///     - Render
 /// </summary>
-public class DynamicRenderableModel : IRenderableModel
+public class DynamicRenderableModel<TPerVert, TPerPrim> : IRenderableModel<TPerVert, TPerPrim> where TPerVert : unmanaged where TPerPrim : unmanaged
 {
     private readonly IGraphicApi _graphicApi;
-    private Dictionary<PrimitiveTopology, MeshInstance.Builder> _meshes = new();
-    private Dictionary<PrimitiveTopology, IRenderableMesh.IDynamic> _renderableMeshes = new();
+    private readonly Dictionary<PrimitiveTopology, Mesh<TPerVert, TPerPrim>> 
+        _meshes = new(Enum.GetValues<PrimitiveTopology>().Length);
+    private readonly Dictionary<PrimitiveTopology, IRenderableMesh<TPerVert, TPerPrim>.IDynamic> 
+        _renderableMeshes = new(Enum.GetValues<PrimitiveTopology>().Length);
 
-    public DynamicRenderableModel(IGraphicApi graphicApi)
+    private DynamicRenderableModel(IGraphicApi graphicApi) => _graphicApi = graphicApi;
+    
+    public static ResultOrError<DynamicRenderableModel<TPerVert, TPerPrim>> Create(IGraphicApi graphicApi)
     {
-        _graphicApi = graphicApi;
+        var model = new DynamicRenderableModel<TPerVert, TPerPrim>(graphicApi);
         // filling both
         foreach (var topology in Enum.GetValues<PrimitiveTopology>())
         {
-            _meshes[topology] = new MeshInstance.Builder(topology);
-            _renderableMeshes[topology] = graphicApi.CreateDynamicRenderable(MeshInstance.CreateEmpty(topology));
+            var renderableOrErr = graphicApi.CreateDynamicRenderable<TPerVert, TPerPrim>();
+            if (renderableOrErr.Error is not null)
+                return renderableOrErr.Error.Value;
+         
+            model._meshes[topology] = new Mesh<TPerVert, TPerPrim>(topology);
+            model._renderableMeshes[topology] = renderableOrErr.GetOrThrow();
         }
-    }
-
-    public void Add(MeshInstance.Entry entry)
-    {
-        _meshes[entry.Geometry.Topology].Add(entry);
+        return ResultOrError.Success(model);
     }
     
+    public void Add(PrimitiveTopology topology, Action<Mesh<TPerVert, TPerPrim>> meshModifier) 
+        => meshModifier(_meshes[topology]);
+
     public void Clear()
     {
-        foreach (var (_, builder) in _meshes)
-        {
-            builder.Clear();
-        }
-        // not clearing renderables: we will reuse them
+        foreach (var (_, mesh) in _meshes) 
+            mesh.Clear();
     }
     
     /// <summary>
@@ -49,13 +52,11 @@ public class DynamicRenderableModel : IRenderableModel
     /// </summary>
     public void Refit()
     {
-        foreach (var (primitive, builder) in _meshes)
-        {
-            _renderableMeshes[primitive].Refit(builder.Build(false));
-        }
+        foreach (var (primitive, mesh) in _meshes) 
+            _renderableMeshes[primitive].Refit(mesh);
     }
 
-    public void Render(IShader shader)
+    public void Render(IShader<TPerVert, TPerPrim> shader)
     {
         foreach (var (_, renderableMesh) in _renderableMeshes) 
             shader.Render(renderableMesh);

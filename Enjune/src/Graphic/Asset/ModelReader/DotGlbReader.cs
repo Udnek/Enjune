@@ -1,6 +1,7 @@
 using Enjune.Graphic;
 using Enjune.Graphic.Asset;
 using Enjune.Graphic.Modeling;
+using Enjune.Graphic.Modeling.Utility;
 using Enjune.Misc;
 using SharpGLTF.Schema2;
 using StbImageSharp;
@@ -11,7 +12,7 @@ namespace Enjune.File.ModelReader;
 
 public class DotGlbReader : AbstractModelReader
 {
-    protected override StaticModel? Read(out Error? error)
+    protected override StaticModel<BasicVertex, MaterialPerPrimitive>? Read(out Error? error)
     {
         ModelRoot? gltfModel = null;
         Path.LoadStream(out error, stream =>
@@ -20,7 +21,7 @@ public class DotGlbReader : AbstractModelReader
         });
         if (gltfModel == null) return null;
 
-        var builder = new StaticModel.Builder();
+        var builder = new StaticModel<BasicVertex, MaterialPerPrimitive>.Builder();
         foreach (var mesh in gltfModel.LogicalMeshes)
         {
             
@@ -56,15 +57,23 @@ public class DotGlbReader : AbstractModelReader
 
                 var material = primitive.Material;
                 var compiledMat = GetMaterial(material);
-                builder.Add(new MeshInstance.Entry
+                var basicVertices = new BasicVertex[poses.Length];
+                for (var i = 0; i < poses.Length; i++)
                 {
-                    Geometry = Mesh.Create(poses, texPoses, indices, enjunePrimitive.Value, true),
-                    Material = compiledMat
+                    basicVertices[i] = new BasicVertex
+                    {
+                        Position = poses[0],
+                        Uv = texPoses[0]
+                    };
+                }
+                builder.Add(enjunePrimitive.Value, m =>
+                {
+                    m.Add(basicVertices, indices, new MaterialPerPrimitive(compiledMat.Id));
                 });
             }
         }
 
-        return builder.Build(false);
+        return builder.Build();
     }
 
     private CompiledMaterial GetMaterial(Material material)
