@@ -5,7 +5,7 @@ namespace Enjune.Graphic.Api;
 
 public interface IRawGraphicApi
 {
-    IGraphicApi? Init(CompiledAssets assets,
+    IGraphicApi? Init(
         Vector2i windowSize,
         string title,
         IUserInputHandler inputHandler,

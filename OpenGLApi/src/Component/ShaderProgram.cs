@@ -54,7 +54,7 @@ public sealed class ShaderProgram<TPerVert, TPerPrim>
             var infoLog = GL.GetShaderInfoLog(shader);
             var lines = source.Split('\n');
             for (var i = 0; i < lines.Length; i++) 
-                Logger.Error(this, $"[{i+1}] {lines[i]}");
+                Logger.Info(this, $"[{i+1}] {lines[i]}");
             error = $"shader compilation failed ({type}): {infoLog}";
             return 0;
         }

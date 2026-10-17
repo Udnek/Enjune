@@ -10,4 +10,5 @@ public interface IUserInputHandler
     void HandleCursorFromLeftBottom(int x, int y); // (0; 0) at left bottom
     void HandleScroll(float x, float y);
     void HandleWindowSizeChange(Vector2i newSize);
+    void HandleCloseWindowAttempt();
 }

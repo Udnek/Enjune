@@ -22,7 +22,11 @@ public static class Logger
         Print(domain, author, member, msg, "INF");
     }
     public static void Warn(Domain? domain, object author, object? msg, [CallerMemberName] string member = "") => Print(domain, author, member, msg, "WRN", ConsoleColor.Yellow);
-    public static void Error(Domain? domain, object author, object? msg, [CallerMemberName] string member = "") => Print(domain, author, member, msg, "ERR", ConsoleColor.Red);
+    public static void Error(Domain? domain, object author, object? msg, [CallerMemberName] string member = "")
+    {
+        Print(domain, author, member, $"{msg}; stacktrace: \n{Environment.StackTrace}", "ERR", ConsoleColor.Red);
+    }
+
     public static void Highlight(Domain? domain, object author, object? msg, [CallerMemberName] string member = "") => Print(domain, author, member, msg, "HIL", ConsoleColor.Green);
 
     public static bool IgnoreInfoLogs { get; set; } = false;

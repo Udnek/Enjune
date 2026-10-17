@@ -1,6 +1,6 @@
 using Enjune.Graphic.Api.Data;
 
-namespace OpenGLApi.Mesh;
+namespace OpenGLApi.Generation;
 
 public readonly record struct FieldDesc(
     string InShaderName,

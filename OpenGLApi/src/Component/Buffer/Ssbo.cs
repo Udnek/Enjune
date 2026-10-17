@@ -1,11 +1,13 @@
 using System.Runtime.InteropServices;
 using Enjune.Graphic.Api;
 using Enjune.Misc;
+using OpenGLApi.Generation;
 
 namespace OpenGLApi.Component.Buffer;
 
 /// <summary>
 /// Shared storage between shaders, can be used to store per primitive data
+/// Must be std430
 /// </summary>
 public sealed class Ssbo<T> : AbstractBuffer<T>, IUniformArray<T> where T : unmanaged
 {

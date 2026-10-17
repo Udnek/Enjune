@@ -1,10 +1,8 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
-using Enjune.Graphic.Api.Data;
 using Enjune.Misc;
-using OpenGLApi.Mesh;
 
-namespace OpenGLApi.Component;
+namespace OpenGLApi.Generation;
 
 public abstract class Std
 {

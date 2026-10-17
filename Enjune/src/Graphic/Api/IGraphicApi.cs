@@ -7,12 +7,54 @@ namespace Enjune.Graphic.Api;
 
 public interface IGraphicApi : IDisposable
 {
+    /// <summary>
+    /// Creates a slot for any texture, that can be later bind and sampled in shader
+    /// </summary>
+    /// <typeparam name="TexType"></typeparam>
+    /// <returns></returns>
+    public ResultOrError<ITextureSlot<TexType>> CreateTextureSlot<TexType>(string inShaderName) where TexType : ITexture;
     
+    /// <summary>
+    /// Creates sample-only texture from byte image
+    /// </summary>
+    /// <param name="image"></param>
+    /// <returns></returns>
+    public ResultOrError<ITexture> CreateTexture(ByteImage image);
+    
+    /// <summary>
+    /// Creates an array of textures from array of byte images.
+    /// Note: all images must be of the same size
+    /// </summary>
+    /// <param name="images"></param>
+    /// <returns></returns>
+    public ResultOrError<ITextureArray> CreateTextureArray(ReadOnlySpan<ByteImage> images);
+
+    /// <summary>
+    /// Creates an empty texture that can be used as sample or be bind as render target
+    /// </summary>
+    /// <param name="size"></param>
+    /// <returns></returns>
+    public ResultOrError<IDynamicTexture> CreateDynamicTexture(Vector2i size);
+    
+    /// <summary>
+    /// Creates a static mesh that can be rendered in appropriate shader
+    /// </summary>
+    /// <param name="mesh"></param>
+    /// <typeparam name="TPerVert"></typeparam>
+    /// <typeparam name="TPerPrim"></typeparam>
+    /// <returns></returns>
     public ResultOrError<IRenderableMesh<TPerVert, TPerPrim>> 
-        CreateRenderable<TPerVert, TPerPrim>(Mesh<TPerVert, TPerPrim> mesh) where TPerVert : unmanaged where TPerPrim : unmanaged;
-    
+        CreateRenderableMesh<TPerVert, TPerPrim>(Mesh<TPerVert, TPerPrim> mesh) where TPerVert : unmanaged where TPerPrim : unmanaged;
+
+    /// <summary>
+    /// Creates a dynamic mesh that can be rendered in appropriate shader and can be refit
+    /// </summary>
+    /// <param name="initialMesh"></param>
+    /// <typeparam name="TPerVert"></typeparam>
+    /// <typeparam name="TPerPrim"></typeparam>
+    /// <returns></returns>
     public ResultOrError<IRenderableMesh<TPerVert, TPerPrim>.IDynamic> 
-        CreateDynamicRenderable<TPerVert, TPerPrim>(Mesh<TPerVert, TPerPrim>? initialMesh = null) where TPerVert : unmanaged where TPerPrim : unmanaged;
+        CreateDynamicRenderableMesh<TPerVert, TPerPrim>(Mesh<TPerVert, TPerPrim>? initialMesh = null) where TPerVert : unmanaged where TPerPrim : unmanaged;
 
     /// <summary>
     /// Creates shader.
@@ -49,7 +91,7 @@ public interface IGraphicApi : IDisposable
         CreateShader<TPerVert, TPerPrim, TVaryings>(string vertexCode, string fragmentCode) where TPerVert : unmanaged where TPerPrim : unmanaged where TVaryings : unmanaged;
     
     /// <summary>
-    /// Creates a uniform that can be accessed in any shader any time through it's name
+    /// Creates a uniform that can be accessed in any shader any time through its name
     /// Struct must be aligned to std140
     /// </summary>
     /// <param name="name"></param>
@@ -59,7 +101,7 @@ public interface IGraphicApi : IDisposable
         CreateUniform<T>(string name) where T : unmanaged;
 
     /// <summary>
-    /// Creates an array that can be accessed in any shader any time through it's name
+    /// Creates an array that can be accessed in any shader any time through its name
     /// Struct must be aligned to std430
     /// </summary>
     /// <param name="name"></param>
@@ -70,24 +112,21 @@ public interface IGraphicApi : IDisposable
         CreateUniformArray<T>(string name, int initialCapacity) where T : unmanaged;
 
     // general pipeliner
-    bool ShouldStop(); // should stop application
-    void ClearRenderBuffer(bool color = true, bool depth = true);
+    void ClearCurrentRenderTarget(bool color = true, bool depth = true);
+    void BindScreenRenderTarget();
     void UpdateScreen();
     void UpdateEvents(); // such as keyboard, mouse, etc
     // general pipeline end
 
-    // misc
-    Vector2i GetCursorPosition();
-    void SetRenderSize(Vector2i size);
+    // misc ;
     void SetClearColor(Color color);
-    void DumpTextures(ExternalPath path); // TODO fix
     void SetDrawMode(DrawMode mode);
     void SetCursorMode(CursorMode mode);
-    void SetVsync(bool vsync);
     CursorMode GetCursorMode();
+    void SetVsync(bool vsync);
     Vector2i GetWindowSize();
     void SetWindowSize(Vector2i size);
-    void Title(string title);
+    void SetTitle(string title);
     // misc end
     
     enum DrawMode

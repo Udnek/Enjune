@@ -1,7 +1,6 @@
 using Enjune.Misc;
-using OpenGLApi.Component;
 
-namespace OpenGLApi.Mesh;
+namespace OpenGLApi.Generation;
 
 public readonly record struct BufferDesc
 {

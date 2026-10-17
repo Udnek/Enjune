@@ -3,6 +3,7 @@ using Enjune.Graphic.Modeling;
 using Enjune.Misc;
 using OpenGLApi.Component;
 using OpenGLApi.Component.Buffer;
+using OpenGLApi.Generation;
 
 namespace OpenGLApi.Mesh;
 
@@ -49,7 +50,7 @@ public class GlMesh<TPerVert, TPerPrim> : GlDisposable, IRenderableMesh<TPerVert
                 out _vbo, 
                 out _vao);
             _ebo = new Ebo(eboBuf.Length, _fixedSize);
-            _ssbo = new Ssbo<TPerPrim>(Bindings.PerPrimitiveSsbo, ssboBuf.Length, _fixedSize);
+            _ssbo = new Ssbo<TPerPrim>(StaticBindings.PerPrimitiveSsbo, ssboBuf.Length, _fixedSize);
         }
         else
         {

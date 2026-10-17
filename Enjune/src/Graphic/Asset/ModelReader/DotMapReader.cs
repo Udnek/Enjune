@@ -55,10 +55,8 @@ public class DotMapReader : AbstractModelReader
                 }
                 
                 var material = AssetManager.AddMaterialAndGetCompiled(RawMaterial.FromTexture(Path.ResolveRaw(face.TextureName)));
-                builder.Add(PrimitiveTopology.Triangle, m =>
-                {
-                    m.AddNgon(new MaterialPerPrimitive(material.Id), basicVertices);
-                });
+                builder.GetMeshWithTopology(PrimitiveTopology.Triangle)
+                    .AddNgon(new MaterialPerPrimitive(material.Id), basicVertices);
             }
         }
 

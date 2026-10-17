@@ -44,7 +44,7 @@ public class GraphicEngine
         
         graphicApi.UseShader<IShader.ICamera.IColor>(s =>
         {
-            graphicApi.ClearRenderBuffer();
+            graphicApi.ClearCurrentRenderTarget();
             // drawing everything else over
             s.ProjectionTransform(Projection);
             s.ViewTransform(View);

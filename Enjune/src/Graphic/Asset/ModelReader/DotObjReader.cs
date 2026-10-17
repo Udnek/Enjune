@@ -210,10 +210,8 @@ public class DotObjReader : AbstractModelReader
             };
         }
         
-        _builder.Add(PrimitiveTopology.Triangle, m =>
-        {
-            m.AddNgon(new MaterialPerPrimitive(material.Id), basicVertices);
-        });
+        _builder.GetMeshWithTopology(PrimitiveTopology.Triangle)
+            .AddNgon(new MaterialPerPrimitive(material.Id), basicVertices);
         return null;
     }
 }

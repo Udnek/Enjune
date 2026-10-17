@@ -3,6 +3,7 @@ using Enjune.Graphic.Api;
 using Enjune.Graphic.Key;
 using Enjune.Graphic.Modeling;
 using Enjune.Misc;
+using OpenGLApi.Generation;
 using OpenGLApi.Mesh;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
@@ -20,12 +21,18 @@ public sealed partial class OpenGlApi
         Logger.RegisterNamespaceToDomain(typeof(OpenGlApi).Assembly, "", Logger.Domain.Graphics);
     }
     
+    public static Error? GetGlErr()
+    {
+        var errorCode = GL.GetError();
+        if (errorCode == ErrorCode.NoError) return null; 
+        return $"GL error: {Enum.GetName(errorCode)}";
+    }
 
     public static void CheckGlError(object author)
     {
-        var errorCode = GL.GetError();
-        if (errorCode == ErrorCode.NoError) return;
-        Logger.Error(author, $"GL error: {Enum.GetName(errorCode)}");
+        var err = GetGlErr();
+        if (err == null) return;
+        Logger.Error(author, err);
     }
 
     private void InitKeyCodeMaps()
@@ -114,7 +121,7 @@ public sealed partial class OpenGlApi
         }
     }
 
-    public ResultOrError<IRenderableMesh<TPerVert, TPerPrim>> CreateRenderable<TPerVert, TPerPrim>(Mesh<TPerVert, TPerPrim> mesh) where TPerVert : unmanaged where TPerPrim : unmanaged
+    public ResultOrError<IRenderableMesh<TPerVert, TPerPrim>> CreateRenderableMesh<TPerVert, TPerPrim>(Mesh<TPerVert, TPerPrim> mesh) where TPerVert : unmanaged where TPerPrim : unmanaged
     {
         var deviceOrError = VaoVboDevice.Get<TPerVert>();
         return deviceOrError.AndThen(IRenderableMesh<TPerVert, TPerPrim> (device) =>
@@ -126,7 +133,7 @@ public sealed partial class OpenGlApi
         });
     }
 
-    public ResultOrError<IRenderableMesh<TPerVert, TPerPrim>.IDynamic> CreateDynamicRenderable<TPerVert, TPerPrim>(Mesh<TPerVert, TPerPrim>? mesh = null) where TPerVert : unmanaged where TPerPrim : unmanaged
+    public ResultOrError<IRenderableMesh<TPerVert, TPerPrim>.IDynamic> CreateDynamicRenderableMesh<TPerVert, TPerPrim>(Mesh<TPerVert, TPerPrim>? mesh = null) where TPerVert : unmanaged where TPerPrim : unmanaged
     {
         var deviceOrError = VaoVboDevice.Get<TPerVert>();
         return deviceOrError.AndThen(IRenderableMesh<TPerVert, TPerPrim>.IDynamic (device) =>
@@ -138,28 +145,12 @@ public sealed partial class OpenGlApi
             return glMesh;
         });
     }
-
-    public void DumpTextures(ExternalPath path)
-    {
-        // _textureArray.Dump(path, "main")?.Log(this);
-        // _screenPack.Texture.Dump(path, "screen")?.Log(this);
-        // _shadowMapPack.Maps.Dump(path, "shadow_map")?.Log(this);
-    }
-
-    public void Title(string title)
+    
+    public void SetTitle(string title)
     {
         unsafe
         {
             GLFW.SetWindowTitle(_window, title);
-        }
-    }
-    
-    public Vector2i GetCursorPosition()
-    {
-        unsafe
-        {
-            GLFW.GetCursorPos(_window, out var x, out var y);
-            return new Vector2i((int)x, (int)y);
         }
     }
     
@@ -246,12 +237,12 @@ public sealed partial class OpenGlApi
             return (width, height);
         }
     }
-
-    public bool ShouldStop()
+    
+    public void UpdateScreen()
     {
         unsafe
         {
-            return GLFW.WindowShouldClose(_window);
+            GLFW.SwapBuffers(_window);
         }
     }
 

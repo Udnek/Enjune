@@ -12,4 +12,8 @@
       <ProjectReference Include="..\OpenGLApi\OpenGLApi.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <EmbeddedResource Include="Resources\Atlas.png" />
+    </ItemGroup>
+
 </Project>

@@ -60,9 +60,11 @@ public abstract class ResourcePath
     {
         using var stream = Read(out error);
         if (stream == null) return null;
+        StbImage.stbi_set_flip_vertically_on_load(1);
         var imageResult = ImageResult.FromStream(stream);
-        ByteImage.Kind? type = ByteImage.Kind.FromStb(imageResult.Comp);
-        return new ByteImage(imageResult.Width, imageResult.Height, (ByteImage.Kind)type, imageResult.Data);
+        StbImage.stbi_set_flip_vertically_on_load(0);
+        ByteImage.Format? type = ByteImage.Format.FromStb(imageResult.Comp);
+        return new ByteImage(imageResult.Width, imageResult.Height, (ByteImage.Format)type, imageResult.Data);
     }
 
     public byte[]? LoadBytes(out Error? error)

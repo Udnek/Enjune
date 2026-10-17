@@ -150,7 +150,7 @@ public class App : AbstractDisposable, IApp
         // window
         if (InputHandler.WindowSizeChanged)
         {
-            GraphicApi.Title($"{Title} ({InputHandler.WindowSize.X}x{InputHandler.WindowSize.Y})");
+            GraphicApi.SetTitle($"{Title} ({InputHandler.WindowSize.X}x{InputHandler.WindowSize.Y})");
         }
         
         // input

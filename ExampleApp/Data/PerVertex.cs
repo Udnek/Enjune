@@ -3,7 +3,7 @@ using Enjune.Graphic.Api.Data;
 using Enjune.Graphic.Modeling;
 using OpenTK.Mathematics;
 
-namespace ExampleApp;
+namespace ExampleApp.Data;
 
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct PerVertex() : IPositionedVertex, ITexturedVertex

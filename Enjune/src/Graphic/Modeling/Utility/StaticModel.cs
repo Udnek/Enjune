@@ -16,7 +16,7 @@ public class StaticModel<TPerVert, TPerPrim> where TPerVert : unmanaged where TP
         var renderables = new IRenderableMesh<TPerVert, TPerPrim>[_meshes.Length];
         foreach (var mesh in _meshes)
         {
-            var meshOrError = graphicApi.CreateRenderable(mesh);
+            var meshOrError = graphicApi.CreateRenderableMesh(mesh);
             if (meshOrError.Error is not null)
                 return meshOrError.Error.Value;
         }
@@ -32,20 +32,15 @@ public class StaticModel<TPerVert, TPerPrim> where TPerVert : unmanaged where TP
          /// Returns mesh with appropriate topology to be modified
          /// </summary>
          /// <param name="topology"></param>
-         /// <param name="meshModifier"></param>
          /// <returns></returns>
-         public Builder Add(PrimitiveTopology topology, Action<Mesh<TPerVert, TPerPrim>> meshModifier)
+         public Mesh<TPerVert, TPerPrim> GetMeshWithTopology(PrimitiveTopology topology)
          {
              if (_meshes.TryGetValue(topology, out var mesh))
-             {
-                 meshModifier(mesh);
-                 return this;
-             }
+                 return mesh;
 
              var newMesh = new Mesh<TPerVert, TPerPrim>(topology);
              _meshes[topology] = newMesh;
-             meshModifier(newMesh);
-             return this;
+             return newMesh;
          }
 
          [Pure]

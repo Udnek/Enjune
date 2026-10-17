@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 
 namespace Enjune.Misc;
@@ -14,14 +15,14 @@ public readonly record struct ResultOrError<T>
     }
     
     public TTo Map<TTo>(Func<T, TTo> whenSuccess, Func<Error, TTo> whenFailure)
-        => Error is null ? whenSuccess(_value) : whenFailure((Error)Error);
+        => Error is null ? whenSuccess(_value) : whenFailure(Error.Value);
     
     public void Map(Action<T> whenSuccess, Action<Error> whenFailure)
     {
         if (Error is null)
             whenSuccess(_value);
         else
-            whenFailure((Error)Error);
+            whenFailure(Error.Value);
     }
 
     public ResultOrError<TTo> AndThen<TTo>(Func<T, ResultOrError<TTo>> run) 
@@ -29,13 +30,26 @@ public readonly record struct ResultOrError<T>
     
     public ResultOrError<TTo> AndThen<TTo>(Func<T, TTo> run) 
         => Error is null ? ResultOrError.Success(run(_value)) : ResultOrError.Failure<TTo>(Error.Value);
-
-    [Pure]
-    public T GetOr(T fallback) => Error is null ? _value : fallback;
     
-    // Use Map<Tto> in most cases
+    
     [Pure]
-    public T GetOrThrow() => Error is null ? _value : throw new InvalidOperationException();
+    [Obsolete("use GetIsFailed")]
+    public T GetOrThrow() => Error is null ? _value : throw new Exception(Error);
+
+    /// <summary>
+    /// Returns true if err. Basic usage example:
+    /// if (resultOrError.GetIsFailed(out var result, out var error))
+    ///     return "can not init: " + error
+    /// </summary>
+    /// <param name="value"></param>
+    /// <param name="error"></param>
+    /// <returns></returns>
+    public bool GetIsFailed([MaybeNullWhen(true)] out T value, out Error? error)
+    {
+        value = _value;
+        error = Error;
+        return Error != null;
+    }
     
     public static implicit operator ResultOrError<T>(Error error) => ResultOrError.Failure<T>(error);
 }

@@ -66,10 +66,9 @@ public class DotGlbReader : AbstractModelReader
                         Uv = texPoses[0]
                     };
                 }
-                builder.Add(enjunePrimitive.Value, m =>
-                {
-                    m.Add(basicVertices, indices, new MaterialPerPrimitive(compiledMat.Id));
-                });
+
+                builder.GetMeshWithTopology(enjunePrimitive.Value)
+                    .Add(basicVertices, indices, new MaterialPerPrimitive(compiledMat.Id));
             }
         }
 
@@ -92,7 +91,7 @@ public class DotGlbReader : AbstractModelReader
             if (rawImg is null) return null;
             using var stream = rawImg.Content.Open();
             var img = ImageResult.FromStream(stream);
-            return new ByteImage(img.Width, img.Height, ByteImage.Kind.FromStb(img.Comp), img.Data);
+            return new ByteImage(img.Width, img.Height, ByteImage.Format.FromStb(img.Comp), img.Data);
         }
     }
 }

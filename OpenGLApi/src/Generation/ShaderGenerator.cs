@@ -1,11 +1,20 @@
 using System.Text;
 using Enjune.Graphic.Api.Data;
-using OpenGLApi.Mesh;
+using OpenGLApi.Component;
 
-namespace OpenGLApi.Component;
+namespace OpenGLApi.Generation;
 
 public static class ShaderGenerator
 {
+    private static void TextureSamplers(StringBuilder builder, ReadOnlySpan<IGlTextureSlot> samplers)
+    {
+        foreach (var sampler in samplers)
+        {
+            // layout(binding = 0) uniform sampler2D tex;
+            builder.AppendLine($"layout(binding = {sampler.UnitIdx}) uniform {ToGlName(sampler.Type)} {sampler.InShaderName};");
+        }
+    }
+    
     private static void VertexIn(StringBuilder builder, ReadOnlySpan<VaoAttribute> attributes)
     {
         foreach (var attr in attributes)
@@ -136,6 +145,7 @@ public static class ShaderGenerator
     
     public static string CreateVertex(    
         string userProcess,
+        ReadOnlySpan<IGlTextureSlot> samplers,
         ReadOnlySpan<VaoAttribute> attributes,
         ReadOnlySpan<BufferDesc> ssbos,
         ReadOnlySpan<BufferDesc> ubos,
@@ -145,6 +155,7 @@ public static class ShaderGenerator
         // header
         builder.AppendLine("#version 430 core");
         
+        TextureSamplers(builder, samplers);
         Ssbos(builder, ssbos);
         Ubos(builder, ubos);
         VaryingsStruct(builder, varyings);
@@ -163,6 +174,7 @@ public static class ShaderGenerator
 
     public static string CreateFragment(
         string userProcess,
+        ReadOnlySpan<IGlTextureSlot> samplers,
         ReadOnlySpan<BufferDesc> ssbos,
         ReadOnlySpan<BufferDesc> ubos,
         StructDesc varyings)
@@ -171,6 +183,7 @@ public static class ShaderGenerator
         // header
         builder.AppendLine("#version 430 core");
 
+        TextureSamplers(builder, samplers);
         Ssbos(builder, ssbos);
         Ubos(builder, ubos);
         VaryingsStruct(builder, varyings);
@@ -185,7 +198,16 @@ public static class ShaderGenerator
 
         return builder.ToString();
     }
-    
+
+    private static string ToGlName(SamplerType st)
+    {
+        return st switch {
+            SamplerType.Sampler2D => "sampler2D",
+            SamplerType.Sampler2DArray => "sampler2DArray",
+            _ => throw new ArgumentOutOfRangeException(nameof(st), st, null)
+        };
+    }
+
     private static string ToGlName(ShaderValuePrimitive primitive)
     {
         return primitive switch {

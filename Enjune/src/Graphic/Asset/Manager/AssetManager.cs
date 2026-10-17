@@ -63,7 +63,7 @@ public class AssetManager
         }
         
         // adding material
-        var atlas = new ByteImage(atlasSize, atlasSize, ByteImage.Kind.Alpha8, atlasBuffer.Data);
+        var atlas = new ByteImage(atlasSize, atlasSize, ByteImage.Format.Alpha8, atlasBuffer.Data);
         atlas = atlas.Alpha8ToRgba32();
         var material = AddMaterialAndGetCompiled(RawMaterial.FromTexture(atlas, path.ToString()));
 

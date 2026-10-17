@@ -1,11 +1,13 @@
 using System.Runtime.InteropServices;
 using Enjune.File;
+using Enjune.Graphic;
 using Enjune.Graphic.Api;
 using Enjune.Graphic.Asset;
 using Enjune.Misc;
 using OpenGLApi.Component;
 using OpenGLApi.Component.Buffer;
 using OpenGLApi.Component.Texture;
+using OpenGLApi.Generation;
 using OpenGLApi.Mesh;
 using OpenGLApi.Pack;
 using OpenTK.Mathematics;
@@ -15,12 +17,7 @@ namespace OpenGLApi;
 
 public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicApi
 {
-    private const TextureUnit MainTexturesUnit = TextureUnit.Texture0;
-    
     private unsafe Window* _window;
-    
-    private CompiledAssets _assets = null!;
-    
     
     // storing it here so fucking GC won't erase it
     private GLFWCallbacks.KeyCallback _keyCallback = null!;
@@ -30,29 +27,32 @@ public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicAp
     private GLFWCallbacks.FramebufferSizeCallback _windowSizeChangeCallback = null!;
     private DebugProc _debugProc = null!;
     private GLFWCallbacks.ScrollCallback _scrollCallback = null!;
+    private GLFWCallbacks.WindowCloseCallback _windowCloseCallback = null!;
     
     // for shader generation
     private readonly Dictionary<Type, BufferDesc> _ssboDescs = [];
     private readonly Dictionary<Type, BufferDesc> _uboDescs = [];
+    private readonly List<IGlTextureSlot> _textureSlots = [];
     
     // disposables
     private readonly List<IGlBuffer> _bufferToDispose = [];
     private readonly List<IGlMesh> _meshesToDispose = [];
     private readonly List<IGlShader> _shadersToDispose = [];
+    private readonly List<AbstractTexture> _texturesToDispose = [];
+    private readonly List<FboRboTexDevice> _rboFboToDispose = [];
 
-    public IGraphicApi? Init(CompiledAssets assets, Vector2i windowSize, string title, IUserInputHandler inputHandler,
+    public IGraphicApi? Init(Vector2i windowSize, string title, IUserInputHandler inputHandler,
         out Error? error)
     {
-        var graphicApi = InitInternal(assets, windowSize, title, inputHandler, out error);
+        var graphicApi = InitInternal(windowSize, title, inputHandler, out error);
         if (graphicApi != null) return graphicApi;
         Dispose();
         return null;
     }
 
-    private OpenGlApi? InitInternal(CompiledAssets assets, Vector2i initialWindowSize, string title, IUserInputHandler inputHandler,
+    private OpenGlApi? InitInternal(Vector2i initialWindowSize, string title, IUserInputHandler inputHandler,
         out Error? error)
     {
-        _assets = assets;
         InitKeyCodeMaps();
         
         // error callback
@@ -78,7 +78,6 @@ public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicAp
         GLFW.WindowHint(WindowHintInt.ContextVersionMinor, 6);
         GLFW.WindowHint(WindowHintOpenGlProfile.OpenGlProfile, OpenGlProfile.Compat);
         GLFW.WindowHint(WindowHintBool.OpenGLForwardCompat, true);
-        
         GLFW.WindowHint(WindowHintBool.TransparentFramebuffer, false);
         
         // window creation
@@ -86,7 +85,7 @@ public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicAp
         {
             _window = GLFW.CreateWindow(initialWindowSize.X, initialWindowSize.Y, title, null, null);
             
-            Fbo.SizeOfDefault = initialWindowSize;
+            FboRboTexDevice.ScreenSize = initialWindowSize;
             if (_window == null)
             {
                 error = "failed to create GLFW window";
@@ -103,7 +102,7 @@ public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicAp
                     InputAction.Release => IGraphicApi.KeyAction.Release,
                     InputAction.Press => IGraphicApi.KeyAction.Press,
                     InputAction.Repeat => IGraphicApi.KeyAction.Repeat,
-                    _ => throw new Exception($"unknown key action: {glfw}")
+                    _ => throw new Exception($"Unknown key action: {glfw}")
                 };
             }
             
@@ -124,7 +123,11 @@ public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicAp
             };
             GLFW.SetMouseButtonCallback(_window, _mouseButtonCallback);
             
-            _windowSizeChangeCallback = (_, w, h) => inputHandler.HandleWindowSizeChange((w, h));
+            _windowSizeChangeCallback = (_, w, h) =>
+            {
+                FboRboTexDevice.ScreenSize = (w, h);
+                inputHandler.HandleWindowSizeChange((w, h));
+            };
             GLFW.SetFramebufferSizeCallback(_window, _windowSizeChangeCallback);
 
             _cursorCallback = (window, x, y) =>
@@ -135,16 +138,23 @@ public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicAp
 
             _scrollCallback = (window, x, y) => inputHandler.HandleScroll((float) x, (float) y);
             GLFW.SetScrollCallback(_window, _scrollCallback);
+
+            _windowCloseCallback = window =>
+            {
+                GLFW.SetWindowShouldClose(_window, false);
+                inputHandler.HandleCloseWindowAttempt();
+            };
+            GLFW.SetWindowCloseCallback(_window, _windowCloseCallback);
             
             // end callbacks
 
             if (GLFW.RawMouseMotionSupported())
             {
                 GLFW.SetInputMode(_window, RawMouseMotionAttribute.RawMouseMotion, true);
-                Logger.Info(this,"raw mouse input enabled");
+                Logger.Info(this,"Raw mouse input enabled");
             }
             else
-                Logger.Warn(this,"raw mouse input isn't supported; mouse motion might be janky");
+                Logger.Warn(this,"Raw mouse input isn't supported: mouse motion might be janky");
             
             GLFW.ShowWindow(_window);
         }
@@ -198,87 +208,12 @@ public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicAp
         return null;
     }
 
-    public ResultOrError<IShader<TPerVert, TPerPrim>> CreateShader<TPerVert, TPerPrim, TVaryings>(string userVertexCode, string userFragmentCode) where TPerVert : unmanaged where TPerPrim : unmanaged where TVaryings : unmanaged
+    public void BindScreenRenderTarget()
     {
-        var vaoVboDeviceOrErr = VaoVboDevice.Get<TPerVert>();
-        if (vaoVboDeviceOrErr.Error is not null)
-            return vaoVboDeviceOrErr.Error.Value;
-        
-        var ssboDescOrErr = BufferDesc.Get<TPerPrim>(Bindings.PerPrimitiveSsbo, Std.Std430, "PerPrimitives", "PerPrimitive");
-        if (ssboDescOrErr.Error is not null)
-            return ssboDescOrErr.Error.Value;
-
-        _ssboDescs[typeof(TPerPrim)] = ssboDescOrErr.GetOrThrow();
-
-        var varyingsOrErr = StructDesc.Get<TVaryings>(null);
-        if (varyingsOrErr.Error is not null)
-            return varyingsOrErr.Error.Value;
-
-        var vert = ShaderGenerator.CreateVertex(
-            userVertexCode,
-            vaoVboDeviceOrErr.GetOrThrow().VaoAttributes,
-            _ssboDescs.Values.ToArray(),
-            _uboDescs.Values.ToArray(),
-            varyingsOrErr.GetOrThrow()
-        );
-        
-        var frag = ShaderGenerator.CreateFragment(
-            userFragmentCode,
-            _ssboDescs.Values.ToArray(),
-            _uboDescs.Values.ToArray(),
-            varyingsOrErr.GetOrThrow()
-        );
-        
-        // Logger.Highlight(this, "\n"+vert);
-        // Logger.Highlight(this, "-----------------");
-        // Logger.Highlight(this, "\n"+frag);
-
-        var shader = new ShaderProgram<TPerVert, TPerPrim>();
-        _shadersToDispose.Add(shader);
-        var shaderError = shader.Init(vert, frag);
-        if (shaderError != null)
-            return shaderError.Value;
-        
-        return ResultOrError.Success<IShader<TPerVert, TPerPrim>>(shader);
+        FboRboTexDevice.BindScreen();
     }
 
-    public ResultOrError<IUniform<T>> CreateUniform<T>(string name) where T : unmanaged
-    {
-        var descOrErr = BufferDesc.Get<T>(Bindings.TakeUbo(name), Std.Std140, name, null);
-        if (descOrErr.Error != null) 
-            return descOrErr.Error.Value;
-        var desc = descOrErr.GetOrThrow();
-        _uboDescs[typeof(T)] = desc;
-        var ubo = new Ubo<T>(Bindings.TakeUbo(name));
-        _bufferToDispose.Add(ubo);
-        return ResultOrError.Success<IUniform<T>>(ubo);
-    }
-
-    public ResultOrError<IUniformArray<T>> CreateUniformArray<T>(string name, int initialCapacity) where T : unmanaged
-    {
-        var descOrErr = BufferDesc.Get<T>(Bindings.TakeSsbo(name), Std.Std430, name, null);
-        if (descOrErr.Error != null) 
-            return descOrErr.Error.Value;
-        var desc = descOrErr.GetOrThrow();
-        _ssboDescs[typeof(T)] = desc;
-        var ssbo = new Ssbo<T>(Bindings.TakeSsbo(name), initialCapacity, false);
-        _bufferToDispose.Add(ssbo);
-        return ResultOrError.Success<IUniformArray<T>>(ssbo);
-    }
-
-    public void SetRenderSize(Vector2i size)
-    {
-        Fbo.SizeOfDefault = size;
-        //_screenPack.Resize(size);
-    }
-
-    public void UpdateScreen()
-    {
-        // rendering to window
-        unsafe { GLFW.SwapBuffers(_window); }
-    }
-    
-    public void ClearRenderBuffer(bool color = true, bool depth = true)
+    public void ClearCurrentRenderTarget(bool color = true, bool depth = true)
     {
         GL.Clear(
             (color ? ClearBufferMask.ColorBufferBit : 0) | 
@@ -290,17 +225,12 @@ public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicAp
         foreach (var glMesh in _meshesToDispose) glMesh.Dispose();
         foreach (var glShader in _shadersToDispose) glShader.Dispose();
         foreach (var glBuffer in _bufferToDispose) glBuffer.Dispose();
+        foreach (var glTex in _texturesToDispose) glTex.Dispose();
+        foreach (var dev in _rboFboToDispose) dev.Dispose();
         
         Utils.DisposeAllFields(this);
         
-        unsafe
-        {
-            GLFW.SetKeyCallback(_window, null);
-            GLFW.SetFramebufferSizeCallback(_window, null);
-            GLFW.DestroyWindow(_window);
-        }
-
+        unsafe { GLFW.DestroyWindow(_window); }
         GLFW.Terminate();
-        GLFW.SetErrorCallback(null);
     }
 }

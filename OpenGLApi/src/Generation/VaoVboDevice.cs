@@ -1,11 +1,10 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
-using Enjune.Attribute;
 using Enjune.Graphic.Api.Data;
 using Enjune.Misc;
 using OpenGLApi.Component.Buffer;
 
-namespace OpenGLApi.Mesh;
+namespace OpenGLApi.Generation;
 
 public interface IGlMeshDevice;
 

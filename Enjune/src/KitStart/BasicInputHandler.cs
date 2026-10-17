@@ -24,14 +24,20 @@ public class BasicInputHandler : IUserInputHandler
     private readonly Stopwatch _lastWindowChange;
     private Vector2i _pendingWindowSize;
     private readonly Seconds _debouncingDelay;
+    private readonly Action _onPlayerAttemptToCloseWindow;
     public Vector2i WindowSize { get; private set; }
     public bool WindowSizeChanged { get; private set; } = false;
 
-    public BasicInputHandler(Vector2i initialWindowSize, Seconds debouncingDelay)
+    public BasicInputHandler(
+        Vector2i initialWindowSize, 
+        Seconds debouncingDelay,
+        Action onPlayerAttemptToCloseWindow)
     {
         _debouncingDelay = debouncingDelay;
+        _onPlayerAttemptToCloseWindow = onPlayerAttemptToCloseWindow;
         WindowSize = initialWindowSize;
         _lastWindowChange = Stopwatch.StartNew();
+        
     }
 
     public void PrepareAtFrameStart()
@@ -104,8 +110,7 @@ public class BasicInputHandler : IUserInputHandler
         CursorPosition = (x, y);
     }
 
-    public void HandleScroll(float x, float y)
-    {
-        DeltaWheelScroll += (x, y);
-    }
+    public void HandleScroll(float x, float y) => DeltaWheelScroll += (x, y);
+
+    public void HandleCloseWindowAttempt() => _onPlayerAttemptToCloseWindow();
 }

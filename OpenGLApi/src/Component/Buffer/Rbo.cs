@@ -2,36 +2,34 @@ using OpenTK.Mathematics;
 
 namespace OpenGLApi.Component.Buffer;
 
+/// <summary>
+/// Basically texture that can not be sampled, but I am using it for depth buffer
+/// </summary>
 public sealed class Rbo : GlDisposable
 {
-    private int _handle;
+    public int Handle { get; private set; }
 
     public Rbo(Vector2i size)
     {
-        _handle = GL.GenRenderbuffer();
+        Handle = GL.GenRenderbuffer();
         Bind();
-        GL.RenderbufferStorage(RenderbufferTarget.Renderbuffer, RenderbufferStorage.DepthComponent24, size.X, size.Y);
+        GL.RenderbufferStorage(RenderbufferTarget.Renderbuffer, 
+            RenderbufferStorage.DepthComponent24, size.X, size.Y);
         Unbind();
-    }
-    
-    public void AttachToFbo(Fbo fbo)
-    {
-        fbo.Bind();
-        GL.FramebufferRenderbuffer(FramebufferTarget.Framebuffer, FramebufferAttachment.DepthAttachment,
-            RenderbufferTarget.Renderbuffer, _handle); 
     }
 
     public void Resize(Vector2i size)
     {
-        GL.DeleteRenderbuffer(_handle);
-        _handle = GL.GenRenderbuffer();
+        GL.DeleteRenderbuffer(Handle);
+        Handle = GL.GenRenderbuffer();
         Bind();
-        GL.RenderbufferStorage(RenderbufferTarget.Renderbuffer, RenderbufferStorage.DepthComponent24, size.X, size.Y);
+        GL.RenderbufferStorage(RenderbufferTarget.Renderbuffer, 
+            RenderbufferStorage.DepthComponent24, size.X, size.Y);
         Unbind();
     }
-    
-    private void Bind() => GL.BindRenderbuffer(RenderbufferTarget.Renderbuffer, _handle);
+
+    private void Bind() => GL.BindRenderbuffer(RenderbufferTarget.Renderbuffer, Handle);
     private void Unbind() => GL.BindRenderbuffer(RenderbufferTarget.Renderbuffer, 0);
     
-    protected override void DisposeGlData() => GL.DeleteRenderbuffer(_handle);
+    protected override void DisposeGlData() => GL.DeleteRenderbuffer(Handle);
 }

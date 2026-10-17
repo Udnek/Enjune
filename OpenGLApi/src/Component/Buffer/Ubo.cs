@@ -2,6 +2,10 @@ using Enjune.Graphic.Api;
 
 namespace OpenGLApi.Component.Buffer;
 
+/// <summary>
+/// Stores global variables, must be std140
+/// </summary>
+/// <typeparam name="T"></typeparam>
 public class Ubo<T> : GlDisposable, IGlBuffer, IUniform<T> where T : unmanaged
 {
     private const BufferTarget Target = BufferTarget.UniformBuffer;

@@ -1,5 +1,7 @@
 using System.Security.Cryptography;
 using Enjune.Misc;
+using OpenTK.Mathematics;
+using SixLabors.ImageSharp.PixelFormats;
 using StbImageSharp;
 
 namespace Enjune.Graphic;
@@ -8,19 +10,25 @@ public sealed class ByteImage : IEquatable<ByteImage>
 {
     public readonly int Width;
     public readonly int Height;
-    public readonly Kind Type;
+    public readonly Format Type;
     public readonly byte[] Data;
+
+    public Vector2i Size => (Width, Height);
     
-    public static ByteImage Empty(int width, int height, Kind type) 
+    public static ByteImage Empty(int width, int height, Format type) 
         => new(width, height, type, new byte[width * height * type.Depth]);
     
-    public ByteImage(int width, int height, Kind type, byte[] data)
+    public ByteImage(int width, int height, Format type, byte[] data)
     {
+        if (width <= 0 || height <= 0)
+            throw new Exception($"Size must be positive, got {width}x{height}");
+        
         if (width * height * type.Depth != data.Length)
         {
             Logger.Warn(this, $"Data length: {data.Length}, expected (w*h*d): {width * height * type.Depth}");
             data = new byte[width * height*type.Depth];
         }
+        
         Data = data;
         Width = width;
         Height = height;
@@ -42,7 +50,7 @@ public sealed class ByteImage : IEquatable<ByteImage>
             newData[i+2] = b;
             newData[i+3] = Data[i/4];
         }
-        return new ByteImage(Width, Height, Kind.Rgba32, newData);
+        return new ByteImage(Width, Height, Format.Rgba32, newData);
     }
 
     public bool Equals(ByteImage? other) 
@@ -54,14 +62,14 @@ public sealed class ByteImage : IEquatable<ByteImage>
     public override int GetHashCode() 
         => HashCode.Combine(Width, Height, Type, SHA1.HashData(Data));
 
-    public readonly record struct Kind(int Depth, ColorComponents StbType)
+    public readonly record struct Format(int Depth, ColorComponents StbType)
     {
-        public static readonly Kind Rgba32 = new(4, ColorComponents.RedGreenBlueAlpha);
-        public static readonly Kind Rgb24 = new(3, ColorComponents.RedGreenBlue);
-        public static readonly Kind GreyAlpha16 = new(2, ColorComponents.GreyAlpha);
-        public static readonly Kind Alpha8 = new(1, ColorComponents.Grey);
+        public static readonly Format Rgba32 = new(4, ColorComponents.RedGreenBlueAlpha);
+        public static readonly Format Rgb24 = new(3, ColorComponents.RedGreenBlue);
+        public static readonly Format GreyAlpha16 = new(2, ColorComponents.GreyAlpha);
+        public static readonly Format Alpha8 = new(1, ColorComponents.Grey);
 
-        public static Kind FromStb(ColorComponents comps)
+        public static Format FromStb(ColorComponents comps)
         {
             return comps switch
             {
@@ -74,7 +82,7 @@ public sealed class ByteImage : IEquatable<ByteImage>
             };
         }
         
-        public static Kind OfDepth(int depth)
+        public static Format OfDepth(int depth)
         {
             return depth switch
             {

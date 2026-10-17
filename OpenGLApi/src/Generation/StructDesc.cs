@@ -2,15 +2,13 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using Enjune.Graphic.Api.Data;
 using Enjune.Misc;
-using OpenGLApi.Component;
 
-namespace OpenGLApi.Mesh;
+namespace OpenGLApi.Generation;
 
 public readonly record struct StructDesc
 {
     public required FieldDesc[] Fields { get; init; }
-
-
+    
     private static readonly Dictionary<Type, StructDesc> Descriptions = [];
 
     public static ResultOrError<StructDesc> Get<T>(Std? std) where T : unmanaged
@@ -27,9 +25,7 @@ public readonly record struct StructDesc
         #region Field Processing
 
         var fields = typeof(T)
-            .GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-            // ordering by offset, cause GetFields order is not guaranteed;
-            .OrderBy(fi => fi.GetCustomAttribute<FieldOffsetAttribute>()!.Value).ToArray();
+            .GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
 
         List<FieldDesc> descs = new List<FieldDesc>(fields.Length);
         HashSet<string> names = new HashSet<string>(fields.Length);
@@ -40,12 +36,7 @@ public readonly record struct StructDesc
                 return new Error($"all fields must have {Logger.GetTypeName<GraphicFieldAttribute>()}, but {field.Name} don't");
             
             if (!names.Add(fieldAttr.InShaderName))
-                return new Error($"names must be unique, got {fieldAttr.InShaderName} twice");
-
-            var expectedSize = fieldAttr.Type.ByteSize();
-            var realSize = Marshal.SizeOf(field.FieldType);
-            if (expectedSize != realSize)
-                return new Error($"Mismatch of sizes: specified {expectedSize}, but field is {realSize}");
+                return new Error($"names must be unique, got {fieldAttr.InShaderName} twice"); ;
             
             descs.Add(new FieldDesc
             {

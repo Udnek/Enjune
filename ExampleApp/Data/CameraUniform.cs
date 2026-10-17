@@ -2,7 +2,7 @@ using System.Runtime.InteropServices;
 using Enjune.Graphic.Api.Data;
 using OpenTK.Mathematics;
 
-namespace ExampleApp;
+namespace ExampleApp.Data;
 
 [StructLayout(LayoutKind.Explicit, Size = 16*4*2)]
 public struct CameraUniform

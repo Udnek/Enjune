@@ -20,26 +20,29 @@ public class DynamicRenderableModel<TPerVert, TPerPrim> : IRenderableModel<TPerV
     private readonly Dictionary<PrimitiveTopology, IRenderableMesh<TPerVert, TPerPrim>.IDynamic> 
         _renderableMeshes = new(Enum.GetValues<PrimitiveTopology>().Length);
 
-    private DynamicRenderableModel(IGraphicApi graphicApi) => _graphicApi = graphicApi;
-    
-    public static ResultOrError<DynamicRenderableModel<TPerVert, TPerPrim>> Create(IGraphicApi graphicApi)
+    public DynamicRenderableModel(IGraphicApi graphicApi) => _graphicApi = graphicApi;
+
+    /// <summary>
+    /// Can be used to modify mesh by topology
+    /// </summary>
+    /// <param name="topology"></param>
+    public Mesh<TPerVert, TPerPrim> GetMesh(PrimitiveTopology topology)
     {
-        var model = new DynamicRenderableModel<TPerVert, TPerPrim>(graphicApi);
-        // filling both
-        foreach (var topology in Enum.GetValues<PrimitiveTopology>())
+        if (_meshes.TryGetValue(topology, out var alreadyMesh))
+            return alreadyMesh;
+
+        var newMesh = new Mesh<TPerVert,TPerPrim>(topology);
+        var renderableOrErr = _graphicApi.CreateDynamicRenderableMesh<TPerVert, TPerPrim>();
+        if (renderableOrErr.Error is not null)
         {
-            var renderableOrErr = graphicApi.CreateDynamicRenderable<TPerVert, TPerPrim>();
-            if (renderableOrErr.Error is not null)
-                return renderableOrErr.Error.Value;
-         
-            model._meshes[topology] = new Mesh<TPerVert, TPerPrim>(topology);
-            model._renderableMeshes[topology] = renderableOrErr.GetOrThrow();
+            Logger.Error(this, renderableOrErr.Error);
+            return null!;
         }
-        return ResultOrError.Success(model);
+
+        _renderableMeshes[topology] = renderableOrErr.GetOrThrow();
+        _meshes[topology] = newMesh;
+        return newMesh;
     }
-    
-    public void Add(PrimitiveTopology topology, Action<Mesh<TPerVert, TPerPrim>> meshModifier) 
-        => meshModifier(_meshes[topology]);
 
     public void Clear()
     {
