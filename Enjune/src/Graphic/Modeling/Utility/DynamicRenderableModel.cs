@@ -32,14 +32,13 @@ public class DynamicRenderableModel<TPerVert, TPerPrim> : IRenderableModel<TPerV
             return alreadyMesh;
 
         var newMesh = new Mesh<TPerVert,TPerPrim>(topology);
-        var renderableOrErr = _graphicApi.CreateDynamicRenderableMesh<TPerVert, TPerPrim>();
-        if (renderableOrErr.Error is not null)
+        if (_graphicApi.CreateDynamicRenderableMesh<TPerVert, TPerPrim>().GetIsFailed(out var renderableMesh, out var error))
         {
-            Logger.Error(this, renderableOrErr.Error);
+            Logger.Error(this, "Can not generate mesh: " + error);
             return null!;
         }
 
-        _renderableMeshes[topology] = renderableOrErr.GetOrThrow();
+        _renderableMeshes[topology] = renderableMesh;
         _meshes[topology] = newMesh;
         return newMesh;
     }
