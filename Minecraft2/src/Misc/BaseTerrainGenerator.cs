@@ -4,8 +4,13 @@ namespace Minecraft2.Misc;
 
 public class BaseTerrainGenerator : ConcurrentWorker<ChunkPos, Chunk>
 {
-    private readonly FastNoiseLite.FastNoiseLite _noise = new();
-    
+    private readonly FastNoiseLite.FastNoiseLite _noise;
+
+    public BaseTerrainGenerator()
+    {
+        _noise = new FastNoiseLite.FastNoiseLite();
+    }
+
     protected override Chunk Work(ChunkPos chunkPos)
     {
         var chunk = new Chunk();
@@ -13,7 +18,7 @@ public class BaseTerrainGenerator : ConcurrentWorker<ChunkPos, Chunk>
         {
             for (int blockZ = 0; blockZ < Chunk.Size.Z; blockZ++)
             {
-                var y = _noise.GetNoise(chunkPos.X*Chunk.Size.X +blockX, chunkPos.Z*Chunk.Size.Z +blockZ); // [-1; 1]
+                var y = NoiseSumAt(chunkPos.Xz, (blockX, blockZ)); // [-1; 1]
                 y = (y + 1f) / 2f; // [0; 1]
                 int height = Math.Clamp((int)(y * Chunk.Size.Y), 0, Chunk.Size.Y);
                 height = Math.Max(height, 1);
@@ -25,5 +30,15 @@ public class BaseTerrainGenerator : ConcurrentWorker<ChunkPos, Chunk>
         }
 
         return chunk;
+    }
+
+    protected float NoiseSumAt(Vector2 chunk, Vector2 block)
+    {
+        float x = chunk.X * Chunk.Size.X + block.X;
+        float z = chunk.Y * Chunk.Size.Z + block.Y;
+        //return _noise.GetNoise(x, z);
+        return 0.2f * _noise.GetNoise(x, z) +
+               0.3f * _noise.GetNoise(x/5f, z/5f) +
+               0.5f * _noise.GetNoise(x/20f, z/20f);
     }
 }
