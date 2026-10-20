@@ -21,5 +21,5 @@ global using Seconds = float;
 global using ComponentTypeId = int; // (n=32) n-bits type ID -> 2^n components are allowed to exist
 global using SignatureInteger = int; // (n=32) n-bits mask -> n components per entity allowed
 
-global using TexId = int;
-global using MatId = int;
+global using TexIdx = int;
+global using MatIdx = int;

@@ -2,7 +2,6 @@ using System.Text;
 using Enjune.Attribute;
 using Enjune.File;
 using Enjune.Graphic.Api;
-using Enjune.Graphic.Api.Data;
 using Enjune.Misc;
 using OpenGLApi.Mesh;
 

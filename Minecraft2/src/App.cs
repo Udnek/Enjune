@@ -5,10 +5,10 @@ using Enjune.Ecs;
 using Enjune.Ecs.EcsType;
 using Enjune.File;
 using Enjune.Graphic.Api;
-using Enjune.Graphic.Asset;
 using Enjune.Graphic.Key;
 using Enjune.Graphic.Modeling;
 using Enjune.KitStart;
+using Enjune.KitStart.TAAL;
 using Enjune.Misc;
 using Minecraft2.Bridge;
 using Minecraft2.Ecs;
@@ -68,8 +68,8 @@ public class App : AbstractDisposable, IApp
         Components.Boot();
         
         // assets
-        var assetManager = new AssetManager();
-        DirtMaterial = assetManager.AddMaterialAndGetCompiled(RawMaterial.FromTexture(AssemblyPath.Of(Program.Assembly, "Dirt.png")));
+        var assetManager = new TextureArrayAssetLoader();
+        DirtMaterial = assetManager.AddMaterialAndGetIndex(RawTAALMaterial.FromTexture(AssemblyPath.Of(Program.Assembly, "Dirt.png")));
         var assets = assetManager.Compile();
 
         // graphicApi

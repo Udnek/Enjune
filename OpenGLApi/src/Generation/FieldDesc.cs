@@ -1,4 +1,4 @@
-using Enjune.Graphic.Api.Data;
+using Enjune.Graphic.Api.Attribute;
 
 namespace OpenGLApi.Generation;
 

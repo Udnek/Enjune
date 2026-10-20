@@ -1,4 +1,3 @@
-using Enjune.Graphic.Asset;
 using OpenTK.Mathematics;
 
 namespace Enjune.Graphic.Api;

@@ -1,6 +1,6 @@
-using Enjune.Graphic.Asset.Font;
 using Enjune.Graphic.Key;
 using Enjune.KitStart;
+using Enjune.KitStart.Font;
 using Enjune.Misc;
 using UiAddon.Display;
 using UiAddon.Display.Abstraction;

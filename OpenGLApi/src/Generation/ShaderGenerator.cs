@@ -1,5 +1,5 @@
 using System.Text;
-using Enjune.Graphic.Api.Data;
+using Enjune.Graphic.Api.Attribute;
 using OpenGLApi.Component;
 
 namespace OpenGLApi.Generation;

@@ -1,4 +1,3 @@
-using Enjune.Graphic.Asset.Font;
 using Enjune.Misc;
 using UiAddon.Display.Abstraction;
 using UiAddon.Element;

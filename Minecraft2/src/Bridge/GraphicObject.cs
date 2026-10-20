@@ -1,5 +1,3 @@
-using Enjune.Graphic.Modeling.Utility;
-
 namespace Minecraft2.Bridge;
 
 public struct GraphicObject

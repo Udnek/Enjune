@@ -1,7 +1,6 @@
 using Enjune.File;
 using Enjune.Graphic;
 using Enjune.Graphic.Api;
-using Enjune.Graphic.Asset;
 using Enjune.Misc;
 using OpenGLApi.Component.Buffer;
 using OpenTK.Mathematics;

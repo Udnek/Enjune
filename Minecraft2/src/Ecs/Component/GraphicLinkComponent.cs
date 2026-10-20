@@ -1,6 +1,5 @@
 using Enjune.Ecs.Component;
 using Enjune.Graphic.Modeling;
-using Enjune.Graphic.Modeling.Utility;
 using Enjune.Registering;
 
 namespace Minecraft2.Ecs.Component;

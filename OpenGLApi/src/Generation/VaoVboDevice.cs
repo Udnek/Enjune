@@ -1,6 +1,6 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
-using Enjune.Graphic.Api.Data;
+using Enjune.Graphic.Api.Attribute;
 using Enjune.Misc;
 using OpenGLApi.Component.Buffer;
 
