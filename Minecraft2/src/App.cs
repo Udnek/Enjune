@@ -27,7 +27,7 @@ public class App : AbstractDisposable, IApp
 
     #region Public
     
-    public IGraphicApi GraphicApi { get; private set; } = null!;
+    private IGraphicApi GraphicApi { get; set; } = null!;
     public readonly GraphicEngine GraphicEngine;
     public readonly BasicInputHandler InputHandler;
     public FlyingPlayerController FlyingController { get; private set; } = null!;
@@ -161,10 +161,6 @@ public class App : AbstractDisposable, IApp
         
         // render
         GraphicEngine.Update();
-        
-        // keyboard input
-        if (InputHandler.IsPressed(_dumbTexturesBind)) 
-            GraphicApi.DumpTextures(ExternalPath.Of("."));
         
         // post frame
         GraphicApi.UpdateScreen();

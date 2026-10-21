@@ -24,23 +24,6 @@ public sealed class TextureArray : AbstractTexture, ITextureArray
         GL.TextureStorage3D(Handle, 1, internalFormat, size.X, size.Y, Layers);
         SetParams();
     }
-    
-    public static TextureArray FromAssets(CompiledAssets compiledAssets)
-    {
-        var texArr = new TextureArray((compiledAssets.TextureSize, compiledAssets.TextureSize), 
-            compiledAssets.Textures.Count, SizedInternalFormat.Rgba8);
-
-        var textures = compiledAssets.Textures;
-        
-        // loading into
-        for (var layer = 0; layer < textures.Count; layer++)
-        {
-            texArr.Put(layer, textures[layer]);
-            OpenGlApi.CheckGlError(typeof(TextureArray));
-        }
-
-        return texArr;
-    }
 
     public Error? Put(int layer, ByteImage image)
     {

@@ -86,10 +86,10 @@ public class App : AbstractDisposable, IApp
 
             if (GraphicApi.CreateShader<PerVertex, PerPrimitive, Varyings>(
                     """
-                    vec4 process(Input input, out Varyings varyings) {
-                        varyings.color = input.color;
-                        varyings.uv = input.uv;
-                        return camera.proj * camera.view * vec4(input.pos, 1);
+                    vec4 process(Vertex vertex, out Varyings varyings) {
+                        varyings.color = vertex.color;
+                        varyings.uv = vertex.uv;
+                        return camera.proj * camera.view * vec4(vertex.pos, 1);
                     }
                     """,
                     """
@@ -109,11 +109,11 @@ public class App : AbstractDisposable, IApp
             
             if (GraphicApi.CreateShader<PerVertex, PerPrimitive, Varyings>(
                     """
-                    vec4 process(Input input, out Varyings varyings) {
-                        varyings.color = input.color;
-                        varyings.uv = input.uv;
+                    vec4 process(Vertex vertex, out Varyings varyings) {
+                        varyings.color = vertex.color;
+                        varyings.uv = vertex.uv;
                         
-                        vec3 pos = input.pos;
+                        vec3 pos = vertex.pos;
                         pos.y += sin(time.sec*1.5) / 10.0;
                         return vec4(pos, 1);
                     }

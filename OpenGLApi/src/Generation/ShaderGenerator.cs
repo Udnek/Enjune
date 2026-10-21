@@ -47,10 +47,10 @@ public static class ShaderGenerator
         builder.AppendLine("};");
     }
 
-    private static void FragmentInputStruct(StringBuilder builder, ReadOnlySpan<VaoAttribute> attributes)
+    private static void FragmentVertexStruct(StringBuilder builder, ReadOnlySpan<VaoAttribute> attributes)
     {
-        // struct Input {
-        builder.AppendLine("struct Input {");
+        // struct Vertex {
+        builder.AppendLine("struct Vertex {");
         foreach (var attr in attributes)
         {
             //      vec4 color;
@@ -63,13 +63,13 @@ public static class ShaderGenerator
     private static void VertexMain(StringBuilder builder, StructDesc varyings, ReadOnlySpan<VaoAttribute> attributes)
     {
         builder.AppendLine("void main() {");
-        builder.AppendLine("\tInput input;");
+        builder.AppendLine("\tVertex vertex;");
         foreach (var attr in attributes)
         {
-            builder.AppendLine($"\tinput.{attr.InShaderName} = {attr.InShaderName}_in;");
+            builder.AppendLine($"\tvertex.{attr.InShaderName} = {attr.InShaderName}_in;");
         }
         builder.AppendLine("\tVaryings varyings;");
-        builder.AppendLine("\tgl_Position = process(input, varyings);");
+        builder.AppendLine("\tgl_Position = process(vertex, varyings);");
         // decomposing result
         foreach (var field in varyings.Fields)
         {
@@ -159,7 +159,7 @@ public static class ShaderGenerator
         Ssbos(builder, ssbos);
         Ubos(builder, ubos);
         VaryingsStruct(builder, varyings);
-        FragmentInputStruct(builder, attributes);
+        FragmentVertexStruct(builder, attributes);
         
         VertexIn(builder, attributes);
         VaryingsOut(builder, varyings);
