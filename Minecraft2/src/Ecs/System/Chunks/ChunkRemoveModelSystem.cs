@@ -1,3 +1,4 @@
+using System.Threading.Channels;
 using Enjune.Ecs;
 using Enjune.Ecs.EcsType;
 using Enjune.Graphic.Modeling;
@@ -21,16 +22,15 @@ public class ChunkRemoveModelSystem : AppSystem
 
     public override void OnUpdate()
     {
-        var graphicObjects = App.GraphicEngine.Objects;
         _query.ForEach((entity, ref chunkComp, ref graphicLink) =>
         {
             if (!chunkComp.ToBeUnloaded) return;
-
-            if (graphicObjects.Remove(graphicLink.GraphicId, out var graphicObject))
-                App.ChunkModelPool.Recycle((DynamicRenderableModel)graphicObject.Model);
-            else
-                Logger.Warn(this, $"{entity} has {graphicLink} but doesn't appear in {App.GraphicEngine}");
-
+            
+            // removing api model
+            App.GraphicEngine.EnqueueChunkRemoval(graphicLink.GraphicId);
+            // recycling local model
+            App.ChunkModelPool.Recycle(graphicLink.Model);
+            
             _world.RemoveEntityComponent<GraphicLinkComponent>(entity);
         });
     }

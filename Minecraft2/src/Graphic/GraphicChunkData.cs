@@ -8,31 +8,25 @@ public static class GraphicChunkData
 {
     public static readonly string VertexShader = 
         """
-        vec4 process(Input input, out Varyings varyings) {
-            varyings.color = input.color;
-            varyings.uv = input.uv;
-            return camera.proj * camera.view * vec4(input.pos, 1);
+        vec4 process(Vertex vertex, out Varyings varyings) {
+            varyings.color = vertex.color;
+            varyings.uv = vertex.uv;
+            return camera.proj * camera.view * model.mat * vec4(vertex.pos, 1);
         }
         """;
 
     public static readonly string FragmentShader =
         """
         vec4 process(Varyings varyings, PerPrimitive perPrim) {
-            return varyings.color * 
-                    perPrim.color * 
-                    texture(mainTex, varyings.uv) * 
-                    (sin(time.sec)+1)/2.0;
+            return vec4(varyings.color * perPrim.color, 1) * 
+                    texture(block_tex, vec3(varyings.uv, 0.0));
         }
         """;
     
     public struct Varyings()
     {
-        [field: GraphicField(ShaderValuePrimitive.Vector3F, "pos")]
-        public Vector3 Position;
-
-        [GraphicField(ShaderValuePrimitive.Vector4F, "color")]
+        [GraphicField(ShaderValuePrimitive.Vector3F, "color")]
         public Vector3 Color;
-
         [field: GraphicField(ShaderValuePrimitive.Vector2F, "uv")]
         public Vector2 Uv;
     }
@@ -42,7 +36,7 @@ public static class GraphicChunkData
     {
         [field: GraphicField(ShaderValuePrimitive.Vector3F, "pos")]
         public Vector3 Position { get; set; }
-        [GraphicField(ShaderValuePrimitive.Vector4F, "color")]
+        [GraphicField(ShaderValuePrimitive.Vector3F, "color")]
         public Vector3 Color = Vector3.One;
         [field: GraphicField(ShaderValuePrimitive.Vector2F, "uv")]
         public Vector2 Uv { get; set; }
@@ -51,7 +45,7 @@ public static class GraphicChunkData
     [StructLayout(LayoutKind.Explicit, Size = 16)]
     public struct Primitive()
     {
-        [GraphicField(ShaderValuePrimitive.Vector4F, "color")]
+        [GraphicField(ShaderValuePrimitive.Vector3F, "color")]
         [FieldOffset(0)] public Vector3 Color = Vector3.One;
     }
 }

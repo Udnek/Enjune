@@ -28,22 +28,15 @@ public class ChunkRenderSystem : AppSystem
             var chunk = chunkComp.Chunk;
             if (!chunk.IsDirty) return;
             
-            // mesh generation
-            var model = App.GraphicEngine.Objects[graphicLink.GraphicId].Model;
-            if (model is DynamicRenderableModel dynamicRenderable)
-            {
-                App.ChunkMeshGenerator.Enqueue((chunk, dynamicRenderable));
-            }
-            else
-                Logger.Warn(this, $"Can not update model: model for {chunkComp} is not dynamic");
-        
             chunk.IsDirty = false;
+            // mesh generation
+            App.ChunkMeshGenerator.Enqueue((graphicLink.GraphicId, chunk, graphicLink.Model));
         });
         
         // pulling done and refitting
         while (App.ChunkMeshGenerator.TryDequeue(out var result))
         {
-            result.job.Model.Refit();
+            App.GraphicEngine.EnqueueChunkRefit(result.job.GrxId, result.job.Model);
         }
     }
 }

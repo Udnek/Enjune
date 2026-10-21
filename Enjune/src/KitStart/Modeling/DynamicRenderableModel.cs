@@ -4,59 +4,34 @@ using Enjune.Misc;
 
 namespace Enjune.KitStart.Modeling;
 
-/// <summary>
-/// Basically:
-/// - Create
-/// - while you need:
-///     - Clear
-///     - Modify meshes
-///     - Call refit
-///     - Render
-/// </summary>
 public class DynamicRenderableModel<TPerVert, TPerPrim> : IRenderableModel<TPerVert, TPerPrim> where TPerVert : unmanaged where TPerPrim : unmanaged
 {
-    private readonly IGraphicApi _graphicApi;
-    private readonly Dictionary<PrimitiveTopology, Mesh<TPerVert, TPerPrim>> 
-        _meshes = new(Enum.GetValues<PrimitiveTopology>().Length);
     private readonly Dictionary<PrimitiveTopology, IRenderableMesh<TPerVert, TPerPrim>.IDynamic> 
         _renderableMeshes = new(Enum.GetValues<PrimitiveTopology>().Length);
 
-    public DynamicRenderableModel(IGraphicApi graphicApi) => _graphicApi = graphicApi;
+    private DynamicRenderableModel(){}
 
-    /// <summary>
-    /// Can be used to modify mesh by topology
-    /// </summary>
-    /// <param name="topology"></param>
-    public Mesh<TPerVert, TPerPrim> GetMesh(PrimitiveTopology topology)
+    public static ResultOrError<DynamicRenderableModel<TPerVert, TPerPrim>> Create(IGraphicApi graphicApi)
     {
-        if (_meshes.TryGetValue(topology, out var alreadyMesh))
-            return alreadyMesh;
-
-        var newMesh = new Mesh<TPerVert,TPerPrim>(topology);
-        if (_graphicApi.CreateDynamicRenderableMesh<TPerVert, TPerPrim>().GetIsFailed(out var renderableMesh, out var error))
+        var model = new DynamicRenderableModel<TPerVert, TPerPrim>();
+        foreach (var topology in Enum.GetValues<PrimitiveTopology>())
         {
-            Logger.Error(this, "Can not generate mesh: " + error);
-            return null!;
+            if (graphicApi.CreateDynamicRenderableMesh<TPerVert, TPerPrim>().GetIsFailed(out var mesh, out var error))
+                return new Error("can not create mesh: " + error);
+            model._renderableMeshes[topology] = mesh;
         }
 
-        _renderableMeshes[topology] = renderableMesh;
-        _meshes[topology] = newMesh;
-        return newMesh;
+        return ResultOrError.Success(model);
     }
-
-    public void Clear()
-    {
-        foreach (var (_, mesh) in _meshes) 
-            mesh.Clear();
-    }
+    
     
     /// <summary>
     /// Updates renderable based on recent changes in builders
     /// </summary>
-    public void Refit()
+    public void Refit(DynamicModel<TPerVert, TPerPrim> model)
     {
-        foreach (var (primitive, mesh) in _meshes) 
-            _renderableMeshes[primitive].Refit(mesh);
+        foreach (var (topology, mesh) in model.Meshes) 
+            _renderableMeshes[topology].Refit(mesh);
     }
 
     public void Render(IShader<TPerVert, TPerPrim> shader)

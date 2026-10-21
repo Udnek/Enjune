@@ -1,3 +1,5 @@
+using System.Collections.Concurrent;
+using System.Threading.Channels;
 using Enjune.Ecs;
 using Enjune.Ecs.EcsType;
 using Enjune.Misc;
@@ -22,27 +24,22 @@ public class ChunkAddModelSystem : AppSystem
 
     public override void OnUpdate()
     {
-        var graphicObjects = App.GraphicEngine.Objects;
-
-        int c = 0;
-        _query.ForEach((_, ref _) => c+=1);
-        
         _query.ForEach((entity, ref chunkComp) =>
         {
             if (chunkComp.ToBeUnloaded) return;
             
-            var graphicLink = new GraphicLinkComponent();
-            _world.AddEntityComponent(entity, graphicLink);
-            var graphicObject = new GraphicObject
+            var graphicLink = new GraphicLinkComponent
             {
-                Model = App.ChunkModelPool.Take(),
-                TransformMatrix = MathUtils.CreateModelTransform(
+                Model = App.ChunkModelPool.Take()
+            };
+            _world.AddEntityComponent(entity, graphicLink);
+
+            App.GraphicEngine.EnqueueChunkAddition(
+                graphicLink.GraphicId,
+                MathUtils.CreateModelTransform(
                     chunkComp.Pos * Minecraft2.Misc.Chunk.Size,
                     Quaternion.Identity,
-                    Vector3.One)
-            };
-
-            graphicObjects[graphicLink.GraphicId] = graphicObject;
+                    Vector3.One));
         });
     }
 }

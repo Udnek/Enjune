@@ -98,7 +98,7 @@ public static class VaoVboDevice
             var expectedSize = fieldAttr.Type.ByteSize();
             var realSize = Marshal.SizeOf(field.FieldType);
             if (expectedSize != realSize)
-                return new Error($"Mismatch of sizes: specified {expectedSize}, but field is {realSize}");
+                return new Error($"mismatch of sizes: specified {expectedSize}, but field is {realSize}");
             
             vaoAttributes.Add(new VaoAttribute
             {

@@ -1,66 +1,93 @@
 using System.Collections.Concurrent;
-using System.Threading.Channels;
+using System.Diagnostics.CodeAnalysis;
 using Enjune.Graphic.Api;
 using Enjune.Graphic.Key;
 using Enjune.KitStart.Modeling;
+using Enjune.KitStart.TAAL;
+using Enjune.Misc;
+using Minecraft2.Misc;
 
 namespace Minecraft2.Bridge;
 
 public class GraphicEngine
 {
     private Matrix4 _projection;
-    private Matrix4 _view;
 
     private readonly App _app;
     private readonly IGraphicApi _grxApi;
-    
-    private readonly ConcurrentDictionary<Guid, ChunkModel> _chunks = [];
-    private readonly ConcurrentQueue<Command> _commands = [];
 
-    private IUniform<Uniforms.Camera> CameraUniform = null!;
-    private IUniform<Uniforms.Model> ModelUniform = null!;
+    private readonly RecyclingPool<RenderableChunkModel> _chunkModelPool;
+    
+    private readonly Dictionary<Guid, (RenderableChunkModel Model, Matrix4 Transform)> _chunks = [];
+    private readonly ConcurrentQueue<ChunkCommand> _chunkCommands = [];
+    
+    private IUniform<Uniforms.Camera> _cameraUniform = null!;
+    private IUniform<Uniforms.Model> _modelUniform = null!;
+    private IShader<GraphicChunkData.Vertex, GraphicChunkData.Primitive> _chunkShader = null!;
+    private ITextureArray _blockTexture = null!;
+    private ITextureSlot<ITextureArray> _blockTextureSlot = null!;
     
     public GraphicEngine(App app, IGraphicApi grxApi)
     {
         _app = app;
         _grxApi = grxApi;
+        _chunkModelPool = new(() =>
+        {
+            if (RenderableChunkModel.Create(_grxApi)
+                .GetIsFailed(out var mesh, out var error))
+            {
+                Logger.Error(this, "can not create mesh: " + error);
+            }
+            return mesh!;
+        });
     }
 
-    public Error? Init()
+    public Error? Init(CompiledTAAL blockAssets)
     {
-        if (_grxApi.CreateUniform<Uniforms.Camera>("camera").GetIsFailed(out CameraUniform!, out var error))
+        if (_grxApi.CreateTextureArray(blockAssets.Textures).GetIsFailed(out _blockTexture!, out var error))
+            return "can not create block texture: " + error;
+        
+        if (_grxApi.CreateTextureSlot<ITextureArray>("block_tex").GetIsFailed(out _blockTextureSlot!, out error))
+            return "can not create block texture slot: " + error;
+        
+        if (_grxApi.CreateUniform<Uniforms.Camera>("camera").GetIsFailed(out _cameraUniform!, out error))
             return "can not create camera uniform: " + error;
         
-        if (_grxApi.CreateUniform<Uniforms.Model>("model").GetIsFailed(out ModelUniform!, out error))
+        if (_grxApi.CreateUniform<Uniforms.Model>("model").GetIsFailed(out _modelUniform!, out error))
             return "can not create model uniform: " + error;
-        
-        if (_grxApi.CreateShader<GraphicChunkData.Vertex, GraphicChunkData.Primitive, >())
+
+        if (_grxApi.CreateShader<GraphicChunkData.Vertex, GraphicChunkData.Primitive, GraphicChunkData.Varyings>(
+                GraphicChunkData.VertexShader, GraphicChunkData.FragmentShader)
+            .GetIsFailed(out _chunkShader!, out error))
+        {
+            return "can not create chunk shader: " + error;
+        }
 
         _projection = Matrix4.CreatePerspectiveFieldOfView(
             MathF.PI / 2, (float) _app.InputHandler.WindowSize.X / _app.InputHandler.WindowSize.Y, 0.1f, 1000f);
-
+        
         return null;
     }
-    
+
     public void Update()
     {
         var inputHandler = _app.InputHandler;
-        _view = _app.FlyingController.View;
+        var view = _app.FlyingController.View;
         
         // command
-        while (_commands.TryDequeue(out var command))
+        while (_chunkCommands.TryDequeue(out var command))
         {
             switch (command.Kind)
             {
-                case CommandKind.AddChunk:
-                    _chunks[command.Id] = command.AddModel;
+                case ChunkCommandKind.AddChunk:
+                    _chunks[command.Id] = (_chunkModelPool.Take(), command.NewChunkTransform);
                     break;
-                case CommandKind.RefitChunk:
-                    _chunks[command.Id].Refit();
+                case ChunkCommandKind.RefitChunk:
+                    _chunks[command.Id].Model.Refit(command.RefitModel);
                     break;
-                case CommandKind.RemoveChunk:
-                    _chunks.Remove(command.Id, out var model);
-                    command.TakeModel!.TryWrite(model!);
+                case ChunkCommandKind.RemoveChunk:
+                    if (_chunks.Remove(command.Id, out var chunk)) 
+                        _chunkModelPool.Recycle(chunk.Model);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
@@ -72,59 +99,66 @@ public class GraphicEngine
         {
             _projection = Matrix4.CreatePerspectiveFieldOfView(
                 MathF.PI / 2, (float) inputHandler.WindowSize.X / inputHandler.WindowSize.Y, 0.1f, 1000f);
-            
-            CameraUniform.Set(new Uniforms.Camera(){Projection = _projection, View = _view});
         }
         
+        // setting uniforms
+        _cameraUniform.Set(new Uniforms.Camera{Projection = _projection, View = view});
+        
         // render
-        foreach (var (_, model) in _chunks)
+        _grxApi.ClearCurrentRenderTarget();
+        
+        _blockTextureSlot.BindToSample(_blockTexture);
+        foreach (var (_, chunk) in _chunks)
         {
-            model.Render();
+            _modelUniform.Set(new Uniforms.Model {Matrix = chunk.Transform});
+            chunk.Model.Render(_chunkShader);
         }
+        
+        _grxApi.UpdateScreen();
     }
     
     #region Commands
 
-    public void EnqueueChunkAddition(Guid id, ChunkModel chunkModel)
+    public void EnqueueChunkAddition(Guid id, Matrix4 transform)
     {
-        _commands.Enqueue(new Command
+        _chunkCommands.Enqueue(new ChunkCommand
         {
-            Kind = CommandKind.AddChunk,
+            Kind = ChunkCommandKind.AddChunk,
             Id = id,
-            AddModel = chunkModel
+            NewChunkTransform = transform
         });   
     }
     
-    public void EnqueueChunkRefit(Guid id)
+    public void EnqueueChunkRefit(Guid id, ChunkModel model)
     {
-        _commands.Enqueue(new Command
+        _chunkCommands.Enqueue(new ChunkCommand
         {
-            Kind = CommandKind.RefitChunk,
+            Kind = ChunkCommandKind.RefitChunk,
+            RefitModel = model,
             Id = id
         });
     }
 
-    public void EnqueueChunkRemoval(Guid id, ChannelWriter<ChunkModel> takeChannel)
+    public void EnqueueChunkRemoval(Guid id)
     {
-        _commands.Enqueue(new Command
+        _chunkCommands.Enqueue(new ChunkCommand
         {
-            Kind = CommandKind.RemoveChunk,
-            Id = id,
-            TakeModel = takeChannel
+            Kind = ChunkCommandKind.RemoveChunk,
+            Id = id
         });
     }
-
+    
     #endregion
     
-    private struct Command
+    private struct ChunkCommand
     {
-        public required CommandKind Kind;
+        public required ChunkCommandKind Kind;
         public required Guid Id;
-        public ChannelWriter<ChunkModel>? TakeModel;
-        public ChunkModel AddModel;
+        public ChunkModel RefitModel;
+        public Matrix4 NewChunkTransform;
     }
     
-    private enum CommandKind
+    private enum ChunkCommandKind
     {
         AddChunk,
         RefitChunk,
