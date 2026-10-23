@@ -65,7 +65,8 @@ public class App : AbstractDisposable, IApp
         
         // assets
         var taal = new TextureArrayAssetLoader();
-        taal.AddMaterialAndGetIndex(RawTAALMaterial.FromTexture(AssemblyPath.Of(Program.Assembly, "Dirt.png")));
+        var dirtId = taal.AddMaterialAndGetIndex(RawTAALMaterial.FromTexture(AssemblyPath.Of(Program.Assembly, "Dirt.png")));
+        Logger.Highlight(this, $"dirt id: {dirtId}");
         if (taal.Compile().GetIsFailed(out var blockAssets, out var error))
             return "can not create block assets: " + error;
         

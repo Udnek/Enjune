@@ -50,7 +50,7 @@ public class TextureArrayAssetLoader
         };
         _textures.Add((tex, true));
         _materials.Add((rawMaterial, material));
-        Logger.Info(this, $"Added material {material}");
+        Logger.Info(this, $"Added material {material} from {texturePath}");
         return matIdx;
     }
 
@@ -64,9 +64,9 @@ public class TextureArrayAssetLoader
             // texture already present
             if (foundTex != -1)
                 texIdx = foundTex;
-            else
-                // adding new
+            else 
             {
+                // adding new
                 texIdx = _textures.Count;
                 _textures.Add((rawMaterial.LoadedTexture, false));
             }
@@ -76,7 +76,7 @@ public class TextureArrayAssetLoader
             var matWithSameTexture = _materials
                 .FirstOrDefault(p => Equals(texturePath, p.Raw.TexturePath));
             // texture already exists
-            if (matWithSameTexture == default)
+            if (matWithSameTexture != default)
             {
                 texIdx = matWithSameTexture.Material.TextureIndex;
             }

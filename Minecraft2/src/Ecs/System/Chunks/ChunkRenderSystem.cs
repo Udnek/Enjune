@@ -13,12 +13,12 @@ namespace Minecraft2.Ecs.System.Chunks;
 
 public class ChunkRenderSystem : AppSystem
 {
-    private Query<ChunkComponent, GraphicLinkComponent> _query = null!;
+    private Query<ChunkComponent, ChunkGraphicComponent> _query = null!;
 
     public override void OnInit(World world)
     {
         _query = new QueryBuilder(world)
-            .Retrieve<ChunkComponent, GraphicLinkComponent>();
+            .Retrieve<ChunkComponent, ChunkGraphicComponent>();
     }
 
     public override void OnUpdate()
@@ -30,13 +30,13 @@ public class ChunkRenderSystem : AppSystem
             
             chunk.IsDirty = false;
             // mesh generation
-            App.ChunkMeshGenerator.Enqueue((graphicLink.GraphicId, chunk, graphicLink.Model));
+            App.ChunkMeshGenerator.Enqueue(graphicLink.GraphicId, (chunk, graphicLink.Model));
         });
         
         // pulling done and refitting
-        while (App.ChunkMeshGenerator.TryDequeue(out var result))
+        while (App.ChunkMeshGenerator.TryDequeue(out Guid key, out var output))
         {
-            App.GraphicEngine.EnqueueChunkRefit(result.job.GrxId, result.job.Model);
+            App.GraphicEngine.EnqueueChunkRefit(key, output.Model);
         }
     }
 }

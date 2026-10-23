@@ -36,7 +36,7 @@ public class ChunkWorld
         }
 
         _queuedForGeneration.Add(pos);
-        _app.TerrainGenerator.Enqueue(pos);
+        _app.TerrainGenerator.Enqueue(pos, pos);
     }
 
     public void Unload(ChunkPos pos)
@@ -60,9 +60,8 @@ public class ChunkWorld
     /// </summary>
     public void PullLoading()
     {
-        while (_app.TerrainGenerator.TryDequeue(out var res))
+        while (_app.TerrainGenerator.TryDequeue(out var pos, out var output))
         {
-            var (pos, chunk) = res;
             if (!_queuedForGeneration.Remove(pos))
             {
                 Logger.Warn(this, $"Got chunk that was not queued: {pos}");
@@ -72,7 +71,7 @@ public class ChunkWorld
             var entity = _app.World.AddEntity(new Entity.Assembly()
                 .AddComponent(new ChunkComponent
                 {
-                    Chunk = chunk,
+                    Chunk = output,
                     Pos = pos
                 }));
             _loadedChunks[pos] = entity;

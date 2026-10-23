@@ -19,7 +19,7 @@ public static class GraphicChunkData
         """
         vec4 process(Varyings varyings, PerPrimitive perPrim) {
             return vec4(varyings.color * perPrim.color, 1) * 
-                    texture(block_tex, vec3(varyings.uv, 0.0));
+                    texture(block_tex, vec3(varyings.uv, 1.0));
         }
         """;
     

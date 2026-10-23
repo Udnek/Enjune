@@ -2,7 +2,7 @@ using OpenTK.Mathematics;
 
 namespace Minecraft2.Misc;
 
-public class BaseTerrainGenerator : ConcurrentWorker<ChunkPos, Chunk>
+public class BaseTerrainGenerator : ConcurrentWorker<ChunkPos, ChunkPos, Chunk>
 {
     private readonly FastNoiseLite.FastNoiseLite _noise = new();
     

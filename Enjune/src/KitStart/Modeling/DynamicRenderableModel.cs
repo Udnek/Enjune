@@ -28,10 +28,18 @@ public class DynamicRenderableModel<TPerVert, TPerPrim> : IRenderableModel<TPerV
     /// <summary>
     /// Updates renderable based on recent changes in builders
     /// </summary>
-    public void Refit(DynamicModel<TPerVert, TPerPrim> model)
+    public void Refit(DynamicModel<TPerVert, TPerPrim>? model)
     {
-        foreach (var (topology, mesh) in model.Meshes) 
-            _renderableMeshes[topology].Refit(mesh);
+        if (model is null)
+        {
+            foreach (var (_, mesh) in _renderableMeshes) 
+                mesh.Refit(null);
+        }
+        else
+        {
+            foreach (var (topology, mesh) in model.Meshes) 
+                _renderableMeshes[topology].Refit(mesh);
+        }
     }
 
     public void Render(IShader<TPerVert, TPerPrim> shader)

@@ -69,30 +69,43 @@ public class GraphicEngine
         return null;
     }
 
+    private void ProceedCommands()
+    {
+        while (_chunkCommands.TryDequeue(out var command))
+        {
+            switch (command.Kind)
+            {
+                case ChunkCommandKind.AddChunk:
+                    if (_chunks.ContainsKey(command.Id))
+                        Logger.Error(this, $"Trying to replace chunk that already exists: {command.Id}");
+                    else
+                        _chunks[command.Id] = (_chunkModelPool.Take(), command.NewChunkTransform);
+                    break;
+                case ChunkCommandKind.RefitChunk:
+                    if (_chunks.TryGetValue(command.Id, out var chunk)) 
+                        chunk.Model.Refit(command.RefitModel);
+                    else
+                        Logger.Error(this, $"Can not refit chunk that doesn't exist: {command.Id}");
+                    break;
+                case ChunkCommandKind.RemoveChunk:
+                    if (_chunks.Remove(command.Id, out chunk)) 
+                        _chunkModelPool.Recycle(chunk.Model);
+                    else 
+                        Logger.Error(this, $"Trying to remove chunk that doesn't exist: {command.Id}");
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+        }
+    }
+    
     public void Update()
     {
         var inputHandler = _app.InputHandler;
         var view = _app.FlyingController.View;
         
         // command
-        while (_chunkCommands.TryDequeue(out var command))
-        {
-            switch (command.Kind)
-            {
-                case ChunkCommandKind.AddChunk:
-                    _chunks[command.Id] = (_chunkModelPool.Take(), command.NewChunkTransform);
-                    break;
-                case ChunkCommandKind.RefitChunk:
-                    _chunks[command.Id].Model.Refit(command.RefitModel);
-                    break;
-                case ChunkCommandKind.RemoveChunk:
-                    if (_chunks.Remove(command.Id, out var chunk)) 
-                        _chunkModelPool.Recycle(chunk.Model);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-        }
+        ProceedCommands();
         
         // window size change
         if (inputHandler.WindowSizeChanged)
@@ -106,7 +119,6 @@ public class GraphicEngine
         
         // render
         _grxApi.ClearCurrentRenderTarget();
-        
         _blockTextureSlot.BindToSample(_blockTexture);
         foreach (var (_, chunk) in _chunks)
         {
@@ -129,7 +141,7 @@ public class GraphicEngine
         });   
     }
     
-    public void EnqueueChunkRefit(Guid id, ChunkModel model)
+    public void EnqueueChunkRefit(Guid id, ChunkModel? model)
     {
         _chunkCommands.Enqueue(new ChunkCommand
         {
@@ -154,7 +166,7 @@ public class GraphicEngine
     {
         public required ChunkCommandKind Kind;
         public required Guid Id;
-        public ChunkModel RefitModel;
+        public ChunkModel? RefitModel;
         public Matrix4 NewChunkTransform;
     }
     

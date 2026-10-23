@@ -18,7 +18,7 @@ public class ChunkAddModelSystem : AppSystem
     {
         _world = world;
         _query = new QueryBuilder(world)
-            .Excluding<GraphicLinkComponent>()
+            .Excluding<ChunkGraphicComponent>()
             .Retrieve<ChunkComponent>();
     }
 
@@ -28,7 +28,7 @@ public class ChunkAddModelSystem : AppSystem
         {
             if (chunkComp.ToBeUnloaded) return;
             
-            var graphicLink = new GraphicLinkComponent
+            var graphicLink = new ChunkGraphicComponent
             {
                 Model = App.ChunkModelPool.Take()
             };

@@ -15,9 +15,9 @@ public class GlMesh<TPerVert, TPerPrim> : GlDisposable, IRenderableMesh<TPerVert
     private readonly VaoVboDevice<TPerVert> _vaoVboDevice;
     
     private Vao? _vao;
-    private Vbo<TPerVert> _vbo = null!;
-    private Ssbo<TPerPrim> _ssbo = null!;
-    private Ebo _ebo = null!;
+    private Vbo<TPerVert>? _vbo;
+    private Ssbo<TPerPrim>? _ssbo;
+    private Ebo? _ebo;
 
     public PrimitiveType CurrentTopology { get; private set; }
 
@@ -29,13 +29,13 @@ public class GlMesh<TPerVert, TPerPrim> : GlDisposable, IRenderableMesh<TPerVert
     
     public void Render()
     {
-        if (_vao == null || _ebo.Count == 0)
+        if (_vao == null || _ebo!.Count == 0)
             return;
         
         _vao.Bind();
-        _vbo.Bind();
-        _ebo.Bind();
-        _ssbo.Bind();
+        _vbo!.Bind();
+        _ebo!.Bind();
+        _ssbo!.Bind();
         GL.DrawElements(CurrentTopology, _ebo.Count, DrawElementsType.UnsignedInt, 0);
     }
 
@@ -55,9 +55,9 @@ public class GlMesh<TPerVert, TPerPrim> : GlDisposable, IRenderableMesh<TPerVert
         else
         {
             const float capacityIncreasement = 1.5f;
-            if (_vbo.Capacity < vboBuf.Length) _vbo.Reallocate(CalcCap(_vbo.Capacity, vboBuf.Length));
-            if (_ebo.Capacity < eboBuf.Length) _ebo.Reallocate(CalcCap(_ebo.Capacity, eboBuf.Length));
-            if (_ssbo.Capacity < ssboBuf.Length) _ssbo.Reallocate(CalcCap(_ssbo.Capacity, ssboBuf.Length));
+            if (_vbo!.Capacity < vboBuf.Length) _vbo.Reallocate(CalcCap(_vbo.Capacity, vboBuf.Length));
+            if (_ebo!.Capacity < eboBuf.Length) _ebo.Reallocate(CalcCap(_ebo.Capacity, eboBuf.Length));
+            if (_ssbo!.Capacity < ssboBuf.Length) _ssbo.Reallocate(CalcCap(_ssbo.Capacity, ssboBuf.Length));
 
             static int CalcCap(int current, int model) => (int)Math.Max(current * capacityIncreasement, model);
         }
@@ -67,8 +67,14 @@ public class GlMesh<TPerVert, TPerPrim> : GlDisposable, IRenderableMesh<TPerVert
         _ssbo.BindAndPush(ssboBuf);
     }
     
-    public void Refit(Mesh<TPerVert, TPerPrim> mesh)
+    public void Refit(Mesh<TPerVert, TPerPrim>? mesh)
     {
+        if (mesh is null)
+        {
+            // just clearing EBO
+            _ebo?.BindAndPush([]);
+            return;
+        }
         CurrentTopology = OpenGlApi.ToGl(mesh.Topology);
         Refit(mesh.Vertices.AsSpan(), mesh.Indexes.AsSpan(), mesh.PerPrimitives.AsSpan());
     }

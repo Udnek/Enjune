@@ -180,6 +180,9 @@ public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicAp
         GL.Enable(EnableCap.DebugOutput);
         _debugProc = (source, type, id, severity, length, messagePointer, param) =>
         {
+            if (severity == DebugSeverity.DebugSeverityNotification) 
+                return;
+            
             string message = Marshal.PtrToStringUTF8(messagePointer, length);
             if (type == DebugType.DebugTypeError)
                 Logger.Error(this, message);
@@ -193,24 +196,14 @@ public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicAp
         GL.GetInteger(GetPName.MaxArrayTextureLayers, out var maxArrayLayers);
         Logger.Info(this, $"max possible texture size: {maxTextureSize}");
         Logger.Info(this, $"max possible texture array layers: {maxArrayLayers}");
-        
-        // other components init
-        error = InitComponents();
-        if (error != null) return null;
+
+        error = null;
         return this;
     }
     
-    private Error? InitComponents()
-    {
-        // loading comps
-        //_textureArray = TextureArray.FromAssets(MainTexturesUnit, _assets);
-        return null;
-    }
 
-    public void BindScreenRenderTarget()
-    {
-        FboRboTexDevice.BindScreen();
-    }
+
+    public void BindScreenRenderTarget() => FboRboTexDevice.BindScreen();
 
     public void ClearCurrentRenderTarget(bool color = true, bool depth = true)
     {
