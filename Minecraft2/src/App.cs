@@ -5,10 +5,10 @@ using Enjune.Ecs;
 using Enjune.Ecs.EcsType;
 using Enjune.File;
 using Enjune.Graphic.Api;
-using Enjune.Graphic.Asset;
 using Enjune.Graphic.Key;
 using Enjune.Graphic.Modeling;
 using Enjune.KitStart;
+using Enjune.KitStart.TAAL;
 using Enjune.Misc;
 using Minecraft2.Bridge;
 using Minecraft2.Ecs;
@@ -26,25 +26,23 @@ public class App : AbstractDisposable, IApp
     private const string Title = "Minecraft2";
 
     #region Public
-
-    [DisposeAtLast("other objects may cause segfault when disposing //TODO fix")] // TODO probably dispose all GlModels in GlApi itself?
-    public IGraphicApi GraphicApi { get; private set; } = null!;
-    public readonly GraphicEngine GraphicEngine;
+    
+    private IGraphicApi _graphicApi = null!;
+    public GraphicEngine GraphicEngine { get; private set; }
     public readonly BasicInputHandler InputHandler;
     public FlyingPlayerController FlyingController { get; private set; } = null!;
     public readonly KeyBinds Binds;
     public World World { get; private set; } = null!;
-    public CompiledMaterial DirtMaterial;
     public ChunkWorld ChunkWorld { get; private set; } = null!;
     public Entity PlayerEntity { get; private set; }
-    public RecyclingPool<DynamicRenderableModel> ChunkModelPool { get; private set; } = null!;
+    public RecyclingPool<ChunkModel> ChunkModelPool { get; private set; } = new(() => new ChunkModel());
     public readonly BaseTerrainGenerator TerrainGenerator = new BaseTerrainGenerator();
     public readonly ChunkMeshGenerator ChunkMeshGenerator;
-    
+    public bool IsRunning { get; private set; } = true;
+
     #endregion
     
     private readonly Wasd _wasd;
-    private readonly KeyBinds.Bind _dumbTexturesBind;
     private readonly KeyBinds.Bind _freeCursorBind;
     private readonly KeyBinds.Bind _lockCursorBind;
 
@@ -54,13 +52,10 @@ public class App : AbstractDisposable, IApp
         ChunkMeshGenerator = new ChunkMeshGenerator(this);
         _wasd = Wasd.AddTo(Binds);
         
-        InputHandler = new BasicInputHandler(InitialWindowSize, 0.5f);
-        _dumbTexturesBind = Binds.AddBind(new KeyBinds.Bind("dumb_textures", KeyCode.F2));
+        InputHandler = new BasicInputHandler(InitialWindowSize, 0.5f, () => IsRunning = false);
 
         _freeCursorBind = Binds.AddBind(new KeyBinds.Bind("free_cursor", KeyCode.Escape));
         _lockCursorBind = Binds.AddBind(new KeyBinds.Bind("lock_cursor", KeyCode.RightMouseButton));
-        
-        GraphicEngine = new GraphicEngine(this);
     }
 
     public Error? Init()
@@ -69,13 +64,15 @@ public class App : AbstractDisposable, IApp
         Components.Boot();
         
         // assets
-        var assetManager = new AssetManager();
-        DirtMaterial = assetManager.AddMaterialAndGetCompiled(RawMaterial.FromTexture(AssemblyPath.Of(Program.Assembly, "Dirt.png")));
-        var assets = assetManager.Compile();
-
+        var taal = new TextureArrayAssetLoader();
+        var dirtId = taal.AddMaterialAndGetIndex(RawTAALMaterial.FromTexture(AssemblyPath.Of(Program.Assembly, "Dirt.png")));
+        Logger.Highlight(this, $"dirt id: {dirtId}");
+        if (taal.Compile().GetIsFailed(out var blockAssets, out var error))
+            return "can not create block assets: " + error;
+        
         // graphicApi
         {
-            var graphicApi = new OpenGlApi().Init(assets,
+            var graphicApi = new OpenGlApi().Init(
                 InitialWindowSize,
                 $"{Title} ({InitialWindowSize.X}x{InitialWindowSize.Y})",
                 InputHandler,
@@ -83,17 +80,21 @@ public class App : AbstractDisposable, IApp
             
             if (graphicApi == null) 
                 return graphicError;
-            GraphicApi = graphicApi;
+            _graphicApi = graphicApi;
             
-            GraphicApi.SetVsync(false);
-            GraphicApi.SetClearColor(new Vector4(135, 206, 235f, 255f)/255f);
-            GraphicApi.SetCursorMode(IGraphicApi.CursorMode.Centered);
+            _graphicApi.SetVsync(false);
+            _graphicApi.SetClearColor(new Vector4(135, 206, 235f, 255f)/255f);
+            _graphicApi.SetCursorMode(IGraphicApi.CursorMode.Centered);
+
             
-            ChunkModelPool = new RecyclingPool<DynamicRenderableModel>(() => new DynamicRenderableModel(GraphicApi));
+            GraphicEngine = new GraphicEngine(this, _graphicApi);
+            error = GraphicEngine.Init(blockAssets);
+            if (error != null)
+                return "can not init graphics engine: " + error;
         }
         
         // controllers
-        FlyingController = new FlyingPlayerController(GraphicApi, InputHandler, _wasd)
+        FlyingController = new FlyingPlayerController(_graphicApi, InputHandler, _wasd)
         {
             Sensitivity =  0.2f,
             Speed = 30,
@@ -106,7 +107,7 @@ public class App : AbstractDisposable, IApp
             World = new World();
             ChunkWorld = new ChunkWorld(this);
             PlayerEntity = World.AddEntity(new Entity.Assembly()
-                .AddComponent(new ChunkLoader{Radius = 8})
+                .AddComponent(new ChunkLoader{Radius = 4})
                 .AddComponent(new Transform()));
 
             Systems.AddTo(World, this);
@@ -123,7 +124,7 @@ public class App : AbstractDisposable, IApp
     {
         Utils.RunTargetFpsLoopWhile(
             200, 
-            () => !GraphicApi.ShouldStop(),
+            () => IsRunning,
             GraphicCycle
             );
         
@@ -151,26 +152,21 @@ public class App : AbstractDisposable, IApp
         // window
         if (InputHandler.WindowSizeChanged)
         {
-            GraphicApi.Title($"{Title} ({InputHandler.WindowSize.X}x{InputHandler.WindowSize.Y})");
+            _graphicApi.SetTitle($"{Title} ({InputHandler.WindowSize.X}x{InputHandler.WindowSize.Y})");
         }
         
         // input
         if (InputHandler.IsPressed(_freeCursorBind))
-            GraphicApi.SetCursorMode(IGraphicApi.CursorMode.Normal);
+            _graphicApi.SetCursorMode(IGraphicApi.CursorMode.Normal);
         else if (InputHandler.IsPressed(_lockCursorBind))
-            GraphicApi.SetCursorMode(IGraphicApi.CursorMode.Centered);
+            _graphicApi.SetCursorMode(IGraphicApi.CursorMode.Centered);
         
         // render
         GraphicEngine.Update();
         
-        // keyboard input
-        if (InputHandler.IsPressed(_dumbTexturesBind)) 
-            GraphicApi.DumpTextures(ExternalPath.Of("."));
-        
         // post frame
-        GraphicApi.UpdateScreen();
         InputHandler.ClearForNextFrame();
-        GraphicApi.UpdateEvents();
+        _graphicApi.UpdateEvents();
     }
 
     protected override void DisposeData()

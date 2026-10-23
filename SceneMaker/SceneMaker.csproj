@@ -12,5 +12,48 @@
       <ProjectReference Include="..\OpenGLApi\OpenGLApi.csproj" />
       <ProjectReference Include="..\UiAddon\UiAddon.csproj" />
     </ItemGroup>
+	
+	<ItemGroup>
+	  <Folder Include="Resources\" />
+	</ItemGroup>
+	
+	<ItemGroup>
+	  <EmbeddedResource Include="Resources\Fonts\papyrus.ttf" />
+	  <EmbeddedResource Include="Resources\Fonts\vt323.ttf" />
+	  <EmbeddedResource Include="Resources\Maps\test.map" />
+	  <EmbeddedResource Include="Resources\Maps\textures\cbble.jpg" />
+	  <EmbeddedResource Include="Resources\Maps\textures\cbble_specular(1).png" />
+	  <EmbeddedResource Include="Resources\Maps\textures\wood.jpg" />
+	  <EmbeddedResource Include="Resources\Models\bamboo_block.png" />
+	  <EmbeddedResource Include="Resources\Models\bamboo_block_top.png" />
+	  <EmbeddedResource Include="Resources\Models\bamboo_fence_gate_particle.png" />
+	  <EmbeddedResource Include="Resources\Models\Calavera\box.jpg" />
+	  <EmbeddedResource Include="Resources\Models\Calavera\Calavera.blend" />
+	  <EmbeddedResource Include="Resources\Models\Calavera\Calavera.blend1" />
+	  <EmbeddedResource Include="Resources\Models\Calavera\Calavera.glb" />
+	  <EmbeddedResource Include="Resources\Models\Calavera\cobblestone.jpg" />
+	  <EmbeddedResource Include="Resources\Models\Calavera\concrete.png" />
+	  <EmbeddedResource Include="Resources\Models\Calavera\De_calavera_radar.webp" />
+	  <EmbeddedResource Include="Resources\Models\Calavera\grass.png" />
+	  <EmbeddedResource Include="Resources\Models\Calavera\grass_displace.png" />
+	  <EmbeddedResource Include="Resources\Models\Calavera\grass_norm.png" />
+	  <EmbeddedResource Include="Resources\Models\Calavera\metal.png" />
+	  <EmbeddedResource Include="Resources\Models\Calavera\orange_concrete.png" />
+	  <EmbeddedResource Include="Resources\Models\Calavera\planks.jpg" />
+	  <EmbeddedResource Include="Resources\Models\Calavera\red_concrete.png" />
+	  <EmbeddedResource Include="Resources\Models\Calavera\roof.png" />
+	  <EmbeddedResource Include="Resources\Models\Calavera\roof_displace.png" />
+	  <EmbeddedResource Include="Resources\Models\Calavera\roof_normal.png" />
+	  <EmbeddedResource Include="Resources\Models\Calavera\yellow_concrete.png" />
+	  <EmbeddedResource Include="Resources\Models\cessna.obj" />
+	  <EmbeddedResource Include="Resources\Models\power_lines.obj" />
+	  <EmbeddedResource Include="Resources\Models\test.mtl" />
+	  <EmbeddedResource Include="Resources\Models\test.obj" />
+	  <EmbeddedResource Include="Resources\Models\ToyCar.glb" />
+	  <EmbeddedResource Include="Resources\Models\wt\textures\Wood_Tower_Col.jpg" />
+	  <EmbeddedResource Include="Resources\Models\wt\textures\Wood_Tower_Nor.jpg" />
+	  <EmbeddedResource Include="Resources\Models\wt\wooden watch tower2.mtl" />
+	  <EmbeddedResource Include="Resources\Models\wt\wooden watch tower2.obj" />
+	</ItemGroup>
 
 </Project>

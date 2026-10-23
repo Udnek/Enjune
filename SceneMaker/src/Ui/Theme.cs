@@ -1,4 +1,4 @@
-using Enjune.Graphic.Asset.Font;
+using Enjune.KitStart.Font;
 using SceneMaker.Misc;
 using UiAddon.Display;
 using UiAddon.Display.Abstraction;

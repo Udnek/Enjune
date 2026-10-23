@@ -4,9 +4,9 @@ using Enjune.Ecs;
 using Enjune.Ecs.EcsType;
 using Enjune.File;
 using Enjune.Graphic.Api;
-using Enjune.Graphic.Asset;
 using Enjune.Graphic.Key;
 using Enjune.KitStart;
+using Enjune.KitStart.TAAL;
 using Enjune.Misc;
 using OpenGLApi;
 using OpenTK.Mathematics;
@@ -55,7 +55,7 @@ public class App : AbstractDisposable, IApp
 
     public Error? Init()
     {
-        var assetManager = new AssetManager();
+        var assetManager = new TextureArrayAssetLoader();
 
         // font
         var font = assetManager.AddFont(AssemblyPath.Of(Enjune.Enjune.Assembly, "Fonts", "vt323.ttf"), 32, out var fontError);
@@ -161,7 +161,7 @@ public class App : AbstractDisposable, IApp
 
         if (InputHandler.WindowSizeChanged)
         {
-            GraphicApi.Title($"{Title} ({InputHandler.WindowSize.X}x{InputHandler.WindowSize.Y})");
+            GraphicApi.SetTitle($"{Title} ({InputHandler.WindowSize.X}x{InputHandler.WindowSize.Y})");
         }
         
         // render

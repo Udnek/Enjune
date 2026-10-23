@@ -1,15 +1,14 @@
 using System.Runtime.InteropServices;
 using Enjune.File;
+using Enjune.Graphic;
 using Enjune.Graphic.Api;
-using Enjune.Graphic.Asset;
 using Enjune.Misc;
 using OpenGLApi.Component;
 using OpenGLApi.Component.Buffer;
 using OpenGLApi.Component.Texture;
-using OpenGLApi.Data;
+using OpenGLApi.Generation;
 using OpenGLApi.Mesh;
 using OpenGLApi.Pack;
-using OpenGLApi.Shader;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 
@@ -17,39 +16,7 @@ namespace OpenGLApi;
 
 public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicApi
 {
-    private const TextureUnit MainTexturesUnit = TextureUnit.Texture0;
-    private const TextureUnit ScreenTextureUnit = TextureUnit.Texture1;
-    private const TextureUnit ShadowMapTextureUnit = TextureUnit.Texture2;
-    private const int ShadowMapResolution = 2048;
-    private const int MaxLights = 5; // MUST BE ALSO CHANGED INSIDE VERTEX AND FRAG SHADERS
-
-    private const int MaterialsSsboBinding = 0;
-    private const int PerPrimitiveSsboBinding = 1;
-    private const int LightsSsboBinding = 2;
-    
     private unsafe Window* _window;
-    
-    private CompiledAssets _assets = null!;
-    
-    // buffers
-    private SsboDataAndArray<LightsLengthData, SpotLightData> _lightSsbo = null!;
-    private SsboArray<MaterialData> _materialSsbo = null!;
-    private Vao _screenVao = null!;
-    private Vbo<(Vector2 position, Vector2 texCoord)> _screenVbo = null!;
-
-    private ScreenPack _screenPack = null!;
-    private ShadowMapPack _shadowMapPack = null!;
-    
-
-    private TextureArray _textureArray = null!;
-    
-    // shaders
-    private MaterialShader _materialShader = null!;
-    private ColorShader _colorShader = null!;
-    private ScreenShader _screenShader = null!;
-    private ShadowMapShader _shadowMapShader = null!;
-
-    private readonly Dictionary<Type, AbstractShader> _typeToShader = [];
     
     // storing it here so fucking GC won't erase it
     private GLFWCallbacks.KeyCallback _keyCallback = null!;
@@ -59,23 +26,32 @@ public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicAp
     private GLFWCallbacks.FramebufferSizeCallback _windowSizeChangeCallback = null!;
     private DebugProc _debugProc = null!;
     private GLFWCallbacks.ScrollCallback _scrollCallback = null!;
+    private GLFWCallbacks.WindowCloseCallback _windowCloseCallback = null!;
     
-    // disposable meshes
-    private readonly List<GlMesh> _meshesToDispose = [];
+    // for shader generation
+    private readonly Dictionary<Type, BufferDesc> _ssboDescs = [];
+    private readonly Dictionary<Type, BufferDesc> _uboDescs = [];
+    private readonly List<IGlTextureSlot> _textureSlots = [];
+    
+    // disposables
+    private readonly List<IGlBuffer> _bufferToDispose = [];
+    private readonly List<IGlMesh> _meshesToDispose = [];
+    private readonly List<IGlShader> _shadersToDispose = [];
+    private readonly List<AbstractTexture> _texturesToDispose = [];
+    private readonly List<FboRboTexDevice> _rboFboToDispose = [];
 
-    public IGraphicApi? Init(CompiledAssets assets, Vector2i windowSize, string title, IUserInputHandler inputHandler,
+    public IGraphicApi? Init(Vector2i windowSize, string title, IUserInputHandler inputHandler,
         out Error? error)
     {
-        var graphicApi = InitInternal(assets, windowSize, title, inputHandler, out error);
+        var graphicApi = InitInternal(windowSize, title, inputHandler, out error);
         if (graphicApi != null) return graphicApi;
         Dispose();
         return null;
     }
 
-    private OpenGlApi? InitInternal(CompiledAssets assets, Vector2i initialWindowSize, string title, IUserInputHandler inputHandler,
+    private OpenGlApi? InitInternal(Vector2i initialWindowSize, string title, IUserInputHandler inputHandler,
         out Error? error)
     {
-        _assets = assets;
         InitKeyCodeMaps();
         
         // error callback
@@ -83,7 +59,7 @@ public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicAp
 
         if (GLFW.PlatformSupported(Platform.X11))
         {
-            Logger.Info(this, "X11 is supported");
+            Logger.Info(this, "X11 is supported, switching to it");
             GLFW.InitHint(InitHintPlatform.Platform, Platform.X11);
         }
         
@@ -101,7 +77,6 @@ public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicAp
         GLFW.WindowHint(WindowHintInt.ContextVersionMinor, 6);
         GLFW.WindowHint(WindowHintOpenGlProfile.OpenGlProfile, OpenGlProfile.Compat);
         GLFW.WindowHint(WindowHintBool.OpenGLForwardCompat, true);
-        
         GLFW.WindowHint(WindowHintBool.TransparentFramebuffer, false);
         
         // window creation
@@ -109,7 +84,7 @@ public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicAp
         {
             _window = GLFW.CreateWindow(initialWindowSize.X, initialWindowSize.Y, title, null, null);
             
-            Fbo.SizeOfDefault = initialWindowSize;
+            FboRboTexDevice.ScreenSize = initialWindowSize;
             if (_window == null)
             {
                 error = "failed to create GLFW window";
@@ -126,7 +101,7 @@ public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicAp
                     InputAction.Release => IGraphicApi.KeyAction.Release,
                     InputAction.Press => IGraphicApi.KeyAction.Press,
                     InputAction.Repeat => IGraphicApi.KeyAction.Repeat,
-                    _ => throw new Exception($"unknown key action: {glfw}")
+                    _ => throw new Exception($"Unknown key action: {glfw}")
                 };
             }
             
@@ -147,7 +122,11 @@ public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicAp
             };
             GLFW.SetMouseButtonCallback(_window, _mouseButtonCallback);
             
-            _windowSizeChangeCallback = (_, w, h) => inputHandler.HandleWindowSizeChange((w, h));
+            _windowSizeChangeCallback = (_, w, h) =>
+            {
+                FboRboTexDevice.ScreenSize = (w, h);
+                inputHandler.HandleWindowSizeChange((w, h));
+            };
             GLFW.SetFramebufferSizeCallback(_window, _windowSizeChangeCallback);
 
             _cursorCallback = (window, x, y) =>
@@ -158,16 +137,23 @@ public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicAp
 
             _scrollCallback = (window, x, y) => inputHandler.HandleScroll((float) x, (float) y);
             GLFW.SetScrollCallback(_window, _scrollCallback);
+
+            _windowCloseCallback = window =>
+            {
+                GLFW.SetWindowShouldClose(_window, false);
+                inputHandler.HandleCloseWindowAttempt();
+            };
+            GLFW.SetWindowCloseCallback(_window, _windowCloseCallback);
             
             // end callbacks
 
             if (GLFW.RawMouseMotionSupported())
             {
                 GLFW.SetInputMode(_window, RawMouseMotionAttribute.RawMouseMotion, true);
-                Logger.Info(this,"raw mouse input enabled");
+                Logger.Info(this,"Raw mouse input enabled");
             }
             else
-                Logger.Warn(this,"raw mouse input isn't supported; mouse motion might be janky");
+                Logger.Warn(this,"Raw mouse input isn't supported: mouse motion might be janky");
             
             GLFW.ShowWindow(_window);
         }
@@ -194,6 +180,9 @@ public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicAp
         GL.Enable(EnableCap.DebugOutput);
         _debugProc = (source, type, id, severity, length, messagePointer, param) =>
         {
+            if (severity == DebugSeverity.DebugSeverityNotification) 
+                return;
+            
             string message = Marshal.PtrToStringUTF8(messagePointer, length);
             if (type == DebugType.DebugTypeError)
                 Logger.Error(this, message);
@@ -207,123 +196,16 @@ public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicAp
         GL.GetInteger(GetPName.MaxArrayTextureLayers, out var maxArrayLayers);
         Logger.Info(this, $"max possible texture size: {maxTextureSize}");
         Logger.Info(this, $"max possible texture array layers: {maxArrayLayers}");
-        
-        // other components init
-        error = InitComponents();
-        if (error != null) return null;
+
+        error = null;
         return this;
     }
     
-    private Error? InitComponents()
-    {
-        // loading comps
-        _textureArray = TextureArray.FromAssets(MainTexturesUnit, _assets);
-        _lightSsbo = new SsboDataAndArray<LightsLengthData, SpotLightData>(LightsSsboBinding, MaxLights, true);
-        {
-            // loading materials
-            _materialSsbo = new SsboArray<MaterialData>(MaterialsSsboBinding, _assets.Materials.Length, true);
-   
-            _materialSsbo.BindAndPush(_assets.Materials.Map(mat => new MaterialData(mat.Raw.Color, mat.TextureId)));
-        }
-        _screenVao = new Vao();
-        _screenVbo = new Vbo<(Vector2 position, Vector2 texCoord)>(6, true);
-        _screenPack = new ScreenPack(GetWindowSize(), ScreenTextureUnit);
-        _shadowMapPack = new ShadowMapPack(ShadowMapResolution, ShadowMapTextureUnit, MaxLights);
-        
-        _screenVbo.BindAndPush([
-            ((-1, -1), (0, 0)), ((1, -1), (1, 0)), ((1, 1), (1, 1)), // first triangle
-            ((-1, -1), (0, 0)), ((1, 1), (1, 1)), ((-1, 1), (0, 1)) // second
-        ]);
-        
-        // loading shaders
-        _materialShader = new MaterialShader(_screenPack.Fbo, _textureArray, _shadowMapPack.Maps);
-        var error = _materialShader.Init(
-            AssemblyPath.Of(GetType().Assembly, "Shaders", "Material", "frag.frag"),
-            AssemblyPath.Of(GetType().Assembly, "Shaders", "Material", "vert.vert"),
-            AssemblyPath.Of(GetType().Assembly, "Shaders", "Common.glsl"));
-        if (error != null) return $"{nameof(_materialShader)}: {error}";
-        
-        _colorShader = new ColorShader(_screenPack.Fbo, _textureArray);
-        error = _colorShader.Init(
-            AssemblyPath.Of(GetType().Assembly, "Shaders", "Color", "frag.frag"),
-            AssemblyPath.Of(GetType().Assembly, "Shaders", "Color", "vert.vert"),
-            AssemblyPath.Of(GetType().Assembly, "Shaders", "Common.glsl"));
-        if (error != null) return $"{nameof(_colorShader)}: {error}";
-        
-        _screenShader = new ScreenShader(_screenVao, _screenVbo, _screenPack.Texture);
-        error = _screenShader.Init(
-            AssemblyPath.Of(GetType().Assembly, "Shaders", "Screen", "frag.frag"),
-            AssemblyPath.Of(GetType().Assembly, "Shaders", "Screen", "vert.vert"),
-            AssemblyPath.Of(GetType().Assembly, "Shaders", "Common.glsl"));
-        if (error != null) return $"{nameof(_screenShader)}: {error}";
-        new VaoAttributes(_screenVao, _screenVbo)
-            .Add<float>(VertexAttribPointerType.Float, "aPos", 2)
-            .Add<float>(VertexAttribPointerType.Float, "aTexPos", 2)
-            .Compile(_screenShader);
 
-        _shadowMapShader = new ShadowMapShader(_lightSsbo, _shadowMapPack);
-        error = _shadowMapShader.Init(
-            AssemblyPath.Of(GetType().Assembly, "Shaders", "ShadowMap", "frag.frag"),
-            AssemblyPath.Of(GetType().Assembly, "Shaders", "ShadowMap", "vert.vert"),
-            AssemblyPath.Of(GetType().Assembly, "Shaders", "Common.glsl"));
-        if (error != null) return $"{nameof(_shadowMapShader)}: {error}";
-        
-        _typeToShader[typeof(IShader.ICamera.IMaterial)] = _materialShader;
-        _typeToShader[typeof(IShader.ICamera.IColor)] = _colorShader;
-        _typeToShader[typeof(IShader.IShadowMap)] = _shadowMapShader;
-        
-        
-        // enabling off-screen rendering
-        _screenPack.BindFbo();
-        
-        return null;
-    }
 
-    public void SetLights(IEnumerable<SpotLight> lights)
-    {
-        var data = lights.Select(l => new SpotLightData(l.View, l.Projection, l.Color, l.Position)).ToArray();
-        var len = data.Length;
-        if (len > MaxLights)
-        {
-            Logger.Warn(this,$"lights size to big: {len}, but max capacity is {MaxLights}");
-            len = MaxLights;
-        }
-        _lightSsbo.BindAndPush(new LightsLengthData(len), data);
-    }
+    public void BindScreenRenderTarget() => FboRboTexDevice.BindScreen();
 
-    public void SetRenderSize(Vector2i size)
-    {
-        Fbo.SizeOfDefault = size;
-        _screenPack.Resize(size);
-    }
-
-    public void UpdateScreen()
-    {
-        // rendering to window
-        _screenShader.Bind();
-        _screenShader.AfterBind();
-        _screenShader.Render();
-        unsafe { GLFW.SwapBuffers(_window); }
-        _screenShader.BeforeUnbind();
-        ShaderProgram.Unbind();
-    }
-    
-    
-    public void UseShader<T>(Consumer<T> consumer) where T : IShader
-    {
-        if (_typeToShader.TryGetValue(typeof(T), out var shader))
-        {
-            shader.Bind();
-            shader.AfterBind();
-            consumer((T)(object)shader); // todo probably fuck around it?
-            shader.BeforeUnbind();
-            ShaderProgram.Unbind();
-        }
-        else
-            Logger.Error(this, $"shader isn't supported: {typeof(T)}");
-    }
-    
-    public void ClearRenderBuffer(bool color = true, bool depth = true)
+    public void ClearCurrentRenderTarget(bool color = true, bool depth = true)
     {
         GL.Clear(
             (color ? ClearBufferMask.ColorBufferBit : 0) | 
@@ -332,20 +214,15 @@ public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicAp
 
     protected override void DisposeGlData()
     {
-        foreach (var glMesh in _meshesToDispose)
-        {
-            glMesh.Dispose();
-        }
+        foreach (var glMesh in _meshesToDispose) glMesh.Dispose();
+        foreach (var glShader in _shadersToDispose) glShader.Dispose();
+        foreach (var glBuffer in _bufferToDispose) glBuffer.Dispose();
+        foreach (var glTex in _texturesToDispose) glTex.Dispose();
+        foreach (var dev in _rboFboToDispose) dev.Dispose();
+        
         Utils.DisposeAllFields(this);
         
-        unsafe
-        {
-            GLFW.SetKeyCallback(_window, null);
-            GLFW.SetFramebufferSizeCallback(_window, null);
-            GLFW.DestroyWindow(_window);
-        }
-
+        unsafe { GLFW.DestroyWindow(_window); }
         GLFW.Terminate();
-        GLFW.SetErrorCallback(null);
     }
 }

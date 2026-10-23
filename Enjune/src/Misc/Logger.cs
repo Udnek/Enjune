@@ -16,14 +16,17 @@ public static class Logger
     public static void Error(object author, object? msg, [CallerMemberName] string member = "") => Error(null, author, msg, member);
     public static void Highlight(object author, object? msg, [CallerMemberName] string member = "") => Highlight(null, author, msg, member);
 
-    public static void Info(Domain? domain, object author, object? msg, [CallerMemberName] string member = "")
+    private static void Info(Domain? domain, object author, object? msg, [CallerMemberName] string member = "")
     {
         if (IgnoreInfoLogs) return;
         Print(domain, author, member, msg, "INF");
     }
-    public static void Warn(Domain? domain, object author, object? msg, [CallerMemberName] string member = "") => Print(domain, author, member, msg, "WRN", ConsoleColor.Yellow);
-    public static void Error(Domain? domain, object author, object? msg, [CallerMemberName] string member = "") => Print(domain, author, member, msg, "ERR", ConsoleColor.Red);
-    public static void Highlight(Domain? domain, object author, object? msg, [CallerMemberName] string member = "") => Print(domain, author, member, msg, "HIL", ConsoleColor.Green);
+    private static void Warn(Domain? domain, object author, object? msg, [CallerMemberName] string member = "") => Print(domain, author, member, msg, "WRN", ConsoleColor.Yellow);
+    private static void Error(Domain? domain, object author, object? msg, [CallerMemberName] string member = "")
+    {
+        Print(domain, author, member, $"{msg}; stacktrace: \n{Environment.StackTrace}", "ERR", ConsoleColor.Red);
+    }
+    private static void Highlight(Domain? domain, object author, object? msg, [CallerMemberName] string member = "") => Print(domain, author, member, msg, "HIL", ConsoleColor.Green);
 
     public static bool IgnoreInfoLogs { get; set; } = false;
 

@@ -1,5 +1,4 @@
 using Enjune.Graphic.Api;
-using Enjune.Graphic.Modeling.Utility;
 
 namespace SceneMaker.Bridge;
 

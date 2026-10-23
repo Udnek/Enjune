@@ -1,28 +1,8 @@
+using Enjune.Graphic.Modeling;
+
 namespace Enjune.Graphic.Api;
 
-public interface IShader
+public interface IShader<TPerVert, TPerPrim> where TPerVert : unmanaged where TPerPrim : unmanaged
 {
-
-    public void Render(IRenderableMesh mesh);
-    
-    public interface IShadowMap : IShader
-    {
-        void ForEachLight(Action action); // you need to render all objects for each light source
-        void ModelTransform(Matrix4 model);
-    }
-    
-    public interface ICamera : IShader
-    {
-        void ModelTransform(Matrix4 model);
-        void ViewTransform(Matrix4 view);
-        void ProjectionTransform(Matrix4 proj);
-        void GlobalColor(Color color);
-        
-        public interface IMaterial : ICamera
-        {
-            void ViewPosition(Position position);
-        }
-    
-        public interface IColor: ICamera;
-    }
+    public void Render(IRenderableMesh<TPerVert, TPerPrim> mesh);
 }

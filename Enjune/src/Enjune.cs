@@ -10,7 +10,7 @@ public static class Enjune
     static Enjune()
     {
         Logger.RegisterNamespaceToDomain(Assembly, "", Logger.Domain.Enjune);
-        Logger.RegisterNamespaceToDomain(Assembly, nameof(Graphic.Asset), Logger.Domain.Assets);
+        Logger.RegisterNamespaceToDomain(Assembly, nameof(KitStart.TAAL), Logger.Domain.Assets);
         Logger.RegisterNamespaceToDomain(Assembly, nameof(Ecs), Logger.Domain.Ecs);
         Logger.RegisterNamespaceToDomain(Assembly, nameof(Misc), Logger.Domain.Misc);
     }

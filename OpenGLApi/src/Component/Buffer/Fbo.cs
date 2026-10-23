@@ -3,15 +3,17 @@ using OpenTK.Mathematics;
 
 namespace OpenGLApi.Component.Buffer;
 
+/// <summary>
+/// Used to connect RBO and Texture, as a render target
+/// </summary>
 public sealed class Fbo : GlDisposable
 {
-    public static Vector2i SizeOfDefault = new(1, 1);
-    private Vector2i _size;
+    public Vector2i Size { get; private set; }
     private readonly int _handle;
     
     public Fbo(Vector2i size)
     {
-        _size = size;
+        Size = size;
         _handle = GL.GenFramebuffer();
     }
     
@@ -19,28 +21,16 @@ public sealed class Fbo : GlDisposable
     {
         var status = GL.CheckFramebufferStatus(FramebufferTarget.Framebuffer);
         if (status != FramebufferErrorCode.FramebufferComplete) 
-            Logger.Error(this, $"framebuffer failed: {Enum.GetName(status)}");
+            Logger.Error(this, $"Framebuffer failed: {status}");
+        OpenGlApi.CheckGlError(this);
     }
 
-    public void SetEmptyColorBuffer()
-    {
-        Bind();
-        GL.DrawBuffer(DrawBufferMode.None);
-        GL.ReadBuffer(ReadBufferMode.None);
-    }
-
-    public void Resize(Vector2i size) => _size = size;
+    public void Resize(Vector2i size) => Size = size;
     
     public void Bind()
     {
-        GL.Viewport(0, 0, _size.X, _size.Y);
+        GL.Viewport(0, 0, Size.X, Size.Y);
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, _handle);
-    }
-
-    public static void BindDefault()
-    {
-        GL.Viewport(0, 0, SizeOfDefault.X, SizeOfDefault.Y);
-        GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
     }
 
     protected override void DisposeGlData() => GL.DeleteFramebuffer(_handle);

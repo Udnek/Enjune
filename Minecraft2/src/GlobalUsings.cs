@@ -13,6 +13,9 @@ global using TexturePos = OpenTK.Mathematics.Vector2;
 global using Normal = OpenTK.Mathematics.Vector3;
 global using ChunkPos = OpenTK.Mathematics.Vector3i;
 
+global using ChunkModel = Enjune.KitStart.Modeling.DynamicModel<Minecraft2.Bridge.GraphicChunkData.Vertex, Minecraft2.Bridge.GraphicChunkData.Primitive>;
+global using RenderableChunkModel = Enjune.KitStart.Modeling.DynamicRenderableModel<Minecraft2.Bridge.GraphicChunkData.Vertex, Minecraft2.Bridge.GraphicChunkData.Primitive>;
+
 global using Nanoseconds = long;
 global using Fps = float;
 global using Seconds = float;

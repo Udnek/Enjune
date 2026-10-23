@@ -3,10 +3,10 @@ using Enjune.Data.Json;
 using Enjune.Ecs;
 using Enjune.Ecs.EcsType;
 using Enjune.File;
-using Enjune.File.ModelReader;
 using Enjune.Graphic;
-using Enjune.Graphic.Asset;
 using Enjune.Graphic.Modeling;
+using Enjune.KitStart.ModelLoader;
+using Enjune.KitStart.TAAL;
 using Enjune.Misc;
 using Enjune.Registering;
 using OpenTK.Mathematics;
@@ -18,25 +18,25 @@ public static class ResourceManager
 {
     private static readonly ExternalPath WorldPath = ExternalPath.Of("world.json");
     
-    public static Error? LoadModels(AssetManager assetManager)
+    public static Error? LoadModels(TextureArrayAssetLoader textureArrayAssetLoader)
     {
         Models.Registry.Register(Models.ErrorCube,
             new StaticModel(MeshInstance.Of(new MeshInstance.Entry
             {
-                Geometry = Mesh.Cube(Position.Zero, 1f, TextureQuad.Full),
-                Material = assetManager.MissingMaterial
+                Geometry = Mesh.AddCube(Position.Zero, 1f, TextureQuad.Full),
+                Material = textureArrayAssetLoader.MissingMaterialIndex
             })));
         
         var calaveraRawModel = new DotGlbReader()
-            .Read(assetManager, AssemblyPath.Of(Enjune.Enjune.Assembly, "Models", "Calavera", "Calavera.glb"), out var error);
+            .Read(textureArrayAssetLoader, AssemblyPath.Of(Enjune.Enjune.Assembly, "Models", "Calavera", "Calavera.glb"), out var error);
         if (calaveraRawModel == null) return error;
         Models.Registry.Register(Models.Calavera, calaveraRawModel);
         
         Models.Registry.Register(Models.WhiteCube,
             new StaticModel(MeshInstance.Of(new MeshInstance.Entry
             {
-                Geometry = Mesh.Cube(Position.Zero, 0.5f, TextureQuad.Full),
-                Material = assetManager.WhiteMaterial
+                Geometry = Mesh.AddCube(Position.Zero, 0.5f, TextureQuad.Full),
+                Material = textureArrayAssetLoader.WhiteMaterial
             })));
 
         return null;

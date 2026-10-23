@@ -4,31 +4,32 @@ namespace OpenGLApi.Component.Texture;
 
 public abstract class AbstractTexture : GlDisposable
 {
-    protected int Handle;
+    public int Handle { get; protected set; }
     protected readonly TextureTarget Target;
-    protected readonly TextureUnit Unit;
     
-    public AbstractTexture(TextureTarget target, TextureUnit unit)
+    public AbstractTexture(TextureTarget target)
     {
         Target = target;
-        Unit = unit;
-        Handle = GL.GenTexture();
-        BindTo(Unit);
+        GenTexture();
     }
-    
-    public abstract Error? Dump(ExternalPath dir, string namePrefix);
-    
-    public int GetUnitId()
+
+    protected void GenTexture()
     {
-        const int offset = -(int) TextureUnit.Texture0;
-        return (int) Unit + offset;
+        GL.CreateTextures(Target, 1, out int textures);
+        Handle = textures;
     }
     
-    protected void BindTo(TextureUnit unit)
+    public void BindTo(TextureUnit unit)
     {
         GL.ActiveTexture(unit);
         GL.BindTexture(Target, Handle);
     }
+    
+    protected void SetParams()
+    {
+        GL.TextureParameter(Handle, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
+        GL.TextureParameter(Handle, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest);
+    } 
 
     protected override void DisposeGlData() => GL.DeleteTexture(Handle);
 }

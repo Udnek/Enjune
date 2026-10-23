@@ -60,7 +60,7 @@ public class EditableTextDisplay : TextDisplay<EditableTextElement>
                 // backline
                 Meshes.Add(new MeshInstance.Entry
                     {
-                       Geometry = Mesh.QuadXy((Parent.Rect.Val.Min.X, yBaseLine, Z-0.01f), Parent.Rect.Val.Width, 
+                       Geometry = Mesh.AddQuadXy((Parent.Rect.Val.Min.X, yBaseLine, Z-0.01f), Parent.Rect.Val.Width, 
                             Parent.TextHeight, TextureQuad.Full, calculateNormals: false),
                         Color = LineBackgroundColor
                     }
@@ -72,7 +72,7 @@ public class EditableTextDisplay : TextDisplay<EditableTextElement>
                     line.SafeSubstringFromTo(0, cursorCharIdx), Parent.TextHeight);
                 Meshes.Add(new MeshInstance.Entry
                 {
-                    Geometry = Mesh.QuadXy((Parent.Rect.Val.Min.X + width, yBaseLine, Z), Parent.TextHeight / 15,
+                    Geometry = Mesh.AddQuadXy((Parent.Rect.Val.Min.X + width, yBaseLine, Z), Parent.TextHeight / 15,
                         Parent.TextHeight, TextureQuad.Full, calculateNormals: false),
                     Color = CursorColor
                 });

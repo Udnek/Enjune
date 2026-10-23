@@ -61,7 +61,7 @@ public class GraphicEngine
         {
             s.ForEachLight(() =>
             {
-                graphicApi.ClearRenderBuffer();
+                graphicApi.ClearCurrentRenderTarget();
                 foreach (var obj in Objects.Values)
                 {
                     if (!obj.DropsShadow) continue;
@@ -77,7 +77,7 @@ public class GraphicEngine
         #region Material
         graphicApi.UseShader<IShader.ICamera.IMaterial>(s =>
         {
-            graphicApi.ClearRenderBuffer();
+            graphicApi.ClearCurrentRenderTarget();
             s.ProjectionTransform(Projection);
             s.ViewTransform(View);
             s.ViewPosition(_app.WasdController.Position);
@@ -102,7 +102,7 @@ public class GraphicEngine
         graphicApi.UseShader<IShader.ICamera.IColor>(s =>
         {
             // drawing everything else over
-            graphicApi.ClearRenderBuffer(false);
+            graphicApi.ClearCurrentRenderTarget(false);
             s.ProjectionTransform(Projection);
             s.ViewTransform(View);
             
@@ -117,7 +117,7 @@ public class GraphicEngine
             }
             
             // render UI
-            graphicApi.ClearRenderBuffer(false, true);
+            graphicApi.ClearCurrentRenderTarget(false, true);
             _app.UiManager.Ui.Render(s);
         });
         #endregion

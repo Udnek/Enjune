@@ -6,11 +6,11 @@ using Enjune.Misc;
 namespace Minecraft2.Misc;
 
 [LogParams(logCallingMethod: true)]
-public abstract class ConcurrentWorker<TIn, TOut> : AbstractDisposable where TIn : notnull
+public abstract class ConcurrentWorker<TJobKey, TIn, TOut> : AbstractDisposable where TIn : notnull where TJobKey : unmanaged
 {
-    private readonly BlockingCollection<TIn> _jobs = new(new ConcurrentQueue<TIn>());
-    private readonly ConcurrentDictionary<TIn, Nothing> _cancelledJobs = [];
-    private readonly ConcurrentQueue<(TIn, TOut)> _done = [];
+    private readonly BlockingCollection<(TJobKey Key, TIn Input)> _jobs = new(new ConcurrentQueue<(TJobKey, TIn)>());
+    private readonly ConcurrentDictionary<TJobKey, Nothing> _cancelledJobs = [];
+    private readonly ConcurrentQueue<(TJobKey Key, TOut Output)> _done = [];
     private Thread? _workingThread;
     private CancellationTokenSource? _cancelWork;
 
@@ -38,10 +38,12 @@ public abstract class ConcurrentWorker<TIn, TOut> : AbstractDisposable where TIn
                 {
                     try
                     {
-                        if (_cancelledJobs.TryRemove(job, out _)) // job was canceled
+                        if (_cancelledJobs.TryRemove(job.Key, out _)) // job was canceled before work
                             continue;
-                        var res = Work(job);
-                        _done.Enqueue((job, res));
+                        var res = Work(job.Input);
+                        if (_cancelledJobs.TryRemove(job.Key, out _)) // job was canceled after work
+                            continue;
+                        _done.Enqueue((job.Key, res));
                     }
                     catch (OperationCanceledException){}
                     catch (Exception e)
@@ -81,31 +83,34 @@ public abstract class ConcurrentWorker<TIn, TOut> : AbstractDisposable where TIn
     /// <summary>
     /// Add new job for worker in FIFO order
     /// </summary>
+    /// <param name="key"></param>
     /// <param name="input"></param>
-    public void Enqueue(TIn input)
+    public void Enqueue(TJobKey key, TIn input)
     {
         if (_workingThread is null)
         {
             Logger.Error(this, "Start worker first");
             return;
         }
-        _jobs.Add(input);
+        _jobs.Add((key, input));
     }
 
     /// <summary>
     /// Cancels queued job 
     /// </summary>
-    /// <param name="input"></param>
-    public void CancelJob(TIn input) => _cancelledJobs.TryAdd(input, Nothing.Instance);
+    /// <param name="key"></param>
+    public void CancelJob(TJobKey key) => _cancelledJobs.TryAdd(key, Nothing.Instance);
 
     /// <summary>
     /// Tries to deque done works if any
     /// </summary>
-    /// <param name="result"></param>
-    /// <returns></returns>
-    public bool TryDequeue(out (TIn job, TOut done) result)
-        => _done.TryDequeue(out result);
-    
+    public bool TryDequeue(out TJobKey key, out TOut output)
+    {
+        var dequeued = _done.TryDequeue(out var tuple);
+        (key, output) = tuple;
+        return dequeued;
+    }
+
     #endregion
 
     #region Private

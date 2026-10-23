@@ -13,12 +13,12 @@ namespace Minecraft2.Ecs.System.Chunks;
 
 public class ChunkRenderSystem : AppSystem
 {
-    private Query<ChunkComponent, GraphicLinkComponent> _query = null!;
+    private Query<ChunkComponent, ChunkGraphicComponent> _query = null!;
 
     public override void OnInit(World world)
     {
         _query = new QueryBuilder(world)
-            .Retrieve<ChunkComponent, GraphicLinkComponent>();
+            .Retrieve<ChunkComponent, ChunkGraphicComponent>();
     }
 
     public override void OnUpdate()
@@ -28,22 +28,15 @@ public class ChunkRenderSystem : AppSystem
             var chunk = chunkComp.Chunk;
             if (!chunk.IsDirty) return;
             
-            // mesh generation
-            var model = App.GraphicEngine.Objects[graphicLink.GraphicId].Model;
-            if (model is DynamicRenderableModel dynamicRenderable)
-            {
-                App.ChunkMeshGenerator.Enqueue((chunk, dynamicRenderable));
-            }
-            else
-                Logger.Warn(this, $"Can not update model: model for {chunkComp} is not dynamic");
-        
             chunk.IsDirty = false;
+            // mesh generation
+            App.ChunkMeshGenerator.Enqueue(graphicLink.GraphicId, (chunk, graphicLink.Model));
         });
         
         // pulling done and refitting
-        while (App.ChunkMeshGenerator.TryDequeue(out var result))
+        while (App.ChunkMeshGenerator.TryDequeue(out Guid key, out var output))
         {
-            result.job.Model.Refit();
+            App.GraphicEngine.EnqueueChunkRefit(key, output.Model);
         }
     }
 }

@@ -14,12 +14,11 @@ public class EntityRemoveSystem : AppSystem
     public override void OnInit(World world)
     {
         _query = new QueryBuilder(world)
-            .Excluding<GraphicLinkComponent>()
+            .Excluding<ChunkGraphicComponent>()
             .Including<ToBeRemovedRequest>()
             .Retrieve();
         _world = world;
     }
-
 
     public override void OnUpdate()
     {
