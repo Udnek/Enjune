@@ -2,7 +2,7 @@ using System.Runtime.InteropServices;
 using Enjune.Graphic.Api.Attribute;
 using Enjune.Graphic.Modeling;
 
-namespace Minecraft2.Bridge;
+namespace Minecraft2.Graphic;
 
 public static class GraphicChunkData
 {
@@ -19,7 +19,7 @@ public static class GraphicChunkData
         """
         vec4 process(Varyings varyings, PerPrimitive perPrim) {
             return vec4(varyings.color * perPrim.color, 1) * 
-                    texture(block_tex, vec3(varyings.uv, 1.0));
+                    texture(block_tex, vec3(varyings.uv, perPrim.tex_idx));
         }
         """;
     
@@ -47,5 +47,10 @@ public static class GraphicChunkData
     {
         [GraphicField(ShaderValuePrimitive.Vector3F, "color")]
         [FieldOffset(0)] public Vector3 Color = Vector3.One;
+        [GraphicField(ShaderValuePrimitive.Int, "tex_idx")]
+        [FieldOffset(12)] public required int TextureIndex;
+
+        public static Primitive operator *(Primitive prim, Vector3 color) 
+            => prim with { Color = prim.Color * color };
     }
 }

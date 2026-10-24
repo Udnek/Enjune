@@ -1,10 +1,8 @@
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using Enjune.Attribute;
-using Enjune.Misc;
-using OpenTK.Mathematics;
+using Minecraft2.Block;
 
-namespace Minecraft2.Misc;
+namespace Minecraft2.Terrain;
 
 public class Chunk
 {
@@ -17,9 +15,14 @@ public class Chunk
         Trace.Assert(Size.Z % 2 == 0);
     }
     
-    private readonly bool[] _data = new bool[Size.X * Size.Y * Size.Z];
+    private readonly BlockType[] _data = new BlockType[Size.X * Size.Y * Size.Z];
     public bool IsDirty = false;
 
+    public Chunk(BlockType fillWith)
+    {
+        Array.Fill(_data, fillWith);
+    }
+    
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ChunkPos ToChunkPos(Vector3 pos) => 
         new((int) Math.Floor(pos.X / Size.X), 
@@ -30,7 +33,7 @@ public class Chunk
     private static int ToIndex(ChunkPos pos) => pos.X + (Size.X * pos.Z) + (Size.X * Size.Z * pos.Y);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool SafeGet(ChunkPos pos, bool whenOutOfBounds)
+    public BlockType SafeGet(ChunkPos pos, BlockType whenOutOfBounds)
     {
         if (pos.X < 0 || Size.X <= pos.X ||
             pos.Y < 0 || Size.Y <= pos.Y || 
@@ -38,7 +41,7 @@ public class Chunk
         return this[pos];
     }
     
-    public bool this[ChunkPos pos]
+    public BlockType this[ChunkPos pos]
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => _data[ToIndex(pos)];

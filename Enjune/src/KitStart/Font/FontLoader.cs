@@ -52,7 +52,7 @@ public static class FontLoader
         }
         
         // adding material
-        var atlas = new ByteImage(atlasSize, atlasSize, ByteImage.Format.Alpha8, atlasBuffer.Data);
+        var atlas = new ByteImage(atlasSize, atlasSize, ByteImage.Format.Grey8, atlasBuffer.Data);
 
         // creating compiled font
         var charBounds = rectangles.ToDictionary(rec => (char)rec.Id);

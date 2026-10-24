@@ -3,9 +3,9 @@ using System.Threading.Channels;
 using Enjune.Ecs;
 using Enjune.Ecs.EcsType;
 using Enjune.Misc;
-using Minecraft2.Bridge;
 using Minecraft2.Ecs.Component;
 using Minecraft2.Ecs.System.Misc;
+using Minecraft2.Terrain;
 
 namespace Minecraft2.Ecs.System.Chunks;
 
@@ -37,7 +37,7 @@ public class ChunkAddModelSystem : AppSystem
             App.GraphicEngine.EnqueueChunkAddition(
                 graphicLink.GraphicId,
                 MathUtils.CreateModelTransform(
-                    chunkComp.Pos * Minecraft2.Misc.Chunk.Size,
+                    chunkComp.Pos * Chunk.Size,
                     Quaternion.Identity,
                     Vector3.One));
         });

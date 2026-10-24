@@ -33,14 +33,24 @@ public sealed class TextureArray : AbstractTexture, ITextureArray
         if (Size != image.Size)
             return $"expected size {Size}, got {image.Size}";
         
-        PixelFormat? pixelFormat = image.Type.Depth switch
+        PixelFormat? pixelFormat;
+        switch (image.Type.Depth)
         {
-            4 => PixelFormat.Rgba,
-            3 => PixelFormat.Rgb,
-            1 => PixelFormat.Alpha,
-            _ => null
-        };
-        
+            case 4:
+                pixelFormat = PixelFormat.Rgba;
+                break;
+            case 3:
+                pixelFormat = PixelFormat.Rgb;
+                break;
+            case 1:
+                image = image.ToRgba32();
+                pixelFormat = PixelFormat.Rgba;
+                break;
+            default:
+                pixelFormat = null;
+                break;
+        }
+
         if (pixelFormat == null)
             return $"unsupported depth: {image.Type.Depth}";
         

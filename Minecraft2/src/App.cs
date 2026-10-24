@@ -10,11 +10,13 @@ using Enjune.Graphic.Modeling;
 using Enjune.KitStart;
 using Enjune.KitStart.TAAL;
 using Enjune.Misc;
-using Minecraft2.Bridge;
+using Minecraft2.Block;
 using Minecraft2.Ecs;
 using Minecraft2.Ecs.Component;
 using Minecraft2.Ecs.System;
+using Minecraft2.Graphic;
 using Minecraft2.Misc;
+using Minecraft2.Terrain;
 using OpenGLApi;
 using OpenTK.Mathematics;
 
@@ -28,7 +30,7 @@ public class App : AbstractDisposable, IApp
     #region Public
     
     private IGraphicApi _graphicApi = null!;
-    public GraphicEngine GraphicEngine { get; private set; }
+    public GraphicEngine GraphicEngine { get; private set; } = null!;
     public readonly BasicInputHandler InputHandler;
     public FlyingPlayerController FlyingController { get; private set; } = null!;
     public readonly KeyBinds Binds;
@@ -36,10 +38,11 @@ public class App : AbstractDisposable, IApp
     public ChunkWorld ChunkWorld { get; private set; } = null!;
     public Entity PlayerEntity { get; private set; }
     public RecyclingPool<ChunkModel> ChunkModelPool { get; private set; } = new(() => new ChunkModel());
-    public readonly BaseTerrainGenerator TerrainGenerator = new BaseTerrainGenerator();
+    public readonly BaseTerrainGenerator TerrainGenerator;
     public readonly ChunkMeshGenerator ChunkMeshGenerator;
     public bool IsRunning { get; private set; } = true;
-
+    public BlockTypes Blocks { get; private set; } = null!;
+    
     #endregion
     
     private readonly Wasd _wasd;
@@ -50,6 +53,7 @@ public class App : AbstractDisposable, IApp
     {
         Binds = KeyBinds.CreateEmpty();
         ChunkMeshGenerator = new ChunkMeshGenerator(this);
+        TerrainGenerator = new BaseTerrainGenerator(this);
         _wasd = Wasd.AddTo(Binds);
         
         InputHandler = new BasicInputHandler(InitialWindowSize, 0.5f, () => IsRunning = false);
@@ -65,11 +69,10 @@ public class App : AbstractDisposable, IApp
         
         // assets
         var taal = new TextureArrayAssetLoader();
-        var dirtId = taal.AddMaterialAndGetIndex(RawTAALMaterial.FromTexture(AssemblyPath.Of(Program.Assembly, "Dirt.png")));
-        Logger.Highlight(this, $"dirt id: {dirtId}");
+        Blocks = new BlockTypes(taal);
         if (taal.Compile().GetIsFailed(out var blockAssets, out var error))
-            return "can not create block assets: " + error;
-        
+            return "can not compile block assets: " + error;
+
         // graphicApi
         {
             var graphicApi = new OpenGlApi().Init(
@@ -100,7 +103,6 @@ public class App : AbstractDisposable, IApp
             Speed = 30,
             Position = (0, 30, 0)
         };
-        
         
         // world load
         {

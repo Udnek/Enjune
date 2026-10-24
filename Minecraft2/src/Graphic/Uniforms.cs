@@ -1,7 +1,7 @@
 using System.Runtime.InteropServices;
 using Enjune.Graphic.Api.Attribute;
 
-namespace Minecraft2.Bridge;
+namespace Minecraft2.Graphic;
 
 public static class Uniforms
 {

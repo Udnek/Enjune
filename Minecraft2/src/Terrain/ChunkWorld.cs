@@ -1,10 +1,8 @@
-using Enjune.Ecs;
 using Enjune.Ecs.EcsType;
 using Enjune.Misc;
 using Minecraft2.Ecs.Component;
-using OpenTK.Mathematics;
 
-namespace Minecraft2.Misc;
+namespace Minecraft2.Terrain;
 
 public class ChunkWorld
 {

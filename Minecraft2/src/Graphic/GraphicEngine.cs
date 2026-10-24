@@ -1,13 +1,10 @@
 using System.Collections.Concurrent;
-using System.Diagnostics.CodeAnalysis;
 using Enjune.Graphic.Api;
-using Enjune.Graphic.Key;
-using Enjune.KitStart.Modeling;
 using Enjune.KitStart.TAAL;
 using Enjune.Misc;
 using Minecraft2.Misc;
 
-namespace Minecraft2.Bridge;
+namespace Minecraft2.Graphic;
 
 public class GraphicEngine
 {

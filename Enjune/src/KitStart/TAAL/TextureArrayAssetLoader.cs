@@ -40,6 +40,7 @@ public class TextureArrayAssetLoader
             Logger.Error(this, error);
             throw new Exception(error);
         }
+        
         var matIdx = _materials.Count;
         var texIdx = _textures.Count;
         var rawMaterial = RawTAALMaterial.FromTexture(texturePath);
