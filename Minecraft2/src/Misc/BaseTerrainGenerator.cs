@@ -16,7 +16,7 @@ public class BaseTerrainGenerator : ConcurrentWorker<ChunkPos, ChunkPos, Chunk>
 
     protected override Chunk Work(ChunkPos chunkPos)
     {
-        var chunk = new Chunk(_app.Blocks.Air);
+        var chunk = new Chunk(chunkPos, _app.Blocks.Air);
         for (int blockX = 0; blockX < Chunk.Size.X; blockX++)
         {
             for (int blockZ = 0; blockZ < Chunk.Size.Z; blockZ++)
@@ -27,9 +27,9 @@ public class BaseTerrainGenerator : ConcurrentWorker<ChunkPos, ChunkPos, Chunk>
                 height = Math.Max(height, 1);
                 for (int i = 0; i < height-1; i++)
                 {
-                    chunk[new(blockX, i, blockZ)] = _app.Blocks.Dirt;
+                    chunk.SetByLocal((blockX, i, blockZ), _app.Blocks.Dirt);
                 }
-                chunk[new(blockX, height-1, blockZ)] = _app.Blocks.Grass;
+                chunk.SetByLocal((blockX, height-1, blockZ), _app.Blocks.Grass);
             }
         }
 

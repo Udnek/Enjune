@@ -29,6 +29,7 @@ public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicAp
     private GLFWCallbacks.WindowCloseCallback _windowCloseCallback = null!;
     
     // for shader generation
+    private readonly Dictionary<Type, BufferDesc> _perPrimDescs = [];
     private readonly Dictionary<Type, BufferDesc> _ssboDescs = [];
     private readonly Dictionary<Type, BufferDesc> _uboDescs = [];
     private readonly List<IGlTextureSlot> _textureSlots = [];

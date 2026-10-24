@@ -8,18 +8,21 @@ public class BlockTypes
 {
     public static readonly WritableRegistry<BlockType> 
         Registry = WritableRegistry<BlockType>.CreateAndRegister(Identifier.Of(Program.Assembly, "block_type"));
+    
     public readonly BlockType Air;
     public readonly BlockType Dirt;
     public readonly BlockType Grass;
+    public readonly BlockType Cobblestone;
     
     private readonly TextureArrayAssetLoader _assetLoader;
 
     public BlockTypes(TextureArrayAssetLoader assetLoader)
     {
         _assetLoader = assetLoader;
-        Air = Register("air", new BlockType { Render = null });
+        Air = Register("air", new BlockType { Render = null, Collision = null });
         Dirt = Register("dirt", "Dirt.png");
         Grass = Register("grass", "Grass.png");
+        Cobblestone = Register("cobblestone", "Cobblestone.png");
         Grass.Render!.BiomeColor = true;
     }
 
@@ -37,10 +40,8 @@ public class BlockTypes
             name,
             new BlockType
             {
-                Render = new BlockRender
-                {
-                    TextureIndex = texIdx
-                }
+                Render = new BlockRender { TextureIndex = texIdx },
+                Collision = BlockCollision.Full
             });
     }
 }

@@ -18,9 +18,6 @@ public readonly record struct StructDesc
         
         if (Descriptions.TryGetValue(typeof(T), out var desc))
             return ResultOrError.Success(desc);
-
-        Logger.Info(typeof(StructDesc),
-            $"Staring description generation for {Logger.GetTypeName<T>()}");
         
         #region Field Processing
 
@@ -52,7 +49,6 @@ public readonly record struct StructDesc
             Fields = descs.ToArray()
         };
         Descriptions[typeof(T)] = structDesc;
-        Logger.Info(typeof(StructDesc), "Done");
         
         return ResultOrError.Success(structDesc);
     }

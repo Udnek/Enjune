@@ -13,19 +13,17 @@ public sealed partial class OpenGlApi
         string userFragmentCode) where TPerVert : unmanaged where TPerPrim : unmanaged where TVaryings : unmanaged
     {
         if (VaoVboDevice.Get<TPerVert>().GetIsFailed(out var vaoVboDevice, out var error))
-            return new Error("can not create vaoVboDevice: " + error);
+            return new Error($"can not create vaoVboDevice for {Logger.GetTypeName<TPerVert>()}: {error}");
         
 
         if (BufferDesc.Get<TPerPrim>(StaticBindings.PerPrimitiveSsbo, Std.Std430, "PerPrimitives", "PerPrimitive")
-            .GetIsFailed(out var ssboDesc, out error))
+            .GetIsFailed(out var perPrimDesc, out error))
         {
-            return new Error("can not create ssbo desc: " + error);
+            return new Error($"can not create ssbo desc for {Logger.GetTypeName<TPerPrim>()}: {error}");
         }
 
-        _ssboDescs[typeof(TPerPrim)] = ssboDesc;
-
         if (StructDesc.Get<TVaryings>(null).GetIsFailed(out var varyings, out error))
-            return new Error("can not create varyings: " + error);
+            return new Error($"can not create varyings for {Logger.GetTypeName<TVaryings>()}: {error}");
 
         var vert = ShaderGenerator.CreateVertex(
             userVertexCode,
@@ -39,7 +37,7 @@ public sealed partial class OpenGlApi
         var frag = ShaderGenerator.CreateFragment(
             userFragmentCode,
             _textureSlots.AsSpan(),
-            _ssboDescs.Values.ToArray(),
+            _ssboDescs.Values.Append(perPrimDesc).ToArray(),
             _uboDescs.Values.ToArray(),
             varyings
         );

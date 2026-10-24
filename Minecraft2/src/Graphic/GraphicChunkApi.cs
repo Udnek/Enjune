@@ -4,7 +4,7 @@ using Enjune.Graphic.Modeling;
 
 namespace Minecraft2.Graphic;
 
-public static class GraphicChunkData
+public static class GraphicChunkApi
 {
     public static readonly string VertexShader = 
         """

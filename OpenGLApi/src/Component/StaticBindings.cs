@@ -23,9 +23,9 @@ public static class StaticBindings
             return binding;
 
         taken[name] = taken.Count;
-        Logger.Info(typeof(StaticBindings), $"Current bindings for {typeName}:");
-        foreach (var (key, bind) in taken) 
-            Logger.Info(typeof(StaticBindings), $"{key} -> {bind}");
+        // Logger.Info(typeof(StaticBindings), $"Current bindings for {typeName}:");
+        // foreach (var (key, bind) in taken) 
+        //     Logger.Info(typeof(StaticBindings), $"{key} -> {bind}");
 
         return taken.Count - 1;
     }

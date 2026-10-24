@@ -26,10 +26,10 @@ public class ChunkMeshGenerator(App app) : ConcurrentWorker<Guid, (Chunk Chunk, 
             {
                 for (int z = 0; z < Chunk.Size.Z; z++)
                 {
-                    var blockRender = chunk[new ChunkPos(x, y, z)]?.Render;
+                    var blockRender = chunk.GetByLocal((x, y, z)).Render;
                     if (blockRender is null) continue;
                     
-                    var primitive = new GraphicChunkData.Primitive
+                    var primitive = new GraphicChunkApi.Primitive
                     {
                         TextureIndex = blockRender.TextureIndex
                     };
@@ -38,13 +38,12 @@ public class ChunkMeshGenerator(App app) : ConcurrentWorker<Guid, (Chunk Chunk, 
                     {
                         primitive.Color = (0.3f, 0.6f, 0.2f);
                     }
-                    
-                    // ambient occlusion
 
                     // bottom
-                    if (chunk.SafeGet(new ChunkPos(x, y-1, z), outOfBounds) == air)
+                    var triangleMesh = model.GetMesh(PrimitiveTopology.Triangle);
+                    if (chunk.SafeGetByLocal((x, y-1, z), outOfBounds) == air)
                     {
-                        model.GetMesh(PrimitiveTopology.Triangle).AddQuad(
+                        triangleMesh.AddQuad(
                             new(), primitive,
                             (x, y, z), (x+1, y, z), 
                             (x+1, y, z+1), (x, y, z+1), 
@@ -52,9 +51,9 @@ public class ChunkMeshGenerator(App app) : ConcurrentWorker<Guid, (Chunk Chunk, 
                         );
                     }
                     // top
-                    if (chunk.SafeGet(new ChunkPos(x, y + 1, z), outOfBounds) == air)
+                    if (chunk.SafeGetByLocal((x, y + 1, z), outOfBounds) == air)
                     {
-                        model.GetMesh(PrimitiveTopology.Triangle).AddQuad(
+                        triangleMesh.AddQuad(
                             new(), primitive,
                             (x, y+1, z), (x, y+1, z+1), 
                             (x+1, y+1, z+1), (x+1, y+1, z), 
@@ -62,9 +61,9 @@ public class ChunkMeshGenerator(App app) : ConcurrentWorker<Guid, (Chunk Chunk, 
                         );
                     }
                     // xy -z
-                    if (chunk.SafeGet(new ChunkPos(x, y, z - 1), outOfBounds) == air)
+                    if (chunk.SafeGetByLocal((x, y, z - 1), outOfBounds) == air)
                     {
-                        model.GetMesh(PrimitiveTopology.Triangle).AddQuad(
+                        triangleMesh.AddQuad(
                             new(), primitive * sideColor,
                             (x, y, z), (x, y+1, z), 
                             (x+1, y+1, z), (x+1, y, z), 
@@ -72,9 +71,9 @@ public class ChunkMeshGenerator(App app) : ConcurrentWorker<Guid, (Chunk Chunk, 
                         );
                     }
                     // xy +z
-                    if (chunk.SafeGet(new ChunkPos(x, y, z + 1), outOfBounds) == air)
+                    if (chunk.SafeGetByLocal((x, y, z + 1), outOfBounds) == air)
                     {
-                        model.GetMesh(PrimitiveTopology.Triangle).AddQuad(
+                        triangleMesh.AddQuad(
                             new(), primitive * sideColor,
                             (x, y, z+1), (x+1, y, z+1), 
                             (x+1, y+1, z+1), (x, y+1, z+1), 
@@ -82,9 +81,9 @@ public class ChunkMeshGenerator(App app) : ConcurrentWorker<Guid, (Chunk Chunk, 
                         );
                     }
                     // yz -x
-                    if (chunk.SafeGet(new ChunkPos(x - 1, y, z), outOfBounds) == air)
+                    if (chunk.SafeGetByLocal((x - 1, y, z), outOfBounds) == air)
                     {
-                        model.GetMesh(PrimitiveTopology.Triangle).AddQuad(
+                        triangleMesh.AddQuad(
                             new(), primitive * sideColor,
                             (x, y, z), (x, y, z+1), 
                             (x, y+1, z+1), (x, y+1, z), 
@@ -92,9 +91,9 @@ public class ChunkMeshGenerator(App app) : ConcurrentWorker<Guid, (Chunk Chunk, 
                         );
                     }
                     // yz +x
-                    if (chunk.SafeGet(new ChunkPos(x + 1, y, z), outOfBounds) == air)
+                    if (chunk.SafeGetByLocal((x + 1, y, z), outOfBounds) == air)
                     {
-                        model.GetMesh(PrimitiveTopology.Triangle).AddQuad(
+                        triangleMesh.AddQuad(
                             new(), primitive * sideColor,
                             (x+1, y, z), (x+1, y+1, z), 
                             (x+1, y+1, z+1), (x+1, y, z+1), 

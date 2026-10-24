@@ -25,9 +25,6 @@ public abstract class Std
 
     private Error? CheckNoCache<T>() where T : unmanaged
     {
-        Logger.Info(this,
-            $"Validating {Logger.GetTypeName<T>()}");
-
         var type = typeof(T);
         if (type.IsPrimitive)
             return $"can not use primitive {Logger.GetTypeName(type)}";
@@ -48,6 +45,9 @@ public abstract class Std
             .Select(fi => (fi, fi.GetCustomAttribute<FieldOffsetAttribute>()!.Value))
             // ordering by offset, cause GetFields order is not guaranteed;
             .OrderBy(t => t.Value).ToArray();
+
+        if (fields.Length == 0)
+            return "empty struct is prohibited";
         
         int currentOffset = 0;
         int maxAlign = 0;

@@ -62,9 +62,6 @@ public static class VaoVboDevice
         if (Devices.TryGetValue(typeof(TPerVert), out var device))
             return ResultOrError.Success((VaoVboDevice<TPerVert>)device);
 
-        Logger.Info(typeof(VaoVboDevice),
-            $"Staring generation of device for {Logger.GetTypeName<TPerVert>()}");
-
         var type = typeof(TPerVert);
         if (type.IsPrimitive)
             return new Error($"can not use primitive {Logger.GetTypeName<TPerVert>()}");

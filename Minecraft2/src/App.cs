@@ -145,6 +145,36 @@ public class App : AbstractDisposable, IApp
             transform.Position = FlyingController.Position;
             return transform;
         });
+
+        if (InputHandler.IsJustPressed(KeyCode.LeftMouseButton))
+        {
+            if (ChunkWorld.TryTraceBlock(FlyingController.Position, FlyingController.Direction, 10,
+                    out BlockPos hitPos, out _, out _))
+            {
+                Logger.Highlight(this, $"break at {hitPos}");
+                if (ChunkWorld.TryGetChunk(Chunk.ToChunkPos(hitPos), out var chunk))
+                {
+                    chunk.SetByGlobal(hitPos, Blocks.Air);   
+                }
+            }
+        }
+        
+        if (InputHandler.IsJustPressed(KeyCode.RightMouseButton))
+        {
+            if (ChunkWorld.TryTraceBlock(FlyingController.Position, FlyingController.Direction, 10,
+                    out BlockPos hitPos, out _, out var hitFace))
+            {
+                if (hitFace != null)
+                {
+                    var placePos = hitPos + hitFace.Value.Direction();
+                    Logger.Highlight(this, $"place at {placePos}, {hitFace}");
+                    if (ChunkWorld.TryGetChunk(Chunk.ToChunkPos(placePos), out var chunk))
+                    {
+                        chunk.SetByGlobal(placePos, Blocks.Cobblestone);   
+                    }  
+                }
+            }
+        }
         
         // world
         //Logger.Highlight(this, "---------------------------------");

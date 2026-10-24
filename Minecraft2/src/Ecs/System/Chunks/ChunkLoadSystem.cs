@@ -24,7 +24,7 @@ public class ChunkLoadSystem : AppSystem
         _query.ForEach((_, ref transform, ref loader) =>
         {
             var radius = loader.Radius;
-            var center = Chunk.ToChunkPos(transform.Position) with{Y = 0};
+            var center = Chunk.ToChunkPos(transform.Position) with {Y = 0};
             for (int x = -radius; x <= radius; x++)
             {
                 for (int z = -radius; z <= radius; z++)

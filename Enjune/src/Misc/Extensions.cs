@@ -78,19 +78,9 @@ public static class Extensions
                 action(t);
         }
     }
-
     
     public static Assembly GetAssembly(this object obj) => obj.GetType().Assembly;
 
-    public static Color ToTk(this System.Drawing.Color color) => new Color(color.R, color.G, color.B, color.A) / 255f;
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Vector4 ToTk(this System.Numerics.Vector4 vector) => new(vector.X, vector.Y, vector.Z, vector.W);
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Vector3 ToTk(this System.Numerics.Vector3 vector) => new(vector.X, vector.Y, vector.Z);
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Vector2 ToTk(this System.Numerics.Vector2 vector) => new(vector.X, vector.Y);
-    
     public static string ContentToString<T>(this IEnumerable<T> array, string prefix="[", string separator = ", ", string postfix="]")
         => prefix+string.Join(separator, array.Select(v => v?.ToString() ?? "null"))+postfix;
 
@@ -100,6 +90,73 @@ public static class Extensions
         action();
         mutex.ReleaseMutex();
     }
+
+
+    #region Vector
+
+    public static Color ToTk(this System.Drawing.Color color) => new Color(color.R, color.G, color.B, color.A) / 255f;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector4 ToTk(this System.Numerics.Vector4 vector) => new(vector.X, vector.Y, vector.Z, vector.W);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector3 ToTk(this System.Numerics.Vector3 vector) => new(vector.X, vector.Y, vector.Z);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Vector2 ToTk(this System.Numerics.Vector2 vector) => new(vector.X, vector.Y);
+    
+    extension(Vector4 vec)
+    {
+        public static bool operator <=(Vector4 left, Vector4 right)
+        {
+            return left.X <= right.X &&
+                   left.Y <= right.Y &&
+                   left.Z <= right.Z &&
+                   left.W <= right.W;
+        }
+
+        public static bool operator >=(Vector4 left, Vector4 right)
+        {
+            return left.X >= right.X &&
+                   left.Y >= right.Y &&
+                   left.Z >= right.Z &&
+                   left.W >= right.W;
+        }
+    }
+    
+    extension(Vector3 vec)
+    {
+        public static bool operator <=(Vector3 left, Vector3 right)
+        {
+            return left.X <= right.X &&
+                   left.Y <= right.Y &&
+                   left.Z <= right.Z;
+        }
+
+        public static bool operator >=(Vector3 left, Vector3 right)
+        {
+            return left.X >= right.X &&
+                   left.Y >= right.Y &&
+                   left.Z >= right.Z;
+        }
+    }
+    
+    extension(Vector2 vec)
+    {
+        public static bool operator <=(Vector2 left, Vector2 right)
+        {
+            return left.X <= right.X &&
+                   left.Y <= right.Y;
+        }
+
+        public static bool operator >=(Vector2 left, Vector2 right)
+        {
+            return left.X >= right.X &&
+                   left.Y >= right.Y;
+        }
+    }
+
+    #endregion
 }
 
 

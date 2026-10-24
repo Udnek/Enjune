@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Enjune.Attribute;
 using OpenTK.Mathematics;
 using static System.MathF;
@@ -8,22 +9,24 @@ namespace Enjune.Misc;
 public static class MathUtils
 {
     public const float Epsilon = 1e-6f; // don't fucking touch it, increasing accuracy may break everything
-    
-    public static Matrix4 CreateModelTransform(Position pos, Quaternion rot, Vector3 scale) 
-        => Matrix4.CreateScale(scale) * Matrix4.CreateFromQuaternion(rot) * Matrix4.CreateTranslation(pos); // todo wtf why this order works?
+
+    public static Matrix4 CreateModelTransform(Position pos, Quaternion rot, Vector3 scale)
+        => Matrix4.CreateScale(scale) * Matrix4.CreateFromQuaternion(rot) *
+           Matrix4.CreateTranslation(pos); // todo wtf why this order works?
 
     public static Matrix4 CreateView(Position pos, Vector3 dir)
     {
         var up = Vector3.UnitY;
-        if (1 - Math.Abs(Vector3.Dot(dir, Vector3.UnitY)) < Epsilon) 
+        if (1 - Math.Abs(Vector3.Dot(dir, Vector3.UnitY)) < Epsilon)
             up = Vector3.UnitX;
         return Matrix4.LookAt(pos, pos + dir, up);
     }
-    
-    public static Matrix4 CreateView(Position pos, Quaternion rot) 
+
+    public static Matrix4 CreateView(Position pos, Quaternion rot)
         => Matrix4.CreateFromQuaternion(rot) * Matrix4.CreateTranslation(pos);
 
-    public static bool RayIntersectsLine(Position origin, Vector3 direction, Position p0, Position p1, out float cosDistance)
+    public static bool RayIntersectsLine(Position origin, Vector3 direction, Position p0, Position p1,
+        out float cosDistance)
     {
         p0 -= origin;
         p1 -= origin;
@@ -32,17 +35,19 @@ public static class MathUtils
         var leftAngle = Acos(CosAngleBetween(projected, p0));
         var rightAngle = Acos(CosAngleBetween(projected, p1));
         var sumAngle = Acos(CosAngleBetween(p0, p1));
-        if (Abs(sumAngle - (leftAngle + rightAngle)) < Epsilon*10) // increasing epsilon 'cause Acos sucks
+        if (Abs(sumAngle - (leftAngle + rightAngle)) < Epsilon * 10) // increasing epsilon 'cause Acos sucks
         {
             cosDistance = CosAngleBetween(direction, projected);
             return true;
         }
+
         cosDistance = 0;
         return false;
     }
 
     // https://en.wikipedia.org/wiki/Cramer%27s_rule
-    public static bool VectorsIntersect(Position originA, Vector3 directionA, Position originB, Vector3 directionB, out Position intersection)
+    public static bool VectorsIntersect(Position originA, Vector3 directionA, Position originB, Vector3 directionB,
+        out Position intersection)
     {
         // solving for k and m
         // origA + k*dirA = origB + m*dirB 
@@ -51,9 +56,9 @@ public static class MathUtils
         // vector b: origB - origA 
         // x_i = det(Ai)/det(A)
         // Ai = i-th column replaced with b
-        
+
         var b = originB - originA;
-        
+
         // dropping z-coord to cause overdetermined
         var detXy = Det(directionA.Xy, -directionB.Xy);
         var detXz = Det(directionA.Xz, -directionB.Xz);
@@ -75,9 +80,9 @@ public static class MathUtils
 
         intersection = originA + directionA * k;
         return true;
-        
 
-        static float Det(Vector2 column1, Vector2 column2) 
+
+        static float Det(Vector2 column1, Vector2 column2)
             => column1.X * column2.Y - column2.X * column1.Y;
 
         static float FindK(Vector2 b, Vector2 secondColumn, float detA)
@@ -87,15 +92,16 @@ public static class MathUtils
                 Logger.Error(typeof(MathUtils), $"detA = {detA}");
                 return -1;
             }
+
             var detAi = Det(b, secondColumn);
             return detAi / detA;
         }
     }
-    
-    public static float DegreeAngleBetween(Vector3 a, Vector3 b) 
+
+    public static float DegreeAngleBetween(Vector3 a, Vector3 b)
         => MathHelper.RadiansToDegrees(Acos(CosAngleBetween(a, b)));
-    
-    public static float CosAngleBetween(Vector3 a, Vector3 b) 
+
+    public static float CosAngleBetween(Vector3 a, Vector3 b)
         => Vector3.Dot(a, b) / a.Length / b.Length;
 
     public static Vector3 ProjectVectorOnPlane(Vector3 direction, Position p0, Position p1, Position p2)
@@ -106,6 +112,7 @@ public static class MathUtils
             Logger.Error(typeof(MathUtils), $"plane norm is too small: {planeNorm}");
             return direction;
         }
+
         return direction - ProjectAonB(direction, planeNorm);
     }
 
@@ -116,21 +123,23 @@ public static class MathUtils
             Logger.Error(typeof(MathUtils), $"b vec is too small: {b}");
             return a;
         }
+
         b.Normalize();
         return Vector3.Dot(a, b) * b;
     }
-    
-    public static Vector3 PlaneNormNotNormalized(Position p0, Position p1, Position p2) 
-        => Vector3.Cross(p1-p0, p2-p0);
-    
-    public static float PointToVectorDistance(Position p, Vector3 direction) 
+
+    public static Vector3 PlaneNormNotNormalized(Position p0, Position p1, Position p2)
+        => Vector3.Cross(p1 - p0, p2 - p0);
+
+    public static float PointToVectorDistance(Position p, Vector3 direction)
         => Vector3.Cross(p, direction.Normalized()).Length;
 
     // https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
-    public static bool RayIntersectsTriangle(Position origin, Vector3 direction, Position p0, Position p1, Position p2, out float distance)
+    public static bool RayIntersectsTriangle(Position origin, Vector3 direction, Position p0, Position p1, Position p2,
+        out float distance)
     {
         distance = 0;
-        
+
         var e1 = p1 - p0;
         var e2 = p2 - p0;
 
@@ -138,21 +147,82 @@ public static class MathUtils
         var det = Vector3.Dot(e1, pvec);
 
         // parallel
-        if (det < Epsilon && det > -Epsilon) 
+        if (det < Epsilon && det > -Epsilon)
             return false;
 
         var invDet = 1 / det;
         var tvec = origin - p0;
         var u = Vector3.Dot(tvec, pvec) * invDet;
-        if (u < 0 || 1 < u) 
+        if (u < 0 || 1 < u)
             return false;
 
         var qvec = Vector3.Cross(tvec, e1);
         float v = Vector3.Dot(direction, qvec) * invDet;
         if (v < 0 || 1 < u + v)
             return false;
-        
+
         distance = Vector3.Dot(e2, qvec) * invDet;
         return true;
+    }
+
+    
+    public static bool RayEntersAABB(Position origin, Vector3 dir, Vector3 aabbLow, Vector3 aabbHigh,
+        out Vector3 enterPos)
+    {
+        RayAABBIntersectionEnterExit(origin, dir, aabbLow, aabbHigh, out float enterT, out var exitT);
+        if (exitT < 0 || enterT > exitT)
+        {
+            enterPos = default;
+            return false;
+        }
+        enterPos = origin + dir * Math.Max(enterT, 0);
+        return true;
+    }
+    
+    public static bool RayExitsAABB(Position origin, Vector3 dir, Vector3 aabbLow, Vector3 aabbHigh,
+        out Vector3 exitPos)
+    {
+        RayAABBIntersectionEnterExit(origin, dir, aabbLow, aabbHigh, out float enterT, out var exitT);
+        if (exitT < 0 || enterT > exitT)
+        {
+            exitPos = default;
+            return false;
+        }
+        exitPos = origin + dir * exitT;
+        return true;
+    }
+    
+    // https://en.wikipedia.org/wiki/Slab_method
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void RayAABBIntersectionEnterExit(Position origin, Vector3 dir, Vector3 aabbLow, Vector3 aabbHigh,
+        out float enterT, out float exitT)
+    {
+        RayAABBIntersectionNearFar(origin, dir, aabbLow, aabbHigh, out Vector3 tNear, out Vector3 tFar);
+        exitT = Math.Min(tFar.X, Math.Min(tFar.Y, tFar.Z));
+        enterT = Math.Max(tNear.X, Math.Max(tNear.Y, tNear.Z));
+    }
+    
+    // https://en.wikipedia.org/wiki/Slab_method
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void RayAABBIntersectionNearFar(Position origin, Vector3 dir, Vector3 aabbLow, Vector3 aabbHigh,
+        out Vector3 tNear, out Vector3 tFar)
+    {
+        // point(t) = origin + dir*t
+        // t = (point - origin) / dir
+
+        var tLow = (aabbLow - origin) / dir;
+        var tHigh = (aabbHigh - origin) / dir;
+
+        // fixing NaNs
+        if (float.IsNaN(tLow.X)) tLow.X = float.NegativeInfinity;
+        if (float.IsNaN(tLow.Y)) tLow.Y = float.NegativeInfinity;
+        if (float.IsNaN(tLow.Z)) tLow.Z = float.NegativeInfinity;
+
+        if (float.IsNaN(tHigh.X)) tHigh.X = float.PositiveInfinity;
+        if (float.IsNaN(tHigh.Y)) tHigh.Y = float.PositiveInfinity;
+        if (float.IsNaN(tHigh.Z)) tHigh.Z = float.PositiveInfinity;
+
+        tNear = Vector3.ComponentMin(tLow, tHigh);
+        tFar = Vector3.ComponentMax(tLow, tHigh);
     }
 }
