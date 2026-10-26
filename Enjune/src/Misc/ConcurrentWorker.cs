@@ -1,12 +1,10 @@
 using System.Collections.Concurrent;
-using System.Diagnostics.CodeAnalysis;
 using Enjune.Attribute;
-using Enjune.Misc;
 
-namespace Minecraft2.Misc;
+namespace Enjune.Misc;
 
 [LogParams(logCallingMethod: true)]
-public abstract class ConcurrentWorker<TJobKey, TIn, TOut> : AbstractDisposable where TIn : notnull where TJobKey : unmanaged
+public abstract class ConcurrentWorker<TJobKey, TIn, TOut> : AbstractDisposable where TJobKey : unmanaged
 {
     private readonly BlockingCollection<(TJobKey Key, TIn Input)> _jobs = new(new ConcurrentQueue<(TJobKey, TIn)>());
     private readonly ConcurrentDictionary<TJobKey, Nothing> _cancelledJobs = [];
@@ -15,6 +13,8 @@ public abstract class ConcurrentWorker<TJobKey, TIn, TOut> : AbstractDisposable 
     private CancellationTokenSource? _cancelWork;
 
     #region Public Api
+
+    public bool HasStated => _workingThread != null;
     
     /// <summary>
     /// Starts worker in separate thread
@@ -22,7 +22,7 @@ public abstract class ConcurrentWorker<TJobKey, TIn, TOut> : AbstractDisposable 
     /// <param name="threadName"></param>
     public void Start(string threadName)
     {
-        if (_workingThread is not null)
+        if (HasStated)
         {
             Logger.Error(this, "Thread is already running");
             return;

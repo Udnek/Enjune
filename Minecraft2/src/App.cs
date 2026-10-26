@@ -149,29 +149,23 @@ public class App : AbstractDisposable, IApp
         if (InputHandler.IsJustPressed(KeyCode.LeftMouseButton))
         {
             if (ChunkWorld.TryTraceBlock(FlyingController.Position, FlyingController.Direction, 10,
-                    out BlockPos hitPos, out _, out _))
+                    out BlockPos hitPos, out _, out var hitChunk, out _))
             {
                 Logger.Highlight(this, $"break at {hitPos}");
-                if (ChunkWorld.TryGetChunk(Chunk.ToChunkPos(hitPos), out var chunk))
-                {
-                    chunk.SetByGlobal(hitPos, Blocks.Air);   
-                }
+                hitChunk.SetByGlobal(hitPos, Blocks.Air);
             }
         }
         
         if (InputHandler.IsJustPressed(KeyCode.RightMouseButton))
         {
             if (ChunkWorld.TryTraceBlock(FlyingController.Position, FlyingController.Direction, 10,
-                    out BlockPos hitPos, out _, out var hitFace))
+                    out BlockPos hitPos, out _, out var hitChunk,  out var hitFace))
             {
                 if (hitFace != null)
                 {
                     var placePos = hitPos + hitFace.Value.Direction();
                     Logger.Highlight(this, $"place at {placePos}, {hitFace}");
-                    if (ChunkWorld.TryGetChunk(Chunk.ToChunkPos(placePos), out var chunk))
-                    {
-                        chunk.SetByGlobal(placePos, Blocks.Cobblestone);   
-                    }  
+                    hitChunk.SetByGlobal(placePos, Blocks.Cobblestone);
                 }
             }
         }

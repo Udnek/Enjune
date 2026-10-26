@@ -1,4 +1,4 @@
-namespace Minecraft2.Misc;
+namespace Enjune.Misc;
 
 public readonly record struct Nothing
 {

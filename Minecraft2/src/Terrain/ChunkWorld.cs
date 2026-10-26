@@ -97,27 +97,17 @@ public class ChunkWorld
         chunk = chunkComponent.Value.Chunk;
         return true;
     }
-
-    public bool TryGetBlock(BlockPos pos, [MaybeNullWhen(false)] out BlockType block)
-    {
-        var chunkPos = Chunk.ToChunkPos(pos);
-        if (TryGetChunk(chunkPos, out var chunk))
-        {
-            block = chunk.GetByGlobal(pos);
-            return true;
-        }
-        block = null;
-        return false;
-    }
     
     public bool TryTraceBlock(Vector3 absRayOrigin, Vector3 dir, float maxDistance, 
         [MaybeNullWhen(false)] out BlockPos hitBlockPos,
         [MaybeNullWhen(false)] out BlockType hitBlockType,
+        [MaybeNullWhen(false)] out Chunk hitChunk,
         out BlockFace? hitBlockFace)
     {
         hitBlockType = null;
         hitBlockPos = default;
         hitBlockFace = null;
+        hitChunk = null;
         
         if (dir.LengthSquared == 0)
         {
@@ -137,6 +127,7 @@ public class ChunkWorld
         {
             hitBlockType = block;
             hitBlockPos = absBlockOrigin;
+            hitChunk = chunk;
             return true;
         }
         
@@ -180,6 +171,7 @@ public class ChunkWorld
             hitBlockFace = BlockFace.FromDirection(stepDir).Opposite();
             hitBlockPos = absBlockPos;
             hitBlockType = block;
+            hitChunk = chunk;
             return true;
         }
 
