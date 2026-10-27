@@ -221,7 +221,7 @@ public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicAp
         foreach (var glTex in _texturesToDispose) glTex.Dispose();
         foreach (var dev in _rboFboToDispose) dev.Dispose();
         
-        Utils.DisposeAllFields(this);
+        //Utils.DisposeAllFields(this);
         
         unsafe { GLFW.DestroyWindow(_window); }
         GLFW.Terminate();

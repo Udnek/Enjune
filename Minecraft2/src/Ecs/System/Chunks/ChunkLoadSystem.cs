@@ -23,17 +23,21 @@ public class ChunkLoadSystem : AppSystem
         var chunkWorld = App.ChunkWorld;
         _query.ForEach((_, ref transform, ref loader) =>
         {
-            var radius = loader.Radius;
-            var center = Chunk.ToChunkPos(transform.Position) with {Y = 0};
-            for (int x = -radius; x <= radius; x++)
+            var xzRadius = loader.HorizontalRadius;
+            var yRadius = loader.VerticalRadius;
+            var center = Chunk.ToChunkPos(transform.Position);
+            for (int x = -xzRadius; x <= xzRadius; x++)
             {
-                for (int z = -radius; z <= radius; z++)
+                for (int z = -xzRadius; z <= xzRadius; z++)
                 {
-                    chunkWorld.Load(center + (x, 0, z));
+                    for (int y = -yRadius; y <= yRadius; y++)
+                    {
+                        chunkWorld.QueueLoading(center + (x, y, z));
+                    }
                 }
             }
         });
         // pulling from generator
-        chunkWorld.PullLoading();
+        chunkWorld.PullFromGenerator();
     }
 }

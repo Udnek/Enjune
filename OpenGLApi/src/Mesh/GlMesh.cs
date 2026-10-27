@@ -82,6 +82,6 @@ public class GlMesh<TPerVert, TPerPrim> : GlDisposable, IRenderableMesh<TPerVert
     protected override void DisposeGlData()
     {
         if (_vao is null) return; // nothing to dispose
-        Utils.DisposeAllFields(this);
+        Utils.DisposeAllFields(this, false);
     }
 }

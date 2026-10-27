@@ -24,7 +24,6 @@ public class EntityRemoveSystem : AppSystem
     {
         _query.ForEach(entity =>
         {
-            Logger.Highlight(this, $"Removed {entity}");
             _world.RemoveEntity(entity);
         });
     }

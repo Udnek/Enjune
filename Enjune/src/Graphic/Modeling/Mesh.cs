@@ -297,7 +297,7 @@ public static class Mesh
     public static void Scale<TPerVert, TPerPrim>(
         this Mesh<TPerVert, TPerPrim> mesh, Vector3 factor) where TPerVert : unmanaged, IPositionedVertex where TPerPrim : unmanaged
     {
-        for (var i = 0; i < mesh.Indexes.Count; i++)
+        for (var i = 0; i < mesh.Vertices.Count; i++)
         {
             var vertex = mesh.Vertices[i];
             vertex.Position *= factor;

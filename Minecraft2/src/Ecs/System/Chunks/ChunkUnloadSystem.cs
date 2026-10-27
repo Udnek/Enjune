@@ -24,7 +24,7 @@ public class ChunkUnloadSystem : AppSystem
         _query.ForEach((entity, ref chunkComp) =>
         {
             if (!chunkComp.ToBeUnloaded) return;
-            chunkWorld.Unload(chunkComp.Pos);
+            chunkWorld.Unload(chunkComp.Chunk.Position);
             _world.AddEntityComponent(entity, new ToBeRemovedRequest());
         });
     }

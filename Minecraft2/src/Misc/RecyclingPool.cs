@@ -5,8 +5,9 @@ namespace Minecraft2.Misc;
 
 public class RecyclingPool<T>
 {
-    private readonly Stack<T> _stack = new();
+    private readonly Queue<T> _queue = new();
     private readonly Func<T> _fabric;
+    private uint _totalCreated = 0;
     
     /// <summary>
     /// Fabric will be called when pool is empty
@@ -16,17 +17,18 @@ public class RecyclingPool<T>
     /// <summary>
     /// Adds item to the pool for later retrieve
     /// </summary>
-    public void Recycle(T item) => _stack.Push(item);
+    public void Recycle(T item) => _queue.Enqueue(item);
 
     /// <summary>
     /// Takes and removes item from pool is any. Creates new instance via fabric otherwise
     /// </summary>
     public T Take()
     {
-        if (_stack.TryPop(out var result))
+        if (_queue.TryDequeue(out var result))
             return result;
         
-        Logger.Info(this, "Pool is empty, creating new");
+        Logger.Info(this, $"Pool is empty, creating new number {_totalCreated}");
+        _totalCreated += 1;
         return _fabric();
     }
 }

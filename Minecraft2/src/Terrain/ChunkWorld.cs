@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using Enjune.Attribute;
 using Enjune.Ecs.EcsType;
 using Enjune.Misc;
 using Minecraft2.Block;
@@ -6,6 +7,7 @@ using Minecraft2.Ecs.Component;
 
 namespace Minecraft2.Terrain;
 
+[LogParams(logCallingMethod:true)]
 public class ChunkWorld
 {
     private readonly Dictionary<ChunkPos, Entity> _loadedChunks = [];
@@ -15,52 +17,59 @@ public class ChunkWorld
     public ChunkWorld(App app) => _app = app;
 
     /// <summary>
-    /// Loads new chunk and adds to ecs world or just returns already loaded
+    /// Queses chunk for loading if not already
     /// </summary>
-    /// <param name="pos"></param>
     /// <returns></returns>
-    public void Load(ChunkPos pos)
+    public void QueueLoading(ChunkPos chunkPos)
     {
         // already loaded
-        if (_loadedChunks.TryGetValue(pos, out var alreadyLoaded))
+        if (_loadedChunks.TryGetValue(chunkPos, out var alreadyLoaded))
         {
             _app.World.ModifyEntityComponent<ChunkComponent>(alreadyLoaded, c => c with { ToBeUnloaded = false });
             return;
         }
         
         // already queued
-        if (_queuedForGeneration.Contains(pos))
-        {
-            Logger.Info(this, $"{pos} already queued for generation");
+        if (IsQueued(chunkPos))
             return;
-        }
 
-        _queuedForGeneration.Add(pos);
-        _app.TerrainGenerator.Enqueue(pos, pos);
+        var chunk = _app.ChunkPool.Take();
+        chunk.Position = chunkPos;
+        chunk.Clear(_app.Blocks.Air);
+        _queuedForGeneration.Add(chunkPos);
+        _app.TerrainGenerator.Enqueue(chunkPos, chunk);
     }
 
-    public void Unload(ChunkPos pos)
+    public void Unload(ChunkPos chunkPos)
     {
-        if (_loadedChunks.Remove(pos, out var chunk))
+        if (_loadedChunks.Remove(chunkPos, out var chunkEntity))
         {
-            _app.World.RemoveEntityComponent<ChunkComponent>(chunk);
-            Logger.Info(this, $"Unloading {pos} {chunk}");
+            var chunkComp = _app.World.GetEntityComponent<ChunkComponent>(chunkEntity);
+            if (chunkComp is null)
+            {
+                Logger.Warn(this, $"Chunk {chunkPos} doesn't have {Logger.GetTypeName<ChunkComponent>()}");
+                return;
+            }
+            _app.World.RemoveEntityComponent<ChunkComponent>(chunkEntity);
+            //_app.ChunkPool.Recycle(chunkComp.Value.Chunk);
+            Logger.Info(this, $"Unloading {chunkPos} {chunkEntity}");
         }
-        else if (_queuedForGeneration.Remove(pos))
+        else if (_queuedForGeneration.Remove(chunkPos))
         {
-            _app.TerrainGenerator.CancelJob(pos);
-            Logger.Info(this, $"Dequeuing generation of {pos}");
+            _app.TerrainGenerator.EnqueueJobCancel(chunkPos);
+            Logger.Info(this, $"Dequeuing generation of {chunkPos}");
         }
         else
-            Logger.Info(this, $"Trying to unloaded {pos}, but already unloaded");
+            Logger.Warn(this, $"Trying to unloaded {chunkPos}, but already unloaded");
     }
 
     /// <summary>
     /// Tries to pull all generated chunks from TerrainGenerator
     /// </summary>
-    public void PullLoading()
+    public void PullFromGenerator()
     {
-        while (_app.TerrainGenerator.TryDequeue(out var pos, out var output))
+        // done
+        while (_app.TerrainGenerator.TryDequeueDone(out var pos, out var chunk))
         {
             if (!_queuedForGeneration.Remove(pos))
             {
@@ -69,14 +78,17 @@ public class ChunkWorld
             }
             
             var entity = _app.World.AddEntity(new Entity.Assembly()
-                .AddComponent(new ChunkComponent
-                {
-                    Chunk = output,
-                    Pos = pos
-                }));
+                .AddComponent(new ChunkComponent { Chunk = chunk }));
             _loadedChunks[pos] = entity;
         }
+        // cancelled
+        while (_app.TerrainGenerator.TryDequeueCancelled(out var pos, out var chunk))
+            _app.ChunkPool.Recycle(chunk);
     }
+
+    public bool IsQueued(ChunkPos chunkPos) => _queuedForGeneration.Contains(chunkPos);
+
+    public bool IsLoaded(ChunkPos chunkPos) => _loadedChunks.ContainsKey(chunkPos);
 
     public bool TryGetChunk(ChunkPos pos, [MaybeNullWhen(false)] out Chunk chunk)
     {
@@ -122,7 +134,7 @@ public class ChunkWorld
             return false;
         
         var absBlockOrigin = Chunk.ToGlobalBlockPos(absRayOrigin);
-        var block = chunk.GetByGlobal(absBlockOrigin);
+        var block = chunk.BlockLayer.GetByGlobal(absBlockOrigin);
         if (block.Collision != null && block.Collision.Value.ContainsPoint(absRayOrigin - absBlockOrigin))
         {
             hitBlockType = block;
@@ -155,7 +167,7 @@ public class ChunkWorld
                     return false;
             }
 
-            block = chunk.GetByGlobal(absBlockPos);
+            block = chunk.BlockLayer.GetByGlobal(absBlockPos);
             if (block.Collision == null) continue;
             var collision = block.Collision.Value;
             if (!MathUtils.RayEntersAABB(

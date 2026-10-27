@@ -6,10 +6,11 @@ using Enjune.Misc;
 using Minecraft2.Ecs.Component;
 using Minecraft2.Ecs.System.Misc;
 using Minecraft2.Terrain;
+using Utils = Minecraft2.Ecs.System.Misc.Utils;
 
 namespace Minecraft2.Ecs.System.Chunks;
 
-public class ChunkAddModelSystem : AppSystem
+public class ChunkAssignModelSystem : AppSystem
 {
     private World _world = null!;
     private Query<ChunkComponent> _query = null!;
@@ -27,17 +28,25 @@ public class ChunkAddModelSystem : AppSystem
         _query.ForEach((entity, ref chunkComp) =>
         {
             if (chunkComp.ToBeUnloaded) return;
-            
+
+            var pos = chunkComp.Chunk.Position;
+            int pendingNeighbors = 0;
+            Utils.ForFaceNeighbors(offset =>
+            {
+                if (App.ChunkWorld.IsQueued(pos + offset))
+                    pendingNeighbors++;
+            });
             var graphicLink = new ChunkGraphicComponent
             {
-                Model = App.ChunkModelPool.Take()
+                Model = App.ChunkModelPool.Take(),
+                PendingNeighbors = pendingNeighbors
             };
             _world.AddEntityComponent(entity, graphicLink);
 
             App.GraphicEngine.EnqueueChunkAddition(
                 graphicLink.GraphicId,
                 MathUtils.CreateModelTransform(
-                    chunkComp.Pos * Chunk.Size,
+                    pos * Chunk.Size,
                     Quaternion.Identity,
                     Vector3.One));
         });

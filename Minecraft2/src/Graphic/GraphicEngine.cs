@@ -119,7 +119,9 @@ public class GraphicEngine
                     if (_chunks.TryGetValue(command.Id, out var chunk)) 
                         chunk.Model.Refit(command.RefitModel);
                     else
-                        Logger.Error(this, $"Can not refit chunk that doesn't exist: {command.Id}");
+                        Logger.Error(this, 
+                            $"Can not refit with " + 
+                            $"{(command.RefitModel is null ? "null" : "non-null")} model chunk that doesn't exist: {command.Id}");
                     break;
                 case ChunkCommandKind.RemoveChunk:
                     if (_chunks.Remove(command.Id, out chunk)) 

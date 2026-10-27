@@ -5,7 +5,7 @@ using Minecraft2.Block;
 
 namespace Minecraft2.Terrain;
 
-public class Chunk
+public class Chunk : IReadonlyChunk
 {
     public static readonly ChunkPos Size = (32, 64, 32);
 
@@ -15,15 +15,32 @@ public class Chunk
         Trace.Assert(Size.Y % 2 == 0);
         Trace.Assert(Size.Z % 2 == 0);
     }
-    
-    private readonly BlockType[] _data = new BlockType[Size.X * Size.Y * Size.Z];
-    public bool IsDirty = false;
-    public readonly ChunkPos Position;
 
-    public Chunk(ChunkPos position, BlockType fillWith)
+    public int Version { get; private set; }
+
+    public ChunkPos Position
     {
-        Position = position;
-        Array.Fill(_data, fillWith);
+        get;
+        set
+        {
+            field = value;
+            Version++;
+            BlockLayer.Position = value;
+        }
+    }
+
+    IReadonlyChunkLayer<BlockType> IReadonlyChunk.BlockLayer => BlockLayer;
+    public readonly ChunkLayer<BlockType> BlockLayer;
+    
+    public Chunk(ChunkPos pos, ChunkLayer<BlockType> blockLayer)
+    {
+        BlockLayer = blockLayer;
+        Position = pos;
+    }
+
+    public void Clear(BlockType air)
+    {
+        BlockLayer.Clear(air);
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -37,28 +54,12 @@ public class Chunk
         new((int) Math.Floor(pos.X), 
             (int) Math.Floor(pos.Y), 
             (int) Math.Floor(pos.Z));
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public BlockPos ToLocalPos(BlockPos globalPos) => globalPos - (Position * Size);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public BlockType GetByGlobal(BlockPos globalPos) => GetByLocal(ToLocalPos(globalPos));
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetByGlobal(BlockPos globalPos, BlockType block) => SetByLocal(ToLocalPos(globalPos), block);
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public BlockType GetByLocal(BlockPos local) => _data[ToIndex(local)];
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetByLocal(BlockPos local, BlockType block)
-    {
-        IsDirty = true;
-        _data[ToIndex(local)] = block;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool ContainsGlobalBlockPos(BlockPos global) => ContainsLocalBlockPos(ToLocalPos(global));
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public BlockPos ToLocalPos(BlockPos globalPos) => globalPos - (Position * Size);
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool ContainsLocalBlockPos(BlockPos local)
@@ -67,19 +68,4 @@ public class Chunk
                0 <= local.Y && local.Y < Size.Y &&
                0 <= local.Z && local.Z < Size.Z;
     }
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public BlockType SafeGetByGlobal(BlockPos global, BlockType whenOutOfBounds) 
-        => SafeGetByLocal(ToLocalPos(global), whenOutOfBounds);
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public BlockType SafeGetByLocal(BlockPos local, BlockType whenOutOfBounds)
-    {
-        if (!ContainsLocalBlockPos(local))
-            return whenOutOfBounds;
-        return _data[ToIndex(local)];
-    }
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static int ToIndex(BlockPos pos) => pos.X + (Size.X * pos.Z) + (Size.X * Size.Z * pos.Y);
 }

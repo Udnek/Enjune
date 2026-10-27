@@ -38,8 +38,9 @@ public class App : AbstractDisposable, IApp
     public ChunkWorld ChunkWorld { get; private set; } = null!;
     public Entity PlayerEntity { get; private set; }
     public RecyclingPool<ChunkModel> ChunkModelPool { get; private set; } = new(() => new ChunkModel());
-    public readonly BaseTerrainGenerator TerrainGenerator;
-    public readonly ChunkMeshGenerator ChunkMeshGenerator;
+    public RecyclingPool<Chunk> ChunkPool { get; private set; }
+    public BaseTerrainGenerator TerrainGenerator { get; private set; } = null!;
+    public ChunkMeshGenerator ChunkMeshGenerator { get; private set; } = null!;
     public bool IsRunning { get; private set; } = true;
     public BlockTypes Blocks { get; private set; } = null!;
     
@@ -52,14 +53,16 @@ public class App : AbstractDisposable, IApp
     public App()
     {
         Binds = KeyBinds.CreateEmpty();
-        ChunkMeshGenerator = new ChunkMeshGenerator(this);
-        TerrainGenerator = new BaseTerrainGenerator(this);
         _wasd = Wasd.AddTo(Binds);
         
         InputHandler = new BasicInputHandler(InitialWindowSize, 0.5f, () => IsRunning = false);
 
         _freeCursorBind = Binds.AddBind(new KeyBinds.Bind("free_cursor", KeyCode.Escape));
         _lockCursorBind = Binds.AddBind(new KeyBinds.Bind("lock_cursor", KeyCode.RightMouseButton));
+
+        ChunkPool = new RecyclingPool<Chunk>(() => new Chunk(
+            ChunkPos.Zero,
+            new ChunkLayer<BlockType>(ChunkPos.Zero, Blocks.Air)));
     }
 
     public Error? Init()
@@ -88,7 +91,6 @@ public class App : AbstractDisposable, IApp
             _graphicApi.SetVsync(false);
             _graphicApi.SetClearColor(new Vector4(135, 206, 235f, 255f)/255f);
             _graphicApi.SetCursorMode(IGraphicApi.CursorMode.Centered);
-
             
             GraphicEngine = new GraphicEngine(this, _graphicApi);
             error = GraphicEngine.Init(blockAssets);
@@ -100,8 +102,8 @@ public class App : AbstractDisposable, IApp
         FlyingController = new FlyingPlayerController(_graphicApi, InputHandler, _wasd)
         {
             Sensitivity =  0.2f,
-            Speed = 30,
-            Position = (0, 30, 0)
+            Speed = 60,
+            Position = (Chunk.Size.X/2f, 50, Chunk.Size.X/2f)
         };
         
         // world load
@@ -109,11 +111,18 @@ public class App : AbstractDisposable, IApp
             World = new World();
             ChunkWorld = new ChunkWorld(this);
             PlayerEntity = World.AddEntity(new Entity.Assembly()
-                .AddComponent(new ChunkLoader{Radius = 4})
+                .AddComponent(new ChunkLoader
+                {
+                    HorizontalRadius = 8,
+                    VerticalRadius = 3
+                })
                 .AddComponent(new Transform()));
 
             Systems.AddTo(World, this);
         }
+        
+        ChunkMeshGenerator = new ChunkMeshGenerator(this);
+        TerrainGenerator = new BaseTerrainGenerator(this);
         
         // starting workers
         TerrainGenerator.Start("TerrainGenerator");
@@ -124,39 +133,53 @@ public class App : AbstractDisposable, IApp
 
     public void MainCycle()
     {
+        var logicThread = new Thread(() =>
+        {
+            Utils.RunTargetFpsLoopWhile(
+                20, 
+                () => IsRunning,
+                LogicCycle
+            ); 
+        });
+        logicThread.Name = "Logic";
+        logicThread.Start();
+
         Utils.RunTargetFpsLoopWhile(
             200, 
             () => IsRunning,
             GraphicCycle
             );
+
+        logicThread.Join();
         
         TerrainGenerator.Stop();
         ChunkMeshGenerator.Stop();
     }
 
-    private void GraphicCycle(float deltaTime)
+    private void LogicCycle(float deltaTime)
     {
-        InputHandler.PrepareAtFrameStart();
-        
-        // wasd
-        FlyingController.Update(deltaTime);
         World.ModifyEntityComponent<Transform>(PlayerEntity, transform =>
         {
             transform.Position = FlyingController.Position;
             return transform;
         });
+        
+        if (InputHandler.IsLongPressed(KeyCode.P))
+        {
+            Logger.Highlight(this, $"Look dir: {FlyingController.Direction}");
+        }
 
-        if (InputHandler.IsJustPressed(KeyCode.LeftMouseButton))
+        if (InputHandler.IsLongPressed(KeyCode.LeftMouseButton))
         {
             if (ChunkWorld.TryTraceBlock(FlyingController.Position, FlyingController.Direction, 10,
                     out BlockPos hitPos, out _, out var hitChunk, out _))
             {
                 Logger.Highlight(this, $"break at {hitPos}");
-                hitChunk.SetByGlobal(hitPos, Blocks.Air);
+                hitChunk.BlockLayer.SetByGlobal(hitPos, Blocks.Air);
             }
         }
         
-        if (InputHandler.IsJustPressed(KeyCode.RightMouseButton))
+        if (InputHandler.IsLongPressed(KeyCode.RightMouseButton))
         {
             if (ChunkWorld.TryTraceBlock(FlyingController.Position, FlyingController.Direction, 10,
                     out BlockPos hitPos, out _, out var hitChunk,  out var hitFace))
@@ -165,15 +188,21 @@ public class App : AbstractDisposable, IApp
                 {
                     var placePos = hitPos + hitFace.Value.Direction();
                     Logger.Highlight(this, $"place at {placePos}, {hitFace}");
-                    hitChunk.SetByGlobal(placePos, Blocks.Cobblestone);
+                    hitChunk.BlockLayer.SetByGlobal(placePos, Blocks.Cobblestone);
                 }
             }
         }
         
         // world
-        //Logger.Highlight(this, "---------------------------------");
         World.Update();
-        //Logger.Highlight(this, "---------------------------------");
+    }
+
+    private void GraphicCycle(float deltaTime)
+    {
+        InputHandler.PrepareAtFrameStart();
+        
+        // wasd
+        FlyingController.Update(deltaTime);
         
         // window
         if (InputHandler.WindowSizeChanged)

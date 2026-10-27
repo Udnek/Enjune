@@ -19,8 +19,11 @@ public static class Systems
         world.AddSystem(new ChunkUnloadSystem {App = app});
         
         // adding models to loaded
-        world.AddSystem(new ChunkAddModelSystem {App = app});
-        
+        world.AddSystem(new ChunkAssignModelSystem {App = app});
+        // choosing LoD
+        world.AddSystem(new ChunkChooseLoDSystem {App = app});
+        // checking if neighbors are ready
+        world.AddSystem(new ChunkCheckPendingNeighborsSystem {App = app});
         // rendering
         world.AddSystem(new ChunkRenderSystem {App = app});
         

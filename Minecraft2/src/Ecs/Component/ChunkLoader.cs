@@ -8,9 +8,11 @@ public struct ChunkLoader() : IComponent
 {
     public static readonly MapCodec<ChunkLoader> Codec = Codecs
         .ForEmptyConstructor(() => new ChunkLoader())
-        .ForField("radius", i => i.Radius, (ref i, v) => i.Radius = v, Codecs.Int).Build();
+        .ForField("horizontal_radius", i => i.HorizontalRadius, (ref i, v) => i.HorizontalRadius = v, Codecs.Int)
+        .ForField("vertical_radius", i => i.VerticalRadius, (ref i, v) => i.VerticalRadius = v, Codecs.Int).Build();
     
-    public int Radius = 8;
+    public int HorizontalRadius = 1;
+    public int VerticalRadius = 1;
 
     public Identifier Id() => Identifier.Of(Program.Assembly, "chunk_loader");
 }

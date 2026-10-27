@@ -13,6 +13,7 @@ global using TexturePos = OpenTK.Mathematics.Vector2;
 global using Normal = OpenTK.Mathematics.Vector3;
 global using ChunkPos = OpenTK.Mathematics.Vector3i;
 global using BlockPos = OpenTK.Mathematics.Vector3i;
+global using Vector3i = OpenTK.Mathematics.Vector3i;
 
 global using ChunkModel = Enjune.KitStart.Modeling.DynamicModel<Minecraft2.Graphic.GraphicChunkApi.Vertex, Minecraft2.Graphic.GraphicChunkApi.Primitive>;
 global using RenderableChunkModel = Enjune.KitStart.Modeling.DynamicRenderableModel<Minecraft2.Graphic.GraphicChunkApi.Vertex, Minecraft2.Graphic.GraphicChunkApi.Primitive>;

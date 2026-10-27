@@ -50,7 +50,7 @@ public static partial class Logger
             MessageColor = msgColor
         });
         
-        while (PrintWorker.TryDequeue(out uint id, out var output))
+        while (PrintWorker.TryDequeueDone(out uint id, out var output))
         {
             // just dequeuing
         }

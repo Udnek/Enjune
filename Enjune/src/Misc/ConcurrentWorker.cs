@@ -7,10 +7,11 @@ namespace Enjune.Misc;
 public abstract class ConcurrentWorker<TJobKey, TIn, TOut> : AbstractDisposable where TJobKey : unmanaged
 {
     private readonly BlockingCollection<(TJobKey Key, TIn Input)> _jobs = new(new ConcurrentQueue<(TJobKey, TIn)>());
-    private readonly ConcurrentDictionary<TJobKey, Nothing> _cancelledJobs = [];
+    private readonly ConcurrentDictionary<TJobKey, Nothing> _queuedForCancellation = [];
     private readonly ConcurrentQueue<(TJobKey Key, TOut Output)> _done = [];
+    private readonly ConcurrentQueue<(TJobKey Key, TIn Input)> _cancelled = [];
     private Thread? _workingThread;
-    private CancellationTokenSource? _cancelWork;
+    private CancellationTokenSource? _cancelWorkToken;
 
     #region Public Api
 
@@ -19,7 +20,6 @@ public abstract class ConcurrentWorker<TJobKey, TIn, TOut> : AbstractDisposable 
     /// <summary>
     /// Starts worker in separate thread
     /// </summary>
-    /// <param name="threadName"></param>
     public void Start(string threadName)
     {
         if (HasStated)
@@ -28,21 +28,28 @@ public abstract class ConcurrentWorker<TJobKey, TIn, TOut> : AbstractDisposable 
             return;
         }
 
-        _cancelWork = new CancellationTokenSource();
+        _cancelWorkToken = new CancellationTokenSource();
         _workingThread = new Thread(() =>
         {
-            var cancelToken = _cancelWork.Token;
+            var cancelToken = _cancelWorkToken.Token;
             try
             {
                 foreach (var job in _jobs.GetConsumingEnumerable(cancelToken))
                 {
                     try
                     {
-                        if (_cancelledJobs.TryRemove(job.Key, out _)) // job was canceled before work
+                        if (_queuedForCancellation.TryRemove(job.Key, out _)) // job was canceled before work
+                        {
+                            _cancelled.Enqueue((job.Key, job.Input));
                             continue;
+                        }
                         var res = Work(job.Input);
-                        if (_cancelledJobs.TryRemove(job.Key, out _)) // job was canceled after work
+                        if (_queuedForCancellation.TryRemove(job.Key, out _)) // job was canceled after work
+                        {
+                            _cancelled.Enqueue((job.Key, job.Input));
                             continue;
+                        } 
+                        // or finally it was not canceled
                         _done.Enqueue((job.Key, res));
                     }
                     catch (OperationCanceledException){}
@@ -68,23 +75,21 @@ public abstract class ConcurrentWorker<TJobKey, TIn, TOut> : AbstractDisposable 
             return;
         }
         
-        _cancelWork!.Cancel();
+        _cancelWorkToken!.Cancel();
         
         _workingThread.Join();
         Logger.Info(this, $"Thread {_workingThread.Name} stopped");
         _workingThread = null;
         
-        _cancelWork.Dispose();
-        _cancelWork = null;
+        _cancelWorkToken.Dispose();
+        _cancelWorkToken = null;
         
-        _cancelledJobs.Clear();
+        _queuedForCancellation.Clear();
     }
 
     /// <summary>
     /// Add new job for worker in FIFO order
     /// </summary>
-    /// <param name="key"></param>
-    /// <param name="input"></param>
     public void Enqueue(TJobKey key, TIn input)
     {
         if (_workingThread is null)
@@ -96,18 +101,30 @@ public abstract class ConcurrentWorker<TJobKey, TIn, TOut> : AbstractDisposable 
     }
 
     /// <summary>
-    /// Cancels queued job 
+    /// Flags job as canceled. Use TryDequeueCancelled to know when worker stopped doing it
     /// </summary>
-    /// <param name="key"></param>
-    public void CancelJob(TJobKey key) => _cancelledJobs.TryAdd(key, Nothing.Instance);
+    public void EnqueueJobCancel(TJobKey key)
+    {
+        _queuedForCancellation.TryAdd(key, Nothing.Instance);
+    }
 
     /// <summary>
     /// Tries to deque done works if any
     /// </summary>
-    public bool TryDequeue(out TJobKey key, out TOut output)
+    public bool TryDequeueDone(out TJobKey key, out TOut output)
     {
         var dequeued = _done.TryDequeue(out var tuple);
         (key, output) = tuple;
+        return dequeued;
+    }
+    
+    /// <summary>
+    /// Tries to deque canceled works if any
+    /// </summary>
+    public bool TryDequeueCancelled(out TJobKey key, out TIn input)
+    {
+        var dequeued = _cancelled.TryDequeue(out var tuple);
+        (key, input) = tuple;
         return dequeued;
     }
 

@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using Enjune.Graphic;
 using Enjune.Graphic.Modeling;
 using Enjune.Misc;
@@ -8,31 +9,108 @@ using Minecraft2.Misc;
 
 namespace Minecraft2.Terrain;
 
-public class ChunkMeshGenerator(App app) : ConcurrentWorker<Guid, (Chunk Chunk, ChunkModel Model), (Chunk Chunk, ChunkModel Model)>
+public class ChunkMeshGenerator(App app) : ConcurrentWorker<Guid, ChunkMeshGenerator.Job, ChunkMeshGenerator.Job>
 {
-    private readonly App _app = app;
+    public record struct Job(
+        ChunkPos InitialPos,
+        IReadonlyChunk TargetChunk,
+        IReadonlyChunk? DownChunk,
+        IReadonlyChunk? UpChunk,
+        IReadonlyChunk? NorthChunk,
+        IReadonlyChunk? SouthChunk,
+        IReadonlyChunk? EastChunk,
+        IReadonlyChunk? WestChunk,
+        int DownChunkVersion,
+        int UpChunkVersion,
+        int NorthChunkVersion,
+        int SouthChunkVersion,
+        int EastChunkVersion,
+        int WestChunkVersion,
+        ChunkModel Model,
+        int BlockSize // basically LoD: bigger size -> lower quality
+    );
     
-    protected override (Chunk Chunk, ChunkModel Model) Work((Chunk Chunk, ChunkModel Model) job)
+    
+    private readonly App _app = app;
+    private readonly BlockType _outOfBounds = app.Blocks.Cobblestone;
+    
+    private static readonly Vector3 SideColor = System.Drawing.Color.FromArgb(255, 150, 150, 150).ToTk().Xyz;
+    
+    protected override Job Work(Job job)
     {
-        var (chunk, model) = job;
-        model.Clear();
-        Vector3 sideColor = System.Drawing.Color.FromArgb(255, 150, 150, 150).ToTk().Xyz;
-        var air = _app.Blocks.Air;
-        var outOfBounds = air;
+        job.Model.Clear();
+        
         var renderTimer = Stopwatch.StartNew();
-        for (int x = 0; x < Chunk.Size.X; x++)
+        if (job.BlockSize == 1)
+            GenerateDefaultSized(job);
+        else
+            GenerateLoD(job);
+
+        job.Model.GetMesh(PrimitiveTopology.Line)
+            .AddCuboid(new (), new (){ TextureIndex = 4 }, 
+                Position.Zero, Chunk.Size, TextureQuad.Full);
+        
+        renderTimer.Stop();
+        Logger.Info(this, $"Generated mesh in {renderTimer.ElapsedMilliseconds} ms");
+        return job;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private bool ShouldRenderFace(BlockType? adjacentBlock)
+    {
+        if (adjacentBlock is null) return false; // facing unloaded chunk
+        return adjacentBlock.Render is null; // facing air-like
+    }
+
+    private BlockType? Sample(ref Job job, BlockPos locPos)
+    {
+        if (job.TargetChunk.BlockLayer.ContainsLocalBlockPos(locPos))
+            return job.TargetChunk.BlockLayer.GetByLocal(locPos);
+
+        if (job.EastChunk?.Version != job.EastChunkVersion) job.EastChunk = null;
+        if (job.WestChunk?.Version != job.WestChunkVersion) job.WestChunk = null;
+        if (job.UpChunk?.Version != job.UpChunkVersion) job.UpChunk = null;
+        if (job.DownChunk?.Version != job.DownChunkVersion) job.DownChunk = null;
+        if (job.NorthChunk?.Version != job.NorthChunkVersion) job.NorthChunk = null;
+        if (job.SouthChunk?.Version != job.SouthChunkVersion) job.SouthChunk = null;
+        
+        IReadonlyChunkLayer<BlockType>? chunk;
+        if (locPos.X >= Chunk.Size.X)
+            chunk = job.EastChunk?.BlockLayer;
+        else if (locPos.X < 0)
+            chunk = job.WestChunk?.BlockLayer;
+        
+        else if (locPos.Y >= Chunk.Size.Y)
+            chunk = job.UpChunk?.BlockLayer;
+        else if (locPos.Y < 0)
+            chunk = job.DownChunk?.BlockLayer;
+
+        else if (locPos.Z >= Chunk.Size.Z)
+            chunk = job.NorthChunk?.BlockLayer;
+        else if (locPos.Z < 0)
+            chunk = job.SouthChunk?.BlockLayer;
+        else
+            throw new Exception($"Can not sample {locPos}");
+        
+        var globalPos = job.TargetChunk.BlockLayer.ToGlobalPos(locPos);
+        
+        return chunk?.GetByGlobal(globalPos);
+    }
+    
+    private void GenerateDefaultSized(Job job)
+    {
+        var mesh = job.Model.GetMesh(PrimitiveTopology.Triangle);
+        const int blockSize = 1;
+        for (int x = 0; x < Chunk.Size.X; x+=blockSize)
         {
-            for (int y = 0; y < Chunk.Size.Y; y++)
+            for (int y = 0; y < Chunk.Size.Y; y+=blockSize)
             {
-                for (int z = 0; z < Chunk.Size.Z; z++)
+                for (int z = 0; z < Chunk.Size.Z; z+=blockSize)
                 {
-                    var blockRender = chunk.GetByLocal((x, y, z)).Render;
+                    var blockRender = job.TargetChunk.BlockLayer.GetByLocal((x, y, z)).Render;
                     if (blockRender is null) continue;
                     
-                    var primitive = new GraphicChunkApi.Primitive
-                    {
-                        TextureIndex = blockRender.TextureIndex
-                    };
+                    var primitive = new GraphicChunkApi.Primitive { TextureIndex = blockRender.TextureIndex };
 
                     if (blockRender.BiomeColor)
                     {
@@ -40,76 +118,207 @@ public class ChunkMeshGenerator(App app) : ConcurrentWorker<Guid, (Chunk Chunk, 
                     }
 
                     // bottom
-                    var triangleMesh = model.GetMesh(PrimitiveTopology.Triangle);
-                    if (chunk.SafeGetByLocal((x, y-1, z), outOfBounds) == air)
+                    if (ShouldRenderFace(Sample(ref job, (x, y-1, z))))
                     {
-                        triangleMesh.AddQuad(
+                        mesh.AddQuad(
                             new(), primitive,
-                            (x, y, z), (x+1, y, z), 
-                            (x+1, y, z+1), (x, y, z+1), 
+                            (x, y, z), (x+blockSize, y, z), 
+                            (x+blockSize, y, z+blockSize), (x, y, z+blockSize), 
                             TextureQuad.Full
                         );
                     }
                     // top
-                    if (chunk.SafeGetByLocal((x, y + 1, z), outOfBounds) == air)
+                    if (ShouldRenderFace(Sample(ref job, (x, y+1, z))))
                     {
-                        triangleMesh.AddQuad(
+                        mesh.AddQuad(
                             new(), primitive,
-                            (x, y+1, z), (x, y+1, z+1), 
-                            (x+1, y+1, z+1), (x+1, y+1, z), 
+                            (x, y+blockSize, z), (x, y+blockSize, z+blockSize), 
+                            (x+blockSize, y+blockSize, z+blockSize), (x+blockSize, y+blockSize, z), 
                             TextureQuad.Full
                         );
                     }
                     // xy -z
-                    if (chunk.SafeGetByLocal((x, y, z - 1), outOfBounds) == air)
+                    if (ShouldRenderFace(Sample(ref job, (x, y, z-1))))
                     {
-                        triangleMesh.AddQuad(
-                            new(), primitive * sideColor,
-                            (x, y, z), (x, y+1, z), 
-                            (x+1, y+1, z), (x+1, y, z), 
+                        mesh.AddQuad(
+                            new(), primitive * SideColor,
+                            (x, y, z), (x, y+blockSize, z), 
+                            (x+blockSize, y+blockSize, z), (x+blockSize, y, z), 
                             TextureQuad.Full
                         );
                     }
                     // xy +z
-                    if (chunk.SafeGetByLocal((x, y, z + 1), outOfBounds) == air)
+                    if (ShouldRenderFace(Sample(ref job, (x, y, z+1))))
                     {
-                        triangleMesh.AddQuad(
-                            new(), primitive * sideColor,
-                            (x, y, z+1), (x+1, y, z+1), 
-                            (x+1, y+1, z+1), (x, y+1, z+1), 
+                        mesh.AddQuad(
+                            new(), primitive * SideColor,
+                            (x, y, z+blockSize), (x+blockSize, y, z+blockSize), 
+                            (x+blockSize, y+blockSize, z+blockSize), (x, y+blockSize, z+blockSize), 
                             TextureQuad.Full
                         );
                     }
                     // yz -x
-                    if (chunk.SafeGetByLocal((x - 1, y, z), outOfBounds) == air)
+                    if (ShouldRenderFace(Sample(ref job, (x-1, y, z))))
                     {
-                        triangleMesh.AddQuad(
-                            new(), primitive * sideColor,
-                            (x, y, z), (x, y, z+1), 
-                            (x, y+1, z+1), (x, y+1, z), 
+                        mesh.AddQuad(
+                            new(), primitive * SideColor,
+                            (x, y, z), (x, y, z+blockSize), 
+                            (x, y+blockSize, z+blockSize), (x, y+blockSize, z), 
                             TextureQuad.Full
                         );
                     }
                     // yz +x
-                    if (chunk.SafeGetByLocal((x + 1, y, z), outOfBounds) == air)
+                    if (ShouldRenderFace(Sample(ref job, (x+1, y, z))))
                     {
-                        triangleMesh.AddQuad(
-                            new(), primitive * sideColor,
-                            (x+1, y, z), (x+1, y+1, z), 
-                            (x+1, y+1, z+1), (x+1, y, z+1), 
+                        mesh.AddQuad(
+                            new(), primitive * SideColor,
+                            (x+blockSize, y, z), (x+blockSize, y+blockSize, z), 
+                            (x+blockSize, y+blockSize, z+blockSize), (x+blockSize, y, z+blockSize), 
                             TextureQuad.Full
                         );
                     }
                 }
             }
         }
+    }
+    
+    private BlockType? DownsampleNoCache(ref Job job, BlockPos pos, int blockSize)
+    {
+        for (int y = pos.Y+blockSize-1; y >= pos.Y; y--)
+        {
+            var blockType = Sample(ref job, pos with {Y = y});
+            if (blockType is null) return null;
+            if (blockType.Render is null) continue;
+            return blockType;
+        }
+
+        return _app.Blocks.Air;
         
-        model.GetMesh(PrimitiveTopology.Line)
-            .AddCuboid(new (), new (){ TextureIndex = 0 }, 
-                Position.Zero, Chunk.Size, TextureQuad.Full);
-        
-        renderTimer.Stop();
-        Logger.Highlight(this, $"Generated mesh in {renderTimer.ElapsedMilliseconds} ms");
-        return job;
+        //return Sample(job, pos + BlockPos.One*(blockSize-1));
+        // int dirts = 0;
+        // for (int x = from.X; x < from.X+blockSize; x += 1)
+        // {
+        //     for (int y = from.Y; y < from.Y+blockSize; y += 1)
+        //     {
+        //         for (int z = from.Z; z < from.Z+blockSize; z += 1)
+        //         {
+        //             var blockType = Sample(job, (x, y, z));
+        //             if (blockType == _app.Blocks.Grass)
+        //                 return blockType;
+        //             if (blockType == _app.Blocks.Dirt)
+        //                 dirts += 1;
+        //         }
+        //     }
+        // }
+        //
+        // if (dirts > 0)
+        //     return _app.Blocks.Dirt;
+        // return _app.Blocks.Air;
+    }
+    
+    private readonly Dictionary<BlockPos, BlockType?> _downsamplesCache = [];
+    
+    private BlockType? Downsample(ref Job job, BlockPos from, int blockSize)
+    {
+        if (_downsamplesCache.TryGetValue(from, out var sample))
+            return sample;
+
+        sample = DownsampleNoCache(ref job, from, blockSize);
+        _downsamplesCache[from] = sample;
+        return sample;
+    }
+    
+    private void GenerateLoD(Job job)
+    {
+        _downsamplesCache.Clear();
+        var blockSize = job.BlockSize;
+        var mesh = job.Model.GetMesh(PrimitiveTopology.Triangle);
+        var texture = TextureQuad.Full; // var texture = new TextureQuad
+        // {
+        //     TopLeft = TextureQuad.Full.TopLeft * blockSize,
+        //     TopRight = TextureQuad.Full.TopRight * blockSize,
+        //     BotLeft = TextureQuad.Full.BotLeft * blockSize,
+        //     BotRight = TextureQuad.Full.BotRight * blockSize
+        // };
+        for (int x = 0; x < Chunk.Size.X; x+=blockSize)
+        {
+            for (int y = 0; y < Chunk.Size.Y; y+=blockSize)
+            {
+                for (int z = 0; z < Chunk.Size.Z; z+=blockSize)
+                {
+                    var blockType = Downsample(ref job, (x, y, z), blockSize);
+                    var blockRender = blockType?.Render;
+                    if (blockRender is null) continue;
+                    
+                    var primitive = new GraphicChunkApi.Primitive { TextureIndex = blockRender.TextureIndex };
+
+                    if (blockRender.BiomeColor)
+                    {
+                        primitive.Color = (0.3f, 0.6f, 0.2f);
+                    }
+                    
+                    // bottom
+                    if (ShouldRenderFace(Downsample(ref job, (x, y-blockSize, z), blockSize)))
+                    {
+                        mesh.AddQuad(
+                            new(), primitive,
+                            (x, y, z), (x+blockSize, y, z), 
+                            (x+blockSize, y, z+blockSize), (x, y, z+blockSize), 
+                            texture
+                        );
+                    }
+                    // top
+                    if (ShouldRenderFace(Downsample(ref job, (x, y+blockSize, z), blockSize)))
+                    {
+                        mesh.AddQuad(
+                            new(), primitive,
+                            (x, y+blockSize, z), (x, y+blockSize, z+blockSize), 
+                            (x+blockSize, y+blockSize, z+blockSize), (x+blockSize, y+blockSize, z), 
+                            texture
+                        );
+                    }
+                    // xy -z
+                    if (ShouldRenderFace(Downsample(ref job, (x, y, z-blockSize), blockSize)))
+                    {
+                        mesh.AddQuad(
+                            new(), primitive * SideColor,
+                            (x, y, z), (x, y+blockSize, z), 
+                            (x+blockSize, y+blockSize, z), (x+blockSize, y, z), 
+                            texture
+                        );
+                    }
+                    // xy +z
+                    if (ShouldRenderFace(Downsample(ref job, (x, y, z+blockSize), blockSize)))
+                    {
+                        mesh.AddQuad(
+                            new(), primitive * SideColor,
+                            (x, y, z+blockSize), (x+blockSize, y, z+blockSize), 
+                            (x+blockSize, y+blockSize, z+blockSize), (x, y+blockSize, z+blockSize), 
+                            texture
+                        );
+                    }
+                    // yz -x
+                    if (ShouldRenderFace(Downsample(ref job, (x-blockSize, y, z), blockSize)))
+                    {
+                        mesh.AddQuad(
+                            new(), primitive * SideColor,
+                            (x, y, z), (x, y, z+blockSize), 
+                            (x, y+blockSize, z+blockSize), (x, y+blockSize, z), 
+                            texture
+                        );
+                    }
+                    // yz +x
+                    if (ShouldRenderFace(Downsample(ref job, (x+blockSize, y, z), blockSize)))
+                    {
+                        mesh.AddQuad(
+                            new(), primitive * SideColor,
+                            (x+blockSize, y, z), (x+blockSize, y+blockSize, z), 
+                            (x+blockSize, y+blockSize, z+blockSize), (x+blockSize, y, z+blockSize), 
+                            texture
+                        );
+                    }
+                }
+            }
+        }
     }
 }

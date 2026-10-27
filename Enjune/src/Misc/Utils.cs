@@ -38,8 +38,7 @@ public static class Utils
     /// <summary>
     /// Disposes all IDisposable object's fields
     /// </summary>
-    /// <param name="obj"></param>
-    public static void DisposeAllFields(object obj)
+    public static void DisposeAllFields(object obj, bool log = true)
     {
         var tab = new string(' ', _disposeDepth*2);
         _disposeDepth++;
@@ -47,7 +46,7 @@ public static class Utils
         var objType = obj.GetType();
         var fields = objType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
         var disposedAtLestOne = false;
-        Logger.Info(typeof(Utils), $"{tab}- Stared disposing {objType.Name}:");
+        if (log) Logger.Info(typeof(Utils), $"{tab}- Stared disposing {objType.Name}:");
         List<(FieldInfo Field, IDisposable Value, string Reason)> disposeAtLast = [];
         foreach (var field in fields)
         {
@@ -56,7 +55,7 @@ public static class Utils
             var doNotSerialize = (DoNotDisposeViaUtilsAttribute?) field.GetCustomAttribute(typeof(DoNotDisposeViaUtilsAttribute));
             if (doNotSerialize is not null)
             {
-                Logger.Info(typeof(Utils), $"  {tab}Do not disposing {objType.Name}.{field.Name}: {doNotSerialize.Reason}");
+                if (log) Logger.Info(typeof(Utils), $"  {tab}Do not disposing {objType.Name}.{field.Name}: {doNotSerialize.Reason}");
                 continue;
             }
             var isDisposeAtLast = (DisposeAtLastAttribute?) field.GetCustomAttribute(typeof(DisposeAtLastAttribute));
@@ -70,14 +69,14 @@ public static class Utils
 
         foreach (var (field, value, reason) in disposeAtLast)
         {
-            Logger.Highlight(typeof(Utils), $"  {tab}Disposing {objType.Name}.{field.Name} at last: {reason}");
+            if (log) Logger.Highlight(typeof(Utils), $"  {tab}Disposing {objType.Name}.{field.Name} at last: {reason}");
             Dispose(field, value);
         }
         
         if (!disposedAtLestOne)
             Logger.Warn(typeof(Utils), $"  {tab}Nothing disposed in {objType.Name}; something might be wrong");
         
-        Logger.Info(typeof(Utils), $"{tab}- Finished disposing {objType.Name}");
+        if (log) Logger.Info(typeof(Utils), $"{tab}- Finished disposing {objType.Name}");
         
         _disposeDepth--;
         return;
@@ -86,7 +85,7 @@ public static class Utils
         {
             value.Dispose();
             disposedAtLestOne = true;
-            Logger.Info(typeof(Utils),$"  {tab}{objType.Name}.{field.Name} disposed");
+            if (log) Logger.Info(typeof(Utils),$"  {tab}{objType.Name}.{field.Name} disposed");
         }
     }
 }

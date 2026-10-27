@@ -13,6 +13,7 @@ public class BlockTypes
     public readonly BlockType Dirt;
     public readonly BlockType Grass;
     public readonly BlockType Cobblestone;
+    public readonly BlockType Snow;
     
     private readonly TextureArrayAssetLoader _assetLoader;
 
@@ -22,11 +23,12 @@ public class BlockTypes
         Air = Register("air", new BlockType { Render = null, Collision = null });
         Dirt = Register("dirt", "Dirt.png");
         Grass = Register("grass", "Grass.png");
-        Cobblestone = Register("cobblestone", "Cobblestone.png");
         Grass.Render!.BiomeColor = true;
+        Cobblestone = Register("cobblestone", "Cobblestone.png");
+        Snow = Register("snow", "Snow.png");
     }
 
-    private BlockType Register(string name, BlockType blockType)
+    private static BlockType Register(string name, BlockType blockType)
     {
         Registry.Register(Identifier.Of(Program.Assembly, name), blockType);
         return blockType;

@@ -58,6 +58,7 @@ public class BasicInputHandler : IUserInputHandler
     {
         return bind.ContinuousPress ? _pressed.Contains(bind.KeyCode) : _justPressed.Contains(bind.KeyCode);
     }
+    public bool IsLongPressed(KeyCode key) => _pressed.Contains(key);
     public bool IsJustReleased(KeyBinds.Bind bind) => _justReleased.Contains(bind.KeyCode);
     
     public void ClearForNextFrame()
