@@ -15,17 +15,22 @@ namespace Minecraft2.Ecs.System.Chunks;
 public class ChunkRenderSystem : AppSystem
 {
     private Query<ChunkComponent, ChunkGraphicComponent> _query = null!;
+    private World _world = null!;
 
     public override void OnInit(World world)
     {
         _query = new QueryBuilder(world)
             .Retrieve<ChunkComponent, ChunkGraphicComponent>();
+        _world = world;
     }
 
     public override void OnUpdate()
     {
         _query.ForEach((_, ref chunkComp, ref chunkGrx) =>
         {
+            if (chunkComp.ToBeUnloaded) 
+                return;
+            
             if (chunkGrx.PendingNeighbors > 0) 
                 return;
             
@@ -46,7 +51,6 @@ public class ChunkRenderSystem : AppSystem
 
             var job = new ChunkMeshGenerator.Job
             {
-                InitialPos = chunk.Position,
                 TargetChunk = chunk,
                 DownChunk = GetChunk((0, -1, 0)),
                 UpChunk = GetChunk((0, 1, 0)),
@@ -57,13 +61,7 @@ public class ChunkRenderSystem : AppSystem
                 Model = chunkGrx.Model,
                 BlockSize = chunkGrx.BlockSize
             };
-            job.DownChunkVersion = job.DownChunk?.Version ?? 0;
-            job.UpChunkVersion = job.UpChunk?.Version ?? 0;
-            job.EastChunkVersion = job.EastChunk?.Version ?? 0;
-            job.WestChunkVersion = job.WestChunk?.Version ?? 0;
-            job.NorthChunkVersion = job.NorthChunk?.Version ?? 0;
-            job.SouthChunkVersion = job.SouthChunk?.Version ?? 0;
-            
+
             // mesh generation
             App.ChunkMeshGenerator.Enqueue(chunkGrx.GraphicId, job);
         });
@@ -71,13 +69,19 @@ public class ChunkRenderSystem : AppSystem
         // pulling done and refitting
         while (App.ChunkMeshGenerator.TryDequeueDone(out Guid id, out var job))
         {
-            if (job.TargetChunk.Position != job.InitialPos)
+            var pos = job.TargetChunk.Position;
+            if (!App.ChunkWorld.TryGetChunkEntity(pos, out var entity))
             {
-                Logger.Warn(this, $"got chunk {job.TargetChunk.Position}, but initially {job.InitialPos}");
+                Logger.Warn(this, $"Created mesh for unloaded chunk: {pos}");
                 continue;
             }
-            if (!App.ChunkWorld.IsLoaded(job.TargetChunk.Position))
+
+            var grxComp = _world.GetEntityComponent<ChunkGraphicComponent>(entity)!.Value;
+            if (grxComp.GraphicId != id)
+            {
+                Logger.Warn(this, $"Created mesh for chunk {entity} with {id} but real id is {grxComp.GraphicId}");
                 continue;
+            }
             App.GraphicEngine.EnqueueChunkRefit(id, job.Model);
         }
     }

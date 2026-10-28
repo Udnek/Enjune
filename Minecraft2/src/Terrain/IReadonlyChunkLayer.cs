@@ -4,7 +4,6 @@ namespace Minecraft2.Terrain;
 
 public interface IReadonlyChunkLayer<T>
 {
-    public int Version { get; } // changes when Position is changed
     public bool IsDirty { get; } // has something changed. Used in mesh rendering
     public ChunkPos Position { get; }
     

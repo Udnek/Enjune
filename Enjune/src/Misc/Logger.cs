@@ -35,7 +35,7 @@ public static partial class Logger
     {
         var logParams = GetLogParams(author);
         
-        if (!PrintWorker.HasStated) 
+        if (!PrintWorker.HasStarted) 
             PrintWorker.Start("LoggerPrinter");
 
         var msgId = Interlocked.Add(ref _messageCounter, 1);

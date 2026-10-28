@@ -33,9 +33,7 @@ public class ChunkWorld
         if (IsQueued(chunkPos))
             return;
 
-        var chunk = _app.ChunkPool.Take();
-        chunk.Position = chunkPos;
-        chunk.Clear(_app.Blocks.Air);
+        var chunk = new Chunk(chunkPos, new ChunkLayer<BlockType>(chunkPos, _app.Blocks.Air));
         _queuedForGeneration.Add(chunkPos);
         _app.TerrainGenerator.Enqueue(chunkPos, chunk);
     }
@@ -57,7 +55,7 @@ public class ChunkWorld
         else if (_queuedForGeneration.Remove(chunkPos))
         {
             _app.TerrainGenerator.EnqueueJobCancel(chunkPos);
-            Logger.Info(this, $"Dequeuing generation of {chunkPos}");
+            Logger.Highlight(this, $"Dequeuing generation of {chunkPos}");
         }
         else
             Logger.Warn(this, $"Trying to unloaded {chunkPos}, but already unloaded");
@@ -83,16 +81,21 @@ public class ChunkWorld
         }
         // cancelled
         while (_app.TerrainGenerator.TryDequeueCancelled(out var pos, out var chunk))
-            _app.ChunkPool.Recycle(chunk);
+        {
+            
+        }
     }
 
     public bool IsQueued(ChunkPos chunkPos) => _queuedForGeneration.Contains(chunkPos);
 
     public bool IsLoaded(ChunkPos chunkPos) => _loadedChunks.ContainsKey(chunkPos);
 
-    public bool TryGetChunk(ChunkPos pos, [MaybeNullWhen(false)] out Chunk chunk)
+    public bool TryGetChunkEntity(ChunkPos chunkPos, [MaybeNullWhen(false)] out Entity chunk) 
+        => _loadedChunks.TryGetValue(chunkPos, out chunk);
+
+    public bool TryGetChunk(ChunkPos chunkPos, [MaybeNullWhen(false)] out Chunk chunk)
     {
-        if (!_loadedChunks.TryGetValue(pos, out var entity))
+        if (!TryGetChunkEntity(chunkPos, out var entity))
         {
             chunk = null;
             return false;
@@ -101,7 +104,7 @@ public class ChunkWorld
         var chunkComponent = _app.World.GetEntityComponent<ChunkComponent>(entity);
         if (chunkComponent is null)
         {
-            Logger.Warn(this, $"chunk entity {pos} doesn't have {Logger.GetTypeName<ChunkComponent>()}!");
+            Logger.Warn(this, $"chunk entity {chunkPos} doesn't have {Logger.GetTypeName<ChunkComponent>()}!");
             chunk = null;
             return false;
         }

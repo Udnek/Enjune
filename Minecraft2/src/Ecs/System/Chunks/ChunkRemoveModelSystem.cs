@@ -33,10 +33,11 @@ public class ChunkRemoveModelSystem : AppSystem
             
             _world.RemoveEntityComponent<ChunkGraphicComponent>(entity);
         });
-
+        
         // recycling models
         while (App.ChunkMeshGenerator.TryDequeueCancelled(out Guid id, out var job))
         {
+            //Logger.Highlight(this, $"got canceled mesh for {job.TargetChunk.Position}");
             App.ChunkModelPool.Recycle(job.Model);
         }
     }

@@ -38,7 +38,6 @@ public class App : AbstractDisposable, IApp
     public ChunkWorld ChunkWorld { get; private set; } = null!;
     public Entity PlayerEntity { get; private set; }
     public RecyclingPool<ChunkModel> ChunkModelPool { get; private set; } = new(() => new ChunkModel());
-    public RecyclingPool<Chunk> ChunkPool { get; private set; }
     public BaseTerrainGenerator TerrainGenerator { get; private set; } = null!;
     public ChunkMeshGenerator ChunkMeshGenerator { get; private set; } = null!;
     public bool IsRunning { get; private set; } = true;
@@ -59,10 +58,7 @@ public class App : AbstractDisposable, IApp
 
         _freeCursorBind = Binds.AddBind(new KeyBinds.Bind("free_cursor", KeyCode.Escape));
         _lockCursorBind = Binds.AddBind(new KeyBinds.Bind("lock_cursor", KeyCode.RightMouseButton));
-
-        ChunkPool = new RecyclingPool<Chunk>(() => new Chunk(
-            ChunkPos.Zero,
-            new ChunkLayer<BlockType>(ChunkPos.Zero, Blocks.Air)));
+        
     }
 
     public Error? Init()
@@ -136,7 +132,7 @@ public class App : AbstractDisposable, IApp
         var logicThread = new Thread(() =>
         {
             Utils.RunTargetFpsLoopWhile(
-                20, 
+                1, 
                 () => IsRunning,
                 LogicCycle
             ); 

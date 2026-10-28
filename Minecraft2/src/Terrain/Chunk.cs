@@ -16,18 +16,7 @@ public class Chunk : IReadonlyChunk
         Trace.Assert(Size.Z % 2 == 0);
     }
 
-    public int Version { get; private set; }
-
-    public ChunkPos Position
-    {
-        get;
-        set
-        {
-            field = value;
-            Version++;
-            BlockLayer.Position = value;
-        }
-    }
+    public ChunkPos Position { get; }
 
     IReadonlyChunkLayer<BlockType> IReadonlyChunk.BlockLayer => BlockLayer;
     public readonly ChunkLayer<BlockType> BlockLayer;

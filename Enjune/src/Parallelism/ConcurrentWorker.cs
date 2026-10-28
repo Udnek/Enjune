@@ -1,13 +1,15 @@
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using Enjune.Attribute;
 
 namespace Enjune.Misc;
 
 [LogParams(logCallingMethod: true)]
-public abstract class ConcurrentWorker<TJobKey, TIn, TOut> : AbstractDisposable where TJobKey : unmanaged
+public abstract class ConcurrentWorker<TJobKey, TIn, TOut> : AbstractDisposable where TJobKey : IEquatable<TJobKey>
 {
-    private readonly BlockingCollection<(TJobKey Key, TIn Input)> _jobs = new(new ConcurrentQueue<(TJobKey, TIn)>());
-    private readonly ConcurrentDictionary<TJobKey, Nothing> _queuedForCancellation = [];
+    private ulong _generation = 0; // used to track order
+    private readonly BlockingCollection<(TJobKey Key, ulong Generation, TIn Input)> _jobs = new(new ConcurrentQueue<(TJobKey, ulong, TIn)>());
+    private readonly ConcurrentDictionary<TJobKey, ulong> _queuedForCancellation = [];
     private readonly ConcurrentQueue<(TJobKey Key, TOut Output)> _done = [];
     private readonly ConcurrentQueue<(TJobKey Key, TIn Input)> _cancelled = [];
     private Thread? _workingThread;
@@ -15,14 +17,14 @@ public abstract class ConcurrentWorker<TJobKey, TIn, TOut> : AbstractDisposable 
 
     #region Public Api
 
-    public bool HasStated => _workingThread != null;
+    public bool HasStarted => _workingThread != null;
     
     /// <summary>
     /// Starts worker in separate thread
     /// </summary>
     public void Start(string threadName)
     {
-        if (HasStated)
+        if (HasStarted)
         {
             Logger.Error(this, "Thread is already running");
             return;
@@ -38,13 +40,16 @@ public abstract class ConcurrentWorker<TJobKey, TIn, TOut> : AbstractDisposable 
                 {
                     try
                     {
-                        if (_queuedForCancellation.TryRemove(job.Key, out _)) // job was canceled before work
+                        if (_queuedForCancellation.TryRemove(job.Key, out var cancelGen)) // job was canceled before work
                         {
-                            _cancelled.Enqueue((job.Key, job.Input));
-                            continue;
+                            if (job.Generation < cancelGen) // task appeared before cancel request
+                            {
+                                _cancelled.Enqueue((job.Key, job.Input));
+                                continue;
+                            }
                         }
-                        var res = Work(job.Input);
-                        if (_queuedForCancellation.TryRemove(job.Key, out _)) // job was canceled after work
+                        var res = Work(job.Input); // working
+                        if (_queuedForCancellation.TryRemove(job.Key, out _)) // job was canceled during work
                         {
                             _cancelled.Enqueue((job.Key, job.Input));
                             continue;
@@ -83,8 +88,6 @@ public abstract class ConcurrentWorker<TJobKey, TIn, TOut> : AbstractDisposable 
         
         _cancelWorkToken.Dispose();
         _cancelWorkToken = null;
-        
-        _queuedForCancellation.Clear();
     }
 
     /// <summary>
@@ -97,7 +100,8 @@ public abstract class ConcurrentWorker<TJobKey, TIn, TOut> : AbstractDisposable 
             Logger.Error(this, "Start worker first");
             return;
         }
-        _jobs.Add((key, input));
+        var gen = Interlocked.Increment(ref _generation);
+        _jobs.Add((key, gen, input));
     }
 
     /// <summary>
@@ -105,13 +109,20 @@ public abstract class ConcurrentWorker<TJobKey, TIn, TOut> : AbstractDisposable 
     /// </summary>
     public void EnqueueJobCancel(TJobKey key)
     {
-        _queuedForCancellation.TryAdd(key, Nothing.Instance);
+        if (_workingThread is null)
+        {
+            Logger.Error(this, "Start worker first");
+            return;
+        }
+
+        var gen = Interlocked.Increment(ref _generation);
+        _queuedForCancellation[key] = gen;
     }
 
     /// <summary>
     /// Tries to deque done works if any
     /// </summary>
-    public bool TryDequeueDone(out TJobKey key, out TOut output)
+    public bool TryDequeueDone([MaybeNullWhen(false)] out TJobKey key, [MaybeNullWhen(false)] out TOut output)
     {
         var dequeued = _done.TryDequeue(out var tuple);
         (key, output) = tuple;
@@ -121,7 +132,7 @@ public abstract class ConcurrentWorker<TJobKey, TIn, TOut> : AbstractDisposable 
     /// <summary>
     /// Tries to deque canceled works if any
     /// </summary>
-    public bool TryDequeueCancelled(out TJobKey key, out TIn input)
+    public bool TryDequeueCancelled([MaybeNullWhen(false)] out TJobKey key, [MaybeNullWhen(false)] out TIn input)
     {
         var dequeued = _cancelled.TryDequeue(out var tuple);
         (key, input) = tuple;

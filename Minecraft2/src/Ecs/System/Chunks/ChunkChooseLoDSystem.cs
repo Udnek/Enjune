@@ -18,15 +18,12 @@ public class ChunkChooseLoDSystem : AppSystem
     
     private World _world = null!;
     private Query<ChunkComponent, ChunkGraphicComponent> _chunkQuery = null!;
-    private Query<ChunkLoader, Transform> _loaderQuery = null!;
     
     public override void OnInit(World world)
     {
         _world = world;
         _chunkQuery = new QueryBuilder(world)
             .Retrieve<ChunkComponent, ChunkGraphicComponent>();
-        _loaderQuery = new QueryBuilder(world)
-            .Retrieve<ChunkLoader, Transform>();
     }
 
     public override void OnUpdate()

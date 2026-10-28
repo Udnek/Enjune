@@ -11,15 +11,7 @@ public class ChunkLayer<T> : IReadonlyChunkLayer<T>
     public int Version { get; private set; }
     public bool IsDirty { get; set; } = false;
 
-    public ChunkPos Position
-    {
-        get;
-        set
-        {
-            field = value;
-            Version++;
-        }
-    }
+    public ChunkPos Position { get; }
 
     public ChunkLayer(ChunkPos position, T fillWith)
     {
