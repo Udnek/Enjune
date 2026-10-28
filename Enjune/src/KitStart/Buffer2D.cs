@@ -19,7 +19,7 @@ public class Buffer2D<T>
     public Buffer2D(int width, int height, T[] inputData) : this(width, height)
     {
         if (inputData.Length != width * height){
-            Logger.Warn(this, $"data length ({inputData.Length}) should be equal to w*h ({width * height})");
+            Logger.Logger.Warn(this, $"data length ({inputData.Length}) should be equal to w*h ({width * height})");
         }
         new Span<T>(inputData, 0, width * height).CopyTo(Data);
     }
@@ -34,13 +34,13 @@ public class Buffer2D<T>
     {
         if (xOffset < 0 || yOffset < 0)
         {
-            Logger.Warn(this, $"position must be non negative: x={xOffset}; y={yOffset}");
+            Logger.Logger.Warn(this, $"position must be non negative: x={xOffset}; y={yOffset}");
             return;
         }
         if (xOffset + other.Width > Width || yOffset + other.Height > Height)
         {
-            Logger.Warn(this, $"paste is not in bounds: " +
-                              $"must: {xOffset+other.Width} <= {Width} && {yOffset+other.Height} <= {Height}");
+            Logger.Logger.Warn(this, $"paste is not in bounds: " +
+                                     $"must: {xOffset+other.Width} <= {Width} && {yOffset+other.Height} <= {Height}");
             return;
         }
 

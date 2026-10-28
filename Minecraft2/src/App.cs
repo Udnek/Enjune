@@ -1,6 +1,5 @@
 using System.Resources;
 using Enjune;
-using Enjune.Attribute;
 using Enjune.Ecs;
 using Enjune.Ecs.EcsType;
 using Enjune.File;
@@ -9,6 +8,7 @@ using Enjune.Graphic.Key;
 using Enjune.Graphic.Modeling;
 using Enjune.KitStart;
 using Enjune.KitStart.TAAL;
+using Enjune.Logger;
 using Enjune.Misc;
 using Minecraft2.Block;
 using Minecraft2.Ecs;
@@ -162,7 +162,7 @@ public class App : AbstractDisposable, IApp
         
         if (InputHandler.IsLongPressed(KeyCode.P))
         {
-            Logger.Highlight(this, $"Look dir: {FlyingController.Direction}");
+            Logger.Debug(this, $"Look dir: {FlyingController.Direction}");
         }
 
         if (InputHandler.IsLongPressed(KeyCode.LeftMouseButton))
@@ -170,7 +170,7 @@ public class App : AbstractDisposable, IApp
             if (ChunkWorld.TryTraceBlock(FlyingController.Position, FlyingController.Direction, 10,
                     out BlockPos hitPos, out _, out var hitChunk, out _))
             {
-                Logger.Highlight(this, $"break at {hitPos}");
+                Logger.Debug(this, $"break at {hitPos}");
                 hitChunk.BlockLayer.SetByGlobal(hitPos, Blocks.Air);
             }
         }
@@ -183,7 +183,7 @@ public class App : AbstractDisposable, IApp
                 if (hitFace != null)
                 {
                     var placePos = hitPos + hitFace.Value.Direction();
-                    Logger.Highlight(this, $"place at {placePos}, {hitFace}");
+                    Logger.Debug(this, $"place at {placePos}, {hitFace}");
                     hitChunk.BlockLayer.SetByGlobal(placePos, Blocks.Cobblestone);
                 }
             }

@@ -43,7 +43,7 @@ public class PaletteMappedArray<T> where T : IEquatable<T>
 
         if (!_elementToId.TryGetValue(value, out var id))
         {
-            Logger.Highlight(this, 
+            Logger.Logger.Debug(this, 
                 $"{value} is not in palette, increasing capacity {Capacity} -> {Capacity*2}");
             
         }

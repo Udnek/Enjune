@@ -1,6 +1,6 @@
 using System.Reflection;
 
-namespace Enjune.Misc;
+namespace Enjune.Logger;
 
 public static partial class Logger
 {

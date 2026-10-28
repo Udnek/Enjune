@@ -25,7 +25,7 @@ public sealed class WritableRegistry<T> : IRegistry<T> where T: notnull
         var registry = new WritableRegistry<T>(registryId);
         Registries.All.RegisterUnsafe(registryId, registry, out var error);
         if (error is not null)
-            Logger.Error(typeof(WritableRegistry<T>), $"Can not register {registry}: {error}");
+            Logger.Logger.Error(typeof(WritableRegistry<T>), $"Can not register {registry}: {error}");
         return registry;
     }
 
@@ -36,7 +36,7 @@ public sealed class WritableRegistry<T> : IRegistry<T> where T: notnull
     public RegistryReference<T> Register(Identifier id, T value)
     {
         if (_idToValue.ContainsKey(id))
-            Logger.Warn(this, $"Item with id already presented: {id}; replacing");
+            Logger.Logger.Warn(this, $"Item with id already presented: {id}; replacing");
         _idToValue[id] = value;
         return CreateReference(id);
     }
@@ -71,7 +71,7 @@ public sealed class WritableRegistry<T> : IRegistry<T> where T: notnull
         return default;
     }
     
-    public override string ToString() => $"{Logger.GetTypeName<WritableRegistry<T>>()}[{_id}]";
+    public override string ToString() => $"{Logger.Logger.GetTypeName<WritableRegistry<T>>()}[{_id}]";
     
     // parent interface
     
@@ -79,7 +79,7 @@ public sealed class WritableRegistry<T> : IRegistry<T> where T: notnull
     {
         if (value is not T typed)
         {
-            error = $"{this} expects {Logger.GetTypeName<T>()}, but got {value}";
+            error = $"{this} expects {Logger.Logger.GetTypeName<T>()}, but got {value}";
             return;
         }
 

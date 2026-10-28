@@ -1,5 +1,4 @@
 using Enjune;
-using Enjune.Attribute;
 using Enjune.Ecs;
 using Enjune.Ecs.EcsType;
 using Enjune.File;

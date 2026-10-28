@@ -1,4 +1,4 @@
-namespace Enjune.Attribute;
+namespace Enjune.Logger;
 
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Enum)]
 public class LogParamsAttribute(

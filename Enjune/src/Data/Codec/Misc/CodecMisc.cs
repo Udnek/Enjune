@@ -17,7 +17,7 @@ public static class CodecMisc
         {
             if (group.Count() > 1) 
                 // ReSharper disable once PossibleMultipleEnumeration
-                Logger.Error(typeof(Codecs), $"field name used multiple times: \"{group.Key}\" in {names.ContentToString()}");
+                Logger.Logger.Error(typeof(Codecs), $"field name used multiple times: \"{group.Key}\" in {names.ContentToString()}");
         }
     }
 }

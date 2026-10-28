@@ -23,14 +23,14 @@ public sealed record RegistryReference<T> where T : notnull
         ItemId = itemId;
     }
 
-    public override string ToString() => $"{Logger.GetTypeName(GetType())}[{RegistryId} / {ItemId}]";
+    public override string ToString() => $"{Logger.Logger.GetTypeName(GetType())}[{RegistryId} / {ItemId}]";
 
     public T GetOr(T fallback)
     {
         var value = Get(out var error);
         if (value is not null)
             return value;
-        Logger.Warn(this, error);
+        Logger.Logger.Warn(this, error);
         _value = fallback;
         return fallback;
     }
@@ -73,11 +73,11 @@ public sealed record RegistryReference<T> where T : notnull
         }
         if (item is not T typedItem)
         {
-            error = $"item is of incorrect type; got: {Logger.GetTypeName(item.GetType())}, expected: {Logger.GetTypeName<T>()}";
+            error = $"item is of incorrect type; got: {Logger.Logger.GetTypeName(item.GetType())}, expected: {Logger.Logger.GetTypeName<T>()}";
             return default;
         }
 
-        Logger.Info(this, $"Successfully got item {ItemId} in registry {RegistryId}; caching");
+        Logger.Logger.Info(this, $"Successfully got item {ItemId} in registry {RegistryId}; caching");
         _value = typedItem;
         error = null;
         return typedItem;

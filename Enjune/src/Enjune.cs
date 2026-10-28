@@ -9,10 +9,10 @@ public static class Enjune
 
     static Enjune()
     {
-        Logger.RegisterNamespaceToDomain(Assembly, "", Logger.Domain.Enjune);
-        Logger.RegisterNamespaceToDomain(Assembly, nameof(KitStart.TAAL), Logger.Domain.Assets);
-        Logger.RegisterNamespaceToDomain(Assembly, nameof(Ecs), Logger.Domain.Ecs);
-        Logger.RegisterNamespaceToDomain(Assembly, nameof(Misc), Logger.Domain.Misc);
+        Logger.Logger.RegisterNamespaceToDomain(Assembly, "", Logger.Logger.Domain.Enjune);
+        Logger.Logger.RegisterNamespaceToDomain(Assembly, nameof(KitStart.TAAL), Logger.Logger.Domain.Assets);
+        Logger.Logger.RegisterNamespaceToDomain(Assembly, nameof(Ecs), Logger.Logger.Domain.Ecs);
+        Logger.Logger.RegisterNamespaceToDomain(Assembly, nameof(Misc), Logger.Logger.Domain.Misc);
     }
     
     public static void Run(IApp app, string[] args)
@@ -20,7 +20,7 @@ public static class Enjune
         var error = RunUntilError(app);
         if (error != null)
         {
-            Logger.Error(typeof(Enjune), error);
+            Logger.Logger.Error(typeof(Enjune), error);
         }
         app.Dispose();
         

@@ -1,6 +1,7 @@
 using Enjune.Ecs.EcsType;
 using Enjune.Ecs.System;
 using Enjune.Ecs;
+using Enjune.Logger;
 using Enjune.Misc;
 using Standoff2.Ecs.Component;
 

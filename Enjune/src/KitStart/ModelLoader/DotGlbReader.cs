@@ -39,7 +39,7 @@ public class DotGlbReader : AbstractModelReader
                 };
                 if (enjunePrimitive is null)
                 {
-                    Logger.Warn(this, $"{primitiveType} is not supported; skipping mesh");
+                    Logger.Logger.Warn(this, $"{primitiveType} is not supported; skipping mesh");
                     continue;
                 }
                 
@@ -49,7 +49,7 @@ public class DotGlbReader : AbstractModelReader
                 {
                     var i = (int)ui;
                     if (i >= 0) return i;
-                    Logger.Warn(this, $"index overflows int: uint: {ui}; int: {i}");
+                    Logger.Logger.Warn(this, $"index overflows int: uint: {ui}; int: {i}");
                     return 0;
                 }).ToArray();
                 

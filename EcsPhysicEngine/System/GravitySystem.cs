@@ -6,6 +6,7 @@ using PhysicsLibrary.Component;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Enjune.Logger;
 
 namespace PhysicsLibrary.System;
 public class GravitySystem : ISystem

@@ -2,6 +2,7 @@ using Enjune.File;
 using Enjune.Graphic.Api;
 using Enjune.Graphic.Key;
 using Enjune.Graphic.Modeling;
+using Enjune.Logger;
 using Enjune.Misc;
 using OpenGLApi.Generation;
 using OpenGLApi.Mesh;

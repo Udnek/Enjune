@@ -16,7 +16,7 @@ public sealed class KeyBinds
     public Bind AddBind(Bind bind)
     {
         if (_binds.TryGetValue(bind.KeyCode, out var existed)) 
-            Logger.Warn(typeof(KeyBinds), $"rebound key from {existed} to {bind}");
+            Logger.Logger.Warn(typeof(KeyBinds), $"rebound key from {existed} to {bind}");
         
         _binds[bind.KeyCode] = bind;
         return bind;

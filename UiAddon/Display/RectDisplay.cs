@@ -1,5 +1,6 @@
 using Enjune.Graphic;
 using Enjune.Graphic.Modeling;
+using Enjune.Logger;
 using Enjune.Misc;
 using UiAddon.Display.Abstraction;
 using UiAddon.Element;
@@ -10,7 +11,7 @@ public class RectDisplay() : ColoredDisplay<IUiElement>
 {
     protected override void OnRectChange(Rect _, Rect rect)
     {
-        Logger.Highlight(this, "Updating rect");
+        Logger.Debug(this, "Updating rect");
         Meshes.Clear();
         var min = new Vector3(rect.Min.X, rect.Min.Y, Z);
         var max = new Vector3(rect.Max.X, rect.Max.Y, Z);

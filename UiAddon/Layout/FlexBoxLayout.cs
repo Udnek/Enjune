@@ -1,3 +1,4 @@
+using Enjune.Logger;
 using Enjune.Misc;
 using JetBrains.Annotations;
 using UiAddon.Element;
@@ -228,7 +229,7 @@ public readonly record struct FlexBoxLayout() : ILayout
         List<(IUiElement Child, FlexBoxLayout ChildLayout)> ending = [];
         
         
-        Logger.Highlight(this, "--------------------");
+        Logger.Debug(this, "--------------------");
         foreach (var (child, childLayout) in ValidChildren(allChildren))
         {
             if (childLayout.SelfAlign == Alignment.Center)
@@ -244,7 +245,7 @@ public readonly record struct FlexBoxLayout() : ILayout
 
             // auto 
             startOffset = ProceedRectChange(child, startOffset, mainMul);
-            Logger.Highlight(this, $"{child}: {childLayout.DesiredSizeXy}");
+            Logger.Debug(this, $"{child}: {childLayout.DesiredSizeXy}");
         }
         
         // end

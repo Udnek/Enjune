@@ -1,11 +1,11 @@
 using System.Runtime.CompilerServices;
-using Enjune.Attribute;
 using Enjune.Data;
 using Enjune.Data.Codec;
 using Enjune.Ecs.Component;
 using Enjune.Ecs.EcsType;
 using Enjune.Ecs.Manager;
 using Enjune.Ecs.System;
+using Enjune.Logger;
 using Enjune.Misc;
 using FreeTypeSharp;
 
@@ -82,7 +82,7 @@ public sealed class World
     
     public World()
     {
-        Logger.Info(this, "Registering managers");
+        Logger.Logger.Info(this, "Registering managers");
 
         ArchetypeManager = new ArchetypeManager(this);
         SystemManager = new SystemManager(this);
@@ -93,7 +93,7 @@ public sealed class World
     /// </summary>
     private void InvalidateCache()
     {
-        Logger.Info(this, "Invalidated cache");
+        Logger.Logger.Info(this, "Invalidated cache");
         CacheVersion++;
     }
 
@@ -156,7 +156,7 @@ public sealed class World
         ArchetypeManager.AddEntity(assembly, entity);
         _entities.Add(entity);
         InvalidateCache();
-        Logger.Info(this, $"Added {entity}");
+        Logger.Logger.Info(this, $"Added {entity}");
         return entity;
     }
 
@@ -170,7 +170,7 @@ public sealed class World
     {
         if (IsLocked)
         {
-            Logger.Info(this, $"Deferred removal of {entity}");
+            Logger.Logger.Info(this, $"Deferred removal of {entity}");
             _entityRemoveQueue.Add(entity);
             return;
         }
@@ -179,7 +179,7 @@ public sealed class World
         
         InvalidateCache();
         
-        Logger.Info(this, $"Removed {entity}");
+        Logger.Logger.Info(this, $"Removed {entity}");
     }
 
     // TODO: Cringe ass idk son im crine
@@ -195,12 +195,12 @@ public sealed class World
     {
         if (!_entities.Contains(entity))
         {
-            Logger.Error(this, $"{entity} doesn't exist");
+            Logger.Logger.Error(this, $"{entity} doesn't exist");
             return;
         }
         if (IsLocked)
         {
-            Logger.Info(this, $"Deferred addition of {component} to {entity}");
+            Logger.Logger.Info(this, $"Deferred addition of {component} to {entity}");
             _componentAddQueue.Add((entity, component, componentType));
             return;
         }
@@ -210,7 +210,7 @@ public sealed class World
 
         if (targetSignature.Equals(currentArchetype.Signature))
         {
-            Logger.Error(this, $"{entity} already has {componentType}. Use {nameof(ModifyEntityComponent)}");
+            Logger.Logger.Error(this, $"{entity} already has {componentType}. Use {nameof(ModifyEntityComponent)}");
             return;
         }
 
@@ -221,7 +221,7 @@ public sealed class World
         
         InvalidateCache();
 
-        Logger.Info(this, $"Added {componentType} to {entity}");
+        Logger.Logger.Info(this, $"Added {componentType} to {entity}");
     }
     
     /// <summary>
@@ -247,7 +247,7 @@ public sealed class World
     {
         if (!_entities.Contains(entity))
         {
-            Logger.Error(this, $"{entity} doesn't exist");
+            Logger.Logger.Error(this, $"{entity} doesn't exist");
             return;
         }
         if (IsLocked)
@@ -261,7 +261,7 @@ public sealed class World
 
         if (targetSignature.Equals(currentArchetype.Signature))
         {
-            Logger.Error(this, $"{entity} doesn't have {componentType}");
+            Logger.Logger.Error(this, $"{entity} doesn't have {componentType}");
             return;
         }
 
@@ -271,7 +271,7 @@ public sealed class World
 
         InvalidateCache();
         
-        Logger.Info(this, $"Removed {componentType} from {entity}");
+        Logger.Logger.Info(this, $"Removed {componentType} from {entity}");
     }
     
     /// <typeparam name="TComponent">The component type to remove.</typeparam>
@@ -291,14 +291,14 @@ public sealed class World
     {
         if (!_entities.Contains(entity))
         {
-            Logger.Error(this, $"{entity} doesn't exist");
+            Logger.Logger.Error(this, $"{entity} doesn't exist");
             return null;
         }
 
         Archetype archetype = ArchetypeManager.GetArchetypeByEntity(entity);
         if (!archetype.Signature.IsSet(GetComponentId(typeof(TComponent))))
         {
-            Logger.Info(this, $"{entity} doesn't have {typeof(TComponent)}");
+            Logger.Logger.Info(this, $"{entity} doesn't have {typeof(TComponent)}");
             return null;
         }
 
@@ -310,7 +310,7 @@ public sealed class World
     {
         if (!_entities.Contains(entity))
         {
-            Logger.Error(this, $"{entity} doesn't exist");
+            Logger.Logger.Error(this, $"{entity} doesn't exist");
             return false;
         }
 

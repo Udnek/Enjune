@@ -1,7 +1,7 @@
-using Enjune.Attribute;
 using Enjune.Misc;
 using System.ComponentModel;
 using System.Data.Common;
+using Enjune.Logger;
 using IComponent = Enjune.Ecs.Component.IComponent;
 
 namespace Enjune.Ecs.EcsType;
@@ -34,7 +34,7 @@ public sealed class Archetype
         Type columnType = typeof(Column<>).MakeGenericType(compType);
         var columnInstance = Activator.CreateInstance(columnType, _capacity) as IColumn;
         _columns[compType] = columnInstance ??
-                             throw new InvalidOperationException($"Failed to instantiate {Logger.GetTypeName(columnType)}");
+                             throw new InvalidOperationException($"Failed to instantiate {Logger.Logger.GetTypeName(columnType)}");
     }
 
     /// <summary>
@@ -66,7 +66,7 @@ public sealed class Archetype
     /// <param name="entity"></param>
     internal void AddEntity(Entity.Assembly entityAssembly, Entity entity)
     {
-        Logger.Info(this, $"Acquired {entity} as an assembly");
+        Logger.Logger.Info(this, $"Acquired {entity} as an assembly");
         EnsureCapacity(Count + 1);
 
         int row = Count;
@@ -93,7 +93,7 @@ public sealed class Archetype
     /// <param name="components"></param>
     internal void AddEntity(Entity entity, IEnumerable<IComponent> components)
     {
-        Logger.Info(this, $"Acquired {entity} as a stream of components");
+        Logger.Logger.Info(this, $"Acquired {entity} as a stream of components");
 
         EnsureCapacity(Count + 1);
 
@@ -110,7 +110,7 @@ public sealed class Archetype
             }
             else
             {
-                Logger.Info(this, $"Omitting a component that does not belong to archetype {Signature}");
+                Logger.Logger.Info(this, $"Omitting a component that does not belong to archetype {Signature}");
             }
         }
         // Ineffective?
@@ -124,8 +124,8 @@ public sealed class Archetype
     internal void RemoveEntity(Entity entity)
     {
         if (!_entityToRow.TryGetValue(entity, out var entityRow)) 
-            Logger.Info(this, $"{entity} is not in {Signature} archetype.");
-        Logger.Info(this, $"Removing {entity}");
+            Logger.Logger.Info(this, $"{entity} is not in {Signature} archetype.");
+        Logger.Logger.Info(this, $"Removing {entity}");
 
         var lastRow = Count - 1;
 

@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using Enjune;
-using Enjune.Attribute;
 using Enjune.Ecs;
 using Enjune.Ecs.EcsType;
 using Enjune.File;
@@ -9,6 +8,7 @@ using Enjune.Graphic.Api;
 using Enjune.Graphic.Key;
 using Enjune.Graphic.Modeling;
 using Enjune.KitStart;
+using Enjune.Logger;
 using Enjune.Misc;
 using ExampleApp.Data;
 using OpenGLApi;

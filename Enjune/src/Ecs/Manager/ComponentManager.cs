@@ -1,6 +1,6 @@
-using Enjune.Attribute;
 using Enjune.Ecs.Component;
 using Enjune.Ecs.EcsType;
+using Enjune.Logger;
 using Enjune.Misc;
 
 namespace Enjune.Ecs.Manager;
@@ -25,19 +25,19 @@ public sealed class ComponentManager
     {
         if (!typeof(IComponent).IsAssignableFrom(componentType))
         {
-            Logger.Error(this, 
+            Logger.Logger.Error(this, 
                 $"Type {componentType.Name} must implement {nameof(IComponent)} to be registered as a component");
             return;
         }
 
         if (_typeToId.ContainsKey(componentType))
         {
-            Logger.Error(this, $"Type {componentType.Name} is already registered");
+            Logger.Logger.Error(this, $"Type {componentType.Name} is already registered");
             return;
         }
         
         ComponentTypeId id = _availableComponentIds.Dequeue();
-        Logger.Info(this, $"Registering component type {componentType.Name}, identifying as {id}");
+        Logger.Logger.Info(this, $"Registering component type {componentType.Name}, identifying as {id}");
         _typeToId[componentType] = id;
         _idToType[id] = componentType;
     }

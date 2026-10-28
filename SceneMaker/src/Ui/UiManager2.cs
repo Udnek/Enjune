@@ -1,9 +1,9 @@
 using System.Diagnostics;
-using Enjune.Attribute;
 using Enjune.Data.Json;
 using Enjune.Ecs.EcsType;
 using Enjune.Graphic.Key;
 using Enjune.KitStart.Font;
+using Enjune.Logger;
 using Enjune.Misc;
 using Enjune.Registering;
 using SceneMaker.Misc;
@@ -112,7 +112,7 @@ public class UiManager2 : AbstractDisposable
         }
         
         Ui.Update(deltaTime);
-        Logger.Highlight(this, _fps.Layout);
+        Logger.Debug(this, _fps.Layout);
         
         _rememberUiFocused.Val = Ui.IsFocused;
         _rememberSelectedObject.Val = editControl.SelectedEntity;

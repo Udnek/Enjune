@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using Enjune.Logger;
 using Enjune.Misc;
 using UiAddon;
 using UiAddon.Layout;

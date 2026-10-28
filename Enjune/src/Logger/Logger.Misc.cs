@@ -1,7 +1,7 @@
 using System.Reflection;
-using Enjune.Attribute;
+using Enjune.Misc;
 
-namespace Enjune.Misc;
+namespace Enjune.Logger;
 
 public static partial class Logger
 {

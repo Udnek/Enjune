@@ -1,5 +1,5 @@
 using System.Runtime.CompilerServices;
-using Enjune.Attribute;
+using Enjune.Logger;
 using OpenTK.Mathematics;
 using static System.MathF;
 
@@ -89,7 +89,7 @@ public static class MathUtils
         {
             if (Abs(detA) < Epsilon)
             {
-                Logger.Error(typeof(MathUtils), $"detA = {detA}");
+                Logger.Logger.Error(typeof(MathUtils), $"detA = {detA}");
                 return -1;
             }
 
@@ -109,7 +109,7 @@ public static class MathUtils
         var planeNorm = PlaneNormNotNormalized(p0, p1, p2);
         if (planeNorm.LengthSquared < Epsilon)
         {
-            Logger.Error(typeof(MathUtils), $"plane norm is too small: {planeNorm}");
+            Logger.Logger.Error(typeof(MathUtils), $"plane norm is too small: {planeNorm}");
             return direction;
         }
 
@@ -120,7 +120,7 @@ public static class MathUtils
     {
         if (b.LengthSquared < Epsilon)
         {
-            Logger.Error(typeof(MathUtils), $"b vec is too small: {b}");
+            Logger.Logger.Error(typeof(MathUtils), $"b vec is too small: {b}");
             return a;
         }
 

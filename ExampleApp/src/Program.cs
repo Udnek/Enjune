@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using Enjune.Logger;
 using Enjune.Misc;
 
 namespace ExampleApp;

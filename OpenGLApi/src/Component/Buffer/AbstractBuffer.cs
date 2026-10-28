@@ -1,3 +1,4 @@
+using Enjune.Logger;
 using Enjune.Misc;
 
 namespace OpenGLApi.Component.Buffer;

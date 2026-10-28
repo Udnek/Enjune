@@ -11,8 +11,8 @@ public readonly record struct Error(string Text)
     public void Log(object source)
     {
         if (Text.Length == 0)
-            Logger.Error(source, Text);
+            Logger.Logger.Error(source, Text);
         else
-            Logger.Error(source, string.Concat(Text.First().ToString().ToUpper(), Text.AsSpan(1)));
+            Logger.Logger.Error(source, string.Concat(Text.First().ToString().ToUpper(), Text.AsSpan(1)));
     }
 }

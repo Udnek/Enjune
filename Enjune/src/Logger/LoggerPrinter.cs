@@ -1,6 +1,7 @@
-using Enjune.Attribute;
+using Enjune.Misc;
+using Enjune.Parallelism;
 
-namespace Enjune.Misc;
+namespace Enjune.Logger;
 
 public readonly record struct PrinterJob(
     Logger.Domain Domain,

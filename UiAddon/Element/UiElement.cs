@@ -1,9 +1,9 @@
 using System.Collections.ObjectModel;
-using Enjune.Attribute;
 using Enjune.Graphic;
 using Enjune.Graphic.Key;
 using Enjune.Graphic.Modeling;
 using Enjune.KitStart;
+using Enjune.Logger;
 using Enjune.Misc;
 using UiAddon.Display;
 using UiAddon.Layout;

@@ -27,7 +27,7 @@ public static class FontLoader
             {
                 if (glyph.Width == 0 || glyph.Height == 0)
                 {
-                    Logger.Info(typeof(FontLoader), $"char '{ch}' ({(byte)ch}) has zero size: {glyph}");
+                    Logger.Logger.Info(typeof(FontLoader), $"char '{ch}' ({(byte)ch}) has zero size: {glyph}");
                     continue;
                 }
                 var rectangle = new PackingRectangle(0, 0, glyph.Width, glyph.Height, id:ch);
@@ -37,9 +37,9 @@ public static class FontLoader
         }
         
         RectanglePacker.Pack(rectangles, out var bounds);
-        Logger.Info(typeof(FontLoader), $"Bounds: {bounds.Width}x{bounds.Height}");
+        Logger.Logger.Info(typeof(FontLoader), $"Bounds: {bounds.Width}x{bounds.Height}");
         var atlasSize = (int) Math.Pow(2, Math.Ceiling(Math.Log2(Math.Max(bounds.Width, bounds.Height))));
-        Logger.Info(typeof(FontLoader), $"Atlas size: {atlasSize}");
+        Logger.Logger.Info(typeof(FontLoader), $"Atlas size: {atlasSize}");
         
         // unpacking
         var atlasBuffer = new Buffer2D<byte>(atlasSize, atlasSize);

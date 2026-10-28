@@ -22,7 +22,7 @@ public readonly record struct Entity
         public Assembly AddComponent(IComponent component)
         {
             if (_components.ContainsKey(component.GetType()))
-                Logger.Warn(this, $"Replaced component {component.GetType()} for an assembly");
+                Logger.Logger.Warn(this, $"Replaced component {component.GetType()} for an assembly");
             _components.Add(component.GetType(), component);
 
             return this;

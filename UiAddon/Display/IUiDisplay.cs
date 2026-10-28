@@ -1,5 +1,4 @@
 using System.Collections.Specialized;
-using Enjune.Attribute;
 using Enjune.Graphic.Modeling;
 using Enjune.Misc;
 using UiAddon.Element;

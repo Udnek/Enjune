@@ -30,7 +30,7 @@ public class DotObjReader : AbstractModelReader
             var lineError = ProcessLine(line.Split(' '));
             if (lineError != null)
             {
-                Logger.Warn(this, $"error in line {i + 1} \"{line}\" in file {Path}: {lineError}");
+                Logger.Logger.Warn(this, $"error in line {i + 1} \"{line}\" in file {Path}: {lineError}");
             }
         }
 

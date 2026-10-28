@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using Enjune.Attribute;
 using Enjune.Data.Json;
 using Enjune.Ecs.EcsType;
 using Enjune.Graphic.Key;

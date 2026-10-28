@@ -37,7 +37,7 @@ public class TextureArrayAssetLoader
         if (tex == null)
         {
             error = $"Can not load image {texturePath}: {error}";
-            Logger.Error(this, error);
+            Logger.Logger.Error(this, error);
             throw new Exception(error);
         }
         
@@ -51,7 +51,7 @@ public class TextureArrayAssetLoader
         };
         _textures.Add((tex, true));
         _materials.Add((rawMaterial, material));
-        Logger.Info(this, $"Added material {material} from {texturePath}");
+        Logger.Logger.Info(this, $"Added material {material} from {texturePath}");
         return matIdx;
     }
 
@@ -93,7 +93,7 @@ public class TextureArrayAssetLoader
                 if (loadedTexture == null)
                 {
                     _invalidPaths.Add(texturePath);
-                    Logger.Warn(this, $"Can not load new texture {texturePath}: {error}, using missing");
+                    Logger.Logger.Warn(this, $"Can not load new texture {texturePath}: {error}, using missing");
                     return MissingMaterialIndex;
                 }
 
@@ -110,17 +110,17 @@ public class TextureArrayAssetLoader
             TextureIndex = texIdx
         };
         _materials.Add((rawMaterial, material));
-        Logger.Info(this, $"Added material {material} from {rawMaterial}");
+        Logger.Logger.Info(this, $"Added material {material} from {rawMaterial}");
         return _materials.Count - 1;
     }
     
     public ResultOrError<CompiledTAAL> Compile()
     {
-        Logger.Info(this, $"Compiling {_textures.Count} textures and {_materials.Count} materials");
+        Logger.Logger.Info(this, $"Compiling {_textures.Count} textures and {_materials.Count} materials");
 
         // choosing max size
         var targetSize = _textures.Max(img => img.Image.Width);
-        Logger.Info(this, $"Target texture size: {targetSize}");
+        Logger.Logger.Info(this, $"Target texture size: {targetSize}");
 
         // resizing
         List<ByteImage> resizedImages = new();
@@ -168,7 +168,7 @@ public class TextureArrayAssetLoader
             resizedImages.Add(byteImage);
         }
 
-        Logger.Info(this, "Done compiling");
+        Logger.Logger.Info(this, "Done compiling");
         return ResultOrError.Success(
             new CompiledTAAL(
                 MissingMaterialIndex, 

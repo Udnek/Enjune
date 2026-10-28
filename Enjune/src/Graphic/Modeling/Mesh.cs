@@ -1,5 +1,5 @@
 using System.Diagnostics.Contracts;
-using Enjune.Attribute;
+using Enjune.Logger;
 using Enjune.Misc;
 
 namespace Enjune.Graphic.Modeling;

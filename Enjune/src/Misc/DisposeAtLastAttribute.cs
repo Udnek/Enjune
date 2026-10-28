@@ -1,8 +1,7 @@
-namespace Enjune.Attribute;
-
+namespace Enjune.Misc;
 
 [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
-public class DoNotDisposeViaUtilsAttribute(string reason) : System.Attribute
+public class DisposeAtLastAttribute(string reason) : System.Attribute
 {
     public readonly string Reason = reason;
 }

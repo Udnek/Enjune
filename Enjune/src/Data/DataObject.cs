@@ -17,7 +17,7 @@ public abstract class DataObject
             error = null;
             return thisT;
         }
-        error = $"can not cast {this} to ${Logger.GetTypeName<T>()}";
+        error = $"can not cast {this} to ${Logger.Logger.GetTypeName<T>()}";
         return null;
     }
     

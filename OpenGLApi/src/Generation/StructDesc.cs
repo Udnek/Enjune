@@ -1,6 +1,7 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
 using Enjune.Graphic.Api.Attribute;
+using Enjune.Logger;
 using Enjune.Misc;
 
 namespace OpenGLApi.Generation;

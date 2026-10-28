@@ -2,9 +2,12 @@ using Enjune;
 using Enjune.Ecs;
 using Enjune.Ecs.EcsType;
 using Enjune.Ecs.System;
+using Enjune.Logger;
 using Enjune.Misc;
 using Standoff2.Ecs.Component;
 using Standoff2.Ecs.System;
+
+namespace Standoff2;
 
 public class EcsTestApp : AbstractDisposable, IApp
 {

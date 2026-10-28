@@ -1,8 +1,9 @@
 using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
-using Enjune.Attribute;
+using Enjune.Logger;
+using Enjune.Misc;
 
-namespace Enjune.Misc;
+namespace Enjune.Parallelism;
 
 [LogParams(logCallingMethod: true)]
 public abstract class ConcurrentWorker<TJobKey, TIn, TOut> : AbstractDisposable where TJobKey : IEquatable<TJobKey>
@@ -26,7 +27,7 @@ public abstract class ConcurrentWorker<TJobKey, TIn, TOut> : AbstractDisposable 
     {
         if (HasStarted)
         {
-            Logger.Error(this, "Thread is already running");
+            Logger.Logger.Error(this, "Thread is already running");
             return;
         }
 
@@ -60,7 +61,7 @@ public abstract class ConcurrentWorker<TJobKey, TIn, TOut> : AbstractDisposable 
                     catch (OperationCanceledException){}
                     catch (Exception e)
                     {
-                        Logger.Error(this, $"Exception during work: \n{e}");
+                        Logger.Logger.Error(this, $"Exception during work: \n{e}");
                     }
                 }
             }
@@ -69,21 +70,21 @@ public abstract class ConcurrentWorker<TJobKey, TIn, TOut> : AbstractDisposable 
         _workingThread.Name = threadName;
         _workingThread.IsBackground = true;
         _workingThread.Start();
-        Logger.Info(this, $"Thread {_workingThread.Name} started");
+        Logger.Logger.Info(this, $"Thread {_workingThread.Name} started");
     }
 
     public void Stop()
     {
         if (_workingThread is null)
         {
-            Logger.Error(this, "Thread is not running");
+            Logger.Logger.Error(this, "Thread is not running");
             return;
         }
         
         _cancelWorkToken!.Cancel();
         
         _workingThread.Join();
-        Logger.Info(this, $"Thread {_workingThread.Name} stopped");
+        Logger.Logger.Info(this, $"Thread {_workingThread.Name} stopped");
         _workingThread = null;
         
         _cancelWorkToken.Dispose();
@@ -97,7 +98,7 @@ public abstract class ConcurrentWorker<TJobKey, TIn, TOut> : AbstractDisposable 
     {
         if (_workingThread is null)
         {
-            Logger.Error(this, "Start worker first");
+            Logger.Logger.Error(this, "Start worker first");
             return;
         }
         var gen = Interlocked.Increment(ref _generation);
@@ -111,7 +112,7 @@ public abstract class ConcurrentWorker<TJobKey, TIn, TOut> : AbstractDisposable 
     {
         if (_workingThread is null)
         {
-            Logger.Error(this, "Start worker first");
+            Logger.Logger.Error(this, "Start worker first");
             return;
         }
 

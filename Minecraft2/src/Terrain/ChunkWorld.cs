@@ -1,6 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
-using Enjune.Attribute;
 using Enjune.Ecs.EcsType;
+using Enjune.Logger;
 using Enjune.Misc;
 using Minecraft2.Block;
 using Minecraft2.Ecs.Component;
@@ -55,7 +55,7 @@ public class ChunkWorld
         else if (_queuedForGeneration.Remove(chunkPos))
         {
             _app.TerrainGenerator.EnqueueJobCancel(chunkPos);
-            Logger.Highlight(this, $"Dequeuing generation of {chunkPos}");
+            Logger.Debug(this, $"Dequeuing generation of {chunkPos}");
         }
         else
             Logger.Warn(this, $"Trying to unloaded {chunkPos}, but already unloaded");

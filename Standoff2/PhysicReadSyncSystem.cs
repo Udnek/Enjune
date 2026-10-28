@@ -1,8 +1,4 @@
-using Enjune.Ecs.EcsType;
-using Enjune.Ecs.System;
-using SceneMaker.Ecs.Component;
-
-namespace SceneMaker.Ecs.System;
+namespace Standoff2;
 
 // TODO: Wtf is all that
 //public class PhysicReadSyncSystem(PhysicBridge bridge): SingleLegacyQuerySystem

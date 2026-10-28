@@ -2,6 +2,7 @@ using System.Runtime.InteropServices;
 using Enjune.File;
 using Enjune.Graphic;
 using Enjune.Graphic.Api;
+using Enjune.Logger;
 using Enjune.Misc;
 using OpenGLApi.Component;
 using OpenGLApi.Component.Buffer;

@@ -28,7 +28,7 @@ public readonly record struct Identifier
         var assemblyName = assembly.GetName().Name;
         if (assemblyName is null)
         {
-            Logger.Error(typeof(Identifier), $"can not get assembly name for {assembly}");
+            Logger.Logger.Error(typeof(Identifier), $"can not get assembly name for {assembly}");
             return new Identifier("null", "null");
         }
         return new Identifier(assemblyName, name);

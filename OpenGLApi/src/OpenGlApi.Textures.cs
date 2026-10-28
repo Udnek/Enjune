@@ -1,5 +1,6 @@
 using Enjune.Graphic;
 using Enjune.Graphic.Api;
+using Enjune.Logger;
 using Enjune.Misc;
 using OpenGLApi.Component;
 using OpenGLApi.Component.Texture;

@@ -7,6 +7,7 @@ using Enjune.Graphic;
 using Enjune.Graphic.Modeling;
 using Enjune.KitStart.ModelLoader;
 using Enjune.KitStart.TAAL;
+using Enjune.Logger;
 using Enjune.Misc;
 using Enjune.Registering;
 using OpenTK.Mathematics;

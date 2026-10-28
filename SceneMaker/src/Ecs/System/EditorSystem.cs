@@ -4,6 +4,7 @@ using Enjune.Ecs.System;
 using Enjune.Graphic.Api;
 using Enjune.Graphic.Key;
 using Enjune.Graphic.Modeling;
+using Enjune.Logger;
 using Enjune.Misc;
 using SceneMaker.Bridge;
 using SceneMaker.Ecs.Component;

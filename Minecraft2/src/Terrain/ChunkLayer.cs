@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using Enjune.Logger;
 using Enjune.Misc;
 using Minecraft2.Block;
 

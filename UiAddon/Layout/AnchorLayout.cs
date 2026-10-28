@@ -1,3 +1,4 @@
+using Enjune.Logger;
 using Enjune.Misc;
 using UiAddon.Element;
 

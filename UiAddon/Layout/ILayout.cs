@@ -1,4 +1,3 @@
-using Enjune.Attribute;
 using Enjune.Misc;
 using JetBrains.Annotations;
 using UiAddon.Element;

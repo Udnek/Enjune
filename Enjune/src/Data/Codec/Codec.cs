@@ -27,7 +27,7 @@ public interface ICodec<T> : IObjCodec
     {
         if (instance is T t)
             return Encode(t);
-        return new Error($"can not encode {instance} because expected {Logger.GetTypeName<T>()}; use generic method");
+        return new Error($"can not encode {instance} because expected {Logger.Logger.GetTypeName<T>()}; use generic method");
     }
 
     [Pure]
@@ -196,7 +196,7 @@ public static class Codecs
                     }
 
                     if (skipInvalidItems)
-                        Logger.Warn(typeof(Codecs), $"Can not encode {instance}: {result.Error}; skipping");
+                        Logger.Logger.Warn(typeof(Codecs), $"Can not encode {instance}: {result.Error}; skipping");
                     else
                         return new Error($"can not encode {instance}: {result.Error}");
                 }
@@ -222,7 +222,7 @@ public static class Codecs
 
                     if (err == null) continue;
                     if (skipInvalidItems)
-                        Logger.Warn(typeof(Codecs), $"Could not decode \nitem {item} in \narray {array} \nbecause: {err}");
+                        Logger.Logger.Warn(typeof(Codecs), $"Could not decode \nitem {item} in \narray {array} \nbecause: {err}");
                     else
                         return new Error(err);
 

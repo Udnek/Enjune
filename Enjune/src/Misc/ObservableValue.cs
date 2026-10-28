@@ -51,7 +51,7 @@ public sealed class ObservableValue<T>(T initialValue) : IReadonlyObservableValu
         }
     } = initialValue;
 
-    public override string ToString() => $"{Logger.GetTypeName<ObservableValue<T>>()}[value = {Val?.ToString()}]";
+    public override string ToString() => $"{Logger.Logger.GetTypeName<ObservableValue<T>>()}[value = {Val?.ToString()}]";
 
     public static implicit operator ObservableValue<T>(T value) => new(value);
     public static implicit operator T(ObservableValue<T> observable) => observable.Val;

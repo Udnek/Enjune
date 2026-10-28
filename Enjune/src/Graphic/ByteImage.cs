@@ -25,7 +25,7 @@ public sealed class ByteImage : IEquatable<ByteImage>
         
         if (width * height * type.Depth != data.Length)
         {
-            Logger.Warn(this, $"Data length: {data.Length}, expected (w*h*d): {width * height * type.Depth}");
+            Logger.Logger.Warn(this, $"Data length: {data.Length}, expected (w*h*d): {width * height * type.Depth}");
             data = new byte[width * height*type.Depth];
         }
         

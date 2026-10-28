@@ -1,5 +1,7 @@
 ﻿using System.Reflection;
-using Enjune.Misc;
+using Enjune.Logger;
+
+namespace Standoff2;
 
 internal class Program
 {
