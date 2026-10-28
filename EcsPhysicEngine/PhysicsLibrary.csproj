@@ -10,4 +10,8 @@
     <ProjectReference Include="..\Enjune\Enjune.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Integration\" />
+  </ItemGroup>
+
 </Project>
