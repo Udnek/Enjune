@@ -72,7 +72,7 @@ public class CompiledFont
         return (width, minY, maxY);
     }
     
-    public void GenerateMeshes(string text, float textHeight, Action<(Mesh<FontData.Vertex, FontData.PerPrimitive> Mesh, int CharIdx)> consumer)
+    public void GenerateMeshes(string text, float textHeight, Action<(Mesh<FontGraphicData.Vertex, FontGraphicData.PerPrimitive> Mesh, int CharIdx)> consumer)
     {
         // we are calculating it cause font is already rendered in some size
         var sizeMul = textHeight / _initialFontHeight;
@@ -87,7 +87,7 @@ public class CompiledFont
             {
                 var width = glyph.Width * sizeMul;
                 var height = glyph.Height * sizeMul;
-                var mesh = new Mesh<FontData.Vertex, FontData.PerPrimitive>(PrimitiveTopology.Triangle);
+                var mesh = new Mesh<FontGraphicData.Vertex, FontGraphicData.PerPrimitive>(PrimitiveTopology.Triangle);
                 mesh.AddQuad(
                     new (), new (),
                     (0f, 0f, 0f), 
@@ -106,9 +106,9 @@ public class CompiledFont
         }
     }
 
-    public StaticModel<FontData.Vertex, FontData.PerPrimitive> GenerateModel(string text, float height, Color color)
+    public StaticModel<FontGraphicData.Vertex, FontGraphicData.PerPrimitive> GenerateModel(string text, float height, Color color)
     {
-        var meshes = new Mesh<FontData.Vertex, FontData.PerPrimitive>[text.Length];
+        var meshes = new Mesh<FontGraphicData.Vertex, FontGraphicData.PerPrimitive>[text.Length];
         var i = 0;
         GenerateMeshes(text, height, mesh => meshes[i++] = mesh.Mesh);
         return new(meshes);

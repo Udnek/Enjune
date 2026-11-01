@@ -11,7 +11,7 @@ public class Program
     internal static void Main(string[] args)
     {
         Logger.RegisterNamespaceToDomain(Assembly, "", new Logger.Domain("MC2", ConsoleColor.Yellow));
-        Logger.IgnoreDebugLogs = true;
+        Logger.IgnoreDebugLogs = false;
         Enjune.Enjune.Run(new App(), args);
     }
 }

@@ -4,7 +4,7 @@ using Enjune.Graphic.Modeling;
 
 namespace Enjune.KitStart.Font;
 
-public static class FontData
+public static class FontGraphicData
 {
     [StructLayout(LayoutKind.Explicit, Size = 16)]
     public struct PerPrimitive(Color color)

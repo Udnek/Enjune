@@ -21,7 +21,6 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Enjune\Enjune.csproj" />
-      <ProjectReference Include="..\SceneMaker\SceneMaker.csproj" />
     </ItemGroup>
 
 </Project>
