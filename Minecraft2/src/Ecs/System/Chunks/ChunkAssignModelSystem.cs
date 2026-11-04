@@ -6,7 +6,7 @@ using Enjune.Misc;
 using Minecraft2.Ecs.Component;
 using Minecraft2.Ecs.System.Misc;
 using Minecraft2.Terrain;
-using Utils = Minecraft2.Ecs.System.Misc.Utils;
+using Utils = Minecraft2.Misc.Utils;
 
 namespace Minecraft2.Ecs.System.Chunks;
 

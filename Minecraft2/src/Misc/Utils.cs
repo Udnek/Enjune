@@ -1,4 +1,4 @@
-namespace Minecraft2.Ecs.System.Misc;
+namespace Minecraft2.Misc;
 
 public static class Utils
 {

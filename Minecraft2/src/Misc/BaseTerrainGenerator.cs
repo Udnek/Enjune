@@ -1,3 +1,5 @@
+using System.Diagnostics;
+using Enjune.Logger;
 using Enjune.Misc;
 using Enjune.Parallelism;
 using Minecraft2.Block;
@@ -22,6 +24,7 @@ public class BaseTerrainGenerator : ConcurrentWorker<ChunkPos, Chunk, Chunk>
 
     protected override Chunk Work(Chunk chunk)
     {
+        var renderTimer = Stopwatch.StartNew();
         var yOffset = chunk.Position.Y * Chunk.Size.Y;
         for (int blockX = 0; blockX < Chunk.Size.X; blockX++)
         {
@@ -30,7 +33,7 @@ public class BaseTerrainGenerator : ConcurrentWorker<ChunkPos, Chunk, Chunk>
                 var globalHeight = SampleHeight(chunk.Position.Xz, (blockX, blockZ)); // [-1; 1]
                 globalHeight = ((globalHeight + 1f) / 2f)*256f; // [0; 256]
 
-                var topSoil = globalHeight > 220 ? _app.Blocks.Snow : _app.Blocks.Grass;
+                var topSoil = (globalHeight > 220 ? _app.Blocks.Snow : _app.Blocks.Grass).DefaultState;
                 
                 var localHeight = (int) globalHeight - yOffset;
                 if (localHeight <= 0)
@@ -38,7 +41,7 @@ public class BaseTerrainGenerator : ConcurrentWorker<ChunkPos, Chunk, Chunk>
                 
                 for (int i = 0; i < Math.Min(Chunk.Size.Y, localHeight-2); i++)
                 {
-                    chunk.BlockLayer.SetByLocal((blockX, i, blockZ), _app.Blocks.Dirt);
+                    chunk.BlockLayer.SetByLocal((blockX, i, blockZ), _app.Blocks.Dirt.DefaultState);
                 }
 
                 for (int i = Math.Max(0, localHeight-2); i < Math.Min(Chunk.Size.Y, localHeight); i++)
@@ -47,7 +50,8 @@ public class BaseTerrainGenerator : ConcurrentWorker<ChunkPos, Chunk, Chunk>
                 }
             }
         }
-
+        renderTimer.Stop();
+        Logger.Debug(this, $"Generated {chunk.Position} terrain in {renderTimer.ElapsedMilliseconds} ms");
         return chunk;
     }
 

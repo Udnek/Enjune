@@ -196,8 +196,8 @@ public sealed partial class OpenGlApi : GlDisposable, IGraphicApi, IRawGraphicAp
         // just in case
         GL.GetInteger(GetPName.MaxTextureSize, out var maxTextureSize);
         GL.GetInteger(GetPName.MaxArrayTextureLayers, out var maxArrayLayers);
-        Logger.Info(this, $"max possible texture size: {maxTextureSize}");
-        Logger.Info(this, $"max possible texture array layers: {maxArrayLayers}");
+        Logger.Info(this, $"Max possible texture size: {maxTextureSize}");
+        Logger.Info(this, $"Max possible texture array layers: {maxArrayLayers}");
 
         error = null;
         return this;

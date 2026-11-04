@@ -55,9 +55,14 @@ public static partial class Logger
         
         if (!author.IsGenericType) 
             return prefix + author.Name;
-        var generics = author.GetGenericArguments();
+        
         var name = author.Name;
         name = name[..name.IndexOf('`')];
+        
+        if (author.IsGenericTypeDefinition) // is is something like List<> not List<int>
+            return $"{prefix}{name}<>";
+        
+        var generics = author.GetGenericArguments();
         return $"{prefix}{name}{generics.Map(GetTypeName).ContentToString("<", ", ", ">")}";
     }
 }

@@ -6,12 +6,18 @@ public static partial class Logger
 {
     private static readonly Dictionary<Type, Domain> TypeToDomain = [];
     private static readonly List<(Assembly Assembly, string Namespace, Domain domain)> NamespaceToDomain = [];
+    private static readonly HashSet<Domain> EnabledDebugDomains = [];
+    
+    static Logger()
+    {
+        RegisterNamespaceToDomain(Enjune.Assembly, nameof(Logger), Domain.Logger);
+    }
     
     // registering domain
     public static void RegisterTypeToDomain(Type type, Domain domain)
     {
         TypeToDomain[type] = domain;
-        Info(typeof(Logger), $"registered domain [{domain.Name}] for type {type.Name}");
+        Info(typeof(Logger), $"Registered domain [{domain.Name}] for type {GetTypeName(type)}");
     }
     
     public static void RegisterNamespaceToDomain(Assembly assembly, string namespaceName, Domain domain)
@@ -26,12 +32,18 @@ public static partial class Logger
             if (right.Namespace.Contains(left.Namespace)) return 1;
             return 0;
         });
-        Info(typeof(Logger), $"registered domain [{domain.Name}] for assembly {assembly.GetName().Name} and namespace '{namespaceName}'");
+        Info(typeof(Logger), $"Registered domain [{domain.Name}] for assembly {assembly.GetName().Name} and namespace '{namespaceName}'");
     }
     // end registering domain
 
+    public static void EnableDebugFor(Domain domain) => EnabledDebugDomains.Add(domain);
+
+    public static void DisableDebugFor(Domain domain) => EnabledDebugDomains.Remove(domain);
+
     private static Domain? GetRegisteredDomainFor(Type type)
     {
+        if (type.IsGenericType) // is List<Something> for example
+            type = type.GetGenericTypeDefinition(); // returns List<>
         if (TypeToDomain.TryGetValue(type, out var value))
             return value;
         var typeNs = type.Namespace;
@@ -47,7 +59,7 @@ public static partial class Logger
         return null;
     }
     
-    public struct Domain(string name, ConsoleColor? color)
+    public readonly record struct Domain(string Name, ConsoleColor? Color)
     {
         public static readonly Domain Default = new("Unknown", null);
         public static readonly Domain Enjune = new("Enjune", ConsoleColor.DarkGreen);
@@ -56,8 +68,5 @@ public static partial class Logger
         public static readonly Domain Assets = new("Assets", ConsoleColor.DarkMagenta);
         public static readonly Domain Misc = new("Misc", ConsoleColor.White);
         public static readonly Domain Ecs = new("ECS", ConsoleColor.DarkYellow);
-        
-        public readonly string Name = name;
-        public readonly ConsoleColor? Color = color;
     }
 }

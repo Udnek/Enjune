@@ -66,7 +66,7 @@ public sealed class Archetype
     /// <param name="entity"></param>
     internal void AddEntity(Entity.Assembly entityAssembly, Entity entity)
     {
-        Logger.Logger.Info(this, $"Acquired {entity} as an assembly");
+        Logger.Logger.Debug(this, $"Acquired {entity} as an assembly");
         EnsureCapacity(Count + 1);
 
         int row = Count;
@@ -93,7 +93,7 @@ public sealed class Archetype
     /// <param name="components"></param>
     internal void AddEntity(Entity entity, IEnumerable<IComponent> components)
     {
-        Logger.Logger.Info(this, $"Acquired {entity} as a stream of components");
+        Logger.Logger.Debug(this, $"Acquired {entity} as a stream of components");
 
         EnsureCapacity(Count + 1);
 
@@ -110,7 +110,7 @@ public sealed class Archetype
             }
             else
             {
-                Logger.Logger.Info(this, $"Omitting a component that does not belong to archetype {Signature}");
+                Logger.Logger.Debug(this, $"Omitting a component that does not belong to archetype {Signature}");
             }
         }
         // Ineffective?
@@ -124,8 +124,8 @@ public sealed class Archetype
     internal void RemoveEntity(Entity entity)
     {
         if (!_entityToRow.TryGetValue(entity, out var entityRow)) 
-            Logger.Logger.Info(this, $"{entity} is not in {Signature} archetype.");
-        Logger.Logger.Info(this, $"Removing {entity}");
+            Logger.Logger.Debug(this, $"{entity} is not in {Signature} archetype.");
+        Logger.Logger.Debug(this, $"Removing {entity}");
 
         var lastRow = Count - 1;
 

@@ -32,9 +32,12 @@ public class ChunkRenderSystem : AppSystem
             if (chunkComp.ToBeUnloaded) 
                 return;
             
-            if (chunkGrx.PendingNeighbors > 0) 
+            if (chunkGrx.PendingNeighbors > 0)
+            {
+                Logger.Debug(this, $"skipping {chunkComp.Chunk.Position}");
                 return;
-            
+            }
+
             var chunk = chunkComp.Chunk;
             if (!(chunk.BlockLayer.IsDirty || chunkGrx.BlockSizeChanged)) 
                 return;

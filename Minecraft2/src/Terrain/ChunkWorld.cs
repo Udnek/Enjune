@@ -33,7 +33,7 @@ public class ChunkWorld
         if (IsQueued(chunkPos))
             return;
 
-        var chunk = new Chunk(chunkPos, new ChunkLayer<BlockType>(chunkPos, _app.Blocks.Air));
+        var chunk = new Chunk(chunkPos, new PaletteChunkLayer<BlockState>(chunkPos, _app.Blocks.Air.DefaultState));
         _queuedForGeneration.Add(chunkPos);
         _app.TerrainGenerator.Enqueue(chunkPos, chunk);
     }
@@ -50,7 +50,7 @@ public class ChunkWorld
             }
             _app.World.RemoveEntityComponent<ChunkComponent>(chunkEntity);
             //_app.ChunkPool.Recycle(chunkComp.Value.Chunk);
-            Logger.Info(this, $"Unloading {chunkPos} {chunkEntity}");
+            Logger.Debug(this, $"Unloading {chunkPos} {chunkEntity}");
         }
         else if (_queuedForGeneration.Remove(chunkPos))
         {
@@ -104,7 +104,7 @@ public class ChunkWorld
         var chunkComponent = _app.World.GetEntityComponent<ChunkComponent>(entity);
         if (chunkComponent is null)
         {
-            Logger.Warn(this, $"chunk entity {chunkPos} doesn't have {Logger.GetTypeName<ChunkComponent>()}!");
+            Logger.Warn(this, $"Chunk entity {chunkPos} doesn't have {Logger.GetTypeName<ChunkComponent>()}!");
             chunk = null;
             return false;
         }
@@ -115,11 +115,11 @@ public class ChunkWorld
     
     public bool TryTraceBlock(Vector3 absRayOrigin, Vector3 dir, float maxDistance, 
         [MaybeNullWhen(false)] out BlockPos hitBlockPos,
-        [MaybeNullWhen(false)] out BlockType hitBlockType,
+        [MaybeNullWhen(false)] out BlockState? hitBlockState,
         [MaybeNullWhen(false)] out Chunk hitChunk,
         out BlockFace? hitBlockFace)
     {
-        hitBlockType = null;
+        hitBlockState = null;
         hitBlockPos = default;
         hitBlockFace = null;
         hitChunk = null;
@@ -138,9 +138,9 @@ public class ChunkWorld
         
         var absBlockOrigin = Chunk.ToGlobalBlockPos(absRayOrigin);
         var block = chunk.BlockLayer.GetByGlobal(absBlockOrigin);
-        if (block.Collision != null && block.Collision.Value.ContainsPoint(absRayOrigin - absBlockOrigin))
+        if (block.Type.Collision != null && block.Type.Collision.Value.ContainsPoint(absRayOrigin - absBlockOrigin))
         {
-            hitBlockType = block;
+            hitBlockState = block;
             hitBlockPos = absBlockOrigin;
             hitChunk = chunk;
             return true;
@@ -171,8 +171,8 @@ public class ChunkWorld
             }
 
             block = chunk.BlockLayer.GetByGlobal(absBlockPos);
-            if (block.Collision == null) continue;
-            var collision = block.Collision.Value;
+            if (block.Type.Collision == null) continue;
+            var collision = block.Type.Collision.Value;
             if (!MathUtils.RayEntersAABB(
                     absRayOrigin, dir, absBlockPos + collision.Min, absBlockPos + collision.Max,
                     out var enterPos))
@@ -185,7 +185,7 @@ public class ChunkWorld
 
             hitBlockFace = BlockFace.FromDirection(stepDir).Opposite();
             hitBlockPos = absBlockPos;
-            hitBlockType = block;
+            hitBlockState = block;
             hitChunk = chunk;
             return true;
         }

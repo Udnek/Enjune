@@ -45,7 +45,7 @@ public static class Utils
         var objType = obj.GetType();
         var fields = objType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
         var disposedAtLestOne = false;
-        if (log) Logger.Logger.Info(typeof(Utils), $"{tab}- Stared disposing {objType.Name}:");
+        if (log) Logger.Logger.Debug(typeof(Utils), $"{tab}- Stared disposing {objType.Name}:");
         List<(FieldInfo Field, IDisposable Value, string Reason)> disposeAtLast = [];
         foreach (var field in fields)
         {
@@ -54,7 +54,7 @@ public static class Utils
             var doNotSerialize = (DoNotDisposeViaUtilsAttribute?) field.GetCustomAttribute(typeof(DoNotDisposeViaUtilsAttribute));
             if (doNotSerialize is not null)
             {
-                if (log) Logger.Logger.Info(typeof(Utils), $"  {tab}Do not disposing {objType.Name}.{field.Name}: {doNotSerialize.Reason}");
+                if (log) Logger.Logger.Debug(typeof(Utils), $"  {tab}Do not disposing {objType.Name}.{field.Name}: {doNotSerialize.Reason}");
                 continue;
             }
             var isDisposeAtLast = (DisposeAtLastAttribute?) field.GetCustomAttribute(typeof(DisposeAtLastAttribute));
@@ -75,7 +75,7 @@ public static class Utils
         if (!disposedAtLestOne)
             Logger.Logger.Warn(typeof(Utils), $"  {tab}Nothing disposed in {objType.Name}; something might be wrong");
         
-        if (log) Logger.Logger.Info(typeof(Utils), $"{tab}- Finished disposing {objType.Name}");
+        if (log) Logger.Logger.Debug(typeof(Utils), $"{tab}- Finished disposing {objType.Name}");
         
         _disposeDepth--;
         return;
@@ -84,7 +84,7 @@ public static class Utils
         {
             value.Dispose();
             disposedAtLestOne = true;
-            if (log) Logger.Logger.Info(typeof(Utils),$"  {tab}{objType.Name}.{field.Name} disposed");
+            if (log) Logger.Logger.Debug(typeof(Utils),$"  {tab}{objType.Name}.{field.Name} disposed");
         }
     }
 }

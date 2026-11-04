@@ -51,13 +51,13 @@ public abstract class AbstractBuffer<T> : GlDisposable, IGlBuffer where T : unma
         }
         if (newCapacity <= 0)
         {
-            Logger.Error(this, $"capacity must be positive, got {newCapacity}");
+            Logger.Error(this, $"Capacity must be positive, got {newCapacity}");
             return;
         }
         Bind();
         GL.BufferData(_target, newCapacity*_elementSize, IntPtr.Zero, BufferUsageHint.DynamicDraw);
         OpenGlApi.CheckGlError(this);
-        Logger.Info(this, $"capacity changed: {Capacity} -> {newCapacity}");
+        Logger.Debug(this, $"Capacity changed: {Capacity} -> {newCapacity}");
         Capacity = newCapacity;
         Count = 0;
     }

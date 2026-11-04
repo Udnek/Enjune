@@ -1,30 +1,22 @@
 using System.Runtime.CompilerServices;
 using Enjune.Logger;
-using Enjune.Misc;
-using Minecraft2.Block;
 
 namespace Minecraft2.Terrain;
 
-public class ChunkLayer<T> : IReadonlyChunkLayer<T>
+public abstract class AbstractChunkLayer<T> : IReadonlyChunkLayer<T>
 {
-    private readonly T[] _data = new T[Chunk.Size.X * Chunk.Size.Y * Chunk.Size.Z];
-
     public int Version { get; private set; }
-    public bool IsDirty { get; set; } = false;
+    public bool IsDirty { get; set; } = true;
 
     public ChunkPos Position { get; }
 
-    public ChunkLayer(ChunkPos position, T fillWith)
+    public AbstractChunkLayer(ChunkPos position, T fillWith)
     {
         Position = position;
         Clear(fillWith);
     }
 
-    public void Clear(T fillWith)
-    {
-        Array.Fill(_data, fillWith);
-        IsDirty = false;
-    }
+    public abstract void Clear(T fillWith);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public BlockPos ToLocalPos(BlockPos globalPos) => globalPos - (Position * Chunk.Size);
@@ -37,29 +29,6 @@ public class ChunkLayer<T> : IReadonlyChunkLayer<T>
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetByGlobal(BlockPos globalPos, T block) => SetByLocal(ToLocalPos(globalPos), block);
-    
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public T GetByLocal(BlockPos local)
-    {
-        if (!ContainsLocalBlockPos(local))
-        {
-            Logger.Error(this, $"can not get: local {local} is out of bounds");
-            return default!;
-        }
-        return _data[ToIndex(local)];
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetByLocal(BlockPos local, T block)
-    {
-        if (!ContainsLocalBlockPos(local))
-        {
-            Logger.Error(this, $"can not set: local {local} is out of bounds");
-            return;
-        }
-        IsDirty = true;
-        _data[ToIndex(local)] = block;
-    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool ContainsGlobalBlockPos(BlockPos global) => ContainsLocalBlockPos(ToLocalPos(global));
@@ -71,6 +40,12 @@ public class ChunkLayer<T> : IReadonlyChunkLayer<T>
                0 <= local.Y && local.Y < Chunk.Size.Y &&
                0 <= local.Z && local.Z < Chunk.Size.Z;
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public abstract T GetByLocal(BlockPos local);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public abstract void SetByLocal(BlockPos local, T block);
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public T SafeGetByGlobal(BlockPos global, T whenOutOfBounds) 
@@ -81,11 +56,11 @@ public class ChunkLayer<T> : IReadonlyChunkLayer<T>
     {
         if (!ContainsLocalBlockPos(local))
             return whenOutOfBounds;
-        return _data[ToIndex(local)];
+        return GetByLocal(local);
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static int ToIndex(BlockPos pos) 
+    protected static int ToIndex(BlockPos pos) 
         => pos.X + 
            (Chunk.Size.X * pos.Z) + 
            (Chunk.Size.X * Chunk.Size.Z * pos.Y);

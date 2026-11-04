@@ -33,7 +33,7 @@ public class GraphicEngine
     
     // misc
     private Matrix4 _projection;
-    private IRenderableMesh<GraphicScreenApi.Vertex, GraphicScreenApi.Primitive> _screenMesh;
+    private IRenderableMesh<GraphicScreenApi.Vertex, GraphicScreenApi.Primitive> _screenMesh = null!;
     
     public GraphicEngine(App app, IGraphicApi grxApi)
     {
@@ -103,6 +103,8 @@ public class GraphicEngine
         
         return null;
     }
+
+    public uint AmountOfModelsCreated() => _chunkModelPool.TotalCreated;
 
     private void ProceedCommands()
     {

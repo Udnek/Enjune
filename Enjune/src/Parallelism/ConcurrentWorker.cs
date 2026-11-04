@@ -91,6 +91,8 @@ public abstract class ConcurrentWorker<TJobKey, TIn, TOut> : AbstractDisposable 
         _cancelWorkToken = null;
     }
 
+    public bool IsEnqueued(TJobKey key) => _jobs.Any(j => j.Key.Equals(key));
+
     /// <summary>
     /// Add new job for worker in FIFO order
     /// </summary>

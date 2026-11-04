@@ -65,8 +65,6 @@ public class PaletteMappedBuffer<T> where T : IEquatable<T>
             
             if (!_elementToId.TryGetValue(value, out var id))
             {
-                Logger.Logger.Debug(this, 
-                    $"{value} is not in palette, adding");
                 EnsurePaletteCapacity(_idToElement.Count + 1);
                 id = _idToElement.Count;
                 _idToElement.Add(value);

@@ -8,8 +8,8 @@ public class RecyclingPool<T>
 {
     private readonly Queue<T> _queue = new();
     private readonly Func<T> _fabric;
-    private uint _totalCreated = 0;
-    
+    public uint TotalCreated { get; private set; } = 0; // amount of items pool created through fabric
+
     /// <summary>
     /// Fabric will be called when pool is empty
     /// </summary>
@@ -18,7 +18,11 @@ public class RecyclingPool<T>
     /// <summary>
     /// Adds item to the pool for later retrieve
     /// </summary>
-    public void Recycle(T item) => _queue.Enqueue(item);
+    public void Recycle(T item)
+    {
+        Logger.Debug(this, "Got recycled item");
+        _queue.Enqueue(item);
+    }
 
     /// <summary>
     /// Takes and removes item from pool is any. Creates new instance via fabric otherwise
@@ -28,8 +32,8 @@ public class RecyclingPool<T>
         if (_queue.TryDequeue(out var result))
             return result;
         
-        Logger.Info(this, $"Pool is empty, creating new number {_totalCreated}");
-        _totalCreated += 1;
+        Logger.Debug(this, $"Pool is empty, creating new number {TotalCreated}");
+        TotalCreated += 1;
         return _fabric();
     }
 }

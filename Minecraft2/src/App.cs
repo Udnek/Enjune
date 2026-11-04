@@ -19,6 +19,7 @@ using Minecraft2.Misc;
 using Minecraft2.Terrain;
 using OpenGLApi;
 using OpenTK.Mathematics;
+using Utils = Enjune.Misc.Utils;
 
 namespace Minecraft2;
 
@@ -99,7 +100,7 @@ public class App : AbstractDisposable, IApp
         {
             Sensitivity =  0.2f,
             Speed = 60,
-            Position = (Chunk.Size.X/2f, 50, Chunk.Size.X/2f)
+            Position = (Chunk.Size.X/2f, 100, Chunk.Size.X/2f)
         };
         
         // world load
@@ -110,7 +111,7 @@ public class App : AbstractDisposable, IApp
                 .AddComponent(new ChunkLoader
                 {
                     HorizontalRadius = 8,
-                    VerticalRadius = 3
+                    VerticalRadius = 0
                 })
                 .AddComponent(new Transform()));
 
@@ -132,7 +133,7 @@ public class App : AbstractDisposable, IApp
         var logicThread = new Thread(() =>
         {
             Utils.RunTargetFpsLoopWhile(
-                1, 
+                20, 
                 () => IsRunning,
                 LogicCycle
             ); 
@@ -150,6 +151,11 @@ public class App : AbstractDisposable, IApp
         
         TerrainGenerator.Stop();
         ChunkMeshGenerator.Stop();
+        
+        Logger.Info(this, 
+            $"Total amount of chunk model class creations: {ChunkModelPool.TotalCreated}");
+        Logger.Info(this, 
+            $"Total amount of GPU chunks creations: {ChunkModelPool.TotalCreated}");
     }
 
     private void LogicCycle(float deltaTime)
@@ -171,7 +177,7 @@ public class App : AbstractDisposable, IApp
                     out BlockPos hitPos, out _, out var hitChunk, out _))
             {
                 Logger.Debug(this, $"break at {hitPos}");
-                hitChunk.BlockLayer.SetByGlobal(hitPos, Blocks.Air);
+                hitChunk.BlockLayer.SetByGlobal(hitPos, Blocks.Air.DefaultState);
             }
         }
         
@@ -184,7 +190,7 @@ public class App : AbstractDisposable, IApp
                 {
                     var placePos = hitPos + hitFace.Value.Direction();
                     Logger.Debug(this, $"place at {placePos}, {hitFace}");
-                    hitChunk.BlockLayer.SetByGlobal(placePos, Blocks.Cobblestone);
+                    hitChunk.BlockLayer.SetByGlobal(placePos, Blocks.Cobblestone.DefaultState);
                 }
             }
         }

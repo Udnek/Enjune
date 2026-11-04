@@ -26,7 +26,10 @@ public class ChunkRemoveModelSystem : AppSystem
             if (!chunkComp.ToBeUnloaded) return;
             
             // dequeuing from model generation
-            App.ChunkMeshGenerator.EnqueueJobCancel(chunkGrx.GraphicId);
+            if (App.ChunkMeshGenerator.IsEnqueued(chunkGrx.GraphicId))
+                App.ChunkMeshGenerator.EnqueueJobCancel(chunkGrx.GraphicId);
+            else // or just recycling
+                App.ChunkModelPool.Recycle(chunkGrx.Model);
             // clearing and removing api model
             App.GraphicEngine.EnqueueChunkRefit(chunkGrx.GraphicId, null);
             App.GraphicEngine.EnqueueChunkRemoval(chunkGrx.GraphicId);
@@ -35,10 +38,7 @@ public class ChunkRemoveModelSystem : AppSystem
         });
         
         // recycling models
-        while (App.ChunkMeshGenerator.TryDequeueCancelled(out Guid id, out var job))
-        {
-            //Logger.Highlight(this, $"got canceled mesh for {job.TargetChunk.Position}");
+        while (App.ChunkMeshGenerator.TryDequeueCancelled(out Guid id, out var job)) 
             App.ChunkModelPool.Recycle(job.Model);
-        }
     }
 }

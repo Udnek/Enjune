@@ -32,7 +32,12 @@ public class ChunkLoadSystem : AppSystem
                 {
                     for (int y = -yRadius; y <= yRadius; y++)
                     {
-                        chunkWorld.QueueLoading(center + (x, y, z));
+                        var relPos = new ChunkPos(x, y, z);
+                        if (relPos.Xz.EuclideanLengthSquared > xzRadius * xzRadius)
+                            continue;
+                        if (relPos.Y > yRadius)
+                            continue;
+                        chunkWorld.QueueLoading(center + relPos);
                     }
                 }
             }

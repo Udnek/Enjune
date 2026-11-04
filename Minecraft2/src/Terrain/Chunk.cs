@@ -7,7 +7,7 @@ namespace Minecraft2.Terrain;
 
 public class Chunk : IReadonlyChunk
 {
-    public static readonly ChunkPos Size = (32, 64, 32);
+    public static readonly ChunkPos Size = (16, 256, 16);
 
     static Chunk()
     {
@@ -18,20 +18,17 @@ public class Chunk : IReadonlyChunk
 
     public ChunkPos Position { get; }
 
-    IReadonlyChunkLayer<BlockType> IReadonlyChunk.BlockLayer => BlockLayer;
-    public readonly ChunkLayer<BlockType> BlockLayer;
+    IReadonlyChunkLayer<BlockState> IReadonlyChunk.BlockLayer => BlockLayer;
+    public readonly PaletteChunkLayer<BlockState> BlockLayer;
     
-    public Chunk(ChunkPos pos, ChunkLayer<BlockType> blockLayer)
+    public Chunk(ChunkPos pos, PaletteChunkLayer<BlockState> blockLayer)
     {
         BlockLayer = blockLayer;
         Position = pos;
     }
 
-    public void Clear(BlockType air)
-    {
-        BlockLayer.Clear(air);
-    }
-    
+    public void Clear(BlockState air) => BlockLayer.Clear(air);
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static ChunkPos ToChunkPos(Vector3 pos) => 
         new((int) Math.Floor(pos.X / Size.X), 

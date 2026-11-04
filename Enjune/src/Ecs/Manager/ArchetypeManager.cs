@@ -15,7 +15,7 @@ public sealed class ArchetypeManager(World world)
     {
         if (_signatureToArchetype.ContainsKey(signature)) return;
         _signatureToArchetype[signature] = new Archetype(signature, _world);
-        Logger.Logger.Info(this, $"Created an archetype with signature {signature}");
+        Logger.Logger.Debug(this, $"Created an archetype with signature {signature}");
     }
     
     public IEnumerable<Archetype> Query(Signature include, Signature exclude)
@@ -33,7 +33,7 @@ public sealed class ArchetypeManager(World world)
     {
         
         Signature signature = assembly.GetSignature(_world);
-        Logger.Logger.Info(this, $"Got a request to add {entity} with signature {signature}");
+        Logger.Logger.Debug(this, $"Got a request to add {entity} with signature {signature}");
 
         EnsureArchetypeExistence(signature);
 
@@ -44,7 +44,7 @@ public sealed class ArchetypeManager(World world)
     
     internal void RemoveEntity(Entity entity)
     {
-        Logger.Logger.Info(this, $"Got a request to remove {entity}");
+        Logger.Logger.Debug(this, $"Got a request to remove {entity}");
         if (_entityToArchetype.TryGetValue(entity, out Archetype? archetype)) 
         {
             archetype.RemoveEntity(entity);
@@ -56,7 +56,7 @@ public sealed class ArchetypeManager(World world)
 
     internal void MoveEntity(Entity entity, Archetype from, Archetype to)
     {
-        Logger.Logger.Info(this, $"Moving {entity} from {from.Signature} to {to.Signature}");
+        Logger.Logger.Debug(this, $"Moving {entity} from {from.Signature} to {to.Signature}");
         to.AddEntity(entity, from.GetEntityComponents(entity));
         from.RemoveEntity(entity);
         _entityToArchetype[entity] = to;

@@ -46,23 +46,23 @@ public class ChunkMeshGenerator(App app) : ConcurrentWorker<Guid, ChunkMeshGener
                 Position.Zero, Chunk.Size, TextureQuad.Full);
         
         renderTimer.Stop();
-        Logger.Info(this, $"Generated mesh in {renderTimer.ElapsedMilliseconds} ms");
+        Logger.Debug(this, $"Generated ({job.BlockSize}) {job.TargetChunk.Position} mesh in {renderTimer.ElapsedMilliseconds} ms");
         return job;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private bool ShouldRenderFace(BlockType? adjacentBlock)
+    private bool ShouldRenderFace(BlockState? adjacentBlock)
     {
         if (adjacentBlock is null) return false; // facing unloaded chunk
-        return adjacentBlock.Render is null; // facing air-like
+        return adjacentBlock.Value.Type.Render is null; // facing air-like
     }
 
-    private BlockType? Sample(Job job, BlockPos locPos)
+    private BlockState? Sample(Job job, BlockPos locPos)
     {
         if (job.TargetChunk.BlockLayer.ContainsLocalBlockPos(locPos))
             return job.TargetChunk.BlockLayer.GetByLocal(locPos);
         
-        IReadonlyChunkLayer<BlockType>? chunk;
+        IReadonlyChunkLayer<BlockState>? chunk;
         if (locPos.X >= Chunk.Size.X)
             chunk = job.EastChunk?.BlockLayer;
         else if (locPos.X < 0)
@@ -95,7 +95,7 @@ public class ChunkMeshGenerator(App app) : ConcurrentWorker<Guid, ChunkMeshGener
             {
                 for (int z = 0; z < Chunk.Size.Z; z+=blockSize)
                 {
-                    var blockRender = job.TargetChunk.BlockLayer.GetByLocal((x, y, z)).Render;
+                    var blockRender = job.TargetChunk.BlockLayer.GetByLocal((x, y, z)).Type.Render;
                     if (blockRender is null) continue;
                     
                     var primitive = new GraphicChunkApi.Primitive { TextureIndex = blockRender.TextureIndex };
@@ -170,17 +170,17 @@ public class ChunkMeshGenerator(App app) : ConcurrentWorker<Guid, ChunkMeshGener
         }
     }
     
-    private BlockType? DownsampleNoCache(Job job, BlockPos pos, int blockSize)
+    private BlockState? DownsampleNoCache(Job job, BlockPos pos, int blockSize)
     {
         for (int y = pos.Y+blockSize-1; y >= pos.Y; y--)
         {
-            var blockType = Sample(job, pos with {Y = y});
-            if (blockType is null) return null;
-            if (blockType.Render is null) continue;
-            return blockType;
+            var blockState = Sample(job, pos with {Y = y});
+            if (blockState is null) return null;
+            if (blockState.Value.Type.Render is null) continue;
+            return blockState;
         }
 
-        return _app.Blocks.Air;
+        return _app.Blocks.Air.DefaultState;
         
         //return Sample(job, pos + BlockPos.One*(blockSize-1));
         // int dirts = 0;
@@ -204,9 +204,9 @@ public class ChunkMeshGenerator(App app) : ConcurrentWorker<Guid, ChunkMeshGener
         // return _app.Blocks.Air;
     }
     
-    private readonly Dictionary<BlockPos, BlockType?> _downsamplesCache = [];
+    private readonly Dictionary<BlockPos, BlockState?> _downsamplesCache = [];
     
-    private BlockType? Downsample(Job job, BlockPos from, int blockSize)
+    private BlockState? Downsample(Job job, BlockPos from, int blockSize)
     {
         if (_downsamplesCache.TryGetValue(from, out var sample))
             return sample;
@@ -235,7 +235,7 @@ public class ChunkMeshGenerator(App app) : ConcurrentWorker<Guid, ChunkMeshGener
                 for (int z = 0; z < Chunk.Size.Z; z+=blockSize)
                 {
                     var blockType = Downsample(job, (x, y, z), blockSize);
-                    var blockRender = blockType?.Render;
+                    var blockRender = blockType?.Type.Render;
                     if (blockRender is null) continue;
                     
                     var primitive = new GraphicChunkApi.Primitive { TextureIndex = blockRender.TextureIndex };

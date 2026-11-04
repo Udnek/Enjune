@@ -37,7 +37,7 @@ public sealed class ComponentManager
         }
         
         ComponentTypeId id = _availableComponentIds.Dequeue();
-        Logger.Logger.Info(this, $"Registering component type {componentType.Name}, identifying as {id}");
+        Logger.Logger.Debug(this, $"Registering component type {componentType.Name}, identifying as {id}");
         _typeToId[componentType] = id;
         _idToType[id] = componentType;
     }
