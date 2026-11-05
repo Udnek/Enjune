@@ -11,6 +11,7 @@ namespace Minecraft2.Ecs.System.Chunks;
 public class ChunkChooseLoDSystem : AppSystem
 {
     private static readonly int MaxLoDPowOf2 = (int) Math.Log2(Math.Min(Chunk.Size.X, Math.Min(Chunk.Size.Y, Chunk.Size.Z)));
+    private const int LoDChangeEveryNChunks = 10;
 
     static ChunkChooseLoDSystem()
     {
@@ -43,7 +44,8 @@ public class ChunkChooseLoDSystem : AppSystem
             var old = chunkGrx.BlockSize;
             chunkGrx.BlockSize = 1 << Math.Min(
                 MaxLoDPowOf2, 
-                (Chunk.ToChunkPos(playerTransform.Value.Position) - chunkComp.Chunk.Position).ManhattanLength/5); // powers of 2
+                (Chunk.ToChunkPos(playerTransform.Value.Position) - chunkComp.Chunk.Position)
+                .ManhattanLength/LoDChangeEveryNChunks); // powers of 2
             
             if (old != chunkGrx.BlockSize)
                 chunkGrx.BlockSizeChanged = true;

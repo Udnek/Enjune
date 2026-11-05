@@ -7,7 +7,7 @@ namespace Minecraft2.Terrain;
 
 public class Chunk : IReadonlyChunk
 {
-    public static readonly ChunkPos Size = (16, 256, 16);
+    public static readonly ChunkPos Size = (16, 128, 16);
 
     static Chunk()
     {

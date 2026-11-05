@@ -110,8 +110,8 @@ public class App : AbstractDisposable, IApp
             PlayerEntity = World.AddEntity(new Entity.Assembly()
                 .AddComponent(new ChunkLoader
                 {
-                    HorizontalRadius = 8,
-                    VerticalRadius = 0
+                    HorizontalRadius = 16,
+                    VerticalRadius = 1
                 })
                 .AddComponent(new Transform()));
 
@@ -155,7 +155,7 @@ public class App : AbstractDisposable, IApp
         Logger.Info(this, 
             $"Total amount of chunk model class creations: {ChunkModelPool.TotalCreated}");
         Logger.Info(this, 
-            $"Total amount of GPU chunks creations: {ChunkModelPool.TotalCreated}");
+            $"Total amount of GPU chunks creations: {GraphicEngine.AmountOfModelsCreated}");
     }
 
     private void LogicCycle(float deltaTime)

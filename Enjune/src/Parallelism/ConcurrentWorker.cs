@@ -39,26 +39,32 @@ public abstract class ConcurrentWorker<TJobKey, TIn, TOut> : AbstractDisposable 
             {
                 foreach (var job in _jobs.GetConsumingEnumerable(cancelToken))
                 {
+                    if (_queuedForCancellation.TryRemove(job.Key,
+                            out var cancelGen)) // job was canceled before work
+                    {
+                        if (job.Generation < cancelGen) // task appeared before cancel request
+                        {
+                            _cancelled.Enqueue((job.Key, job.Input));
+                            continue;
+                        }
+                    }
+                    // trying to execute job
                     try
                     {
-                        if (_queuedForCancellation.TryRemove(job.Key, out var cancelGen)) // job was canceled before work
-                        {
-                            if (job.Generation < cancelGen) // task appeared before cancel request
-                            {
-                                _cancelled.Enqueue((job.Key, job.Input));
-                                continue;
-                            }
-                        }
                         var res = Work(job.Input); // working
                         if (_queuedForCancellation.TryRemove(job.Key, out _)) // job was canceled during work
                         {
                             _cancelled.Enqueue((job.Key, job.Input));
                             continue;
-                        } 
+                        }
                         // or finally it was not canceled
                         _done.Enqueue((job.Key, res));
                     }
-                    catch (OperationCanceledException){}
+                    catch (OperationCanceledException) // job canceled itself earlier
+                    {
+                        _queuedForCancellation.Remove(job.Key, out _); // removing cancel token if had
+                        _cancelled.Enqueue((job.Key, job.Input)); // enqueuing as canceled
+                    }
                     catch (Exception e)
                     {
                         Logger.Logger.Error(this, $"Exception during work: \n{e}");

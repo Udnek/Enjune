@@ -104,7 +104,7 @@ public class GraphicEngine
         return null;
     }
 
-    public uint AmountOfModelsCreated() => _chunkModelPool.TotalCreated;
+    public uint AmountOfModelsCreated => _chunkModelPool.TotalCreated;
 
     private void ProceedCommands()
     {

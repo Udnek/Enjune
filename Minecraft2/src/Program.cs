@@ -21,7 +21,7 @@ public class Program
         Logger.RegisterTypeToDomain(typeof(BaseTerrainGenerator), TerrainDomain);
         Logger.RegisterTypeToDomain(typeof(RecyclingPool<>), PoolDomain);
         Logger.IgnoreDebugLogs = false;
-        Logger.EnableDebugFor(PoolDomain);
+        //Logger.EnableDebugFor(PoolDomain);
         Enjune.Enjune.Run(new App(), args);
     }
 }

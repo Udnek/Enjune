@@ -51,7 +51,7 @@ public class TextureArrayAssetLoader
         };
         _textures.Add((tex, true));
         _materials.Add((rawMaterial, material));
-        Logger.Logger.Info(this, $"Added material {material} from {texturePath}");
+        Logger.Logger.Debug(this, $"Added material {material} from {texturePath}");
         return matIdx;
     }
 
@@ -110,17 +110,17 @@ public class TextureArrayAssetLoader
             TextureIndex = texIdx
         };
         _materials.Add((rawMaterial, material));
-        Logger.Logger.Info(this, $"Added material {material} from {rawMaterial}");
+        Logger.Logger.Debug(this, $"Added material {material} from {rawMaterial}");
         return _materials.Count - 1;
     }
     
     public ResultOrError<CompiledTAAL> Compile()
     {
-        Logger.Logger.Info(this, $"Compiling {_textures.Count} textures and {_materials.Count} materials");
+        Logger.Logger.Debug(this, $"Compiling {_textures.Count} textures and {_materials.Count} materials");
 
         // choosing max size
         var targetSize = _textures.Max(img => img.Image.Width);
-        Logger.Logger.Info(this, $"Target texture size: {targetSize}");
+        Logger.Logger.Debug(this, $"Target texture size: {targetSize}");
 
         // resizing
         List<ByteImage> resizedImages = new();
@@ -168,7 +168,7 @@ public class TextureArrayAssetLoader
             resizedImages.Add(byteImage);
         }
 
-        Logger.Logger.Info(this, "Done compiling");
+        Logger.Logger.Debug(this, "Done compiling");
         return ResultOrError.Success(
             new CompiledTAAL(
                 MissingMaterialIndex, 
