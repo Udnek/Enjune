@@ -27,6 +27,7 @@ public sealed class Archetype
         List<Type> types = world.ComponentManager.DeconstructSignature(signature);
         for (var i = 0; i < nComponents; i++) 
             RegisterColumn(types[i]);
+        Logger.Logger.Info(this, $"Created");
     }
     
     private void RegisterColumn(Type compType)
@@ -39,7 +40,7 @@ public sealed class Archetype
 
     /// <summary>
     /// Ensures that archetype's storage has enough capacity<br/>
-    /// to fit <c>targetCapacity</c> elements.<br/>
+    /// to fit <paramref name="targetCapacity"/> elements.<br/>
     /// Does nothing if there is already enough space.<br/>
     /// Resizes storages if there is not
     /// </summary>
@@ -66,7 +67,6 @@ public sealed class Archetype
     /// <param name="entity"></param>
     internal void AddEntity(Entity.Assembly entityAssembly, Entity entity)
     {
-        Logger.Logger.Info(this, $"Acquired {entity} as an assembly");
         EnsureCapacity(Count + 1);
 
         int row = Count;
@@ -83,18 +83,17 @@ public sealed class Archetype
         }
 
         Count++;
+        Logger.Logger.Debug(this, $"Added {entity} using an assembly");
     }
 
     /// <summary>
     /// Adds an entity by consuming a stream of components.<br/>
-    /// Omits components that don't match archetype's signature
+    /// Omitts components that don't match archetype's signature
     /// </summary>
     /// <param name="entity"></param>
     /// <param name="components"></param>
     internal void AddEntity(Entity entity, IEnumerable<IComponent> components)
     {
-        Logger.Logger.Info(this, $"Acquired {entity} as a stream of components");
-
         EnsureCapacity(Count + 1);
 
         int row = Count;
@@ -110,7 +109,7 @@ public sealed class Archetype
             }
             else
             {
-                Logger.Logger.Info(this, $"Omitting a component that does not belong to archetype {Signature}");
+                Logger.Logger.Debug(this, $"Omitting a component that does not belong to archetype {Signature}");
             }
         }
         // Ineffective?
@@ -119,13 +118,14 @@ public sealed class Archetype
             column.Count++;
         }
         Count++;
+
+        Logger.Logger.Debug(this, $"Added {entity} using a stream of components");
     }
 
     internal void RemoveEntity(Entity entity)
     {
-        if (!_entityToRow.TryGetValue(entity, out var entityRow)) 
-            Logger.Logger.Info(this, $"{entity} is not in {Signature} archetype.");
-        Logger.Logger.Info(this, $"Removing {entity}");
+        if (!_entityToRow.TryGetValue(entity, out var entityRow))
+            Logger.Logger.Info(this, $"Couldn't find {entity} to remove");
 
         var lastRow = Count - 1;
 
@@ -151,6 +151,7 @@ public sealed class Archetype
 
         _entityToRow.Remove(entity);
         Count--;
+        Logger.Logger.Debug(this, $"Removed {entity}");
     }
     
     internal IEnumerable<IComponent> GetEntityComponents(Entity entity)

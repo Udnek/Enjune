@@ -1,4 +1,5 @@
 using Enjune.Ecs.System;
+using Enjune.Logger;
 
 namespace Enjune.Ecs.Manager;
 
@@ -11,6 +12,7 @@ public sealed class SystemManager(World world)
     {
         _systems.Add(system);
         system.OnInit(_world);
+        Logger.Logger.Info(this, $"Registered {system} at position {_systems.Count - 1}");
     }
 
     public void UpdateAll()

@@ -15,9 +15,14 @@ public sealed class ArchetypeManager(World world)
     {
         if (_signatureToArchetype.ContainsKey(signature)) return;
         _signatureToArchetype[signature] = new Archetype(signature, _world);
-        Logger.Logger.Info(this, $"Created an archetype with signature {signature}");
     }
-    
+
+    /// <summary>
+    /// Collects all <see cref="Archetype"/> instances that match a component filter
+    /// </summary>
+    /// <param name="include">Components that an archetype must have to be collected</param>
+    /// <param name="exclude">Components that an archetype must not have to be collected</param>
+    /// <returns>All matched <see cref="Archetype"/>s</returns>
     public IEnumerable<Archetype> Query(Signature include, Signature exclude)
     {
         foreach (var (signature, archetype) in _signatureToArchetype)
@@ -31,10 +36,8 @@ public sealed class ArchetypeManager(World world)
     
     internal void AddEntity(Entity.Assembly assembly, Entity entity)
     {
-        
         Signature signature = assembly.GetSignature(_world);
-        Logger.Logger.Info(this, $"Got a request to add {entity} with signature {signature}");
-
+        
         EnsureArchetypeExistence(signature);
 
         Archetype matchedArchetype = _signatureToArchetype[signature];
@@ -44,22 +47,21 @@ public sealed class ArchetypeManager(World world)
     
     internal void RemoveEntity(Entity entity)
     {
-        Logger.Logger.Info(this, $"Got a request to remove {entity}");
         if (_entityToArchetype.TryGetValue(entity, out Archetype? archetype)) 
         {
             archetype.RemoveEntity(entity);
             _entityToArchetype.Remove(entity);
         }
         else
-            Logger.Logger.Warn(this, $"Can not remove entity; not found: {entity}");
+            Logger.Logger.Warn(this, $"Couldn't find {entity} to remove");
     }
 
     internal void MoveEntity(Entity entity, Archetype from, Archetype to)
     {
-        Logger.Logger.Info(this, $"Moving {entity} from {from.Signature} to {to.Signature}");
         to.AddEntity(entity, from.GetEntityComponents(entity));
         from.RemoveEntity(entity);
         _entityToArchetype[entity] = to;
+        Logger.Logger.Debug(this, $"Moved {entity} from {from.Signature} to {to.Signature}");
     }
 
     internal Archetype GetArchetypeByEntity(Entity entity)

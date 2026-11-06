@@ -82,6 +82,7 @@ namespace Generators.Ecs
             sb.AppendLine(@"    }");
 
             // ForEach method
+            sb.AppendLine($"    /// <inheritdoc cref=\"Query.ForEach(ForEachDelegate)\"/>");
             sb.AppendLine($"    public void ForEach(ForEachDelegate<{typeParamList}> action)");
             sb.AppendLine(@"    {");
             sb.AppendLine(@"        _world.Lock();");

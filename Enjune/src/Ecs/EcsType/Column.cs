@@ -12,6 +12,12 @@ public interface IColumn
     IComponent GetValue(int row);
 }
 
+/// <summary>
+/// Stores <typeparamref name="TComponent"/> instances in a dense array.<br/>
+/// Allows for array indexer access, returning <c>ref <typeparamref name="TComponent"/></c>.
+/// </summary>
+/// <typeparam name="TComponent"></typeparam>
+/// <param name="capacity"></param>
 public sealed class Column<TComponent>(int capacity = EcsConstants.InitialColumnCapacity) : IColumn where TComponent : struct, IComponent
 {
     private TComponent[] _data = new TComponent[capacity];
@@ -33,6 +39,11 @@ public sealed class Column<TComponent>(int capacity = EcsConstants.InitialColumn
         _data[rowTo] = temp;
     }
 
+    /// <summary>
+    /// Returns a copy of the value at <paramref name="row"/>
+    /// </summary>
+    /// <param name="row"></param>
+    /// <returns></returns>
     public IComponent GetValue(int row) => _data[row];
 
     void IColumn.SetCapacity(int capacity) => Array.Resize(ref _data, capacity);

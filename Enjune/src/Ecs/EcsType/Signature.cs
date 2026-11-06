@@ -3,6 +3,10 @@ using Enjune.Ecs.Manager;
 
 namespace Enjune.Ecs.EcsType;
 
+/// <summary>
+/// <para>A set of bits with the same length as <see cref="SignatureInteger"/>,<br/>
+/// where each bit is meant to represent a <c>true</c>/<c>false</c> value.</para>
+/// </summary>
 public readonly record struct Signature
 {
     public static readonly Signature Empty = new(0);
@@ -41,7 +45,13 @@ public readonly record struct Signature
     }
 
     public override string ToString() => Convert.ToString(_bitSet, 2).PadLeft(8, '0');
-    
+
+    /// <summary>
+    /// Allows to build a <see cref="Signature"/> using <paramref name="world"/> as context.<br/>
+    /// Resulting <see cref="Signature"/> would have a bit <c>n</c> set, if a component<br/>
+    /// with a type id of <c>n</c> in <paramref name="world"/> was added in the process of building.
+    /// </summary>
+    /// <param name="world"></param>
     public sealed class Builder(World world)
     {
         private readonly ComponentManager _componentManager = world.ComponentManager;

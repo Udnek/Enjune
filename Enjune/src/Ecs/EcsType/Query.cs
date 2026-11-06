@@ -23,7 +23,18 @@ public class Query(World world, Signature include, Signature exclude)
         _cacheVersion = world.CacheVersion;
         return _cache;
     }
-    
+
+    /// <summary>
+    /// <para>
+    /// Applies <paramref name="action"/> to every cached <see cref="Entity"/> 
+    /// along with its components as described by <paramref name="action"/>'s signature.
+    /// </para>
+    /// <para>
+    /// Checks if internal cache version is up to date.<br/>
+    /// If not, completely rebuilds the cache by querying <see cref="Archetype"/>s and saving their <see cref="Column{TComponent}"/> data.
+    /// </para>
+    /// </summary>
+    /// <param name="action"></param>
     public void ForEach(ForEachDelegate action)
     {
         _world.Lock();
