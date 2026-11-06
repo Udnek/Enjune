@@ -36,15 +36,14 @@ public class ChunkChooseLoDSystem : AppSystem
             Logger.Warn(this, $"Player doesn't have {Logger.GetTypeName<Transform>()} component");
             return;
         }
-        
+
+        var playerChunk = Chunk.ToChunkPos(playerTransform.Value.Position);
         _chunkQuery.ForEach((_, ref chunkComp, ref chunkGrx) =>
         {
-            if (chunkComp.ToBeUnloaded) return;
-
             var old = chunkGrx.BlockSize;
             chunkGrx.BlockSize = 1 << Math.Min(
                 MaxLoDPowOf2, 
-                (Chunk.ToChunkPos(playerTransform.Value.Position) - chunkComp.Chunk.Position)
+                (playerChunk - chunkComp.Chunk.Position)
                 .ManhattanLength/LoDChangeEveryNChunks); // powers of 2
             
             if (old != chunkGrx.BlockSize)

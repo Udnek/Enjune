@@ -46,7 +46,7 @@ public class ChunkMeshGenerator(App app) : ConcurrentWorker<Guid, ChunkMeshGener
                 Position.Zero, Chunk.Size, TextureQuad.Full);
         
         renderTimer.Stop();
-        Logger.Debug(this, $"Generated ({job.BlockSize}) {job.TargetChunk.Position} mesh in {renderTimer.ElapsedMilliseconds} ms");
+        //Logger.Debug(this, $"Generated ({job.BlockSize}) {job.TargetChunk.Position} mesh in {renderTimer.ElapsedMilliseconds} ms");
         return job;
     }
 
@@ -204,21 +204,19 @@ public class ChunkMeshGenerator(App app) : ConcurrentWorker<Guid, ChunkMeshGener
         // return _app.Blocks.Air;
     }
     
-    private readonly Dictionary<BlockPos, BlockState?> _downsamplesCache = [];
-    
-    private BlockState? Downsample(Job job, BlockPos from, int blockSize)
+    private BlockState? Downsample(Dictionary<BlockPos, BlockState?> cache, Job job, BlockPos from, int blockSize)
     {
-        if (_downsamplesCache.TryGetValue(from, out var sample))
-            return sample;
+        // if (cache.TryGetValue(from, out var sample))
+        //     return sample;
 
-        sample = DownsampleNoCache(job, from, blockSize);
-        _downsamplesCache[from] = sample;
+        var sample = DownsampleNoCache(job, from, blockSize);
+        //cache[from] = sample;
         return sample;
     }
     
     private void GenerateLoD(Job job)
     {
-        _downsamplesCache.Clear();
+        Dictionary<BlockPos, BlockState?> cache = [];
         var blockSize = job.BlockSize;
         var mesh = job.Model.GetMesh(PrimitiveTopology.Triangle);
         var texture = TextureQuad.Full; // var texture = new TextureQuad
@@ -234,7 +232,7 @@ public class ChunkMeshGenerator(App app) : ConcurrentWorker<Guid, ChunkMeshGener
             {
                 for (int z = 0; z < Chunk.Size.Z; z+=blockSize)
                 {
-                    var blockType = Downsample(job, (x, y, z), blockSize);
+                    var blockType = Downsample(cache, job, (x, y, z), blockSize);
                     var blockRender = blockType?.Type.Render;
                     if (blockRender is null) continue;
                     
@@ -246,7 +244,7 @@ public class ChunkMeshGenerator(App app) : ConcurrentWorker<Guid, ChunkMeshGener
                     }
                     
                     // bottom
-                    if (ShouldRenderFace(Downsample(job, (x, y-blockSize, z), blockSize)))
+                    if (ShouldRenderFace(Downsample(cache, job, (x, y-blockSize, z), blockSize)))
                     {
                         mesh.AddQuad(
                             new(), primitive,
@@ -256,7 +254,7 @@ public class ChunkMeshGenerator(App app) : ConcurrentWorker<Guid, ChunkMeshGener
                         );
                     }
                     // top
-                    if (ShouldRenderFace(Downsample(job, (x, y+blockSize, z), blockSize)))
+                    if (ShouldRenderFace(Downsample(cache, job, (x, y+blockSize, z), blockSize)))
                     {
                         mesh.AddQuad(
                             new(), primitive,
@@ -266,7 +264,7 @@ public class ChunkMeshGenerator(App app) : ConcurrentWorker<Guid, ChunkMeshGener
                         );
                     }
                     // xy -z
-                    if (ShouldRenderFace(Downsample(job, (x, y, z-blockSize), blockSize)))
+                    if (ShouldRenderFace(Downsample(cache, job, (x, y, z-blockSize), blockSize)))
                     {
                         mesh.AddQuad(
                             new(), primitive * SideColor,
@@ -276,7 +274,7 @@ public class ChunkMeshGenerator(App app) : ConcurrentWorker<Guid, ChunkMeshGener
                         );
                     }
                     // xy +z
-                    if (ShouldRenderFace(Downsample(job, (x, y, z+blockSize), blockSize)))
+                    if (ShouldRenderFace(Downsample(cache, job, (x, y, z+blockSize), blockSize)))
                     {
                         mesh.AddQuad(
                             new(), primitive * SideColor,
@@ -286,7 +284,7 @@ public class ChunkMeshGenerator(App app) : ConcurrentWorker<Guid, ChunkMeshGener
                         );
                     }
                     // yz -x
-                    if (ShouldRenderFace(Downsample(job, (x-blockSize, y, z), blockSize)))
+                    if (ShouldRenderFace(Downsample(cache, job, (x-blockSize, y, z), blockSize)))
                     {
                         mesh.AddQuad(
                             new(), primitive * SideColor,
@@ -296,7 +294,7 @@ public class ChunkMeshGenerator(App app) : ConcurrentWorker<Guid, ChunkMeshGener
                         );
                     }
                     // yz +x
-                    if (ShouldRenderFace(Downsample(job, (x+blockSize, y, z), blockSize)))
+                    if (ShouldRenderFace(Downsample(cache, job, (x+blockSize, y, z), blockSize)))
                     {
                         mesh.AddQuad(
                             new(), primitive * SideColor,

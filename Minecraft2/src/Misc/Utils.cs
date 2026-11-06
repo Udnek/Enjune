@@ -9,13 +9,13 @@ public static class Utils
     ///         for z in [-1, 1]:
     ///             action(x, y, z)
     /// </summary>
-    public static void ForFaceNeighbors(Action<Vector3i> action)
-    {
-        action((-1, 0, 0));
-        action((1, 0, 0));
-        action((0, -1, 0));
-        action((0, 1, 0));
-        action((0, 0, -1));
-        action((0, 0, 1));
-    }
+    public static readonly Vector3i[] FaceNeighbors =
+    [
+        (-1, 0, 0),
+        (1, 0, 0),
+        (0, -1, 0),
+        (0, 1, 0),
+        (0, 0, -1),
+        (0, 0, 1)
+    ];
 }

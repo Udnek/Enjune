@@ -30,16 +30,10 @@ public class ChunkAssignModelSystem : AppSystem
             if (chunkComp.ToBeUnloaded) return;
 
             var pos = chunkComp.Chunk.Position;
-            int pendingNeighbors = 0;
-            Utils.ForFaceNeighbors(offset =>
-            {
-                if (App.ChunkWorld.IsQueued(pos + offset))
-                    pendingNeighbors++;
-            });
             var graphicLink = new ChunkGraphicComponent
             {
                 Model = App.ChunkModelPool.Take(),
-                PendingNeighbors = pendingNeighbors
+                PendingNeighbors = 9999
             };
             _world.AddEntityComponent(entity, graphicLink);
 

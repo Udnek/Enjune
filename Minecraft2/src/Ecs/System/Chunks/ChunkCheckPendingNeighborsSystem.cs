@@ -22,16 +22,13 @@ public class ChunkCheckPendingNeighborsSystem : AppSystem
     {
         _query.ForEach((_, ref chunkComp, ref graphicLink) =>
         {
-            if (graphicLink.PendingNeighbors == 0) 
-                return;
-
             int pending = 0;
             var pos = chunkComp.Chunk.Position;
-            Utils.ForFaceNeighbors(offset =>
+            foreach (var offset in Utils.FaceNeighbors)
             {
                 if (App.ChunkWorld.IsQueued(pos + offset))
                     pending++;
-            });
+            }
             graphicLink.PendingNeighbors = pending;
         });
     }

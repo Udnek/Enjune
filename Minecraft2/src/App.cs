@@ -120,10 +120,15 @@ public class App : AbstractDisposable, IApp
         
         ChunkMeshGenerator = new ChunkMeshGenerator(this);
         TerrainGenerator = new BaseTerrainGenerator(this);
+
+        var processors = Environment.ProcessorCount;
+        Logger.Info(this, $"CPU cores: {processors}");
+        ThreadPool.GetMaxThreads(out int workerThreads, out _);
+        Logger.Info(this, $"{nameof(ThreadPool)} max worker threads: {workerThreads}");
         
         // starting workers
-        TerrainGenerator.Start("TerrainGenerator");
-        ChunkMeshGenerator.Start("MeshGenerator");
+        TerrainGenerator.Start(5); // "TerrainGenerator"
+        ChunkMeshGenerator.Start(5); // "MeshGenerator"
         
         return null;
     }

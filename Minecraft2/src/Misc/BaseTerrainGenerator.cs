@@ -51,7 +51,7 @@ public class BaseTerrainGenerator : ConcurrentWorker<ChunkPos, Chunk, Chunk>
             }
         }
         renderTimer.Stop();
-        Logger.Debug(this, $"Generated {chunk.Position} terrain in {renderTimer.ElapsedMilliseconds} ms");
+        //Logger.Debug(this, $"Generated {chunk.Position} terrain in {renderTimer.ElapsedMilliseconds} ms");
         return chunk;
     }
 
