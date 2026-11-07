@@ -10,7 +10,6 @@ namespace Enjune.Parallelism;
 public abstract class ConcurrentWorker<TJobKey, TIn, TOut> : AbstractDisposable where TJobKey : IEquatable<TJobKey>
 {
     private ulong _generation = 0; // used to track order
-    //private readonly BlockingCollection<(TJobKey Key, ulong Generation, TIn Input)> _jobs = new(new ConcurrentQueue<(TJobKey, ulong, TIn)>());
     private readonly ConcurrentDictionary<TJobKey, ulong> 
         _queuedForCancellation = [];
     private readonly ConcurrentQueue<(TJobKey Key, TOut Output)> 
@@ -85,7 +84,7 @@ public abstract class ConcurrentWorker<TJobKey, TIn, TOut> : AbstractDisposable 
     {
         if (!HasStarted)
         {
-            Logger.Logger.Error(this, "worker hasn't started yet");
+            Logger.Logger.Error(this, "Worker hasn't started yet");
             return;
         }
         var gen = Interlocked.Increment(ref _generation);
@@ -126,6 +125,11 @@ public abstract class ConcurrentWorker<TJobKey, TIn, TOut> : AbstractDisposable 
         }
         catch (OperationCanceledException) // job canceled itself earlier
         {
+            if (_queuedForCancellation.TryGetValue(job.Key, out cancelGen))
+            {
+                if (cancelGen > job.Generation)
+                    _queuedForCancellation.Remove(job.Key, out _);
+            }
             _queuedForCancellation.Remove(job.Key, out _); // removing cancel token if had
             _cancelled.Enqueue((job.Key, job.Input)); // enqueuing as canceled
         }
