@@ -35,8 +35,6 @@ public class ChunkLoadSystem : AppSystem
                         var relPos = new ChunkPos(x, y, z);
                         if (relPos.Xz.EuclideanLengthSquared > xzRadius * xzRadius)
                             continue;
-                        if (relPos.Y > yRadius)
-                            continue;
                         chunkWorld.QueueLoading(center + relPos);
                     }
                 }
