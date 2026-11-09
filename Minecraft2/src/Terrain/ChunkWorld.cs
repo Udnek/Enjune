@@ -17,7 +17,7 @@ public class ChunkWorld
     public ChunkWorld(App app) => _app = app;
 
     /// <summary>
-    /// Queses chunk for loading if not already
+    /// Queues chunk for loading if not already
     /// </summary>
     /// <returns></returns>
     public void QueueLoading(ChunkPos chunkPos)
