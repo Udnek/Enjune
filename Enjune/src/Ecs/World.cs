@@ -309,7 +309,7 @@ public sealed class World
     /// <returns><typeparamref name="TComponent"/> if found successfully, <c>null</c> otherwise</returns>
     public TComponent? GetEntityComponent<TComponent>(Entity entity) where TComponent : struct, IComponent
     {
-        Logger.Logger.Info(this, $"Getting {entity} component {nameof(TComponent)} manually");
+        Logger.Logger.Info(this, $"Getting {entity} component {typeof(TComponent)} manually");
         if (!_entities.Contains(entity))
         {
             Logger.Logger.Error(this, $"{entity} doesn't exist");

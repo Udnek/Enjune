@@ -4,11 +4,10 @@
 
 public struct Command
 {
-    
-    
     enum Kind
     {
-        RemoveEnity,
+        AddEntity,
+        RemoveEntity,
         RemoveComponent
     }
 }
