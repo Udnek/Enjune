@@ -8,6 +8,7 @@ using Enjune.Parallelism;
 using Minecraft2.Block;
 using Minecraft2.Graphic;
 using Minecraft2.Misc;
+using Utils = Minecraft2.Misc.Utils;
 
 namespace Minecraft2.Terrain;
 
@@ -29,7 +30,7 @@ public class ChunkMeshGenerator(App app) : ConcurrentWorker<Guid, ChunkMeshGener
     private readonly App _app = app;
     private readonly BlockType _outOfBounds = app.Blocks.Cobblestone;
     
-    private static readonly Vector3 SideColor = System.Drawing.Color.FromArgb(255, 150, 150, 150).ToTk().Xyz;
+    private static readonly Vector4 SideColor = System.Drawing.Color.FromArgb(255, 150, 150, 150).ToTk();
     
     protected override Job Work(Job job)
     {
@@ -89,11 +90,11 @@ public class ChunkMeshGenerator(App app) : ConcurrentWorker<Guid, ChunkMeshGener
     {
         var mesh = job.Model.GetMesh(PrimitiveTopology.Triangle);
         const int blockSize = 1;
-        for (int x = 0; x < Chunk.Size.X; x+=blockSize)
+        for (byte x = 0; x < Chunk.Size.X; x+=blockSize)
         {
-            for (int y = 0; y < Chunk.Size.Y; y+=blockSize)
+            for (byte y = 0; y < Chunk.Size.Y; y+=blockSize)
             {
-                for (int z = 0; z < Chunk.Size.Z; z+=blockSize)
+                for (byte z = 0; z < Chunk.Size.Z; z+=blockSize)
                 {
                     var blockRender = job.TargetChunk.BlockLayer.GetByLocal((x, y, z)).Type.Render;
                     if (blockRender is null) continue;
@@ -102,14 +103,14 @@ public class ChunkMeshGenerator(App app) : ConcurrentWorker<Guid, ChunkMeshGener
 
                     if (blockRender.BiomeColor)
                     {
-                        primitive.Color = (0.3f, 0.6f, 0.2f);
+                        primitive.Color = Utils.PackColor(new Vector4((0.3f, 0.6f, 0.2f, 1)));
                     }
 
                     // bottom
                     if (ShouldRenderFace(Sample(job, (x, y-1, z))))
                     {
                         mesh.AddQuad(
-                            new(), primitive,
+                            new (), primitive,
                             (x, y, z), (x+blockSize, y, z), 
                             (x+blockSize, y, z+blockSize), (x, y, z+blockSize), 
                             TextureQuad.Full
@@ -235,19 +236,22 @@ public class ChunkMeshGenerator(App app) : ConcurrentWorker<Guid, ChunkMeshGener
                     var blockType = Downsample(cache, job, (x, y, z), blockSize);
                     var blockRender = blockType?.Type.Render;
                     if (blockRender is null) continue;
-                    
-                    var primitive = new GraphicChunkApi.Primitive { TextureIndex = blockRender.TextureIndex };
 
-                    if (blockRender.BiomeColor)
+                    var mainColor = blockRender.BiomeColor ? (0.3f, 0.6f, 0.2f, 1) : Vector4.One;
+                    var sideColor = mainColor * SideColor;
+
+                    var mainPrim = new GraphicChunkApi.Primitive
                     {
-                        primitive.Color = (0.3f, 0.6f, 0.2f);
-                    }
+                        TextureIndex = blockRender.TextureIndex,
+                        Color = Utils.PackColor(mainColor)
+                    };
+                    var sidePrim = mainPrim with { Color = Utils.PackColor(sideColor) };
                     
                     // bottom
                     if (ShouldRenderFace(Downsample(cache, job, (x, y-blockSize, z), blockSize)))
                     {
                         mesh.AddQuad(
-                            new(), primitive,
+                            new(), mainPrim,
                             (x, y, z), (x+blockSize, y, z), 
                             (x+blockSize, y, z+blockSize), (x, y, z+blockSize), 
                             texture
@@ -257,7 +261,7 @@ public class ChunkMeshGenerator(App app) : ConcurrentWorker<Guid, ChunkMeshGener
                     if (ShouldRenderFace(Downsample(cache, job, (x, y+blockSize, z), blockSize)))
                     {
                         mesh.AddQuad(
-                            new(), primitive,
+                            new(), mainPrim,
                             (x, y+blockSize, z), (x, y+blockSize, z+blockSize), 
                             (x+blockSize, y+blockSize, z+blockSize), (x+blockSize, y+blockSize, z), 
                             texture
@@ -267,7 +271,7 @@ public class ChunkMeshGenerator(App app) : ConcurrentWorker<Guid, ChunkMeshGener
                     if (ShouldRenderFace(Downsample(cache, job, (x, y, z-blockSize), blockSize)))
                     {
                         mesh.AddQuad(
-                            new(), primitive * SideColor,
+                            new(), sidePrim,
                             (x, y, z), (x, y+blockSize, z), 
                             (x+blockSize, y+blockSize, z), (x+blockSize, y, z), 
                             texture
@@ -277,7 +281,7 @@ public class ChunkMeshGenerator(App app) : ConcurrentWorker<Guid, ChunkMeshGener
                     if (ShouldRenderFace(Downsample(cache, job, (x, y, z+blockSize), blockSize)))
                     {
                         mesh.AddQuad(
-                            new(), primitive * SideColor,
+                            new(), sidePrim,
                             (x, y, z+blockSize), (x+blockSize, y, z+blockSize), 
                             (x+blockSize, y+blockSize, z+blockSize), (x, y+blockSize, z+blockSize), 
                             texture
@@ -287,7 +291,7 @@ public class ChunkMeshGenerator(App app) : ConcurrentWorker<Guid, ChunkMeshGener
                     if (ShouldRenderFace(Downsample(cache, job, (x-blockSize, y, z), blockSize)))
                     {
                         mesh.AddQuad(
-                            new(), primitive * SideColor,
+                            new(), sidePrim,
                             (x, y, z), (x, y, z+blockSize), 
                             (x, y+blockSize, z+blockSize), (x, y+blockSize, z), 
                             texture
@@ -297,7 +301,7 @@ public class ChunkMeshGenerator(App app) : ConcurrentWorker<Guid, ChunkMeshGener
                     if (ShouldRenderFace(Downsample(cache, job, (x+blockSize, y, z), blockSize)))
                     {
                         mesh.AddQuad(
-                            new(), primitive * SideColor,
+                            new(), sidePrim,
                             (x+blockSize, y, z), (x+blockSize, y+blockSize, z), 
                             (x+blockSize, y+blockSize, z+blockSize), (x+blockSize, y, z+blockSize), 
                             texture

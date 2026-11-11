@@ -128,6 +128,7 @@ public static class VaoVboDevice
     {
         return primitive switch {
             ShaderValuePrimitive.Int => 1,
+            ShaderValuePrimitive.UInt => 1,
             ShaderValuePrimitive.Float => 1,
             ShaderValuePrimitive.Vector2F => 2,
             ShaderValuePrimitive.Vector3F => 3,

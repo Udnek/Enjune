@@ -14,7 +14,7 @@ public static class FontGraphicData
     }
     
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct Vertex : IPositionedVertex, ITexturedVertex
+    public struct Vertex : IPositionedVertex<Vector3>, ITexturedVertex
     {
         [field: GraphicField(ShaderValuePrimitive.Vector3F, "position")]
         public Position Position { get; set; }

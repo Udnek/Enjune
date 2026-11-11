@@ -14,6 +14,11 @@ public class Chunk : IReadonlyChunk
         Trace.Assert(Size.X % 2 == 0);
         Trace.Assert(Size.Y % 2 == 0);
         Trace.Assert(Size.Z % 2 == 0);
+        
+        // for block pos to be packed in bytes
+        Trace.Assert(Size.X <= byte.MaxValue);
+        Trace.Assert(Size.Y <= byte.MaxValue);
+        Trace.Assert(Size.Z <= byte.MaxValue);
     }
 
     public ChunkPos Position { get; }

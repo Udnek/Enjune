@@ -26,6 +26,11 @@ public class LoggerPrinter : ConcurrentWorker<uint, PrinterJob, Nothing>
         else
             PrintWithColor($"{job.AuthorName}: {job.Message ?? "null"}\n", job.MessageColor);
 
+        while (TryDequeueDone(out _, out _))
+        {
+            // just dequeuing
+        }
+        
         return Nothing.Instance;
     }
 

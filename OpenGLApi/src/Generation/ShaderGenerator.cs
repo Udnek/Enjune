@@ -212,6 +212,7 @@ public static class ShaderGenerator
     {
         return primitive switch {
             ShaderValuePrimitive.Int => "int",
+            ShaderValuePrimitive.UInt => "uint",
             ShaderValuePrimitive.Float => "float",
             ShaderValuePrimitive.Vector2F => "vec2",
             ShaderValuePrimitive.Vector3F => "vec3",

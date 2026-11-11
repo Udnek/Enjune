@@ -48,10 +48,5 @@ public static partial class Logger
             SeverityType = severityType,
             MessageColor = msgColor
         });
-        
-        while (PrintWorker.TryDequeueDone(out uint id, out var output))
-        {
-            // just dequeuing
-        }
     }
 }

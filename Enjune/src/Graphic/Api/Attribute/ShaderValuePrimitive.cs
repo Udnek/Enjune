@@ -3,6 +3,7 @@ namespace Enjune.Graphic.Api.Attribute;
 public enum ShaderValuePrimitive
 {
     Int,
+    UInt,
     Float,
     Vector2F,
     Vector3F,
@@ -18,6 +19,7 @@ public static class ValuePrimitiveExtensions
         return primitive switch
         {
             ShaderValuePrimitive.Int => 4,
+            ShaderValuePrimitive.UInt => 4,
             ShaderValuePrimitive.Float => 4,
             ShaderValuePrimitive.Vector2F => 8,
             ShaderValuePrimitive.Vector3F => 12,

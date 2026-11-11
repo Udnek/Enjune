@@ -1,12 +1,13 @@
 using System.Diagnostics.Contracts;
+using System.Runtime.CompilerServices;
 using Enjune.Logger;
 using Enjune.Misc;
 
 namespace Enjune.Graphic.Modeling;
 
-public interface IPositionedVertex
+public interface IPositionedVertex<T> where T : unmanaged
 {
-    public Position Position { get; set; }
+    public T Position { get; set; }
 }
 
 public interface ITexturedVertex
@@ -61,6 +62,7 @@ public sealed class Mesh<TPerVert, TPerPrim> where TPerVert : unmanaged where TP
             PerPrimitives.AddRange(perPrim);
     }
     
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void AddNgon(TPerPrim perPrim, params ReadOnlySpan<TPerVert> newVerts)
     {
         var oldIndexes = Indexes.Count;
@@ -171,11 +173,12 @@ public sealed class Mesh<TPerVert, TPerPrim> where TPerVert : unmanaged where TP
 
 public static class Mesh
 {
-    public static void AddTriangle<TPerVert, TPerPrim>(
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void AddTriangle<TPerVert, TPerPrim, TPos>(
         this Mesh<TPerVert, TPerPrim> mesh,
         TPerVert vertexExample, TPerPrim perPrim,
-        Position bl, Position br, Position tr,
-        TextureQuad texture) where TPerVert : unmanaged, IPositionedVertex, ITexturedVertex where TPerPrim : unmanaged
+        TPos bl, TPos br, TPos tr,
+        TextureQuad texture) where TPerVert : unmanaged, IPositionedVertex<TPos>, ITexturedVertex where TPerPrim : unmanaged where TPos : unmanaged
     {
         mesh.AddNgon(perPrim, 
             vertexExample with {Position = bl, Uv = texture.BotLeft},
@@ -184,11 +187,12 @@ public static class Mesh
         );
     }
     
-    public static void AddQuad<TPerVert, TPerPrim>(
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void AddQuad<TPerVert, TPerPrim, TPos>(
         this Mesh<TPerVert, TPerPrim> mesh,
         TPerVert vertexExample, TPerPrim perPrim,
-        Position bl, Position br, Position tr, Position tl,
-        TextureQuad texture) where TPerVert : unmanaged, IPositionedVertex, ITexturedVertex where TPerPrim : unmanaged
+        TPos bl, TPos br, TPos tr, TPos tl,
+        TextureQuad texture) where TPerVert : unmanaged, IPositionedVertex<TPos>, ITexturedVertex where TPerPrim : unmanaged where TPos : unmanaged
     {
         mesh.AddNgon(perPrim, 
             vertexExample with {Position = bl, Uv = texture.BotLeft},
@@ -199,12 +203,13 @@ public static class Mesh
     }
     
     // all must be counter-clock-wise
-    public static void AddHexahedron<TPerVert, TPerPrim>(
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void AddHexahedron<TPerVert, TPerPrim, TPos>(
         this Mesh<TPerVert, TPerPrim> mesh,
         TPerVert vertexExample, TPerPrim perPrim,
-        Position b1, Position b2, Position b3, Position b4,
-        Position t1, Position t2, Position t3, Position t4,
-        TextureQuad texture) where TPerVert : unmanaged, IPositionedVertex, ITexturedVertex where TPerPrim : unmanaged
+        TPos b1, TPos b2, TPos b3, TPos b4,
+        TPos t1, TPos t2, TPos t3, TPos t4,
+        TextureQuad texture) where TPerVert : unmanaged, IPositionedVertex<TPos>, ITexturedVertex where TPerPrim : unmanaged where TPos : unmanaged
     {
         mesh.AddQuad(vertexExample, perPrim, b1, b4, b3, b2, texture); // bottom (−Y)
         mesh.AddQuad(vertexExample, perPrim, t1, t2, t3, t4, texture); // top    (+Y)
@@ -214,11 +219,12 @@ public static class Mesh
         mesh.AddQuad(vertexExample, perPrim, b4, b1, t1, t4, texture); // left   (−X)
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void AddCuboid<TPerVert, TPerPrim>(
         this Mesh<TPerVert, TPerPrim> mesh,
         TPerVert vertexExample, TPerPrim perPrim,
         Position corner1, Position corner2,
-        TextureQuad texture) where TPerVert : unmanaged, IPositionedVertex, ITexturedVertex where TPerPrim : unmanaged
+        TextureQuad texture) where TPerVert : unmanaged, IPositionedVertex<Vector3>, ITexturedVertex where TPerPrim : unmanaged
     {
         var min = Vector3.ComponentMin(corner1, corner2);
         var max = Vector3.ComponentMax(corner1, corner2);
@@ -229,11 +235,12 @@ public static class Mesh
             texture);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void AddCube<TPerVert, TPerPrim>(
         this Mesh<TPerVert, TPerPrim> mesh,
         TPerVert vertexExample, TPerPrim perPrim,
         Position center, float size, 
-        TextureQuad texture) where TPerVert : unmanaged, IPositionedVertex, ITexturedVertex where TPerPrim : unmanaged
+        TextureQuad texture) where TPerVert : unmanaged, IPositionedVertex<Vector3>, ITexturedVertex where TPerPrim : unmanaged
     {
         var hs = size / 2;
         mesh.AddHexahedron(
@@ -252,11 +259,12 @@ public static class Mesh
             texture);
     }
     
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void AddQuadXy<TPerVert, TPerPrim>(
         this Mesh<TPerVert, TPerPrim> mesh,
         TPerVert vertexExample, TPerPrim perPrim,
         Position bl, float width, float height, 
-        TextureQuad texture) where TPerVert : unmanaged, IPositionedVertex, ITexturedVertex where TPerPrim : unmanaged
+        TextureQuad texture) where TPerVert : unmanaged, IPositionedVertex<Vector3>, ITexturedVertex where TPerPrim : unmanaged
     {
         mesh.AddQuad(
             vertexExample, perPrim,
@@ -264,8 +272,9 @@ public static class Mesh
             texture);
     }
     
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static (Vector3 Min, Vector3 Max) Bounds<TPerVert, TPerPrim>(
-        this Mesh<TPerVert, TPerPrim> mesh) where TPerVert : unmanaged, IPositionedVertex where TPerPrim : unmanaged
+        this Mesh<TPerVert, TPerPrim> mesh) where TPerVert : unmanaged, IPositionedVertex<Vector3> where TPerPrim : unmanaged
     {
         var vertices = mesh.Vertices;
         if (vertices.Count == 0)
@@ -283,8 +292,9 @@ public static class Mesh
         return (min, max);
     }
     
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static void Move<TPerVert, TPerPrim>(
-        this Mesh<TPerVert, TPerPrim> mesh, Position offset) where TPerVert : unmanaged, IPositionedVertex where TPerPrim : unmanaged
+        this Mesh<TPerVert, TPerPrim> mesh, Position offset) where TPerVert : unmanaged, IPositionedVertex<Vector3> where TPerPrim : unmanaged
     {
         for (var i = 0; i < mesh.Indexes.Count; i++)
         {
@@ -295,7 +305,7 @@ public static class Mesh
     }
 
     public static void Scale<TPerVert, TPerPrim>(
-        this Mesh<TPerVert, TPerPrim> mesh, Vector3 factor) where TPerVert : unmanaged, IPositionedVertex where TPerPrim : unmanaged
+        this Mesh<TPerVert, TPerPrim> mesh, Vector3 factor) where TPerVert : unmanaged, IPositionedVertex<Vector3> where TPerPrim : unmanaged
     {
         for (var i = 0; i < mesh.Vertices.Count; i++)
         {

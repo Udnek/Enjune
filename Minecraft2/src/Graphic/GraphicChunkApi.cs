@@ -32,12 +32,12 @@ public static class GraphicChunkApi
     }
     
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct Vertex() : IPositionedVertex, ITexturedVertex
+    public struct Vertex() : IPositionedVertex<uint>, ITexturedVertex
     {
-        [field: GraphicField(ShaderValuePrimitive.Vector3F, "pos")]
-        public Vector3 Position { get; set; }
-        [GraphicField(ShaderValuePrimitive.Vector3F, "color")]
-        public Vector3 Color = Vector3.One;
+        [field: GraphicField(ShaderValuePrimitive.UInt, "pos")]
+        public uint Position { get; set; }
+        [GraphicField(ShaderValuePrimitive.UInt, "color")]
+        public uint Color = uint.MaxValue; // white
         [field: GraphicField(ShaderValuePrimitive.Vector2F, "uv")]
         public Vector2 Uv { get; set; }
     }
@@ -45,12 +45,9 @@ public static class GraphicChunkApi
     [StructLayout(LayoutKind.Explicit, Size = 16)]
     public struct Primitive()
     {
-        [GraphicField(ShaderValuePrimitive.Vector3F, "color")]
-        [FieldOffset(0)] public Vector3 Color = Vector3.One;
+        [GraphicField(ShaderValuePrimitive.UInt, "color")]
+        [FieldOffset(0)] public uint Color = uint.MaxValue; // white
         [GraphicField(ShaderValuePrimitive.Int, "tex_idx")]
         [FieldOffset(12)] public required int TextureIndex;
-
-        public static Primitive operator *(Primitive prim, Vector3 color) 
-            => prim with { Color = prim.Color * color };
     }
 }
