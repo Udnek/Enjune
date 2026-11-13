@@ -41,10 +41,10 @@ public class ChunkChooseLoDSystem : AppSystem
         _chunkQuery.ForEach((_, ref chunkComp, ref chunkGrx) =>
         {
             var old = chunkGrx.BlockSize;
-            chunkGrx.BlockSize = 1 << Math.Min(
+            chunkGrx.BlockSize = (byte)(1 << Math.Min(
                 MaxLoDPowOf2, 
                 (playerChunk - chunkComp.Chunk.Position)
-                .ManhattanLength/LoDChangeEveryNChunks); // powers of 2
+                .ManhattanLength/LoDChangeEveryNChunks)); // powers of 2
             
             if (old != chunkGrx.BlockSize)
                 chunkGrx.BlockSizeChanged = true;

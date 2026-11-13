@@ -10,12 +10,12 @@ public struct ChunkGraphicComponent() : IComponent
     public Guid GraphicId = Guid.NewGuid();
     public required ChunkModel Model;
 
-    public int BlockSize // basically LoD: bigger size -> lower quality
+    public byte BlockSize // basically LoD: bigger size -> lower quality
     {
         get;
         set
         {
-            if (value <= 0)
+            if (value == 0)
                 Logger.Error(this, $"{nameof(BlockSize)} must be positive, got {value}");
             else
                 field = value;
@@ -23,7 +23,7 @@ public struct ChunkGraphicComponent() : IComponent
     } = 1; 
 
     public bool BlockSizeChanged = false;
-    public required int PendingNeighbors = 0; // for mesh generation
+    public required byte PendingNeighbors = 0; // for mesh generation
 
     public Identifier Id() => Identifier.Of(Program.Assembly, "chunk_graphic");
 }

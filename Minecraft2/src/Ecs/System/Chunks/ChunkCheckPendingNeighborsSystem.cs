@@ -22,7 +22,7 @@ public class ChunkCheckPendingNeighborsSystem : AppSystem
     {
         _query.ForEach((_, ref chunkComp, ref graphicLink) =>
         {
-            int pending = 0;
+            byte pending = 0;
             var pos = chunkComp.Chunk.Position;
             foreach (var offset in Utils.FaceNeighbors)
             {

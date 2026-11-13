@@ -33,7 +33,7 @@ public class ChunkAssignModelSystem : AppSystem
             var graphicLink = new ChunkGraphicComponent
             {
                 Model = App.ChunkModelPool.Take(),
-                PendingNeighbors = 9999
+                PendingNeighbors = byte.MaxValue
             };
             _world.AddEntityComponent(entity, graphicLink);
 

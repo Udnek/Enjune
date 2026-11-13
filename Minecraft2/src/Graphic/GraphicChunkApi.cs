@@ -8,17 +8,34 @@ public static class GraphicChunkApi
 {
     public static readonly string VertexShader = 
         """
+        vec4 unpack(uint p) {
+            float x = float((p >> 0) & 0xFFu);
+            float y = float((p >> 8) & 0xFFu);
+            float z = float((p >> 16) & 0xFFu);
+            float w = float((p >> 24) & 0xFFu);
+            return vec4(x, y, z, w);
+        }
+        
         vec4 process(Vertex vertex, out Varyings varyings) {
-            varyings.color = vertex.color;
+            varyings.color = unpack(vertex.color).xyz / 255f;
             varyings.uv = vertex.uv;
-            return camera.proj * camera.view * model.mat * vec4(vertex.pos, 1);
+            vec4 pos = unpack(vertex.pos);
+            pos.w = 1;
+            return camera.proj * camera.view * model.mat * pos;
         }
         """;
 
     public static readonly string FragmentShader =
         """
+        vec3 unpack(uint p) {
+            float x = float((p >> 0) & 0xFFu);
+            float y = float((p >> 8) & 0xFFu);
+            float z = float((p >> 16) & 0xFFu);
+            return vec3(x, y, z);
+        }
+        
         vec4 process(Varyings varyings, PerPrimitive perPrim) {
-            return vec4(varyings.color * perPrim.color, 1) * 
+            return vec4(varyings.color * unpack(perPrim.color)/255f, 1) * 
                     texture(block_tex, vec3(varyings.uv, perPrim.tex_idx));
         }
         """;
@@ -48,6 +65,6 @@ public static class GraphicChunkApi
         [GraphicField(ShaderValuePrimitive.UInt, "color")]
         [FieldOffset(0)] public uint Color = uint.MaxValue; // white
         [GraphicField(ShaderValuePrimitive.Int, "tex_idx")]
-        [FieldOffset(12)] public required int TextureIndex;
+        [FieldOffset(4)] public required int TextureIndex;
     }
 }

@@ -90,10 +90,10 @@ public class CompiledFont
                 var mesh = new Mesh<FontGraphicData.Vertex, FontGraphicData.PerPrimitive>(PrimitiveTopology.Triangle);
                 mesh.AddQuad(
                     new (), new (),
-                    (0f, 0f, 0f), 
-                    (width, 0, 0f),
-                    (width, height, 0f),
-                    (0, height, 0f), 
+                    new Vector3(0f, 0f, 0f), 
+                    new Vector3(width, 0, 0f),
+                    new Vector3(width, height, 0f),
+                    new Vector3(0, height, 0f), 
                     glyph.Texture.Value);
                 
                 var y = -(glyph.Height - glyph.BearingY) * sizeMul;

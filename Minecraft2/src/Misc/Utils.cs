@@ -26,11 +26,17 @@ public static class Utils
     /// </summary>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static uint PackBytes(byte x, byte y, byte z, byte w)
-    {
-        return x | ((uint)y << 8) | ((uint)z << 16) | ((uint)w << 24);
-    }
-    
+    public static uint PackBytes(byte x, byte y, byte z, byte w = 0) 
+        => (uint)x | ((uint)y << 8) | ((uint)z << 16) | ((uint)w << 24);
+
+    /// <summary>
+    /// Pack 4 bytes into uint sequentially in Big Endian like wzyx
+    /// </summary>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static uint PackBytes(int x, int y, int z, int w = 0) 
+        => (uint)x | ((uint)y << 8) | ((uint)z << 16) | ((uint)w << 24);
+
     /// <summary>
     /// Converts with clamp floats and packs bytes. See <see cref="PackBytes"/>>
     /// </summary>
@@ -39,9 +45,9 @@ public static class Utils
     {
         return PackBytes(
             (byte) Math.Clamp(vec.X, 0, 255),
-            (byte) Math.Clamp(vec.X, 0, 255),
-            (byte) Math.Clamp(vec.X, 0, 255),
-            (byte) Math.Clamp(vec.X, 0, 255));
+            (byte) Math.Clamp(vec.Y, 0, 255),
+            (byte) Math.Clamp(vec.Z, 0, 255),
+            (byte) Math.Clamp(vec.W, 0, 255));
     }
     
     /// <summary>
@@ -55,11 +61,11 @@ public static class Utils
     /// </summary>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static void UnpackBytes(int packed, out byte x, out byte y, out byte z, out byte w)
+    public static void UnpackBytes(uint packed, out byte x, out byte y, out byte z, out byte w)
     {
-        x = (byte)(packed & 0xFF);
-        y = (byte)(packed & 0xFF00);
-        z = (byte)(packed & 0xFF0000);
-        w = (byte)(packed & 0xFF000000);
+        x = (byte)((packed >> 0) & 0xFFu);
+        y = (byte)((packed >> 8) & 0xFFu);
+        z = (byte)((packed >> 16) & 0xFFu);
+        w = (byte)((packed >> 24) & 0xFFu);
     }
 }

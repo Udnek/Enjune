@@ -8,7 +8,7 @@ using Enjune.Parallelism;
 using Minecraft2.Block;
 using Minecraft2.Graphic;
 using Minecraft2.Misc;
-using Utils = Minecraft2.Misc.Utils;
+using static Minecraft2.Misc.Utils;
 
 namespace Minecraft2.Terrain;
 
@@ -23,7 +23,7 @@ public class ChunkMeshGenerator(App app) : ConcurrentWorker<Guid, ChunkMeshGener
         IReadonlyChunk? EastChunk,
         IReadonlyChunk? WestChunk,
         ChunkModel Model,
-        int BlockSize // basically LoD: bigger size -> lower quality
+        byte BlockSize // basically LoD: bigger size -> lower quality
     );
     
     
@@ -42,9 +42,9 @@ public class ChunkMeshGenerator(App app) : ConcurrentWorker<Guid, ChunkMeshGener
         else
             GenerateLoD(job);
 
-        job.Model.GetMesh(PrimitiveTopology.Line)
-            .AddCuboid(new (), new (){ TextureIndex = 4 }, 
-                Position.Zero, Chunk.Size, TextureQuad.Full);
+        // job.Model.GetMesh(PrimitiveTopology.Line)
+        //     .AddCuboid(new (), new (){ TextureIndex = 4 }, 
+        //         Position.Zero, Chunk.Size, TextureQuad.Full);
         
         renderTimer.Stop();
         //Logger.Debug(this, $"Generated ({job.BlockSize}) {job.TargetChunk.Position} mesh in {renderTimer.ElapsedMilliseconds} ms");
@@ -52,13 +52,13 @@ public class ChunkMeshGenerator(App app) : ConcurrentWorker<Guid, ChunkMeshGener
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private bool ShouldRenderFace(BlockState? adjacentBlock)
+    private static bool ShouldRenderFace(BlockState? adjacentBlock)
     {
         if (adjacentBlock is null) return false; // facing unloaded chunk
         return adjacentBlock.Value.Type.Render is null; // facing air-like
     }
 
-    private BlockState? Sample(Job job, BlockPos locPos)
+    private static BlockState? Sample(Job job, BlockPos locPos)
     {
         if (job.TargetChunk.BlockLayer.ContainsLocalBlockPos(locPos))
             return job.TargetChunk.BlockLayer.GetByLocal(locPos);
@@ -86,33 +86,36 @@ public class ChunkMeshGenerator(App app) : ConcurrentWorker<Guid, ChunkMeshGener
         return chunk?.GetByGlobal(globalPos);
     }
     
-    private void GenerateDefaultSized(Job job)
+    private static void GenerateDefaultSized(Job job)
     {
         var mesh = job.Model.GetMesh(PrimitiveTopology.Triangle);
-        const int blockSize = 1;
-        for (byte x = 0; x < Chunk.Size.X; x+=blockSize)
+        const byte blockSize = 1;
+        for (int x = 0; x < Chunk.Size.X; x+=blockSize)
         {
-            for (byte y = 0; y < Chunk.Size.Y; y+=blockSize)
+            for (int y = 0; y < Chunk.Size.Y; y+=blockSize)
             {
-                for (byte z = 0; z < Chunk.Size.Z; z+=blockSize)
+                for (int z = 0; z < Chunk.Size.Z; z+=blockSize)
                 {
                     var blockRender = job.TargetChunk.BlockLayer.GetByLocal((x, y, z)).Type.Render;
                     if (blockRender is null) continue;
                     
-                    var primitive = new GraphicChunkApi.Primitive { TextureIndex = blockRender.TextureIndex };
+                    var mainColor = blockRender.BiomeColor ? (0.3f, 0.6f, 0.2f, 1) : Vector4.One;
+                    var sideColor = mainColor * SideColor;
 
-                    if (blockRender.BiomeColor)
+                    var mainPrim = new GraphicChunkApi.Primitive
                     {
-                        primitive.Color = Utils.PackColor(new Vector4((0.3f, 0.6f, 0.2f, 1)));
-                    }
+                        TextureIndex = blockRender.TextureIndex,
+                        Color = PackColor(mainColor)
+                    };
+                    var sidePrim = mainPrim with { Color = PackColor(sideColor) };
 
                     // bottom
                     if (ShouldRenderFace(Sample(job, (x, y-1, z))))
                     {
                         mesh.AddQuad(
-                            new (), primitive,
-                            (x, y, z), (x+blockSize, y, z), 
-                            (x+blockSize, y, z+blockSize), (x, y, z+blockSize), 
+                            new (), mainPrim,
+                            PackBytes(x, y, z), PackBytes(x+blockSize, y, z), 
+                            PackBytes(x+blockSize, y, z+blockSize), PackBytes(x, y, z+blockSize), 
                             TextureQuad.Full
                         );
                     }
@@ -120,9 +123,9 @@ public class ChunkMeshGenerator(App app) : ConcurrentWorker<Guid, ChunkMeshGener
                     if (ShouldRenderFace(Sample(job, (x, y+1, z))))
                     {
                         mesh.AddQuad(
-                            new(), primitive,
-                            (x, y+blockSize, z), (x, y+blockSize, z+blockSize), 
-                            (x+blockSize, y+blockSize, z+blockSize), (x+blockSize, y+blockSize, z), 
+                            new(), mainPrim,
+                            PackBytes(x, y+blockSize, z), PackBytes(x, y+blockSize, z+blockSize), 
+                            PackBytes(x+blockSize, y+blockSize, z+blockSize), PackBytes(x+blockSize, y+blockSize, z), 
                             TextureQuad.Full
                         );
                     }
@@ -130,9 +133,9 @@ public class ChunkMeshGenerator(App app) : ConcurrentWorker<Guid, ChunkMeshGener
                     if (ShouldRenderFace(Sample(job, (x, y, z-1))))
                     {
                         mesh.AddQuad(
-                            new(), primitive * SideColor,
-                            (x, y, z), (x, y+blockSize, z), 
-                            (x+blockSize, y+blockSize, z), (x+blockSize, y, z), 
+                            new(), sidePrim,
+                            PackBytes(x, y, z), PackBytes(x, y+blockSize, z), 
+                            PackBytes(x+blockSize, y+blockSize, z), PackBytes(x+blockSize, y, z), 
                             TextureQuad.Full
                         );
                     }
@@ -140,9 +143,9 @@ public class ChunkMeshGenerator(App app) : ConcurrentWorker<Guid, ChunkMeshGener
                     if (ShouldRenderFace(Sample(job, (x, y, z+1))))
                     {
                         mesh.AddQuad(
-                            new(), primitive * SideColor,
-                            (x, y, z+blockSize), (x+blockSize, y, z+blockSize), 
-                            (x+blockSize, y+blockSize, z+blockSize), (x, y+blockSize, z+blockSize), 
+                            new(), sidePrim,
+                            PackBytes(x, y, z+blockSize), PackBytes(x+blockSize, y, z+blockSize), 
+                            PackBytes(x+blockSize, y+blockSize, z+blockSize), PackBytes(x, y+blockSize, z+blockSize), 
                             TextureQuad.Full
                         );
                     }
@@ -150,9 +153,9 @@ public class ChunkMeshGenerator(App app) : ConcurrentWorker<Guid, ChunkMeshGener
                     if (ShouldRenderFace(Sample(job, (x-1, y, z))))
                     {
                         mesh.AddQuad(
-                            new(), primitive * SideColor,
-                            (x, y, z), (x, y, z+blockSize), 
-                            (x, y+blockSize, z+blockSize), (x, y+blockSize, z), 
+                            new(), sidePrim,
+                            PackBytes(x, y, z), PackBytes(x, y, z+blockSize), 
+                            PackBytes(x, y+blockSize, z+blockSize), PackBytes(x, y+blockSize, z), 
                             TextureQuad.Full
                         );
                     }
@@ -160,9 +163,9 @@ public class ChunkMeshGenerator(App app) : ConcurrentWorker<Guid, ChunkMeshGener
                     if (ShouldRenderFace(Sample(job, (x+1, y, z))))
                     {
                         mesh.AddQuad(
-                            new(), primitive * SideColor,
-                            (x+blockSize, y, z), (x+blockSize, y+blockSize, z), 
-                            (x+blockSize, y+blockSize, z+blockSize), (x+blockSize, y, z+blockSize), 
+                            new(), sidePrim,
+                            PackBytes(x+blockSize, y, z), PackBytes(x+blockSize, y+blockSize, z), 
+                            PackBytes(x+blockSize, y+blockSize, z+blockSize), PackBytes(x+blockSize, y, z+blockSize), 
                             TextureQuad.Full
                         );
                     }
@@ -243,17 +246,17 @@ public class ChunkMeshGenerator(App app) : ConcurrentWorker<Guid, ChunkMeshGener
                     var mainPrim = new GraphicChunkApi.Primitive
                     {
                         TextureIndex = blockRender.TextureIndex,
-                        Color = Utils.PackColor(mainColor)
+                        Color = PackColor(mainColor)
                     };
-                    var sidePrim = mainPrim with { Color = Utils.PackColor(sideColor) };
+                    var sidePrim = mainPrim with { Color = PackColor(sideColor) };
                     
                     // bottom
                     if (ShouldRenderFace(Downsample(cache, job, (x, y-blockSize, z), blockSize)))
                     {
                         mesh.AddQuad(
                             new(), mainPrim,
-                            (x, y, z), (x+blockSize, y, z), 
-                            (x+blockSize, y, z+blockSize), (x, y, z+blockSize), 
+                            PackBytes(x, y, z), PackBytes(x+blockSize, y, z), 
+                            PackBytes(x+blockSize, y, z+blockSize), PackBytes(x, y, z+blockSize), 
                             texture
                         );
                     }
@@ -262,8 +265,8 @@ public class ChunkMeshGenerator(App app) : ConcurrentWorker<Guid, ChunkMeshGener
                     {
                         mesh.AddQuad(
                             new(), mainPrim,
-                            (x, y+blockSize, z), (x, y+blockSize, z+blockSize), 
-                            (x+blockSize, y+blockSize, z+blockSize), (x+blockSize, y+blockSize, z), 
+                            PackBytes(x, y+blockSize, z), PackBytes(x, y+blockSize, z+blockSize), 
+                            PackBytes(x+blockSize, y+blockSize, z+blockSize), PackBytes(x+blockSize, y+blockSize, z), 
                             texture
                         );
                     }
@@ -272,8 +275,8 @@ public class ChunkMeshGenerator(App app) : ConcurrentWorker<Guid, ChunkMeshGener
                     {
                         mesh.AddQuad(
                             new(), sidePrim,
-                            (x, y, z), (x, y+blockSize, z), 
-                            (x+blockSize, y+blockSize, z), (x+blockSize, y, z), 
+                            PackBytes(x, y, z), PackBytes(x, y+blockSize, z), 
+                            PackBytes(x+blockSize, y+blockSize, z), PackBytes(x+blockSize, y, z), 
                             texture
                         );
                     }
@@ -282,8 +285,8 @@ public class ChunkMeshGenerator(App app) : ConcurrentWorker<Guid, ChunkMeshGener
                     {
                         mesh.AddQuad(
                             new(), sidePrim,
-                            (x, y, z+blockSize), (x+blockSize, y, z+blockSize), 
-                            (x+blockSize, y+blockSize, z+blockSize), (x, y+blockSize, z+blockSize), 
+                            PackBytes(x, y, z+blockSize), PackBytes(x+blockSize, y, z+blockSize), 
+                            PackBytes(x+blockSize, y+blockSize, z+blockSize), PackBytes(x, y+blockSize, z+blockSize), 
                             texture
                         );
                     }
@@ -292,8 +295,8 @@ public class ChunkMeshGenerator(App app) : ConcurrentWorker<Guid, ChunkMeshGener
                     {
                         mesh.AddQuad(
                             new(), sidePrim,
-                            (x, y, z), (x, y, z+blockSize), 
-                            (x, y+blockSize, z+blockSize), (x, y+blockSize, z), 
+                            PackBytes(x, y, z), PackBytes(x, y, z+blockSize), 
+                            PackBytes(x, y+blockSize, z+blockSize), PackBytes(x, y+blockSize, z), 
                             texture
                         );
                     }
@@ -302,8 +305,8 @@ public class ChunkMeshGenerator(App app) : ConcurrentWorker<Guid, ChunkMeshGener
                     {
                         mesh.AddQuad(
                             new(), sidePrim,
-                            (x+blockSize, y, z), (x+blockSize, y+blockSize, z), 
-                            (x+blockSize, y+blockSize, z+blockSize), (x+blockSize, y, z+blockSize), 
+                            PackBytes(x+blockSize, y, z), PackBytes(x+blockSize, y+blockSize, z), 
+                            PackBytes(x+blockSize, y+blockSize, z+blockSize), PackBytes(x+blockSize, y, z+blockSize), 
                             texture
                         );
                     }
